@@ -27,6 +27,51 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./roi/calculator": {
+      "types": "./dist/roi/calculator.d.ts",
+      "import": "./dist/roi/calculator.js",
+      "require": "./dist/roi/calculator.cjs"
+    },
+    "./roi/transparency-report": {
+      "types": "./dist/roi/transparency-report.d.ts",
+      "import": "./dist/roi/transparency-report.js",
+      "require": "./dist/roi/transparency-report.cjs"
+    },
+    "./roi/index": {
+      "types": "./dist/roi/index.d.ts",
+      "import": "./dist/roi/index.js",
+      "require": "./dist/roi/index.cjs"
+    },
+    "./ledger/store": {
+      "types": "./dist/ledger/store.d.ts",
+      "import": "./dist/ledger/store.js",
+      "require": "./dist/ledger/store.cjs"
+    },
+    "./ledger/index": {
+      "types": "./dist/ledger/index.d.ts",
+      "import": "./dist/ledger/index.js",
+      "require": "./dist/ledger/index.cjs"
+    },
+    "./attribution/git-ai-notes": {
+      "types": "./dist/attribution/git-ai-notes.d.ts",
+      "import": "./dist/attribution/git-ai-notes.js",
+      "require": "./dist/attribution/git-ai-notes.cjs"
+    },
+    "./attribution/index": {
+      "types": "./dist/attribution/index.d.ts",
+      "import": "./dist/attribution/index.js",
+      "require": "./dist/attribution/index.cjs"
+    },
+    "./learning/index": {
+      "types": "./dist/learning/index.d.ts",
+      "import": "./dist/learning/index.js",
+      "require": "./dist/learning/index.cjs"
+    },
+    "./ui/index": {
+      "types": "./dist/ui/index.d.ts",
+      "import": "./dist/ui/index.js",
+      "require": "./dist/ui/index.cjs"
     }
   },
   "scripts": {

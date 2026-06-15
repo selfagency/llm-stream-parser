@@ -1,0 +1,31 @@
+```xml
+<output>
+<compartments>
+<compartment start="163" end="202" title="Batch 4 cloud providers — type stubs, mock fixes, constructor fixes, and full test suite pass" episode_type="feature,bug,infra" importance="55">
+<p1>
+Batch 4 cloud providers on `feature/phase-10-secret-injection`. Two rounds of test mock fixes applied:
+
+**Round 1 (messages 163–178):** Created type declaration files providing `any`-typed stubs for dynamically-imported SDK peer deps (`@aws-sdk/client-secrets-manager`, `@azure/identity`, `@azure/keyvault-secrets`). Fixed circular type reference in `azure-kv.ts` (`_client` cache field). Fixed `vi.mock()`/`vi.hoisted()` ordering across all six cloud provider test files — `vi.mock()` must be called before `vi.hoisted()`. Fixed class mock constructability: switched mock factory from `vi.fn()` constructor assignment to plain function factory syntax (e.g., `SecretsManagerClient() { return { send: mockSend } }`) so `new` works on the mock.
+
+**Round 2 (messages 191–202):** After lint-cleaning provider files, ran full secrets package tests. Three test files still failed with "X is not a constructor" — `aws-sm.test.ts`, `gcp-sm.test.ts`, `azure-kv.test.ts`. The root cause: even the plain function factory approach had issues with how the mock was being used. Fixed by explicitly using `vi.fn()` for the constructor with proper return handling in all three files. Full suite: 17 test files, all passing.
+</p1>
+<p2>
+Batch 4 cloud providers: two rounds of test mock fixes. Round 1 fixed vi.mock ordering, class mock constructability, and SDK type stubs. Round 2 fixed remaining "not a constructor" failures in aws-sm, gcp-sm, and azure-kv test files with vi.fn() pattern. All 17 secrets test files pass.
+</p2>
+<p3>
+Batch 4 cloud provider test mocks corrected across two rounds. All 17 secrets test files pass on `feature/phase-10-secret-injection`.
+</p3>
+<p4>feature/phase-10-secret-injection; Batch 4 cloud providers; vi.fn() mock constructor; 17 tests passing</p4>
+</compartment>
+</compartments>
+<facts>
+<PROJECT_RULES>
+* Cloud provider SDK mocks must use vi.fn() with proper return handling for the constructor so `new` works on the mock in tests.
+</PROJECT_RULES>
+</facts>
+<meta>
+<messages_processed>191-202</messages_processed>
+<unprocessed_from>203</unprocessed_from>
+</meta>
+</output>
+```

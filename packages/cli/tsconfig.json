@@ -5,6 +5,10 @@
     "outDir": "./dist",
     "strictNullChecks": true
   },
-  "include": ["src/**/*", "../secrets/types/**/*.d.ts"],
+  "include": [
+    "src/**/*",
+    "../secrets/types/**/*.d.ts",
+    "../tokenomics/**/*.d.ts"
+  ],
   "exclude": ["dist", "node_modules"]
 }

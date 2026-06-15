@@ -1,0 +1,40 @@
+<output>
+<compartments>
+<compartment start="80" end="124" title="Completed and committed Batch 2 — KeyringProvider, registry, and config schema" episode_type="design,feature,infra" importance="65">
+<p1>
+Batch 2 was implemented across three segments (80-90, 91-111, 112-124) on `feature/phase-10-secret-injection`. The first two segments built the KeyringProvider interface, registry, and config schema and wrote tests. The final segment (112-124) fixed pre-commit lint violations and committed.
+
+Pre-commit lint found issues in `loader.ts` (while-assignment pattern violating non-null assertion rules) and `registry.ts` (variable shadowing and missing `biome-ignore` comments). All violations were corrected. Final validation: type-check ✓, 65 tests ✓, lint ✓. Batch 2 committed on `feature/phase-10-secret-injection`.
+
+Batch 2 files:
+- `src/provider/types.ts` — `KeyringProvider` interface, `ProviderCapabilities`, `ProviderHealth`
+- `src/provider/registry.ts` — `ProviderRegistry` — register, findForResource, resolve, listAll, getProvider, clear, with first-match-wins resolution
+- `src/provider/registry.test.ts` — 15 tests covering registration, resource resolution, provider fallback, error propagation, listAll with failure tolerance
+- `src/config/schema.ts` — Zod schema for `.agentsy/secrets.yaml` — `providers` keyed by id, `resourceTypes`, TTL overrides
+- `src/config/loader.ts` — 3-level config discovery (`.agentsy/secrets.yaml`, `./secrets.yaml`, `~/.config/agentsy/secrets.yaml`), YAML parsing via `yaml`
+- `src/provider/index.ts` — Barrel re-exports
+- `src/config/index.ts` — Barrel re-exports
+- `src/index.ts` — Re-exports provider + config types
+
+Deps added: `zod ^3.24.5`, `yaml ^2.7.1`.
+</p1>
+<p2>
+Batch 2 (KeyringProvider interface + registry + config schema) completed and committed on `feature/phase-10-secret-injection`. Pre-commit lint fixes applied to loader.ts and registry.ts before final commit. Type-check ✓, 65 tests ✓, lint ✓.
+</p2>
+<p3>
+Batch 2 complete — KeyringProvider interface, ProviderRegistry, and YAML config schema implemented and committed on the Phase 10 branch.
+</p3>
+<p4>feature/phase-10-secret-injection; Batch 2; ProviderRegistry; KeyringProvider; zod; yaml</p4>
+</compartment>
+</compartments>
+<facts>
+<PROJECT_RULES>
+* Batch 1 of Phase 10 is complete — injection module committed on `feature/phase-10-secret-injection`.
+* Batch 2 of Phase 10 is complete — KeyringProvider interface + registry + config committed on `feature/phase-10-secret-injection`.
+</PROJECT_RULES>
+</facts>
+<meta>
+<messages_processed>112-124</messages_processed>
+<unprocessed_from>125</unprocessed_from>
+</meta>
+</output>

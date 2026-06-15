@@ -113,6 +113,7 @@ export type {
   ConstraintViolation,
   ConstraintViolationCode,
   GatewayModelInfo,
-  RoutingConstraint
+  RoutingConstraint,
+  RoutingConstraintEvalBatchResult
 } from './routing-constraints.js';
-export { evaluateConstraints } from './routing-constraints.js';
+export { evaluateConstraints, evaluateRoutingConstraints } from './routing-constraints.js';

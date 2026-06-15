@@ -3,10 +3,11 @@
  * rank candidate `ModelReplica` entries.
  *
  * Score components (all optional weights default to 1.0):
- *   localBonus(tier)  — per-tier local preference (strongest for micro)
- *   - latencyPenalty   — linear penalty per ms of measured latency
- *   - errorPenalty     — fixed penalty when errorRate > threshold
- *   - costPenalty      — linear per-input-token-cost penalty
+ *   localBonus(tier)     — per-tier local preference (strongest for micro)
+ *   + quotaHeadroom      — continuous bonus: headroom% × weight (default 0.15)
+ *   - latencyPenalty     — linear penalty per ms of measured latency
+ *   - errorPenalty       — fixed penalty when errorRate > threshold
+ *   - costPenalty        — linear per-input-token-cost penalty
  *
  * Components are summed; higher score = better candidate.
  */
@@ -18,13 +19,20 @@ export interface ReplicaScoreWeights {
   errorWeight?: number;
   latencyWeight?: number;
   localWeight?: number;
+  /**
+   * Weight for quota headroom percentage (0-100).
+   * Higher headroom = higher score. Default 0.15.
+   * A replica at 100% headroom gets +15 score from this component.
+   */
+  quotaHeadroom?: number;
 }
 
 const DEFAULT_WEIGHTS: Required<ReplicaScoreWeights> = {
   costWeight: 1,
   errorWeight: 5,
   latencyWeight: 0.01,
-  localWeight: 1
+  localWeight: 1,
+  quotaHeadroom: 0.15
 };
 
 /**
@@ -56,24 +64,6 @@ export interface ReplicaScoreInput {
   tier: ModelTier;
 }
 
-/**
- * Headroom bonus tiers for quota-aware scoring.
- * Replicas with higher headroom receive a score bonus.
- * >80% → +20, 50-80% → +10, <50% → 0
- */
-function computeHeadroomBonus(headroomPercentage: number | undefined): number {
-  if (headroomPercentage === undefined) {
-    return 0;
-  }
-  if (headroomPercentage > 80) {
-    return 20;
-  }
-  if (headroomPercentage >= 50) {
-    return 10;
-  }
-  return 0;
-}
-
 export function computeReplicaScore(input: ReplicaScoreInput, weights?: ReplicaScoreWeights): number {
   const w = { ...DEFAULT_WEIGHTS, ...weights };
   let score = 0;
@@ -83,8 +73,11 @@ export function computeReplicaScore(input: ReplicaScoreInput, weights?: ReplicaS
     score += DEFAULT_LOCAL_BONUS[input.tier] * w.localWeight;
   }
 
-  // Headroom bonus — prefer replicas with more quota remaining
-  score += computeHeadroomBonus(input.headroomPercentage);
+  // Quota headroom — continuous weighted bonus (0-100 headroom × weight)
+  // A replica at 100% headroom gets +15 with default weight; at 50% gets +7.5
+  if (input.headroomPercentage !== undefined) {
+    score += input.headroomPercentage * w.quotaHeadroom;
+  }
 
   // Latency penalty (1ms = 0.01 * weight)
   score -= input.latencyMs * w.latencyWeight;

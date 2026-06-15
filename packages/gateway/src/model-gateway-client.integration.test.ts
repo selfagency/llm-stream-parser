@@ -124,8 +124,8 @@ describe('quota-aware replica selection', () => {
     });
 
     const headroomPercentages = new Map<string, number>([
-      [exhausted.id, 5], // 5% headroom → +0 bonus
-      [healthy.id, 80] // 80% headroom → +10 bonus
+      [exhausted.id, 5], // 5% headroom → +0.75 (5 × 0.15)
+      [healthy.id, 80] // 80% headroom → +12 (80 × 0.15)
     ]);
 
     const context = testSelectionContext({

@@ -1,0 +1,109 @@
+name: "general"
+role: "adaptive reasoning and analysis"
+description: "General-purpose agent for reasoning, explanation, and task routing"
+
+# Minimal layers (single-role agent)
+layers:
+  - role: "reasoner"
+    goal: "analyze tasks, explain concepts, and route to specialized agents"
+    model: "claude-3-sonnet"
+    tokenBudget: 5000
+    skills:
+      - "reasoning"
+      - "explanation"
+      - "adaptation"
+      - "synthesis"
+    execution: "sequential"
+
+# Agent-level constraints
+constraints:
+  - "Prefer simpler solutions over complex ones"
+  - "Ask for clarification on ambiguous requests"
+  - "Delegate to specialized agents when appropriate"
+  - "Learn from successful patterns"
+  - "Track confidence levels in recommendations"
+  - "Provide reasoning for key decisions"
+  - "Adapt approach based on feedback"
+
+# Lifecycle hooks
+hooks:
+  preInit:
+    - "initialize-reasoning-state"
+    - "load-historical-patterns"
+  
+  preTurn:
+    - "retrieve-relevant-memories"
+    - "assess-task-complexity"
+  
+  skillSelection:
+    - "learn-similar-patterns"
+    - "select-cheapest-viable-skill"
+    - "calculate-confidence-score"
+  
+  preSkill:
+    - "check-token-budget"
+    - "validate-skill-applicability"
+  
+  postSkill:
+    - "store-skill-output"
+    - "update-telemetry"
+  
+  postTurn:
+    - "record-decision-rational"
+    - "update-pattern-learning"
+    - "cleanup-temporary-state"
+
+# Pattern learner (OpenAgentsControl)
+patternLearner:
+  enabled: true
+  storage: "@agentsy/memory"
+  strategy: "similarity-based"
+  minRelevance: 0.6
+
+# Cost optimizer (OpenAgentsControl)
+costOptimizer:
+  strategy: "greedy-minimum"
+  fallback: "confidence-based"
+
+# Inline skill registry
+skillRegistry:
+  - name: "reasoning"
+    cost: "500-2000"
+    latency: "1-5"
+    confidence: 0.95
+    applicableTo:
+      - "all"
+    model: "claude-3-sonnet"
+
+  - name: "explanation"
+    cost: "1000-3000"
+    latency: "2-6"
+    confidence: 0.90
+    applicableTo:
+      - "all"
+      - "documentation"
+      - "teaching"
+    model: "gpt-4"
+
+  - name: "adaptation"
+    cost: "1000-2000"
+    latency: "1-4"
+    confidence: 0.85
+    applicableTo:
+      - "all"
+    model: "claude-3-haiku"
+
+  - name: "synthesis"
+    cost: "1500-4000"
+    latency: "3-8"
+    confidence: 0.88
+    applicableTo:
+      - "all"
+      - "analysis"
+    model: "claude-3-opus"
+
+# Global token budget for this agent
+tokenBudget: 5000
+
+# Execution model
+orchestrator: "sequential"

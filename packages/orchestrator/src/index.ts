@@ -129,6 +129,8 @@ export {
 export type { ITaskBoard, Task, TaskAttempt, TaskStatus, ToolCallRecord } from './task-board/types.js';
 // Type definitions
 export * from './types/index.js';
+// Routing types (TaskTier, RoutingIntent, FailoverPolicy)
+export type { FailoverPolicy, RoutingIntent } from './types/routing.js';
 // Utilities
 export * from './utils/matching.js';
 export * from './utils/timing.js';
