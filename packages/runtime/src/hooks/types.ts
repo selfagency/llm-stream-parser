@@ -87,6 +87,8 @@ export interface PreModelCallEvent {
 /** Fired after a model call completes successfully. */
 export interface PostModelCallEvent {
   actualTokens: number;
+  costUsd: number;
+  latencyMs: number;
   logicalModelId: string;
   providerId: string;
   replicaId: string;
@@ -96,6 +98,7 @@ export interface PostModelCallEvent {
 
 /** Fired when a model call fails. */
 export interface ModelCallFailedEvent {
+  attempt: number;
   error: string;
   logicalModelId: string;
   providerId: string;
@@ -108,6 +111,7 @@ export interface ModelCallFailedEvent {
 export interface ModelReplicaSwitchedEvent {
   fromReplicaId: string;
   logicalModelId: string;
+  reason: string;
   sessionId: string;
   toProviderId: string;
   toReplicaId: string;

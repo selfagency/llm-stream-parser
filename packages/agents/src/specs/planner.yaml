@@ -1,0 +1,102 @@
+name: "planner"
+role: "goal decomposition and milestone tracking"
+description: "Sisyphus-based agent for atomic step execution with dependency tracking"
+
+# Sisyphus atomic step pattern (oh-my-openagent)
+layers:
+  - role: "goal-analyzer"
+    goal: "analyze goal and detect constraints"
+    model: "claude-3-sonnet"
+    tokenBudget: 3000
+    skills:
+      - "goal-analysis"
+      - "constraint-detection"
+    execution: "sequential"
+
+  - role: "decomposer"
+    goal: "decompose goal into atomic steps with dependencies"
+    model: "claude-3-opus"
+    tokenBudget: 8000
+    skills:
+      - "task-decomposition"
+      - "dependency-detection"
+      - "timeline-estimation"
+    execution-model: "atomic-steps"
+    execution: "sequential"
+
+  - role: "milestone-tracker"
+    goal: "track progress and estimate completion"
+    model: "claude-3-haiku"
+    tokenBudget: 7000
+    skills:
+      - "progress-tracking"
+      - "milestone-definition"
+      - "blocker-detection"
+    dependsOn:
+      - "decomposer"
+    execution: "sequential"
+
+  - role: "pivot-recommender"
+    goal: "recommend course corrections if off-track"
+    model: "claude-3-sonnet"
+    tokenBudget: 2000
+    skills:
+      - "trend-analysis"
+      - "risk-assessment"
+    dependsOn:
+      - "milestone-tracker"
+    execution: "sequential"
+
+# Agent-level constraints
+constraints:
+  - "All steps must be atomic and independently verifiable"
+  - "Dependencies must be explicitly declared and validated"
+  - "Track progress against milestones with measurable outcomes"
+  - "Identify blockers early and recommend mitigation strategies"
+  - "Estimate timeline with confidence intervals"
+  - "Support parallel execution where dependencies allow"
+  - "Validate completion before proceeding to next step"
+
+# Lifecycle hooks
+hooks:
+  preInit:
+    - "load-historical-timelines"
+    - "initialize-dependency-graph"
+  
+  preTurn:
+    - "update-milestone-status"
+    - "check-blocker-resolution"
+  
+  stepExecute:
+    - "validate-preconditions"
+    - "execute-step-logic"
+    - "capture-step-output"
+    - "update-state"
+  
+  stepTransition:
+    - "check-dependencies"
+    - "load-predecessor-outputs"
+    - "validate-state-consistency"
+  
+  postTurn:
+    - "aggregate-step-results"
+    - "identify-blockers"
+    - "recommend-pivots"
+    - "update-progress"
+
+# State management
+stateManager:
+  scope: cross-agent
+  storage: "@agentsy/memory"
+  events:
+    - "step-completed"
+    - "blocker-detected"
+    - "timeline-estimate-updated"
+    - "milestone-reached"
+    - "pivot-recommended"
+
+# Global token budget for this agent
+tokenBudget: 20000
+
+# Execution model
+orchestrator: "sisyphus"

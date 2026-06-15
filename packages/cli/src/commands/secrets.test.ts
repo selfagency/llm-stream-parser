@@ -17,7 +17,6 @@ const mockRegistry = {
   resolve: vi.fn()
 };
 
-// biome-ignore lint/complexity/useArrowFunction: must be regular function for `new` constructibility
 function MockProviderRegistry(): typeof mockRegistry {
   return mockRegistry;
 }

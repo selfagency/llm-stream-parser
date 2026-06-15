@@ -43,6 +43,7 @@
       "@agentsy/shared": ["packages/shared/src/index.ts"],
       "@agentsy/shared/*": ["packages/shared/src/*"],
       "@agentsy/tokenomics": ["packages/tokenomics/src/index.ts"],
+      "@agentsy/tokenomics/*": ["packages/tokenomics/src/*"],
       "@agentsy/tools": ["packages/tools/src/index.ts"],
       "@agentsy/tools/*": ["packages/tools/src/*"],
       "@agentsy/types": ["packages/types/src/index.ts"]

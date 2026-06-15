@@ -1,0 +1,28 @@
+Looking at messages 28-35 — all tool calls, no user messages. This continues the type-fixing work from compartment 18-27 (same objective: complete @agentsy/agents package implementation). Extending that compartment to cover the additional tool-only work.
+
+<output>
+<compartments>
+<compartment start="18" end="35" title="Completed @agentsy/agents package implementation and type fixes" episode_type="feature,infra" importance="72">
+<p1>
+Continued Phase 2 implementation of @agentsy/agents package from plan/31-33. Iterative type-error resolution across loader types, skill selector, agent spec types, executor, and budget enforcer. Added yaml dependency for YAML spec loading. Fixed remaining type errors across specs/, loader/, runtime/, and skills/ subsystems after running check-types. Multiple edit passes on agent-loader.ts, budget.ts, executor.ts, selector.ts, and types.ts files. Installed dependencies repeatedly to resolve runtime.
+
+This compartment and compartment 1 together cover the full Phase 2 implementation arc for @agentsy/agents package.
+</p1>
+<p2>
+@agentsy/agents package: type errors resolved across loader, runtime, and skills subsystems. yaml dependency added for spec loading. Iterative fixes complete after multiple check-types cycles.
+</p2>
+<p3>
+@agentsy/agents package fully type-correct; Phase 2 implementation complete.
+</p3>
+<p4>packages/agents/; @agentsy/agents; yaml dependency; BudgetEnforcer; SequentialExecutor; ParallelExecutor</p4>
+</compartment>
+</compartments>
+<facts>
+</facts>
+<events>
+</events>
+<meta>
+<messages_processed>28-35</messages_processed>
+<unprocessed_from>36</unprocessed_from>
+</meta>
+</output>

@@ -36,8 +36,15 @@ export {
   type RuntimeContextReuse,
   type RuntimeReusableSegment
 } from './cache-aware-context.js';
-export type { RuntimeCheckpoint } from './checkpoint.js';
-export { checkpoint, clearCheckpoint, loadCheckpoint } from './checkpoint.js';
+export type { RoutingState, RuntimeCheckpoint } from './checkpoint.js';
+export {
+  checkpoint,
+  clearCheckpoint,
+  clearRoutingState,
+  loadCheckpoint,
+  loadRoutingState,
+  saveRoutingState
+} from './checkpoint.js';
 export type {
   GuardrailResult,
   InputGuardrail,

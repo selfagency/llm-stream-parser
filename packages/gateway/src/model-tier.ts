@@ -9,7 +9,12 @@
 
 export { type CircuitState, type ModelAvailability, ModelAvailabilityTracker } from './availability-tracker.js';
 export { LocalModelDetector } from './local-detector.js';
-export { getAllLogicalModels, getLogicalModel, getLogicalModelsByTier } from './logical-models.js';
+export {
+  getAllLogicalModels,
+  getLogicalModel,
+  getLogicalModelsByTier,
+  LogicalModelRegistry
+} from './logical-models.js';
 export {
   type CallByTierResult,
   createModelGatewayClient,
@@ -21,6 +26,7 @@ export { ModelRegistry, modelRegistry } from './model-registry.js';
 export { type ReplicaPhase, ReplicaRegistry } from './replica-registry.js';
 export { DefaultReplicaSelector, type ReplicaSelectionContext, type ReplicaSelector } from './replica-selector.js';
 export { computeReplicaScore, type ReplicaScoreInput, type ReplicaScoreWeights } from './score/replica-score.js';
+export { type RoutingDiagnostic, buildRoutingDiagnostic, formatRoutingDiagnostic } from './routing-diagnostics.js';
 export { DefaultTierAwareModelSelector } from './selector.js';
 export { type SpilloverResult, spillover } from './spillover.js';
 export type {

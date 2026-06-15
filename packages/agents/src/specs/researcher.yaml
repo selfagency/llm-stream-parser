@@ -1,0 +1,116 @@
+name: "researcher"
+role: "deep research and synthesis"
+description: "Planner-executor agent for conducting thorough web research with source citation tracking"
+
+# Planner-executor pattern (gpt-researcher)
+layers:
+  - role: "query-planner"
+    goal: "analyze research topic and decompose into sub-queries"
+    model: "claude-3-sonnet"
+    tokenBudget: 5000
+    skills:
+      - "research-planning"
+      - "decomposition"
+      - "goal-analysis"
+    execution: "sequential"
+
+  - role: "executor"
+    goal: "execute parallel web searches and source gathering"
+    model: "claude-3-opus"
+    tokenBudget: 15000
+    skills:
+      - "web-search"
+      - "source-scraping"
+      - "fact-checking"
+    execution: "parallel"
+
+  - role: "synthesizer"
+    goal: "synthesize sources into comprehensive report with citations"
+    model: "gpt-4"
+    tokenBudget: 10000
+    skills:
+      - "source-synthesis"
+      - "citation-tracking"
+      - "report-generation"
+    dependsOn:
+      - "executor"
+    execution: "sequential"
+
+# Agent-level constraints
+constraints:
+  - "Always verify claims with source extraction"
+  - "Track all citations accurately"
+  - "Check API rate limits before batch searches"
+  - "Synthesize from multiple sources for balanced perspective"
+  - "Identify and flag conflicting information"
+  - "Store all sources for future reference"
+  - "Follow academic citation standards"
+
+# Lifecycle hooks
+hooks:
+  preInit:
+    - "initialize-search-cache"
+    - "load-sources-database"
+  
+  preTurn:
+    - "load-previous-searches"
+    - "check-rate-limits"
+  
+  skillSelection:
+    - "learn-similar-patterns"
+    - "estimate-search-cost"
+  
+  preSkill:
+    - "validate-query-count"
+    - "check-rate-limits"
+    - "validate-api-quota"
+  
+  postSkill:
+    - "store-source-chunk"
+    - "track-search-costs"
+  
+  postTurn:
+    - "save-sources-to-memory"
+    - "record-citation-tracking"
+    - "update-telemetry"
+
+# Inline skill registry (OpenAgentsControl pattern)
+skillRegistry:
+  - name: "web-search"
+    cost: "3000-5000"
+    latency: "2-10"
+    confidence: 0.95
+    applicableTo:
+      - "research"
+      - "fact-checking"
+      - "data-gathering"
+
+  - name: "source-scraping"
+    cost: "2000-4000"
+    latency: "3-8"
+    confidence: 0.90
+    applicableTo:
+      - "research"
+      - "documentation"
+
+  - name: "source-synthesis"
+    cost: "4000-8000"
+    latency: "8-20"
+    confidence: 0.85
+    applicableTo:
+      - "research"
+      - "analysis"
+
+  - name: "citation-tracking"
+    cost: "2000-3000"
+    latency: "2-5"
+    confidence: 0.95
+    applicableTo:
+      - "research"
+      - "writing"
+
+# Global token budget for this agent
+tokenBudget: 30000
+
+# Execution model
+orchestrator: "parallel"

@@ -1,0 +1,3 @@
+This chunk (messages 316-318) is a pure continuation of the fallow audit from compartment [304-315] — the same work unit, same branch (`feature/phase-10-secret-injection`), same `.fallowrc.jsonc` tuning. The three messages are all configuration operations with no new source changes or architectural decisions. The `.fallowrc.jsonc` state is already visible in the read above.
+
+This does not warrant a separate compartment. The existing compartment [304-315] already covers the fallow audit work completely.

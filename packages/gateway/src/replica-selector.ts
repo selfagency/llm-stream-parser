@@ -53,10 +53,24 @@ export interface ReplicaSelector {
    * best candidate, or `undefined` if none meet the constraints.
    */
   selectReplica(replicas: ModelReplica[], context: ReplicaSelectionContext): ModelReplica | undefined;
+
+  /**
+   * Alias for `selectReplica` — selects the best replica for a
+   * given logical model from the provided candidate list.
+   */
+  selectReplicaForLogicalModel(replicas: ModelReplica[], context: ReplicaSelectionContext): ModelReplica | undefined;
 }
 
 export class DefaultReplicaSelector implements ReplicaSelector {
   selectReplica(replicas: ModelReplica[], context: ReplicaSelectionContext): ModelReplica | undefined {
+    return this.#scoreAndSelect(replicas, context);
+  }
+
+  selectReplicaForLogicalModel(replicas: ModelReplica[], context: ReplicaSelectionContext): ModelReplica | undefined {
+    return this.#scoreAndSelect(replicas, context);
+  }
+
+  #scoreAndSelect(replicas: ModelReplica[], context: ReplicaSelectionContext): ModelReplica | undefined {
     let candidates = replicas;
 
     // Apply local preference

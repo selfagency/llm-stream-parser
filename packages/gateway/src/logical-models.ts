@@ -113,3 +113,39 @@ export function getLogicalModelsByTier(tier: ModelTier): readonly LogicalModel[]
 export function getAllLogicalModels(): readonly LogicalModel[] {
   return LOGICAL_MODELS;
 }
+
+/**
+ * Registry for logical models, indexed by tier, use case, and alias.
+ *
+ * Wraps the standalone lookup functions in a class interface for
+ * dependency injection and testability.
+ */
+export class LogicalModelRegistry {
+  /**
+   * Look up a logical model by its canonical ID.
+   */
+  getById(id: string): LogicalModel | undefined {
+    return getLogicalModel(id);
+  }
+
+  /**
+   * Get all logical models for a given tier.
+   */
+  getByTier(tier: ModelTier): readonly LogicalModel[] {
+    return getLogicalModelsByTier(tier);
+  }
+
+  /**
+   * Get all logical models that support a given use case.
+   */
+  getByUseCase(useCase: string): LogicalModel[] {
+    return LOGICAL_MODELS.filter(m => m.useCases.includes(useCase as never));
+  }
+
+  /**
+   * Get all registered logical models.
+   */
+  getAll(): readonly LogicalModel[] {
+    return getAllLogicalModels();
+  }
+}

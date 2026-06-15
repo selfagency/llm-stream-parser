@@ -67,11 +67,15 @@ export async function interceptModelCall(
 
   // Execute the actual model call
   try {
+    const startTime = Date.now();
     const response = await call();
+    const latencyMs = Date.now() - startTime;
 
     // Fire PostModelCall
     await hooks.fire({
       actualTokens: response.usage?.totalTokens ?? estimatedTokens ?? 0,
+      costUsd: 0, // cost tracking is handled by tokenomics package
+      latencyMs,
       logicalModelId,
       providerId,
       replicaId,
@@ -83,8 +87,9 @@ export async function interceptModelCall(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    // Fire ModelCallFailed
+    // Fire ModelCallFailed — attempt 1 for first failure in the interceptor
     await hooks.fire({
+      attempt: 1,
       error: errorMessage,
       logicalModelId,
       providerId,
