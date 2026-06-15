@@ -212,7 +212,51 @@ describe('createAgentSession', () => {
       task: 'test task'
     });
 
-    await expect(session.resume()).rejects.toThrow('Cannot resume session from state ready');
+    // Start and complete execution first to reach DONE state
+    await session.start();
+    expect(session.state).toBe(AgentSessionState.DONE);
+
+    // Now resume should fail — cannot transition from DONE to RUNNING
+    await expect(session.resume()).rejects.toThrow('Cannot resume session from state done');
+  });
+
+  it('transitions to ERROR when executeAgent throws on resume', async () => {
+    // Use a deferred promise to keep start() in-flight so we can pause
+    const deferred: { resolve: ((value: unknown) => void) | undefined } = { resolve: undefined };
+    const startDeferred = new Promise(resolve => {
+      deferred.resolve = resolve as (value: unknown) => void;
+    });
+    mockExecuteAgent.mockReturnValue(startDeferred);
+
+    const session = createAgentSession({
+      spec: mockSpec,
+      task: 'test task'
+    });
+
+    // Start execution (won't complete until we resolve the deferred)
+    const startPromise = session.start();
+    expect(session.state).toBe(AgentSessionState.RUNNING);
+
+    // Pause while still running
+    session.pause();
+    expect(session.state).toBe(AgentSessionState.PAUSED);
+
+    // Resolve the start — it should complete without error since executeAgent succeeded
+    deferred.resolve({
+      output: 'partial result',
+      tokenUsage: { input: 50, output: 100 }
+    });
+    await startPromise;
+    expect(session.state).toBe(AgentSessionState.PAUSED);
+
+    // Now make executeAgent throw on resume
+    const resumeError = new Error('Resume failed');
+    mockExecuteAgent.mockRejectedValue(resumeError);
+
+    await expect(session.resume()).rejects.toThrow('Resume failed');
+    expect(session.state).toBe(AgentSessionState.ERROR);
+    expect(session.context.state.errors).toHaveLength(1);
+    expect(session.context.state.errors[0]).toBe(resumeError);
   });
 
   it('transitions to DONE after successful execution', async () => {
