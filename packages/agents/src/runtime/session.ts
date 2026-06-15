@@ -1,24 +1,24 @@
 import type { AgentSpec, LoadedAgent } from '../specs/types.js';
-import { AgentStateMachine, AgentSessionState } from './state-machine.js';
 import { executeAgent } from './executor.js';
+import { AgentSessionState, AgentStateMachine } from './state-machine.js';
 import type { AgentExecutionContext, ExecuteOptions, ExecutionResult } from './types.js';
 
 export interface AgentSessionOptions {
+  options?: ExecuteOptions;
   spec: AgentSpec;
   task: string;
-  options?: ExecuteOptions;
 }
 
 export interface AgentSessionHandle {
-  readonly state: AgentSessionState;
   readonly agent: LoadedAgent;
   readonly context: AgentExecutionContext;
-
-  start(): Promise<ExecutionResult>;
-  pause(): void;
-  resume(): Promise<ExecutionResult>;
   getResult(): ExecutionResult | null;
   onStateChange(listener: (from: AgentSessionState, to: AgentSessionState) => void): void;
+  pause(): void;
+  resume(): Promise<ExecutionResult>;
+
+  start(): Promise<ExecutionResult>;
+  readonly state: AgentSessionState;
 }
 
 /**
@@ -26,6 +26,8 @@ export interface AgentSessionHandle {
  */
 export function createAgentSession(options: AgentSessionOptions): AgentSessionHandle {
   const stateMachine = new AgentStateMachine();
+  // Initialize state to READY
+  stateMachine.transition(AgentSessionState.READY);
   let result: ExecutionResult | null = null;
 
   const agent: LoadedAgent = {
@@ -72,17 +74,21 @@ export function createAgentSession(options: AgentSessionOptions): AgentSessionHa
 
     async start(): Promise<ExecutionResult> {
       if (!stateMachine.canTransition(AgentSessionState.RUNNING)) {
-        throw new Error(`Cannot start session from state ${stateMachine.state}. ` + 'Expected READY state.');
+        throw new Error(`Cannot start session from state ${stateMachine.state}. Expected READY state.`);
       }
 
       stateMachine.transition(AgentSessionState.RUNNING);
 
       try {
         result = await executeAgent(context, options.options);
-        stateMachine.transition(AgentSessionState.DONE);
+        if (stateMachine.state === AgentSessionState.RUNNING) {
+          stateMachine.transition(AgentSessionState.DONE);
+        }
       } catch (error) {
         context.state.errors.push(error instanceof Error ? error : new Error(String(error)));
-        stateMachine.transition(AgentSessionState.ERROR);
+        if (stateMachine.state === AgentSessionState.RUNNING) {
+          stateMachine.transition(AgentSessionState.ERROR);
+        }
         throw error;
       }
 
@@ -105,10 +111,14 @@ export function createAgentSession(options: AgentSessionOptions): AgentSessionHa
 
       try {
         result = await executeAgent(context, options.options);
-        stateMachine.transition(AgentSessionState.DONE);
+        if (stateMachine.state === AgentSessionState.RUNNING) {
+          stateMachine.transition(AgentSessionState.DONE);
+        }
       } catch (error) {
         context.state.errors.push(error instanceof Error ? error : new Error(String(error)));
-        stateMachine.transition(AgentSessionState.ERROR);
+        if (stateMachine.state === AgentSessionState.RUNNING) {
+          stateMachine.transition(AgentSessionState.ERROR);
+        }
         throw error;
       }
 
