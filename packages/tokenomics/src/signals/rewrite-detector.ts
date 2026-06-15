@@ -106,8 +106,7 @@ export class RewriteDetector {
   #gc(now: number): void {
     let i = 0;
     while (i < this.#pendingWrites.length) {
-      const write = this.#pendingWrites[i];
-      if (write !== undefined && now - write.timestampMs > REWRITE_WINDOW_MS) {
+      if (now - this.#pendingWrites[i]!.timestampMs > REWRITE_WINDOW_MS) {
         this.#pendingWrites.splice(i, 1);
       } else {
         i++;

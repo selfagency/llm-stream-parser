@@ -40,19 +40,8 @@ async function discoverAgents(): Promise<AgentInfo[]> {
   return agents;
 }
 
-const YAML_FIELD_PATTERNS: Record<string, RegExp> = {
-  name: /^name:\s*(.+)$/m,
-  role: /^role:\s*(.+)$/m,
-  orchestration: /^orchestration:\s*(.+)$/m,
-  budget: /^budget:\s*(.+)$/m
-};
-
 function extractField(yaml: string, field: string): string | undefined {
-  const pattern = YAML_FIELD_PATTERNS[field];
-  if (pattern === undefined) {
-    return;
-  }
-  const match = yaml.match(pattern);
+  const match = yaml.match(new RegExp(`^${field}:\\s*(.+)$`, 'm'));
   return match?.[1]?.replace(/^["']|["']$/g, '').trim();
 }
 
@@ -63,21 +52,17 @@ function formatAgentTable(agents: AgentInfo[]): string {
   );
   return [
     '  NAME             ROLE                       BUDGET  ORCHESTRATOR  STRUCTURE',
-    `  ${'-'.repeat(90)}`,
+    '  ' + '-'.repeat(90),
     ...rows
   ].join('\n');
 }
 
 function writeOut(io: CliIO, msg: string): void {
-  if (io.stdout) {
-    io.stdout(msg);
-  }
+  if (io.stdout) io.stdout(msg);
 }
 
 function writeErr(io: CliIO, msg: string): void {
-  if (io.stderr) {
-    io.stderr(msg);
-  }
+  if (io.stderr) io.stderr(msg);
 }
 
 export async function runAgentCommand(args: readonly string[], io: CliIO): Promise<number> {
@@ -119,7 +104,7 @@ export async function runAgentCommand(args: readonly string[], io: CliIO): Promi
     case 'run': {
       const agentName = args[1];
       const task = args.slice(2).join(' ');
-      if (!(agentName && task)) {
+      if (!agentName || !task) {
         writeErr(io, 'Usage: agentsy agent run <name> <task>\n');
         return 1;
       }
@@ -143,7 +128,7 @@ export async function runAgentCommand(args: readonly string[], io: CliIO): Promi
       writeOut(io, `Agent: ${agent.name}\n`);
       writeOut(io, `Role: ${agent.role}\n`);
       writeOut(io, `\nDescription:\n  ${agent.description}\n`);
-      writeOut(io, '\nArchitecture:\n');
+      writeOut(io, `\nArchitecture:\n`);
       writeOut(io, `  Orchestrator: ${agent.orchestrator}\n`);
       writeOut(io, `  Token Budget: ${agent.tokenBudget} tokens/session\n`);
       writeOut(io, `  Layers:       ${agent.layers}\n`);

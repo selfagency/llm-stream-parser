@@ -202,7 +202,7 @@ export class SemanticCacheMiddleware {
   /**
    * Store a response in the cache directly (bypassing the intercept flow).
    */
-  store(options: CreateSemanticCacheEntryOptions): SemanticCacheEntry {
+  async store(options: CreateSemanticCacheEntryOptions): Promise<SemanticCacheEntry> {
     const hash = this.#computeHash(options.embedding);
     const entry: SemanticCacheEntry = {
       queryEmbeddingHash: hash,

@@ -14,10 +14,10 @@ function identifyDissentingOpinions(
   opinions: FirstOpinion[],
   rankings: Array<{ member: CouncilMember; avgScore: number }>
 ): Array<{ member: CouncilMember; opinion: string }> {
-  if (rankings.length < 2) { return []; }
+  if (rankings.length < 2) return [];
 
-  const lowest = rankings.at(-1);
-  if (!lowest) { return []; }
+  const lowest = rankings[rankings.length - 1];
+  if (!lowest) return [];
 
   const dissenting = opinions.find(
     o => o.member.model === lowest.member.model && o.member.provider === lowest.member.provider

@@ -139,13 +139,13 @@ export async function buildTransparencyReport(
   gitAiStats?: GitAiPeriodStats
 ): Promise<TransparencyReport> {
   // Compute session duration from ledger entries
-  const entries = await ledger.query({ since: roi.period.from, until: roi.period.to });
+  const entries = ledger.query({ since: roi.period.from, until: roi.period.to });
   const totalDurationMs = entries.reduce((sum, e) => sum + e.durationMs, 0);
   const totalDurationHours = totalDurationMs / (1000 * 60 * 60);
   const avgTokensPerSession =
     entries.length > 0 ? entries.reduce((sum, e) => sum + e.spend.totalTokens, 0) / entries.length : 0;
 
-  const _totalInputTokens = entries.reduce((sum, e) => sum + e.spend.totalTokens, 0);
+  const totalInputTokens = entries.reduce((sum, e) => sum + e.spend.totalTokens, 0);
   const avgCacheEfficiency = 0; // requires per-session cache tracking
 
   return {

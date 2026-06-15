@@ -90,7 +90,7 @@ describe('detectAbandonment', () => {
   it('emits session_abandonment when no artifacts', () => {
     const event = detectAbandonment('sess_1', 60_000, [], []);
     expect(event).not.toBeUndefined();
-    expect(event?.kind).toBe('session_abandonment');
+    expect(event!.kind).toBe('session_abandonment');
   });
 
   it('returns undefined when session has artifacts', () => {

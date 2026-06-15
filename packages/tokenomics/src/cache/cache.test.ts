@@ -116,7 +116,7 @@ describe('stripCacheAnnotations', () => {
     const result = stripCacheAnnotations(messages);
 
     expect((result[0] as Record<string, unknown>).cache_control).toBeUndefined();
-    const content = result[0]?.content as Record<string, unknown>[];
+    const content = result[0]?.content as Array<Record<string, unknown>>;
     expect(content[0]?.cache_control).toBeUndefined();
   });
 
@@ -170,7 +170,6 @@ describe('SemanticCacheMiddleware', () => {
   it('returns cached response on similar query', async () => {
     const cache = new SemanticCacheMiddleware({ threshold: 0.9 });
 
-    // biome-ignore lint/suspicious/useAwait: EmbeddingFunction requires async contract
     const embed = vi.fn(async (input: string) => {
       if (input === 'What is AI?') {
         return [1, 0, 0];

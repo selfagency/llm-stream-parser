@@ -9,7 +9,7 @@ interface ExecuteModelOptions {
 /**
  * Collect first opinions from all council members in parallel
  */
-export function collectFirstOpinions(
+export async function collectFirstOpinions(
   council: CouncilDefinition,
   query: string,
   options: {

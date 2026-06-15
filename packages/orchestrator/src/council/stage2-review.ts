@@ -12,7 +12,7 @@ interface ExecuteModelOptions {
 function buildReviewPrompt(
   reviewer: CouncilDefinition['members'][number],
   anonymizedOpinions: Array<{ label: string; content: string }>,
-  _targetOpinion: FirstOpinion
+  targetOpinion: FirstOpinion
 ): string {
   const responses = anonymizedOpinions
     .map(o => `<response label="${o.label}">\n${o.content}\n</response>`)
@@ -35,23 +35,11 @@ Reasoning: <your detailed reasoning>`;
 }
 
 /**
- * Parse a score from review text for a known field.
+ * Parse a score from review text
  */
-const SCORE_PATTERNS: Record<string, RegExp> = {
-  Correctness: /Correctness:\s*(\d+)\/10/i,
-  Clarity: /Clarity:\s*(\d+)\/10/i,
-  Relevance: /Relevance:\s*(\d+)\/10/i,
-  Thoroughness: /Thoroughness:\s*(\d+)\/10/i,
-  Feasibility: /Feasibility:\s*(\d+)\/10/i
-};
-
 function parseScore(text: string, field: string): number {
-  const pattern = SCORE_PATTERNS[field];
-  if (pattern === undefined) {
-    return 5;
-  }
-  const match = text.match(pattern);
-  return match ? Number.parseInt(match[1] ?? '5', 10) : 5;
+  const match = text.match(new RegExp(`${field}:\\s*(\\d+)/10`, 'i'));
+  return match ? Number.parseInt(match[1]!, 10) : 5;
 }
 
 /**
@@ -81,9 +69,7 @@ export async function collectCrossReviews(
 
   for (const reviewer of council.members) {
     for (const opinion of opinions) {
-      if (opinion.member.model === reviewer.model) {
-        continue;
-      }
+      if (opinion.member.model === reviewer.model) continue;
 
       const anonymizedOpinions = opinions.map((o, i) => ({
         label: `Response ${i + 1}`,
