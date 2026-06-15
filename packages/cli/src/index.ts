@@ -250,6 +250,11 @@ async function handleGuardrailsCommand(rest: readonly string[], io: CliIO): Prom
   return runGuardrailsCommand(rest, io);
 }
 
+async function handleSecretsCommand(rest: readonly string[], io: CliIO): Promise<number> {
+  const { runSecretsCommand } = await import('./commands/secrets.js');
+  return runSecretsCommand(rest, io);
+}
+
 async function handleConfigCommand(rest: readonly string[], io: CliIO): Promise<number> {
   const { handleConfigCommand: cmd } = await import('./commands/config.js');
   return cmd(rest, io);
@@ -298,7 +303,7 @@ async function handleSourcesCommand(rest: readonly string[], io: CliIO): Promise
 function handleUnknownCommand(command: string | undefined, io: CliIO): number {
   (io.stderr ?? DEFAULT_IO.stderr)(`Unknown command: ${command ?? '(none)'}`);
   (io.stderr ?? DEFAULT_IO.stderr)(
-    'Supported commands: tui (default), chat, compress, compress-memory, memory-sync-dev, setup, doctor, sandbox-diagnostics, content-address-stats, lb, guardrails, config, settings, mcp, connectors, index, search, sources'
+    'Supported commands: tui (default), chat, compress, compress-memory, memory-sync-dev, setup, doctor, sandbox-diagnostics, content-address-stats, lb, guardrails, config, settings, mcp, connectors, index, search, sources, secrets'
   );
   (io.stderr ?? DEFAULT_IO.stderr)('Chat flags: --agent <name> --plan --mock --model <id> --provider <id>');
   return 1;
@@ -364,6 +369,15 @@ const COMMANDS: Record<string, CommandEntry> = {
   memory: {
     handler: handleMemoryCommand,
     subcommands: { search: handleMemoryCommand, stats: handleMemoryCommand, lint: handleMemoryCommand }
+  },
+  secrets: {
+    handler: handleSecretsCommand,
+    subcommands: {
+      init: handleSecretsCommand,
+      list: handleSecretsCommand,
+      lookup: handleSecretsCommand,
+      sync: handleSecretsCommand
+    }
   },
   index: { handler: handleIndexCommand },
   search: { handler: handleSearchCommand },

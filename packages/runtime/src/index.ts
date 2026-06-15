@@ -67,6 +67,8 @@ export type {
   PlanAgentDefinition,
   PlanResult,
   PlanTask,
+  PostToolCallEvent,
+  PreToolCallEvent,
   RuntimeHookEvent,
   SessionOptions,
   SkillActivator,

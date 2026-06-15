@@ -29,7 +29,11 @@
   // Explicit entry points for packages when package.json exports are insufficient.
   "entry": [
     "packages/runtime/src/approval/index.ts",
-    "packages/cli/src/commands/guardrails.ts"
+    "packages/cli/src/commands/guardrails.ts",
+    // Secrets subpath barrel files — entry points for tsup subpath exports
+    "packages/secrets/src/config/index.ts",
+    "packages/secrets/src/injection/index.ts",
+    "packages/secrets/src/provider/index.ts"
   ],
   // Preserve class members that are used via runtime reflection or host integrations.
   "usedClassMembers": [],
@@ -60,7 +64,23 @@
       // Approval handler — safety-critical logic that trades complexity for correctness
       "packages/runtime/src/approval/approval-hook.ts",
       // Diff viewer extraction already done in earlier rounds; remaining complexity is structural
-      "packages/renderers/src/ink/components/diff-viewer/index.tsx"
+      "packages/renderers/src/ink/components/diff-viewer/index.tsx",
+      // CLI-wrapper provider — moderate complexity inherent in CLI parsing patterns
+      "packages/secrets/src/provider/local/1password.ts",
+      "packages/secrets/src/provider/local/apple-pm.ts",
+      "packages/secrets/src/provider/local/bitwarden.ts",
+      "packages/secrets/src/provider/local/dashlane.ts",
+      "packages/secrets/src/provider/local/lastpass.ts",
+      "packages/secrets/src/provider/cloud/doppler.ts",
+      "packages/secrets/src/provider/cloud/infisical.ts",
+      "packages/secrets/src/provider/cloud/vault.ts",
+      "packages/secrets/src/provider/cloud/aws-sm.ts",
+      "packages/secrets/src/provider/cloud/gcp-sm.ts",
+      "packages/secrets/src/provider/cloud/azure-kv.ts",
+      // Shared CLI executor — wraps child_process.execSync with error recovery
+      "packages/secrets/src/provider/local/exec.ts",
+      // Token resolver — structurally moderate complexity; CRAP high without coverage mapping
+      "packages/secrets/src/injection/resolver.ts"
     ]
   },
   // Prevent gating on current baseline during remediation; switch to stronger gate after cleanup.
@@ -70,6 +90,7 @@
   // Common workspace aliases and packages we intentionally keep as dev/build
   // references across packages (monorepo layout). These are safe to ignore in
   // fallow's unused-dependencies check.
+  // Cloud SDK optional peer deps — used via dynamic import() at runtime
   "ignoreDependencies": [
     "@agentsy/types",
     "@agentsy/core",
@@ -91,7 +112,12 @@
     "zod",
     "@agentsy/tokenomics",
     "better-sqlite3",
-    "@libsql/client"
+    "@libsql/client",
+    // Cloud SDK optional peer deps — dynamically imported, never direct deps
+    "@aws-sdk/client-secrets-manager",
+    "@azure/identity",
+    "@azure/keyvault-secrets",
+    "@google-cloud/secret-manager"
   ],
   // Intentional duplicate exports across namespace-barrel module boundaries
   "ignoreExports": [

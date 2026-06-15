@@ -642,6 +642,12 @@ importers:
       '@agentsy/types':
         specifier: workspace:*
         version: link:../types
+      yaml:
+        specifier: ^2.7.1
+        version: 2.9.0
+      zod:
+        specifier: ^3.24.5
+        version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: ^25.9.0
