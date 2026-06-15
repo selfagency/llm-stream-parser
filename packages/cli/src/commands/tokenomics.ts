@@ -284,7 +284,7 @@ function formatAttributionReport(stats: {
 // agentsy tokenomics report
 // ---------------------------------------------------------------------------
 
-export async function handleReport(argv: readonly string[], opts: TokenomicsCliOptions): Promise<number> {
+async function handleReport(argv: readonly string[], opts: TokenomicsCliOptions): Promise<number> {
   const hasEthical = argv.includes('--ethical');
   const hasAttribution = argv.includes('--attribution');
   const sinceFlag = argv.find(a => /^\d+d$/.test(a) || /^\d{4}-\d{2}-\d{2}/.test(a));
@@ -399,7 +399,7 @@ async function buildStandardReport(since: Date, opts: TokenomicsCliOptions): Pro
 // agentsy tokenomics patch review
 // ---------------------------------------------------------------------------
 
-export async function handlePatchReview(_argv: readonly string[], opts: TokenomicsCliOptions): Promise<number> {
+async function handlePatchReview(_argv: readonly string[], opts: TokenomicsCliOptions): Promise<number> {
   try {
     const { recognizePatterns, createSqliteLedgerStore } = await import('@agentsy/tokenomics');
 
@@ -447,7 +447,7 @@ export async function handlePatchReview(_argv: readonly string[], opts: Tokenomi
 // agentsy tokenomics patch list
 // ---------------------------------------------------------------------------
 
-export async function handlePatchList(_argv: readonly string[], opts: TokenomicsCliOptions): Promise<number> {
+async function handlePatchList(_argv: readonly string[], opts: TokenomicsCliOptions): Promise<number> {
   try {
     const { recognizePatterns, createSqliteLedgerStore } = await import('@agentsy/tokenomics');
 
@@ -488,14 +488,65 @@ export async function handlePatchList(_argv: readonly string[], opts: Tokenomics
 // agentsy tokenomics survival
 // ---------------------------------------------------------------------------
 
-export async function handleSurvival(argv: readonly string[], opts: TokenomicsCliOptions): Promise<number> {
+/**
+ * Extract commit SHAs and files from session artifacts
+ */
+function extractCommitShasAndFiles(entry: import('@agentsy/tokenomics').SessionLedgerEntry): {
+  commitShas: string[];
+  files: string[];
+} {
+  const commitShas: string[] = [];
+  const files: string[] = [];
+  if ('artifacts' in entry) {
+    const a = entry.artifacts as Record<string, unknown>;
+    if (Array.isArray(a.commits)) {
+      for (const c of a.commits) {
+        if (typeof c === 'object' && c !== null && 'sha' in c) {
+          commitShas.push(String((c as Record<string, unknown>).sha));
+        }
+      }
+    }
+    if (Array.isArray(a.files)) {
+      for (const f of a.files) {
+        files.push(String(f));
+      }
+    }
+  }
+  return { commitShas, files };
+}
+
+/**
+ * Compute survival rate for a single session, returning null on failure
+ */
+async function computeSurvivalForEntry(
+  entry: import('@agentsy/tokenomics').SessionLedgerEntry,
+  repoRoot: string,
+  computeSurvivalRate: (
+    sessionId: string,
+    commitShas: string[],
+    files: string[],
+    repoRoot: string
+  ) => Promise<import('@agentsy/tokenomics').SurvivalResult>
+): Promise<import('@agentsy/tokenomics').SurvivalResult | null> {
+  const { commitShas, files } = extractCommitShasAndFiles(entry);
+  if (commitShas.length === 0 || files.length === 0) {
+    return null;
+  }
+  try {
+    return await computeSurvivalRate(entry.sessionId, commitShas, files, repoRoot);
+  } catch {
+    return null;
+  }
+}
+
+async function handleSurvival(argv: readonly string[], opts: TokenomicsCliOptions): Promise<number> {
   const _recompute = argv.includes('--recompute');
 
   try {
     const { computeSurvivalRate, createSqliteLedgerStore } = await import('@agentsy/tokenomics');
     const { execSync } = await import('node:child_process');
 
-    const ledger = createSqliteLedgerStore(':memory:');
+    const ledger = await createSqliteLedgerStore(':memory:');
     const entries = await ledger.query({});
 
     if (entries.length === 0) {
@@ -505,37 +556,9 @@ export async function handleSurvival(argv: readonly string[], opts: TokenomicsCl
 
     const repoRoot = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8', stdio: 'pipe' }).trim();
 
-    const results = entries
-      .map((entry: import('@agentsy/tokenomics').SessionLedgerEntry) => {
-        const commitShas: string[] = [];
-        const files: string[] = [];
-        if ('artifacts' in entry) {
-          const a = entry.artifacts as Record<string, unknown>;
-          if (Array.isArray(a.commits)) {
-            for (const c of a.commits) {
-              if (typeof c === 'object' && c !== null && 'sha' in c) {
-                commitShas.push(String((c as Record<string, unknown>).sha));
-              }
-            }
-          }
-          if (Array.isArray(a.files)) {
-            for (const f of a.files) {
-              files.push(String(f));
-            }
-          }
-        }
-
-        if (commitShas.length === 0 || files.length === 0) {
-          return null;
-        }
-
-        try {
-          return computeSurvivalRate(entry.sessionId, commitShas, files, repoRoot);
-        } catch {
-          return null;
-        }
-      })
-      .filter(Boolean);
+    const results = (
+      await Promise.all(entries.map(entry => computeSurvivalForEntry(entry, repoRoot, computeSurvivalRate)))
+    ).filter(Boolean);
 
     if (opts.json) {
       opts.stdout(JSON.stringify({ survivalResults: results }, null, 2));
@@ -572,7 +595,7 @@ export async function handleSurvival(argv: readonly string[], opts: TokenomicsCl
 // agentsy tokenomics adapters list
 // ---------------------------------------------------------------------------
 
-export function handleAdaptersList(_argv: readonly string[], opts: TokenomicsCliOptions): number {
+function handleAdaptersList(_argv: readonly string[], opts: TokenomicsCliOptions): number {
   const adapterInfo: Array<{ name: string; configured: boolean; env: string }> = [
     { name: 'Plausible', configured: false, env: 'PLAUSIBLE_TOKEN' },
     { name: 'PostHog', configured: false, env: 'POSTHOG_API_KEY' },
@@ -620,7 +643,7 @@ export function handleAdaptersList(_argv: readonly string[], opts: TokenomicsCli
 // agentsy tokenomics adapters add <name>
 // ---------------------------------------------------------------------------
 
-export function handleAdaptersAdd(argv: readonly string[], opts: TokenomicsCliOptions): number {
+function handleAdaptersAdd(argv: readonly string[], opts: TokenomicsCliOptions): number {
   const name = argv[0];
   if (name === undefined || name.length === 0) {
     opts.stderr('Usage: agentsy tokenomics adapters add <name>');

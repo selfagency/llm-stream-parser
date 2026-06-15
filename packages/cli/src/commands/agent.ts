@@ -1,5 +1,5 @@
-import { readFile, readdir } from 'node:fs/promises';
-import { resolve, dirname } from 'node:path';
+import { readdir, readFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { CliIO } from '../index.js';
 
@@ -7,13 +7,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const AGENTS_DIR = resolve(__dirname, '../../../../agents/src/specs');
 
 interface AgentInfo {
-  name: string;
-  role: string;
   description: string;
-  tokenBudget: number;
-  orchestrator: string;
   layers: number;
+  name: string;
+  orchestrator: string;
+  role: string;
   skills: number;
+  tokenBudget: number;
 }
 
 async function discoverAgents(): Promise<AgentInfo[]> {
@@ -48,6 +48,9 @@ const YAML_FIELD_PATTERNS: Record<string, RegExp> = {
 };
 
 function extractField(yaml: string, field: string): string | undefined {
+  if (!Object.hasOwn(YAML_FIELD_PATTERNS, field)) {
+    return;
+  }
   const pattern = YAML_FIELD_PATTERNS[field];
   if (pattern === undefined) {
     return;
@@ -80,6 +83,16 @@ function writeErr(io: CliIO, msg: string): void {
   }
 }
 
+function findAgentOrExit(agents: AgentInfo[], name: string, io: CliIO, usage: string): AgentInfo | null {
+  const agent = agents.find(a => a.name === name);
+  if (!agent) {
+    writeErr(io, `Agent "${name}" not found.\n`);
+    writeErr(io, `Usage: agentsy agent ${usage}\n`);
+    return null;
+  }
+  return agent;
+}
+
 export async function runAgentCommand(args: readonly string[], io: CliIO): Promise<number> {
   const subcommand = args[0] ?? 'list';
 
@@ -101,9 +114,8 @@ export async function runAgentCommand(args: readonly string[], io: CliIO): Promi
         return 1;
       }
       const agents = await discoverAgents();
-      const agent = agents.find(a => a.name === agentName);
+      const agent = findAgentOrExit(agents, agentName, io, 'show <name>');
       if (!agent) {
-        writeErr(io, `Agent "${agentName}" not found.\n`);
         return 1;
       }
       writeOut(io, `Name:         ${agent.name}\n`);
@@ -135,9 +147,8 @@ export async function runAgentCommand(args: readonly string[], io: CliIO): Promi
         return 1;
       }
       const agents = await discoverAgents();
-      const agent = agents.find(a => a.name === agentName);
+      const agent = findAgentOrExit(agents, agentName, io, 'explain <name>');
       if (!agent) {
-        writeErr(io, `Agent "${agentName}" not found.\n`);
         return 1;
       }
       writeOut(io, `Agent: ${agent.name}\n`);

@@ -1,12 +1,7 @@
-import type {
-  CouncilDefinition,
-  CouncilResult,
-  CouncilEvent,
-  FirstOpinion,
-} from './types.js';
 import { collectFirstOpinions } from './stage1-opinions.js';
-import { collectCrossReviews, calculateRankings } from './stage2-review.js';
+import { calculateRankings, collectCrossReviews } from './stage2-review.js';
 import { synthesizeFinalAnswer } from './stage3-chairman.js';
+import type { CouncilDefinition, CouncilEvent, CouncilResult, FirstOpinion } from './types.js';
 
 export interface CouncilExecutorOptions {
   execute: (opts: {
@@ -27,6 +22,65 @@ function calculateTotalUsage(opinions: FirstOpinion[]): { input: number; output:
   );
 }
 
+function emitCouncilStarted(council: CouncilDefinition, options: CouncilExecutorOptions): void {
+  options.onEvent?.({
+    type: 'council_started',
+    councilName: council.name,
+    memberCount: council.members.length
+  });
+}
+
+function emitStage1Started(council: CouncilDefinition, options: CouncilExecutorOptions): void {
+  options.onEvent?.({ type: 'stage1_started', memberCount: council.members.length });
+}
+
+function emitOpinionComplete(
+  options: CouncilExecutorOptions,
+  member: CouncilDefinition['members'][number],
+  tokenUsage: { input: number; output: number }
+): void {
+  options.onEvent?.({
+    type: 'opinion_complete',
+    member,
+    tokenUsage
+  });
+}
+
+function emitStage1Complete(opinionCount: number, options: CouncilExecutorOptions): void {
+  options.onEvent?.({ type: 'stage1_complete', opinionCount });
+}
+
+function emitStage2Started(reviewCount: number, options: CouncilExecutorOptions): void {
+  options.onEvent?.({ type: 'stage2_started', reviewCount });
+}
+
+function emitReviewComplete(
+  options: CouncilExecutorOptions,
+  reviewer: CouncilDefinition['members'][number],
+  target: CouncilDefinition['members'][number]
+): void {
+  options.onEvent?.({
+    type: 'review_complete',
+    reviewer,
+    target
+  });
+}
+
+function emitStage2Complete(
+  rankings: Array<{ member: CouncilDefinition['members'][number]; avgScore: number }>,
+  options: CouncilExecutorOptions
+): void {
+  options.onEvent?.({ type: 'stage2_complete', rankings });
+}
+
+function emitStage3Started(council: CouncilDefinition, options: CouncilExecutorOptions): void {
+  options.onEvent?.({ type: 'stage3_started', chairman: council.chairman });
+}
+
+function emitCouncilComplete(result: CouncilResult, options: CouncilExecutorOptions): void {
+  options.onEvent?.({ type: 'council_complete', result });
+}
+
 /**
  * Execute a full council deliberation (3 stages)
  */
@@ -37,38 +91,26 @@ export async function executeCouncil(
 ): Promise<CouncilResult> {
   const start = Date.now();
 
-  options.onEvent?.({
-    type: 'council_started',
-    councilName: council.name,
-    memberCount: council.members.length
-  });
+  emitCouncilStarted(council, options);
 
   // Stage 1: Collect first opinions
-  options.onEvent?.({ type: 'stage1_started', memberCount: council.members.length });
+  emitStage1Started(council, options);
   const opinions = await collectFirstOpinions(council, query, options, event => {
-    options.onEvent?.({
-      type: 'opinion_complete',
-      member: event.member,
-      tokenUsage: event.tokenUsage
-    });
+    emitOpinionComplete(options, event.member, event.tokenUsage);
   });
-  options.onEvent?.({ type: 'stage1_complete', opinionCount: opinions.length });
+  emitStage1Complete(opinions.length, options);
 
   // Stage 2: Cross-review
   const reviewCount = opinions.length * (opinions.length - 1);
-  options.onEvent?.({ type: 'stage2_started', reviewCount });
+  emitStage2Started(reviewCount, options);
   const reviews = await collectCrossReviews(council, opinions, options, event => {
-    options.onEvent?.({
-      type: 'review_complete',
-      reviewer: event.reviewer,
-      target: event.target
-    });
+    emitReviewComplete(options, event.reviewer, event.target);
   });
   const rankings = calculateRankings(reviews);
-  options.onEvent?.({ type: 'stage2_complete', rankings });
+  emitStage2Complete(rankings, options);
 
   // Stage 3: Chairman synthesis
-  options.onEvent?.({ type: 'stage3_started', chairman: council.chairman });
+  emitStage3Started(council, options);
   const { finalAnswer, dissentingOpinions } = await synthesizeFinalAnswer(council, opinions, reviews, options);
   const result: CouncilResult = {
     finalAnswer,
@@ -80,7 +122,7 @@ export async function executeCouncil(
     totalDurationMs: Date.now() - start,
     chairman: council.chairman
   };
-  options.onEvent?.({ type: 'council_complete', result });
+  emitCouncilComplete(result, options);
 
   return result;
 }
