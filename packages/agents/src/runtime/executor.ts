@@ -165,7 +165,7 @@ async function executeLayer(layer: AgentLayer, context: AgentExecutionContext, o
   context.state.currentLayer = layer.role;
   await executeAgentHooks('layerTransition', context);
 
-  for (const skillName of layer.skills) {
+  for (const _skillName of layer.skills) {
     await executeAgentHooks('preSkill', context);
     // Implementation: execute skill
     await executeAgentHooks('postSkill', context);

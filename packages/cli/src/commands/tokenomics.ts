@@ -91,6 +91,10 @@ function formatPeriodLabel(since: Date): string {
   return `Since ${since.toISOString().slice(0, 10)}`;
 }
 
+function formatPct(rate: number): string {
+  return `${(rate * 100).toFixed(0)}%`;
+}
+
 // =============================================================================
 // Report formatters
 // =============================================================================
@@ -221,7 +225,7 @@ function formatEthicalReport(report: {
     `     Green sessions:  ${report.quality.greenSessionCount} \u2705`,
     `     Yellow sessions: ${report.quality.yellowSessionCount} \u26A0\uFE0F`,
     `     Red sessions:    ${report.quality.redSessionCount} \uD83D\uDD25`,
-    `     30d survival:    ${report.quality.survivalRate30d === null ? 'N/A' : `${(report.quality.survivalRate30d * 100).toFixed(0)}%`}`,
+    `     30d survival:    ${report.quality.survivalRate30d === null ? 'N/A' : formatPct(report.quality.survivalRate30d)}`,
     '',
     '  \uD83D\uDD2C AI TOOL EFFECTIVENESS',
     `     Best survival:    ${report.tools.bestToolBySurvival}`,

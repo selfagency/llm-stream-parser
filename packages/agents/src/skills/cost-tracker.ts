@@ -22,7 +22,7 @@ export interface SkillCost {
  * Phase 4: Skill Bindings
  */
 export class SkillCostTracker {
-  private costs: Map<string, SkillCost> = new Map();
+  private readonly costs: Map<string, SkillCost> = new Map();
 
   /**
    * Record skill execution cost

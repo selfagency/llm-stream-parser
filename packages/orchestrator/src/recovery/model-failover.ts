@@ -222,7 +222,7 @@ export function createFailoverChain(
   const isOptions = circuitBreakerSetOrOptions !== undefined && !('isOpen' in circuitBreakerSetOrOptions);
   const circuitBreakerSet: CircuitBreakerSet | undefined = isOptions
     ? (circuitBreakerSetOrOptions as CreateFailoverChainOptions).circuitBreakerSet
-    : (circuitBreakerSetOrOptions as CircuitBreakerSet | undefined);
+    : circuitBreakerSetOrOptions;
   const resolvedRateLimitMap: Map<string, RateLimitStatus> | undefined = isOptions
     ? (circuitBreakerSetOrOptions as CreateFailoverChainOptions).rateLimitMap
     : rateLimitMap;

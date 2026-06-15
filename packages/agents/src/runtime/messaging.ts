@@ -38,7 +38,7 @@ export interface MessageHandler {
  * Simple message bus for agent communication
  */
 export class MessageBus {
-  private handlers = new Map<string, MessageHandler[]>();
+  private readonly handlers = new Map<string, MessageHandler[]>();
   private history: AgentMessage[] = [];
   private readonly maxHistory: number;
 

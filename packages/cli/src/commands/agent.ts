@@ -55,7 +55,7 @@ function extractField(yaml: string, field: string): string | undefined {
   if (pattern === undefined) {
     return;
   }
-  const match = yaml.match(pattern);
+  const match = YAML_FIELD_PATTERNS[field]?.exec(yaml);
   return match?.[1]?.replace(/^["']|["']$/g, '').trim();
 }
 
