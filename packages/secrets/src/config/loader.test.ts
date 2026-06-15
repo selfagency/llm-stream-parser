@@ -20,7 +20,7 @@ describe('loadConfig', () => {
   it('returns empty config when no file exists', async () => {
     vi.mocked(access).mockRejectedValue(new Error('ENOENT'));
 
-    const config = await loadConfig('/tmp/nonexistent');
+    const config = await loadConfig('/nonexistent-root');
 
     expect(config).toBeDefined();
     expect(config.providers).toEqual({});
@@ -30,7 +30,7 @@ describe('loadConfig', () => {
     vi.mocked(access).mockResolvedValueOnce(undefined);
     vi.mocked(readFile).mockResolvedValue('providers:\n  doppler: {}\n');
 
-    const config = await loadConfig('/tmp/test-project');
+    const config = await loadConfig('/test/project-root');
 
     expect(config.providers).toBeDefined();
     expect(readFile).toHaveBeenCalledTimes(1);
@@ -44,7 +44,7 @@ describe('loadConfig', () => {
     vi.mocked(readFile).mockResolvedValue('version: 1\n');
     mockParse.mockReturnValueOnce({ version: 1, providers: {} });
 
-    const config = await loadConfig('/tmp/test-project');
+    const config = await loadConfig('/test/project-root');
 
     expect(config).toBeDefined();
     expect(readFile).toHaveBeenCalledTimes(1);
@@ -55,7 +55,7 @@ describe('loadConfig', () => {
     vi.mocked(readFile).mockResolvedValue('providers:\n  vault: {}\n');
     mockParse.mockReturnValueOnce({ providers: { vault: {} } });
 
-    const config = await loadConfig('/tmp/test-project');
+    const config = await loadConfig('/test/project-root');
 
     expect(config.providers).toBeDefined();
     expect(config.providers).toHaveProperty('vault');
@@ -70,7 +70,7 @@ describe('discoverConfigPath', () => {
   it('returns first existing path', async () => {
     vi.mocked(access).mockRejectedValueOnce(new Error('ENOENT')).mockResolvedValueOnce(undefined);
 
-    const path = await discoverConfigPath('/tmp/test-project');
+    const path = await discoverConfigPath('/test/project-root');
 
     expect(path).toContain('secrets.yaml');
     expect(access).toHaveBeenCalledTimes(2);
@@ -79,7 +79,7 @@ describe('discoverConfigPath', () => {
   it('returns default project-local path when none exist', async () => {
     vi.mocked(access).mockRejectedValue(new Error('ENOENT'));
 
-    const path = await discoverConfigPath('/tmp/test-project');
+    const path = await discoverConfigPath('/test/project-root');
 
     expect(path).toContain('.agentsy');
     expect(path).toContain('secrets.yaml');
