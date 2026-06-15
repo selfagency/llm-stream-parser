@@ -86,15 +86,17 @@ export function formatRoutingDiagnostic(diagnostic: RoutingDiagnostic): string {
     lines.push(`  Selected replica: ${diagnostic.selectedReplica.id} (${diagnostic.selectedReplica.providerId})`);
   }
 
-  if (diagnostic.rejectedCandidates.length > 0) {
-    lines.push('');
-    lines.push('  Rejected candidates:');
-    for (const rejected of diagnostic.rejectedCandidates) {
-      lines.push(`    ${rejected.replicaId ?? rejected.modelId ?? '(unknown)'}`);
-      for (const reason of rejected.reasons) {
-        lines.push(`      - ${reason}`);
+  const rejected = diagnostic.rejectedCandidates;
+  if (rejected.length > 0) {
+    const rejectedLines: string[] = ['', '  Rejected candidates:'];
+    for (const candidate of rejected) {
+      const id = candidate.replicaId ?? candidate.modelId ?? '(unknown)';
+      rejectedLines.push(`    ${id}`);
+      for (const reason of candidate.reasons) {
+        rejectedLines.push(`      - ${reason}`);
       }
     }
+    lines.push(...rejectedLines);
   }
 
   return lines.join('\n');

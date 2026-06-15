@@ -40,8 +40,19 @@ async function discoverAgents(): Promise<AgentInfo[]> {
   return agents;
 }
 
+const YAML_FIELD_PATTERNS: Record<string, RegExp> = {
+  name: /^name:\s*(.+)$/m,
+  role: /^role:\s*(.+)$/m,
+  orchestration: /^orchestration:\s*(.+)$/m,
+  budget: /^budget:\s*(.+)$/m
+};
+
 function extractField(yaml: string, field: string): string | undefined {
-  const match = yaml.match(new RegExp(`^${field}:\\s*(.+)$`, 'm'));
+  const pattern = YAML_FIELD_PATTERNS[field];
+  if (pattern === undefined) {
+    return;
+  }
+  const match = yaml.match(pattern);
   return match?.[1]?.replace(/^["']|["']$/g, '').trim();
 }
 
@@ -58,11 +69,15 @@ function formatAgentTable(agents: AgentInfo[]): string {
 }
 
 function writeOut(io: CliIO, msg: string): void {
-  if (io.stdout) { io.stdout(msg); }
+  if (io.stdout) {
+    io.stdout(msg);
+  }
 }
 
 function writeErr(io: CliIO, msg: string): void {
-  if (io.stderr) { io.stderr(msg); }
+  if (io.stderr) {
+    io.stderr(msg);
+  }
 }
 
 export async function runAgentCommand(args: readonly string[], io: CliIO): Promise<number> {
