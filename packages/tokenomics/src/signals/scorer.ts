@@ -171,6 +171,8 @@ function getWeight(kind: FrustrationEventKind, weights: SignalWeights): number {
     case 'model_switch':
     case 'context_explosion':
       return 0;
+    default:
+      return 0;
   }
 }
 

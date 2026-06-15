@@ -22,13 +22,13 @@ import { omitUndefined } from './types.js';
 // =============================================================================
 
 function getConfig(): { apiToken: string; projectId: string; teamId?: string } | null {
-  const apiToken = process.env['VERCEL_API_TOKEN'];
-  const projectId = process.env['VERCEL_PROJECT_ID'];
+  const apiToken = process.env.VERCEL_API_TOKEN;
+  const projectId = process.env.VERCEL_PROJECT_ID;
   if (!(apiToken && projectId)) {
     return null;
   }
   const cfg: { apiToken: string; projectId: string; teamId?: string } = { apiToken, projectId };
-  const teamId = process.env['VERCEL_TEAM_ID'];
+  const teamId = process.env.VERCEL_TEAM_ID;
   if (teamId) {
     cfg.teamId = teamId;
   }
@@ -112,9 +112,9 @@ export function createVercelAdapter(): DeployedAppAnalyticsAdapter {
       }) as DeployedAppUsageMetrics;
     },
 
-    async getErrorMetrics(_since: string): Promise<DeployedAppErrorMetrics | undefined> {
+    getErrorMetrics(_since: string): Promise<DeployedAppErrorMetrics | undefined> {
       // Vercel Analytics does not expose error-rate or latency via the public API.
-      return;
+      return Promise.resolve(undefined);
     },
 
     async getDeploymentEvents(since: string): Promise<DeploymentEvent[]> {

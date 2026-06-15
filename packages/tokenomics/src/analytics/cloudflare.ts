@@ -22,9 +22,9 @@ import { omitUndefined } from './types.js';
 // =============================================================================
 
 function getConfig(): { apiToken: string; zoneId: string; accountId: string } | null {
-  const apiToken = process.env['CLOUDFLARE_API_TOKEN'];
-  const zoneId = process.env['CLOUDFLARE_ZONE_ID'];
-  const accountId = process.env['CLOUDFLARE_ACCOUNT_ID'];
+  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+  const zoneId = process.env.CLOUDFLARE_ZONE_ID;
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   if (!(apiToken && zoneId && accountId)) {
     return null;
   }
@@ -53,7 +53,7 @@ async function cfFetch<T>(path: string, config: { apiToken: string }): Promise<T
 // =============================================================================
 
 interface CfAnalyticsResult {
-  data?: Array<Record<string, unknown>>;
+  data?: Record<string, unknown>[];
   totals?: {
     pageviews?: number;
     uniques?: number;
@@ -71,6 +71,16 @@ interface CfDeploymentsResult {
     metadata?: { commit_sha?: string };
     status: string;
   }>;
+}
+
+function mapDeploymentStatus(status: string): DeploymentEvent['status'] {
+  if (status === 'success') {
+    return 'success';
+  }
+  if (status === 'failure') {
+    return 'failed';
+  }
+  return 'rolled-back';
 }
 
 // =============================================================================
@@ -105,10 +115,10 @@ export function createCloudflareAdapter(): DeployedAppAnalyticsAdapter {
       }) as DeployedAppUsageMetrics;
     },
 
-    async getErrorMetrics(_since: string): Promise<DeployedAppErrorMetrics | undefined> {
+    getErrorMetrics(_since: string): Promise<DeployedAppErrorMetrics | undefined> {
       // Cloudflare Analytics dashboard does not expose p99 latency or error rate
       // via the simple dashboard endpoint. Use Cloudflare GraphQL for that.
-      return;
+      return Promise.resolve(undefined);
     },
 
     async getDeploymentEvents(since: string): Promise<DeploymentEvent[]> {
@@ -136,7 +146,7 @@ export function createCloudflareAdapter(): DeployedAppAnalyticsAdapter {
               deployedAt: d.created_on,
               environment: d.environment,
               commitSha: d.metadata?.commit_sha,
-              status: d.status === 'success' ? 'success' : d.status === 'failure' ? 'failure' : d.status
+              status: mapDeploymentStatus(d.status)
             }) as DeploymentEvent
         );
     }

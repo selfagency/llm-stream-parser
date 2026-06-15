@@ -61,25 +61,22 @@ export function recognizePatterns(
     return [];
   }
 
-  // Build context fingerprint per entry
-  const fingerprinted = frustratedEntries.map(entry => ({
-    entry,
-    fingerprint: buildContextFingerprint(entry, opts.fingerprintKeys),
-    dominantKind: extractDominantKind(entry)
-  }));
+  const clusters = buildClusters(frustratedEntries, opts.fingerprintKeys);
+  return promoteToFailureModes(clusters, existingFailureModes, opts);
+}
 
-  // Group by fingerprint + dominant kind
+function buildClusters(entries: SessionLedgerEntry[], fingerprintKeys: string[]): Map<string, SignalCluster> {
   const clusterMap = new Map<string, SignalCluster>();
 
-  for (const item of fingerprinted) {
-    const key = `${item.fingerprint}::${item.dominantKind}`;
+  for (const entry of entries) {
+    const fingerprint = buildContextFingerprint(entry, fingerprintKeys);
+    const dominantKind = extractDominantKind(entry);
+    const key = `${fingerprint}::${dominantKind}`;
     const existing = clusterMap.get(key);
-
-    const entry = item.entry;
 
     if (existing) {
       existing.sessionIds.push(entry.sessionId);
-      existing.signalKindCounts[item.dominantKind] = (existing.signalKindCounts[item.dominantKind] ?? 0) + 1;
+      existing.signalKindCounts[dominantKind] = (existing.signalKindCounts[dominantKind] ?? 0) + 1;
 
       if (!existing.modelIds.includes(entry.modelId)) {
         existing.modelIds.push(entry.modelId);
@@ -99,10 +96,10 @@ export function recognizePatterns(
       }
     } else {
       clusterMap.set(key, {
-        dominantSignalKind: item.dominantKind,
-        signalKindCounts: { [item.dominantKind]: 1 },
+        dominantSignalKind: dominantKind,
+        signalKindCounts: { [dominantKind]: 1 },
         sessionIds: [entry.sessionId],
-        contextFingerprint: item.fingerprint,
+        contextFingerprint: fingerprint,
         modelIds: [entry.modelId],
         agentIds: [entry.agentId],
         avgFrustrationScore: computeSignalScore(entry),
@@ -112,17 +109,23 @@ export function recognizePatterns(
     }
   }
 
-  // Promote clusters to failure modes
+  return clusterMap;
+}
+
+function promoteToFailureModes(
+  clusterMap: Map<string, SignalCluster>,
+  existingFailureModes: FailureMode[],
+  opts: Required<PatternRecognitionOptions>
+): FailureMode[] {
   const existingIds = new Set(existingFailureModes.map(f => f.id));
   const failureModes: FailureMode[] = [];
 
-  for (const [key, cluster] of clusterMap) {
+  for (const [_key, cluster] of clusterMap) {
     const sessionCount = cluster.sessionIds.length;
     if (sessionCount < opts.minSessionCount) {
       continue;
     }
 
-    // Compute confidence from cluster cohesion
     const homogeneity = computeClusterHomogeneity(cluster);
     const confidence = computeConfidence(sessionCount, homogeneity);
 
@@ -130,10 +133,7 @@ export function recognizePatterns(
       continue;
     }
 
-    // Derive category from the fingerprint
     const category = deriveCategory(cluster.dominantSignalKind, cluster.contextFingerprint);
-
-    // Generate a stable-ish ID from fingerprint + kind
     const modeId = generateFailureModeId(cluster);
 
     if (existingIds.has(modeId)) {
@@ -180,6 +180,8 @@ function buildContextFingerprint(entry: SessionLedgerEntry, keys: string[]): str
         break;
       case 'agentId':
         parts.push(`a:${entry.agentId}`);
+        break;
+      default:
         break;
     }
   }
@@ -309,8 +311,10 @@ function generateFailureModeId(cluster: SignalCluster): string {
   let hash = 0;
   for (let i = 0; i < raw.length; i++) {
     const char = raw.charCodeAt(i);
+    // biome-ignore lint/suspicious/noBitwiseOperators: stable hash for deterministic ID generation
     hash = (hash << 5) - hash + char;
-    hash |= 0; // Convert to 32-bit int
+    // biome-ignore lint/suspicious/noBitwiseOperators: 32-bit integer conversion
+    hash |= 0;
   }
   return `fm_${Math.abs(hash).toString(36).padStart(6, '0')}`;
 }

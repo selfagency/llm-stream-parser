@@ -22,12 +22,12 @@ import { omitUndefined } from './types.js';
 // =============================================================================
 
 function getConfig(): { apiKey: string; projectId: string; baseUrl: string } | null {
-  const apiKey = process.env['POSTHOG_API_KEY'];
-  const projectId = process.env['POSTHOG_PROJECT_ID'];
+  const apiKey = process.env.POSTHOG_API_KEY;
+  const projectId = process.env.POSTHOG_PROJECT_ID;
   if (!(apiKey && projectId)) {
     return null;
   }
-  return { apiKey, projectId, baseUrl: process.env['POSTHOG_BASE_URL'] ?? 'https://app.posthog.com' };
+  return { apiKey, projectId, baseUrl: process.env.POSTHOG_BASE_URL ?? 'https://app.posthog.com' };
 }
 
 async function posthogFetch<T>(
@@ -102,10 +102,10 @@ export function createPostHogAdapter(): DeployedAppAnalyticsAdapter {
       }) as DeployedAppUsageMetrics;
     },
 
-    async getErrorMetrics(_since: string): Promise<DeployedAppErrorMetrics | undefined> {
+    getErrorMetrics(_since: string): Promise<DeployedAppErrorMetrics | undefined> {
       // PostHog does not have a dedicated error-metrics endpoint.
       // For error tracking, use Sentry (see sentry.ts).
-      return;
+      return Promise.resolve(undefined);
     },
 
     async getDeploymentEvents(since: string): Promise<DeploymentEvent[]> {
@@ -124,8 +124,8 @@ export function createPostHogAdapter(): DeployedAppAnalyticsAdapter {
           omitUndefined({
             id: ev.id,
             deployedAt: ev.timestamp,
-            environment: (ev.properties?.['environment'] as string) ?? 'unknown',
-            commitSha: ev.properties?.['commit_sha'] as string | undefined,
+            environment: (ev.properties?.environment as string) ?? 'unknown',
+            commitSha: ev.properties?.commit_sha as string | undefined,
             status: 'success'
           }) as DeploymentEvent
       );

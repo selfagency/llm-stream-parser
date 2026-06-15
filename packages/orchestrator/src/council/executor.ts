@@ -3,8 +3,6 @@ import type {
   CouncilResult,
   CouncilEvent,
   FirstOpinion,
-  ReviewScore,
-  CouncilMember
 } from './types.js';
 import { collectFirstOpinions } from './stage1-opinions.js';
 import { collectCrossReviews, calculateRankings } from './stage2-review.js';

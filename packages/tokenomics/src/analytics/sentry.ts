@@ -23,9 +23,9 @@ import { omitUndefined } from './types.js';
 // =============================================================================
 
 function getConfig(): { authToken: string; orgSlug: string; projectSlug: string; baseUrl: string } | null {
-  const authToken = process.env['SENTRY_AUTH_TOKEN'];
-  const orgSlug = process.env['SENTRY_ORG_SLUG'];
-  const projectSlug = process.env['SENTRY_PROJECT_SLUG'];
+  const authToken = process.env.SENTRY_AUTH_TOKEN;
+  const orgSlug = process.env.SENTRY_ORG_SLUG;
+  const projectSlug = process.env.SENTRY_PROJECT_SLUG;
   if (!(authToken && orgSlug && projectSlug)) {
     return null;
   }
@@ -33,7 +33,7 @@ function getConfig(): { authToken: string; orgSlug: string; projectSlug: string;
     authToken,
     orgSlug,
     projectSlug,
-    baseUrl: process.env['SENTRY_BASE_URL'] ?? 'https://sentry.io'
+    baseUrl: process.env.SENTRY_BASE_URL ?? 'https://sentry.io'
   };
 }
 
@@ -79,6 +79,41 @@ interface SentryReleasesResponse {
   }>;
 }
 
+function mapSentryStatus(status: string): DeploymentEvent['status'] {
+  if (status === 'open') {
+    return 'success';
+  }
+  if (status === 'archived') {
+    return 'rolled-back';
+  }
+  return 'failed';
+}
+
+function sumErrorCounts(stats: SentryStatsResponse | undefined): number {
+  if (!stats?.data) {
+    return 0;
+  }
+  let count = 0;
+  for (const bucket of stats.data) {
+    count += (bucket[1] as number) ?? 0;
+  }
+  return count;
+}
+
+function extractP99Latency(stats: SentryStatsResponse | undefined): number {
+  if (!stats?.data) {
+    return 0;
+  }
+  let p99 = 0;
+  for (const bucket of stats.data) {
+    const val = bucket[1] as number | null;
+    if (val !== null && val > 0) {
+      p99 = Math.max(p99, val);
+    }
+  }
+  return p99;
+}
+
 // =============================================================================
 // Adapter
 // =============================================================================
@@ -89,10 +124,10 @@ export function createSentryAdapter(): DeployedAppAnalyticsAdapter {
   const adapter: DeployedAppAnalyticsAdapter = {
     name: 'Sentry',
 
-    async getUsageMetrics(_since: string): Promise<DeployedAppUsageMetrics | undefined> {
+    getUsageMetrics(_since: string): Promise<DeployedAppUsageMetrics | undefined> {
       // Sentry is an error-tracking platform — it does not expose
       // pageviews, active users, or API call counts.
-      return;
+      return Promise.resolve(undefined);
     },
 
     async getErrorMetrics(since: string): Promise<DeployedAppErrorMetrics | undefined> {
@@ -124,23 +159,10 @@ export function createSentryAdapter(): DeployedAppAnalyticsAdapter {
       );
 
       // Sum error counts from the received stats
-      let errorCount = 0;
-      if (stats?.data) {
-        for (const bucket of stats.data) {
-          errorCount += (bucket[1] as number) ?? 0;
-        }
-      }
+      const errorCount = sumErrorCounts(stats);
 
       // Extract p99 from latency data (last non-null value)
-      let p99LatencyMs = 0;
-      if (latencyStats?.data) {
-        for (const bucket of latencyStats.data) {
-          const val = bucket[1] as number | null;
-          if (val !== null && val > 0) {
-            p99LatencyMs = Math.max(p99LatencyMs, val);
-          }
-        }
-      }
+      const p99LatencyMs = extractP99Latency(latencyStats);
 
       const incidentCount = issues?.data?.length ?? 0;
 
@@ -173,7 +195,7 @@ export function createSentryAdapter(): DeployedAppAnalyticsAdapter {
             deployedAt: r.dateCreated,
             environment: r.projects?.[0]?.slug ?? config.projectSlug,
             commitSha: r.version,
-            status: r.status === 'open' ? 'success' : r.status === 'archived' ? 'rolled_back' : r.status
+            status: mapSentryStatus(r.status)
           }) as DeploymentEvent
       );
     }

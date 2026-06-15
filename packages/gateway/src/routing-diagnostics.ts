@@ -50,10 +50,9 @@ export function buildRoutingDiagnostic(
     escalationUsed?: boolean;
   }
 ): RoutingDiagnostic {
-  return {
+  const diagnostic: RoutingDiagnostic = {
     timestamp: new Date().toISOString(),
     requestedTier: context.tier,
-    requestedUseCase: context.useCase,
     rejectedCandidates: selection.rejectedCandidates.map(c => ({
       replicaId: c.id,
       reasons: c.reasons
@@ -61,6 +60,10 @@ export function buildRoutingDiagnostic(
     spilloverUsed: context.spilloverUsed ?? false,
     escalationUsed: context.escalationUsed ?? false
   };
+  if (context.useCase !== undefined) {
+    diagnostic.requestedUseCase = context.useCase;
+  }
+  return diagnostic;
 }
 
 /**
