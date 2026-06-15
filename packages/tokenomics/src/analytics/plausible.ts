@@ -22,12 +22,12 @@ import { omitUndefined } from './types.js';
 // =============================================================================
 
 function getConfig(): { apiKey: string; siteId: string; baseUrl: string } | null {
-  const apiKey = process.env['PLAUSIBLE_API_KEY'];
-  const siteId = process.env['PLAUSIBLE_SITE_ID'];
+  const apiKey = process.env.PLAUSIBLE_API_KEY;
+  const siteId = process.env.PLAUSIBLE_SITE_ID;
   if (!(apiKey && siteId)) {
     return null;
   }
-  return { apiKey, siteId, baseUrl: process.env['PLAUSIBLE_BASE_URL'] ?? 'https://plausible.io' };
+  return { apiKey, siteId, baseUrl: process.env.PLAUSIBLE_BASE_URL ?? 'https://plausible.io' };
 }
 
 async function plausibleFetch<T>(
@@ -64,16 +64,6 @@ interface PlausibleAggregateResponse {
   };
 }
 
-interface PlausibleTimeseriesResponse {
-  results: Array<{
-    date: string;
-    visitors: number;
-    pageviews: number;
-    bounce_rate: number;
-    visit_duration: number;
-  }>;
-}
-
 // =============================================================================
 // Adapter
 // =============================================================================
@@ -105,14 +95,14 @@ export function createPlausibleAdapter(): DeployedAppAnalyticsAdapter {
       }) as DeployedAppUsageMetrics;
     },
 
-    async getErrorMetrics(_since: string): Promise<DeployedAppErrorMetrics | undefined> {
+    getErrorMetrics(_since: string): Promise<DeployedAppErrorMetrics | undefined> {
       // Plausible does not expose error metrics via the public API.
-      return;
+      return Promise.resolve(undefined);
     },
 
-    async getDeploymentEvents(_since: string): Promise<DeploymentEvent[]> {
+    getDeploymentEvents(_since: string): Promise<DeploymentEvent[]> {
       // Plausible does not expose deployment events.
-      return [];
+      return Promise.resolve([]);
     }
   };
 

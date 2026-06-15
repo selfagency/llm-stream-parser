@@ -31,7 +31,7 @@ function getConfig(): {
   errorPath?: string;
   deployPath?: string;
 } | null {
-  const baseUrl = process.env['ANALYTICS_HTTP_URL'];
+  const baseUrl = process.env.ANALYTICS_HTTP_URL;
   if (!baseUrl) {
     return null;
   }
@@ -42,19 +42,19 @@ function getConfig(): {
     errorPath?: string;
     deployPath?: string;
   } = { baseUrl };
-  const apiKey = process.env['ANALYTICS_HTTP_API_KEY'];
+  const apiKey = process.env.ANALYTICS_HTTP_API_KEY;
   if (apiKey) {
     cfg.apiKey = apiKey;
   }
-  const usagePath = process.env['ANALYTICS_HTTP_USAGE_PATH'];
+  const usagePath = process.env.ANALYTICS_HTTP_USAGE_PATH;
   if (usagePath) {
     cfg.usagePath = usagePath;
   }
-  const errorPath = process.env['ANALYTICS_HTTP_ERROR_PATH'];
+  const errorPath = process.env.ANALYTICS_HTTP_ERROR_PATH;
   if (errorPath) {
     cfg.errorPath = errorPath;
   }
-  const deployPath = process.env['ANALYTICS_HTTP_DEPLOY_PATH'];
+  const deployPath = process.env.ANALYTICS_HTTP_DEPLOY_PATH;
   if (deployPath) {
     cfg.deployPath = deployPath;
   }
@@ -64,7 +64,7 @@ function getConfig(): {
 async function httpFetch<T>(url: string, apiKey?: string): Promise<T | undefined> {
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (apiKey) {
-    headers['Authorization'] = `Bearer ${apiKey}`;
+    headers.Authorization = `Bearer ${apiKey}`;
   }
 
   const res = await fetch(url, { headers });
@@ -101,11 +101,11 @@ export function createHttpJsonAdapter(): DeployedAppAnalyticsAdapter {
       }
 
       return omitUndefined({
-        pageviews: coerceNumber(data['pageviews']),
-        activeUsers: coerceNumber(data['activeUsers'] ?? data['active_users']),
-        apiCalls: coerceNumber(data['apiCalls'] ?? data['api_calls']),
-        conversions: coerceNumber(data['conversions']),
-        conversionRate: coerceNumber(data['conversionRate'] ?? data['conversion_rate']),
+        pageviews: coerceNumber(data.pageviews),
+        activeUsers: coerceNumber(data.activeUsers ?? data.active_users),
+        apiCalls: coerceNumber(data.apiCalls ?? data.api_calls),
+        conversions: coerceNumber(data.conversions),
+        conversionRate: coerceNumber(data.conversionRate ?? data.conversion_rate),
         period: { since }
       }) as DeployedAppUsageMetrics;
     },
@@ -127,10 +127,10 @@ export function createHttpJsonAdapter(): DeployedAppAnalyticsAdapter {
       }
 
       return omitUndefined({
-        errorRate: coerceNumber(data['errorRate'] ?? data['error_rate']) ?? 0,
-        p99LatencyMs: coerceNumber(data['p99LatencyMs'] ?? data['p99_latency_ms']) ?? 0,
-        incidentCount: coerceNumber(data['incidentCount'] ?? data['incident_count']) ?? 0,
-        mttrMs: coerceNumber(data['mttrMs'] ?? data['mttr_ms']),
+        errorRate: coerceNumber(data.errorRate ?? data.error_rate) ?? 0,
+        p99LatencyMs: coerceNumber(data.p99LatencyMs ?? data.p99_latency_ms) ?? 0,
+        incidentCount: coerceNumber(data.incidentCount ?? data.incident_count) ?? 0,
+        mttrMs: coerceNumber(data.mttrMs ?? data.mttr_ms),
         period: { since }
       }) as DeployedAppErrorMetrics;
     },
@@ -152,18 +152,18 @@ export function createHttpJsonAdapter(): DeployedAppAnalyticsAdapter {
       }
 
       // Accept either an array directly or { deployments: [...] }
-      const list: Array<Record<string, unknown>> = Array.isArray(data)
-        ? (data as Array<Record<string, unknown>>)
-        : (((data as Record<string, unknown>)['deployments'] as Array<Record<string, unknown>>) ?? []);
+      const list: Record<string, unknown>[] = Array.isArray(data)
+        ? (data as Record<string, unknown>[])
+        : (((data as Record<string, unknown>).deployments as Record<string, unknown>[]) ?? []);
 
       return list.map(
         item =>
           omitUndefined({
-            id: String(item['id'] ?? ''),
-            deployedAt: String(item['deployedAt'] ?? item['deployed_at'] ?? ''),
-            environment: String(item['environment'] ?? 'unknown'),
-            commitSha: (item['commitSha'] as string | undefined) ?? (item['commit_sha'] as string | undefined),
-            status: String(item['status'] ?? 'success') as DeploymentEvent['status']
+            id: String(item.id ?? ''),
+            deployedAt: String(item.deployedAt ?? item.deployed_at ?? ''),
+            environment: String(item.environment ?? 'unknown'),
+            commitSha: (item.commitSha as string | undefined) ?? (item.commit_sha as string | undefined),
+            status: String(item.status ?? 'success') as DeploymentEvent['status']
           }) as DeploymentEvent
       );
     }

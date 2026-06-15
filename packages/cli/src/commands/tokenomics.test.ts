@@ -21,32 +21,17 @@ const mockAggregateGitAiStats = vi.hoisted(() => vi.fn());
 const mockRecognizePatterns = vi.hoisted(() => vi.fn());
 const mockComputeSurvivalRate = vi.hoisted(() => vi.fn());
 
+vi.mock('@agentsy/tokenomics', () => ({
+  computeRoiSnapshot: mockComputeRoiSnapshot,
+  buildTransparencyReport: mockBuildTransparencyReport,
+  createSqliteLedgerStore: mockCreateSqliteLedgerStore,
+  aggregateGitAiStats: mockAggregateGitAiStats,
+  recognizePatterns: mockRecognizePatterns,
+  computeSurvivalRate: mockComputeSurvivalRate
+}));
+
 vi.mock('node:child_process', () => ({
   execSync: mockExecSync
-}));
-
-vi.mock('@agentsy/tokenomics/roi/calculator', () => ({
-  computeRoiSnapshot: mockComputeRoiSnapshot
-}));
-
-vi.mock('@agentsy/tokenomics/roi/transparency-report', () => ({
-  buildTransparencyReport: mockBuildTransparencyReport
-}));
-
-vi.mock('@agentsy/tokenomics/ledger/store', () => ({
-  createSqliteLedgerStore: mockCreateSqliteLedgerStore
-}));
-
-vi.mock('@agentsy/tokenomics/attribution/git-ai-notes', () => ({
-  aggregateGitAiStats: mockAggregateGitAiStats
-}));
-
-vi.mock('@agentsy/tokenomics/learning/index', () => ({
-  recognizePatterns: mockRecognizePatterns
-}));
-
-vi.mock('@agentsy/tokenomics/attribution/index', () => ({
-  computeSurvivalRate: mockComputeSurvivalRate
 }));
 
 // =============================================================================
@@ -62,7 +47,7 @@ function createIoSpy(): CliIO & IoSpy {
   return { stdout: vi.fn(), stderr: vi.fn() } as unknown as CliIO & IoSpy;
 }
 
-function createOpts(io: CliIO & IoSpy) {
+function _createOpts(io: CliIO & IoSpy) {
   return {
     json: false,
     stdout: io.stdout,

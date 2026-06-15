@@ -12,7 +12,7 @@ interface ExecuteModelOptions {
 function buildReviewPrompt(
   reviewer: CouncilDefinition['members'][number],
   anonymizedOpinions: Array<{ label: string; content: string }>,
-  targetOpinion: FirstOpinion
+  _targetOpinion: FirstOpinion
 ): string {
   const responses = anonymizedOpinions
     .map(o => `<response label="${o.label}">\n${o.content}\n</response>`)
@@ -39,7 +39,7 @@ Reasoning: <your detailed reasoning>`;
  */
 function parseScore(text: string, field: string): number {
   const match = text.match(new RegExp(`${field}:\\s*(\\d+)/10`, 'i'));
-  return match ? Number.parseInt(match[1]!, 10) : 5;
+  return match ? Number.parseInt(match[1] ?? '5', 10) : 5;
 }
 
 /**
@@ -69,7 +69,9 @@ export async function collectCrossReviews(
 
   for (const reviewer of council.members) {
     for (const opinion of opinions) {
-      if (opinion.member.model === reviewer.model) continue;
+      if (opinion.member.model === reviewer.model) {
+        continue;
+      }
 
       const anonymizedOpinions = opinions.map((o, i) => ({
         label: `Response ${i + 1}`,

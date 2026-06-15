@@ -289,73 +289,81 @@ export async function handleReport(argv: readonly string[], opts: TokenomicsCliO
   const hasAttribution = argv.includes('--attribution');
   const sinceFlag = argv.find(a => /^\d+d$/.test(a) || /^\d{4}-\d{2}-\d{2}/.test(a));
   const since = parseSince(sinceFlag);
-  const periodLabel = formatPeriodLabel(since);
 
   if (hasEthical) {
-    // Build ethical transparency report
-    try {
-      const { buildTransparencyReport, computeRoiSnapshot, createSqliteLedgerStore } = await import(
-        '@agentsy/tokenomics'
-      );
-
-      const ledger = createSqliteLedgerStore(':memory:');
-      const roi = await computeRoiSnapshot(ledger, since);
-      const report = await buildTransparencyReport(ledger, roi);
-
-      if (opts.json) {
-        opts.stdout(JSON.stringify(report, null, 2));
-        return 0;
-      }
-
-      opts.stdout(formatEthicalReport(report));
-      return 0;
-    } catch (error) {
-      opts.stderr(`Failed to build ethical report: ${error instanceof Error ? error.message : String(error)}`);
-      return 1;
-    }
+    return await buildEthicalReport(since, opts);
   }
 
   if (hasAttribution) {
-    // Build AI attribution report
-    try {
-      const { aggregateGitAiStats } = await import('@agentsy/tokenomics');
-      const { execSync } = await import('node:child_process');
-
-      // Get commits in the period
-      const sinceIso = since.toISOString();
-      const logOutput = execSync(`git log --since="${sinceIso}" --format="%H" --no-pager`, {
-        encoding: 'utf-8',
-        stdio: 'pipe'
-      }).trim();
-      const shas = logOutput.split('\n').filter(Boolean);
-
-      if (shas.length === 0) {
-        opts.stdout('No commits found in the specified period.');
-        return 0;
-      }
-
-      const repoRoot = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8', stdio: 'pipe' }).trim();
-      const stats = aggregateGitAiStats(repoRoot, shas);
-
-      if (opts.json) {
-        opts.stdout(JSON.stringify(stats, null, 2));
-        return 0;
-      }
-
-      opts.stdout(formatAttributionReport(stats));
-      return 0;
-    } catch (error) {
-      opts.stderr(`Failed to build attribution report: ${error instanceof Error ? error.message : String(error)}`);
-      return 1;
-    }
+    return await buildAttributionReport(since, opts);
   }
 
-  // Standard spend-vs-value report
+  return await buildStandardReport(since, opts);
+}
+
+async function buildEthicalReport(since: Date, opts: TokenomicsCliOptions): Promise<number> {
+  try {
+    const { buildTransparencyReport, computeRoiSnapshot, createSqliteLedgerStore } = await import(
+      '@agentsy/tokenomics'
+    );
+
+    const ledger = createSqliteLedgerStore(':memory:');
+    const roi = await computeRoiSnapshot(ledger, since);
+    const report = await buildTransparencyReport(ledger, roi);
+
+    if (opts.json) {
+      opts.stdout(JSON.stringify(report, null, 2));
+      return 0;
+    }
+
+    opts.stdout(formatEthicalReport(report));
+    return 0;
+  } catch (error) {
+    opts.stderr(`Failed to build ethical report: ${error instanceof Error ? error.message : String(error)}`);
+    return 1;
+  }
+}
+
+async function buildAttributionReport(since: Date, opts: TokenomicsCliOptions): Promise<number> {
+  try {
+    const { aggregateGitAiStats } = await import('@agentsy/tokenomics');
+    const { execSync } = await import('node:child_process');
+
+    const sinceIso = since.toISOString();
+    const logOutput = execSync(`git log --since="${sinceIso}" --format="%H" --no-pager`, {
+      encoding: 'utf-8',
+      stdio: 'pipe'
+    }).trim();
+    const shas = logOutput.split('\n').filter(Boolean);
+
+    if (shas.length === 0) {
+      opts.stdout('No commits found in the specified period.');
+      return 0;
+    }
+
+    const repoRoot = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8', stdio: 'pipe' }).trim();
+    const stats = aggregateGitAiStats(repoRoot, shas);
+
+    if (opts.json) {
+      opts.stdout(JSON.stringify(stats, null, 2));
+      return 0;
+    }
+
+    opts.stdout(formatAttributionReport(stats));
+    return 0;
+  } catch (error) {
+    opts.stderr(`Failed to build attribution report: ${error instanceof Error ? error.message : String(error)}`);
+    return 1;
+  }
+}
+
+async function buildStandardReport(since: Date, opts: TokenomicsCliOptions): Promise<number> {
   try {
     const { computeRoiSnapshot, createSqliteLedgerStore } = await import('@agentsy/tokenomics');
 
     const ledger = createSqliteLedgerStore(':memory:');
     const roi = await computeRoiSnapshot(ledger, since);
+    const periodLabel = formatPeriodLabel(since);
 
     if (opts.json) {
       opts.stdout(JSON.stringify(roi, null, 2));
@@ -481,7 +489,7 @@ export async function handlePatchList(_argv: readonly string[], opts: Tokenomics
 // ---------------------------------------------------------------------------
 
 export async function handleSurvival(argv: readonly string[], opts: TokenomicsCliOptions): Promise<number> {
-  const recompute = argv.includes('--recompute');
+  const _recompute = argv.includes('--recompute');
 
   try {
     const { computeSurvivalRate, createSqliteLedgerStore } = await import('@agentsy/tokenomics');
@@ -501,6 +509,21 @@ export async function handleSurvival(argv: readonly string[], opts: TokenomicsCl
       .map((entry: import('@agentsy/tokenomics').SessionLedgerEntry) => {
         const commitShas: string[] = [];
         const files: string[] = [];
+        if ('artifacts' in entry) {
+          const a = entry.artifacts as Record<string, unknown>;
+          if (Array.isArray(a.commits)) {
+            for (const c of a.commits) {
+              if (typeof c === 'object' && c !== null && 'sha' in c) {
+                commitShas.push(String((c as Record<string, unknown>).sha));
+              }
+            }
+          }
+          if (Array.isArray(a.files)) {
+            for (const f of a.files) {
+              files.push(String(f));
+            }
+          }
+        }
 
         if (commitShas.length === 0 || files.length === 0) {
           return null;
@@ -549,8 +572,8 @@ export async function handleSurvival(argv: readonly string[], opts: TokenomicsCl
 // agentsy tokenomics adapters list
 // ---------------------------------------------------------------------------
 
-export async function handleAdaptersList(_argv: readonly string[], opts: TokenomicsCliOptions): Promise<number> {
-  const adapters = [
+export function handleAdaptersList(_argv: readonly string[], opts: TokenomicsCliOptions): number {
+  const adapterInfo: Array<{ name: string; configured: boolean; env: string }> = [
     { name: 'Plausible', configured: false, env: 'PLAUSIBLE_TOKEN' },
     { name: 'PostHog', configured: false, env: 'POSTHOG_API_KEY' },
     { name: 'Vercel', configured: false, env: 'VERCEL_API_TOKEN' },
@@ -559,19 +582,19 @@ export async function handleAdaptersList(_argv: readonly string[], opts: Tokenom
     { name: 'HTTP JSON', configured: false, env: 'ANALYTICS_HTTP_URL' }
   ];
 
-  for (const adapter of adapters) {
-    adapter.configured = process.env[adapter.env] !== undefined && process.env[adapter.env]!.length > 0;
+  for (const adapter of adapterInfo) {
+    adapter.configured = process.env[adapter.env] !== undefined && (process.env[adapter.env] ?? '').length > 0;
   }
 
   if (opts.json) {
-    opts.stdout(JSON.stringify({ adapters }, null, 2));
+    opts.stdout(JSON.stringify({ adapters: adapterInfo }, null, 2));
     return 0;
   }
 
-  const configured = adapters.filter(a => a.configured);
-  const unconfigured = adapters.filter(a => !a.configured);
+  const configured = adapterInfo.filter(a => a.configured);
+  const unconfigured = adapterInfo.filter(a => !a.configured);
 
-  opts.stdout(`Analytics adapters (${configured.length}/${adapters.length} configured):`);
+  opts.stdout(`Analytics adapters (${configured.length}/${adapterInfo.length} configured):`);
   opts.stdout('');
 
   if (configured.length > 0) {
@@ -597,7 +620,7 @@ export async function handleAdaptersList(_argv: readonly string[], opts: Tokenom
 // agentsy tokenomics adapters add <name>
 // ---------------------------------------------------------------------------
 
-export async function handleAdaptersAdd(argv: readonly string[], opts: TokenomicsCliOptions): Promise<number> {
+export function handleAdaptersAdd(argv: readonly string[], opts: TokenomicsCliOptions): number {
   const name = argv[0];
   if (name === undefined || name.length === 0) {
     opts.stderr('Usage: agentsy tokenomics adapters add <name>');

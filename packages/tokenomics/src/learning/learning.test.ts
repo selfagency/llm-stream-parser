@@ -103,11 +103,11 @@ describe('recognizePatterns', () => {
     expect(result.length).toBeGreaterThanOrEqual(1);
     const fm = result[0];
     expect(fm).toBeDefined();
-    expect(fm!.sessionCount).toBeGreaterThanOrEqual(3);
-    expect(fm!.confidence).toBeGreaterThanOrEqual(0.6);
-    expect(fm!.dominantSignalKind).toBe('rapid_retry');
-    expect(fm!.modelIds).toContain('claude-sonnet-4');
-    expect(fm!.agentIds).toContain('agent-alpha');
+    expect(fm?.sessionCount).toBeGreaterThanOrEqual(3);
+    expect(fm?.confidence).toBeGreaterThanOrEqual(0.6);
+    expect(fm?.dominantSignalKind).toBe('rapid_retry');
+    expect(fm?.modelIds).toContain('claude-sonnet-4');
+    expect(fm?.agentIds).toContain('agent-alpha');
   });
 
   it('filters entries outside the lookback window', () => {
@@ -132,7 +132,7 @@ describe('recognizePatterns', () => {
     // Old session should not be counted
     const fm = result[0];
     expect(fm).toBeDefined();
-    expect(fm!.evidenceSessions).not.toContain('old-session');
+    expect(fm?.evidenceSessions).not.toContain('old-session');
   });
 
   it('deduplicates against existing failure modes', () => {
@@ -148,7 +148,7 @@ describe('recognizePatterns', () => {
     // Run once to get an ID
     const firstRun = recognizePatterns(entries);
     expect(firstRun.length).toBeGreaterThanOrEqual(1);
-    const existingId = firstRun[0]!.id;
+    const _existingId = firstRun[0]?.id;
 
     // Run again with the existing failure mode — should produce no new ones
     const secondRun = recognizePatterns(entries, firstRun);
@@ -514,14 +514,14 @@ describe('reinforcePattern', () => {
     });
     const result = reinforcePattern(entry, []);
     expect(result).not.toBeNull();
-    expect(result!.modelId).toBe('claude-sonnet-4');
-    expect(result!.agentId).toBe('agent-alpha');
-    expect(result!.taskCategory).toBe('feature');
-    expect(result!.sessionCount).toBe(1);
-    expect(result!.routingWeight).toBe(1.0);
-    expect(result!.avgFrustrationScore).toBe(0);
-    expect(result!.avgSurvivalRate).toBe(0.92);
-    expect(result!.id).toBeDefined();
+    expect(result?.modelId).toBe('claude-sonnet-4');
+    expect(result?.agentId).toBe('agent-alpha');
+    expect(result?.taskCategory).toBe('feature');
+    expect(result?.sessionCount).toBe(1);
+    expect(result?.routingWeight).toBe(1.0);
+    expect(result?.avgFrustrationScore).toBe(0);
+    expect(result?.avgSurvivalRate).toBe(0.92);
+    expect(result?.id).toBeDefined();
   });
 
   it('upserts existing pattern with updated metrics', () => {
@@ -547,11 +547,11 @@ describe('reinforcePattern', () => {
 
     const result = reinforcePattern(entry, [existing]);
     expect(result).not.toBeNull();
-    expect(result!.sessionCount).toBe(4);
-    expect(result!.routingWeight).toBeGreaterThan(1.15);
-    expect(result!.routingWeight).toBeLessThanOrEqual(2.0);
+    expect(result?.sessionCount).toBe(4);
+    expect(result?.routingWeight).toBeGreaterThan(1.15);
+    expect(result?.routingWeight).toBeLessThanOrEqual(2.0);
     // Avg should be (0.05*3 + 0.1) / 4
-    expect(result!.avgFrustrationScore).toBeCloseTo(0.0625, 4);
+    expect(result?.avgFrustrationScore).toBeCloseTo(0.0625, 4);
   });
 
   it('detects tests passed from quality score', () => {
@@ -630,10 +630,10 @@ describe('getRoutingWeights', () => {
 
     const result = getRoutingWeights(patterns);
     expect(result['claude-sonnet-4']).toBeDefined();
-    expect(result['claude-sonnet-4']!['agent-alpha']).toBe(1.2);
-    expect(result['claude-sonnet-4']!['agent-beta']).toBe(1.1);
+    expect(result['claude-sonnet-4']?.['agent-alpha']).toBe(1.2);
+    expect(result['claude-sonnet-4']?.['agent-beta']).toBe(1.1);
     expect(result['gpt-4o']).toBeDefined();
-    expect(result['gpt-4o']!['agent-alpha']).toBe(1.0);
+    expect(result['gpt-4o']?.['agent-alpha']).toBe(1.0);
   });
 
   it('handles patterns for the same model with multiple agents', () => {
@@ -663,7 +663,9 @@ describe('getRoutingWeights', () => {
     ];
 
     const result = getRoutingWeights(patterns);
-    expect(Object.keys(result['gpt-4o']!)).toHaveLength(2);
+    const gpt4oWeights = result['gpt-4o'];
+    expect(gpt4oWeights).toBeDefined();
+    expect(Object.keys(gpt4oWeights as Record<string, number>)).toHaveLength(2);
   });
 });
 

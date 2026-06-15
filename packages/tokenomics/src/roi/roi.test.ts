@@ -104,7 +104,7 @@ describe('readGitAiCommitStats', () => {
       aiAdditions: 30,
       aiAccepted: 28
     });
-    expect(result.toolModelBreakdown['copilot']).toEqual({
+    expect(result.toolModelBreakdown.copilot).toEqual({
       aiAdditions: 20,
       aiAccepted: 17
     });
@@ -211,8 +211,8 @@ describe('aggregateGitAiStats', () => {
     expect(result.totalAiAccepted).toBe(110);
     expect(result.overallAiPercentage).toBeCloseTo(48, 1);
     expect(result.byTool['claude-code']).toBeDefined();
-    expect(result.byTool['claude-code']!.aiAdditions).toBe(50);
-    expect(result.byTool['copilot']!.aiAdditions).toBe(70);
+    expect(result.byTool['claude-code']?.aiAdditions).toBe(50);
+    expect(result.byTool.copilot?.aiAdditions).toBe(70);
   });
 
   it('returns zero stats when no commits have git-ai notes', () => {
@@ -258,7 +258,9 @@ describe('emitGitAiCheckpoint', () => {
 
   it('writes git-ai checkpoint JSONL to .git-ai directory', () => {
     mockExistsSync.mockReturnValue(true);
-    const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {
+      /* suppress log output */
+    });
 
     emitGitAiCheckpoint('/fake/repo', ['src/test.ts'], {
       agent: 'agentsy/coder',
@@ -290,7 +292,9 @@ describe('emitGitAiCheckpoint', () => {
 
   it('creates .git-ai directory if it does not exist', () => {
     mockExistsSync.mockReturnValue(false);
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {
+      /* suppress log output */
+    });
 
     emitGitAiCheckpoint('/fake/repo', ['src/a.ts'], {
       agent: 'agentsy/coder',
@@ -453,7 +457,7 @@ describe('tryReadAiAttribution', () => {
     expect(result.aiLines).toBe(120);
     expect(result.aiAcceptedLines).toBe(100);
     expect(result.byTool['claude-code']).toBeDefined();
-    expect(result.byTool['claude-code']!.aiLines).toBe(120);
+    expect(result.byTool['claude-code']?.aiLines).toBe(120);
   });
 
   it('returns undefined for empty commit list', () => {
@@ -677,7 +681,7 @@ describe('getCodeSurvival', () => {
   });
 });
 
-function emptyInsert(store: ReturnType<typeof createSqliteLedgerStore>, entry: SessionLedgerEntry): void {
+function _emptyInsert(store: ReturnType<typeof createSqliteLedgerStore>, entry: SessionLedgerEntry): void {
   store.insert(entry);
 }
 
@@ -798,7 +802,7 @@ describe('buildTransparencyReport', () => {
     expect(report.attribution.humanLines).toBe(800);
     expect(report.attribution.aiAcceptedLines).toBe(1000);
     expect(report.attribution.aiLinesPerTool['claude-code']).toBe(800);
-    expect(report.attribution.aiLinesPerTool['copilot']).toBe(400);
+    expect(report.attribution.aiLinesPerTool.copilot).toBe(400);
   });
 
   it('computes session activity from ledger data', async () => {
