@@ -156,7 +156,7 @@ describe('recognizePatterns', () => {
   });
 
   it('recognizes different frustration kinds separately', () => {
-    const rewriteEntries = Array.from({ length: 3 }, (_, i) =>
+    const rewriteEntries = Array.from({ length: 3 }, () =>
       makeEntry({
         sessionId: `rewrite-${i}`,
         frustration: { count: 4, reasons: ['rewrite cycle'] },

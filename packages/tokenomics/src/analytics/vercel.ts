@@ -68,7 +68,7 @@ interface VercelDeploymentsResponse {
     createdAt: number;
     target?: string;
     meta?: { githubCommitSha?: string };
-    state: 'READY' | 'ERROR' | 'CANCELED' | 'BUILDING' | string;
+    state: string;
   }>;
 }
 

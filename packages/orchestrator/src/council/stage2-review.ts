@@ -35,10 +35,22 @@ Reasoning: <your detailed reasoning>`;
 }
 
 /**
- * Parse a score from review text
+ * Parse a score from review text for a known field.
  */
+const SCORE_PATTERNS: Record<string, RegExp> = {
+  Correctness: /Correctness:\s*(\d+)\/10/i,
+  Clarity: /Clarity:\s*(\d+)\/10/i,
+  Relevance: /Relevance:\s*(\d+)\/10/i,
+  Thoroughness: /Thoroughness:\s*(\d+)\/10/i,
+  Feasibility: /Feasibility:\s*(\d+)\/10/i
+};
+
 function parseScore(text: string, field: string): number {
-  const match = text.match(new RegExp(`${field}:\\s*(\\d+)/10`, 'i'));
+  const pattern = SCORE_PATTERNS[field];
+  if (pattern === undefined) {
+    return 5;
+  }
+  const match = text.match(pattern);
   return match ? Number.parseInt(match[1] ?? '5', 10) : 5;
 }
 

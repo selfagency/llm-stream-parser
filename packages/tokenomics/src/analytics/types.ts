@@ -77,11 +77,11 @@ export interface DeploymentEvent {
   /** When the deployment occurred (ISO 8601). */
   deployedAt: string;
   /** Target environment. */
-  environment: 'production' | 'staging' | 'development' | string;
+  environment: string;
   /** Unique deployment identifier. */
   id: string;
   /** Deployment status. */
-  status: 'success' | 'failure' | 'rolled_back' | 'in_progress' | string;
+  status: string;
 }
 
 // =============================================================================
