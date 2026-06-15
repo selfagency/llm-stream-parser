@@ -23,7 +23,7 @@ function createMockProvider(overrides: Partial<KeyringProvider> & { id: string }
     resolve: resolve ?? vi.fn().mockResolvedValue('mock-secret'),
     list: list ?? vi.fn().mockResolvedValue([]),
     ...rest
-  } as KeyringProvider;
+  };
 }
 
 // ---------------------------------------------------------------------------

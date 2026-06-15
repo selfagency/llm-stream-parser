@@ -35,9 +35,7 @@ export function cliNotFoundError(cli: string): Error {
     lpass: 'https://lastpass.com/support.php?cmd=showfaq&id=4278',
     security: 'Built into macOS (Security.framework)'
   };
-  const hint = Object.hasOwn(hints, cli)
-    ? hints[cli as keyof typeof hints]
-    : `Install "${cli}" and ensure it is on your PATH`;
+  const hint = Object.hasOwn(hints, cli) ? hints[cli] : `Install "${cli}" and ensure it is on your PATH`;
   return new Error(`CLI "${cli}" not found. ${hint}`);
 }
 

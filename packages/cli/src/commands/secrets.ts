@@ -127,11 +127,11 @@ const PROVIDER_FACTORIES: Record<string, ProviderFactory> = {
 // =============================================================================
 
 /** Safe factory lookup that won't trigger Semgrep bracket-object-injection. */
-function getFactory(name: string): ProviderFactory | undefined {
+export function getFactory(name: string): ProviderFactory | undefined {
   if (!Object.hasOwn(PROVIDER_FACTORIES, name)) {
     return;
   }
-  return PROVIDER_FACTORIES[name as keyof typeof PROVIDER_FACTORIES];
+  return PROVIDER_FACTORIES[name];
 }
 
 const DEFAULT_IO: Required<CliIO> = {
@@ -143,7 +143,7 @@ const DEFAULT_IO: Required<CliIO> = {
   }
 };
 
-function maskedValue(value: string): string {
+export function maskedValue(value: string): string {
   if (value.length <= 8) {
     return '****';
   }
@@ -189,7 +189,7 @@ providers:
 // Subcommand handlers (exported for testing)
 // =============================================================================
 
-export interface SecretsCliOptions {
+interface SecretsCliOptions {
   json: boolean;
   stderr: (msg: string) => void;
   stdout: (msg: string) => void;
@@ -441,21 +441,28 @@ async function syncProvider(name: string, providerCfg: SyncProviderConfig): Prom
   }
 }
 
+export function printSyncResultLine(
+  r: SyncResult,
+  opts: { stderr: (msg: string) => void; stdout: (msg: string) => void }
+): void {
+  if (r.synced) {
+    opts.stdout(`  \u2705 ${r.provider}`);
+  } else {
+    const errorSuffix = r.error ? ` — ${r.error}` : '';
+    opts.stderr(`  \u274c ${r.provider}${errorSuffix}`);
+  }
+}
+
 function displaySyncResults(results: SyncResult[], opts: SecretsCliOptions): number {
   if (opts.json) {
     opts.stdout(JSON.stringify({ results }, null, 2));
     return 0;
   }
 
-  const synced = results.filter(r => r.synced).length;
   const failed = results.filter(r => !r.synced).length;
-  opts.stdout(`Sync complete: ${synced} synced, ${failed} failed`);
+  opts.stdout(`Sync complete: ${results.length - failed} synced, ${failed} failed`);
   for (const r of results) {
-    if (r.synced) {
-      opts.stdout(`  \u2705 ${r.provider}`);
-    } else {
-      opts.stderr(`  \u274c ${r.provider}${r.error ? ` — ${r.error}` : ''}`);
-    }
+    printSyncResultLine(r, opts);
   }
 
   return failed > 0 ? 1 : 0;

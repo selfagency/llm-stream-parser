@@ -48,7 +48,6 @@ export class ProviderRegistry {
         return p;
       }
     }
-    return;
   }
 
   /**
@@ -92,7 +91,6 @@ export class ProviderRegistry {
         return entry.provider;
       }
     }
-    return;
   }
 
   /**

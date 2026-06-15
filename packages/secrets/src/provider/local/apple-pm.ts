@@ -8,6 +8,10 @@ export interface ApplePMConfig {
   timeout?: number;
 }
 
+function isSupported(): boolean {
+  return process.platform === 'darwin';
+}
+
 /**
  * Create an Apple Password Manager (macOS Keychain) keyring provider.
  *
@@ -23,10 +27,6 @@ export function createApplePMKeyring(config?: ApplePMConfig): KeyringProvider {
     canSync: false,
     canTtl: false
   };
-
-  function isSupported(): boolean {
-    return process.platform === 'darwin';
-  }
 
   return {
     id: 'apple-pm',
