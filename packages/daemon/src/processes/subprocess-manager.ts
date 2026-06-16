@@ -52,6 +52,8 @@ export interface SubprocessManagerDeps {
 export class SubprocessManager extends EventEmitter {
   private readonly processes = new Map<string, SubprocessState>();
   private readonly childProcesses = new Map<string, ChildProcess>();
+  private readonly stallIntervals = new Map<string, ReturnType<typeof setInterval>>();
+  private readonly restartTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private memoryCheckTimer: ReturnType<typeof setInterval> | null = null;
   private readonly deps: SubprocessManagerDeps;
 
@@ -119,10 +121,12 @@ export class SubprocessManager extends EventEmitter {
           this.emit('process:stalled', { id });
           child.kill('SIGTERM');
           clearInterval(stallInterval);
+          this.stallIntervals.delete(id);
         }
       },
       Math.min(stallTimeout, 10_000)
     ).unref();
+    this.stallIntervals.set(id, stallInterval);
 
     child.stdout?.on('data', (data: Buffer) => {
       lastActivity = Date.now();
@@ -146,6 +150,7 @@ export class SubprocessManager extends EventEmitter {
 
     child.on('exit', code => {
       clearInterval(stallInterval);
+      this.stallIntervals.delete(id);
       state.exitCode = code;
       state.status = code === 0 ? 'stopped' : 'crashed';
       state.stoppedAt = Date.now();
@@ -158,7 +163,11 @@ export class SubprocessManager extends EventEmitter {
           state.restartCount++;
           state.status = 'running';
           this.emit('process:restarted', { id, attempt: state.restartCount, delay });
-          setTimeout(() => this.spawnChild(id, spec, state), delay).unref();
+          const timer = setTimeout(() => {
+            this.restartTimers.delete(id);
+            this.spawnChild(id, spec, state);
+          }, delay).unref();
+          this.restartTimers.set(id, timer);
         }
       }
     });
@@ -235,6 +244,9 @@ export class SubprocessManager extends EventEmitter {
   }
 
   killProcess(id: string): boolean {
+    // Clean up timers and intervals
+    this.clearProcessTimers(id);
+
     const child = this.childProcesses.get(id);
     if (!child) {
       return false;
@@ -247,6 +259,19 @@ export class SubprocessManager extends EventEmitter {
     }
     this.emit('process:killed', { id, reason: 'manual' });
     return true;
+  }
+
+  private clearProcessTimers(id: string): void {
+    const stallInterval = this.stallIntervals.get(id);
+    if (stallInterval) {
+      clearInterval(stallInterval);
+      this.stallIntervals.delete(id);
+    }
+    const restartTimer = this.restartTimers.get(id);
+    if (restartTimer) {
+      clearTimeout(restartTimer);
+      this.restartTimers.delete(id);
+    }
   }
 
   listProcesses(): SubprocessState[] {
@@ -266,6 +291,14 @@ export class SubprocessManager extends EventEmitter {
   }
 
   killAll(): Promise<void> {
+    // Clear all timers first
+    for (const id of this.stallIntervals.keys()) {
+      this.clearProcessTimers(id);
+    }
+    for (const id of this.restartTimers.keys()) {
+      this.clearProcessTimers(id);
+    }
+
     const exits = Array.from(this.childProcesses.entries()).map(
       ([_id, child]) =>
         new Promise<void>(resolve => {

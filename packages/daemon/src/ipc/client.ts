@@ -13,18 +13,26 @@ export class IPCClient {
 
   connect(socketPath: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.socket = connect(socketPath, () => resolve());
+      this.socket = connect(socketPath, () => {
+        resolve();
+      });
 
       this.socket.on('data', (data: Buffer) => {
         this.buffer += data.toString('utf-8');
         this.processBuffer();
       });
 
-      this.socket.on('error', reject);
+      this.socket.once('error', reject);
+
+      // Attach a permanent error handler once connect resolves
+      this.socket.on('connect_error', () => {});
     });
   }
 
   request(method: string, params?: Record<string, unknown>): Promise<unknown> {
+    if (!this.socket) {
+      return Promise.reject(new Error('IPCClient not connected'));
+    }
     const id = randomUUID();
     const request: IPCRequest = { jsonrpc: '2.0', id, method, ...(params === undefined ? {} : { params }) };
 
@@ -130,7 +138,11 @@ export class IPCClient {
   }
 }
 
-class StreamListener implements AsyncIterable<Record<string, unknown> | { end: true } | { error: Error }> {
+class StreamListener
+  implements
+    AsyncIterable<Record<string, unknown> | { end: true } | { error: Error }>,
+    AsyncIterator<Record<string, unknown>>
+{
   private readonly queue: (Record<string, unknown> | { end: true } | { error: Error })[] = [];
   private waiting: ((value: IteratorResult<Record<string, unknown>>) => void) | null = null;
   private done = false;
@@ -172,29 +184,29 @@ class StreamListener implements AsyncIterable<Record<string, unknown> | { end: t
   }
 
   [Symbol.asyncIterator](): AsyncIterator<Record<string, unknown>> {
-    return {
-      next: (): Promise<IteratorResult<Record<string, unknown>>> => {
-        if (this.queue.length > 0) {
-          const item = this.queue.shift();
-          if (item === undefined) {
-            return Promise.resolve({ value: undefined, done: true });
-          }
-          if ('end' in item) {
-            return Promise.resolve({ value: undefined, done: true });
-          }
-          if ('error' in item) {
-            return Promise.reject(item.error);
-          }
-          return Promise.resolve({ value: item as Record<string, unknown>, done: false });
-        }
-        if (this.done) {
-          return Promise.resolve({ value: undefined, done: true });
-        }
+    return this;
+  }
 
-        return new Promise(resolve => {
-          this.waiting = resolve;
-        });
+  next(): Promise<IteratorResult<Record<string, unknown>>> {
+    if (this.queue.length > 0) {
+      const item = this.queue.shift();
+      if (item === undefined) {
+        return Promise.resolve({ value: undefined, done: true });
       }
-    };
+      if ('end' in item) {
+        return Promise.resolve({ value: undefined, done: true });
+      }
+      if ('error' in item) {
+        return Promise.reject(item.error);
+      }
+      return Promise.resolve({ value: item as Record<string, unknown>, done: false });
+    }
+    if (this.done) {
+      return Promise.resolve({ value: undefined, done: true });
+    }
+
+    return new Promise(resolve => {
+      this.waiting = resolve;
+    });
   }
 }

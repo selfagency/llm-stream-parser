@@ -156,11 +156,12 @@ export class UnifiedDB {
           .run(JSON.stringify(payload), opts ? JSON.stringify(opts) : null);
         return `job_${String(result.lastInsertRowid)}`;
       },
-      enqueueTx: (_tx: unknown, payload: unknown, opts?: Record<string, unknown>) => {
-        const result = db
-          .prepare(`INSERT INTO honker_jobs_${name} (payload, opts) VALUES (?, ?)`)
-          .run(JSON.stringify(payload), opts ? JSON.stringify(opts) : null);
-        return `job_${String(result.lastInsertRowid)}`;
+      enqueueTx: (tx: unknown, payload: unknown, opts?: Record<string, unknown>) => {
+        const t = tx as { execute: (sql: string, params?: unknown[]) => void };
+        const stmt = `INSERT INTO honker_jobs_${name} (payload, opts) VALUES (?, ?)`;
+        t.execute(stmt, [JSON.stringify(payload), opts ? JSON.stringify(opts) : null]);
+        // Can't return lastInsertRowid via TransactionHandle.execute — caller gets no ID
+        return `job_tx`;
       },
       claimOne: (workerId: string) => {
         const rows = db
@@ -250,15 +251,20 @@ export class UnifiedDB {
     }
     db.prepare('BEGIN').run();
 
+    let committed = false;
+
     return {
       execute: (sql: string, params?: unknown[]) => {
         db.prepare(sql).run(...(params ?? []));
       },
       commit: () => {
         db.prepare('COMMIT').run();
+        committed = true;
       },
       rollback: () => {
-        db.prepare('ROLLBACK').run();
+        if (!committed) {
+          db.prepare('ROLLBACK').run();
+        }
       }
     };
   }
