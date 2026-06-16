@@ -46,6 +46,19 @@ export function createRepairState(): RepairState {
  */
 // #lizard forgives
 export function feedCharToStateMachine(char: string, state: RepairState): string {
+  // If inside a string, handle string-specific logic
+  if (state.inString) {
+    return handleStringChar(char, state);
+  }
+
+  // Outside string: handle structural characters
+  return handleStructuralChar(char, state);
+}
+
+/**
+ * Handle a character while inside a string literal.
+ */
+function handleStringChar(char: string, state: RepairState): string {
   // Handle escape sequences within strings
   if (state.escaped) {
     state.escaped = false;
@@ -53,7 +66,7 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
     return char;
   }
 
-  if (state.inString && char === '\\') {
+  if (char === '\\') {
     state.escaped = true;
     state.buffer += char;
     return char;
@@ -66,36 +79,47 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
     return char;
   }
 
-  // If inside a string, just accumulate
-  if (state.inString) {
-    state.buffer += char;
-    return char;
-  }
+  // All other string characters just accumulate
+  state.buffer += char;
+  return char;
+}
 
-  // Outside string: handle structural characters
+/**
+ * Handle a character outside of a string literal.
+ */
+function handleStructuralChar(char: string, state: RepairState): string {
+  // Opening brackets
   if (char === '{' || char === '[') {
     state.bracketStack.push(char === '{' ? '}' : ']');
     state.buffer += char;
     return char;
   }
 
+  // Closing brackets
   if (char === '}' || char === ']') {
-    if (state.bracketStack.length > 0 && state.bracketStack.at(-1) === char) {
-      state.bracketStack.pop();
-      state.buffer += char;
-      // Mark this as a safe position if we've closed a top-level structure
-      if (state.bracketStack.length === 0) {
-        state.lastSafeEnd = state.buffer.length;
-      }
-      return char;
-    }
-    // Mismatched closing delimiter: skip it
-    return '';
+    return handleClosingBracket(char, state);
   }
 
-  // For all other characters, just accumulate
+  // All other characters just accumulate
   state.buffer += char;
   return char;
+}
+
+/**
+ * Handle a closing bracket, checking for proper matching.
+ */
+function handleClosingBracket(char: string, state: RepairState): string {
+  if (state.bracketStack.length > 0 && state.bracketStack.at(-1) === char) {
+    state.bracketStack.pop();
+    state.buffer += char;
+    // Mark this as a safe position if we've closed a top-level structure
+    if (state.bracketStack.length === 0) {
+      state.lastSafeEnd = state.buffer.length;
+    }
+    return char;
+  }
+  // Mismatched closing delimiter: skip it
+  return '';
 }
 
 /**
