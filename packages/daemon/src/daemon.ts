@@ -69,10 +69,20 @@ export interface DaemonDeps {
 function createLogger(config: DaemonConfig['logging']): Logger {
   const prefix = config.file ?? '[daemon] ';
   const LEVELS = { debug: 10, info: 20, warn: 30, error: 40 } as const;
-  const configuredLevel = LEVELS[config.level] ?? LEVELS.info;
+  const configuredLevel =
+    config.level === 'debug'
+      ? 10
+      : config.level === 'info'
+        ? 20
+        : config.level === 'warn'
+          ? 30
+          : config.level === 'error'
+            ? 40
+            : 20;
 
-  function shouldLog(level: keyof typeof LEVELS): boolean {
-    return LEVELS[level] >= configuredLevel;
+  function shouldLog(level: 'debug' | 'info' | 'warn' | 'error'): boolean {
+    const levelValue = level === 'debug' ? 10 : level === 'info' ? 20 : level === 'warn' ? 30 : 40;
+    return levelValue >= configuredLevel;
   }
 
   return {

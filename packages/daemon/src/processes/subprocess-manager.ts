@@ -98,8 +98,17 @@ export class SubprocessManager extends EventEmitter {
   private spawnChild(id: string, spec: SubprocessSpec, state: SubprocessState): void {
     // Only inherit safe env vars — don't leak secrets to subprocesses
     const safeEnv: Record<string, string> = {};
-    for (const key of ['PATH', 'LANG', 'LC_ALL', 'HOME', 'TMPDIR', 'USER', 'SHELL', 'TERM'] as const) {
-      const val = process.env[key];
+    const envVars: Record<string, string | undefined> = {
+      PATH: process.env.PATH,
+      LANG: process.env.LANG,
+      LC_ALL: process.env.LC_ALL,
+      HOME: process.env.HOME,
+      TMPDIR: process.env.TMPDIR,
+      USER: process.env.USER,
+      SHELL: process.env.SHELL,
+      TERM: process.env.TERM
+    };
+    for (const [key, val] of Object.entries(envVars)) {
       if (val) {
         safeEnv[key] = val;
       }
