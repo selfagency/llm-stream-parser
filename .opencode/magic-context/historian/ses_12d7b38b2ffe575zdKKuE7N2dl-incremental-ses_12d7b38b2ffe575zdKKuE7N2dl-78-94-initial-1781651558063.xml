@@ -1,0 +1,40 @@
+This chunk (78-94) is entirely tool-only — reading and editing the same Phase 4 complexity refactor targets (`extract-xml-tool-calls.ts`, `tool-call-accumulator.ts`) that were already addressed in compartments 45–67 and 68–77. No new files were touched, no new objectives were introduced, and no user messages interrupted the flow.
+
+```xml
+<output>
+<compartments>
+<compartment start="68" end="94" title="Phase 4 complexity refactors: core/providers/gateway nested conditionals" episode_type="refactor" importance="68">
+<p1>
+Continued Phase 4 complexity refactors from plan/agentsy-quality.md (14 findings in providers/gateway/core packages). Read the normalizers test file to understand the test structure, then systematically read and edited source files across three packages to reduce nested conditionals flagged by the complexity scanner.
+
+Files edited in this batch:
+- `packages/core/src/tool-calls/tool-call-accumulator.ts` — simplified addDelta branching
+- `packages/core/src/tool-calls/extract-xml-tool-calls.ts` — reduced nesting in parseXmlToolCallMatch
+- `packages/core/src/structured/repair-state-machine.ts` — investigated Step 4.6 (feedCharToStateMachine, complexity 14); the plan's fix references `state === 'in-tag'` which is not present in the current linear structure; extracted helper functions to reduce complexity
+- `packages/providers/src/normalizers/mistral.ts` — reduced nested conditionals
+- `packages/gateway/src/quota/header-parser.ts` — simplified parseMetric loop
+- `packages/gateway/src/probes/run-probe.ts` — flattened control flow in runCliProbe
+
+The agent also read but did not edit: `packages/gateway/src/registry/local-providers.ts`, `packages/gateway/src/switcher.ts`, `packages/gateway/src/strategies/strategies.ts`, and remaining Phase 4 target files. All changes committed via `but_gitbutler_update_branches`.
+</p1>
+<p2>
+Phase 4 complexity refactors continued across core, providers, and gateway packages. Nested conditionals reduced in tool-call-accumulator.ts, extract-xml-tool-calls.ts, mistral.ts normalizer, header-parser.ts, run-probe.ts, and repair-state-machine.ts. All edits committed.
+</p2>
+<p3>
+Phase 4 complexity remediation continued — reducing nested conditionals across core, providers, and gateway packages per plan/agentsy-quality.md findings.
+</p3>
+<p4>
+plan/agentsy-quality.md; Phase 4; core tool-calls; repair-state-machine
+</p4>
+</compartment>
+</compartments>
+<facts>
+</facts>
+<events>
+</events>
+<meta>
+<messages_processed>78-94</messages_processed>
+<unprocessed_from>95</unprocessed_from>
+</meta>
+</output>
+```
