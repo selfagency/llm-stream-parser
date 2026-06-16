@@ -11,5 +11,5 @@ export async function restartDaemon(socketPath = '/tmp/agentsy-daemon.sock'): Pr
   // Wait for socket cleanup
   await new Promise(resolve => setTimeout(resolve, 1000));
 
-  await startDaemon();
+  await startDaemon({ ipc: { socketPath } });
 }

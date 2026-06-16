@@ -4,7 +4,9 @@ import type { Logger } from '../types.js';
 export interface SleepPolicy {
   enabled: boolean;
   idleTimeoutMs: number;
+  minActiveMs: number;
   pollIntervalMs: number;
+  wakeTimeoutMs: number;
 }
 
 export interface SleeperDeps {

@@ -8,8 +8,9 @@ describe('SubprocessManager', () => {
     const mgr = new SubprocessManager({
       logger,
       defaultStallTimeoutMs: 30_000,
-      defaultMemoryLimitBytes: 256 * 1024 * 1024,
-      memoryCheckIntervalMs: 5000
+      defaultMemoryLimitMb: 256,
+      memoryCheckIntervalMs: 5000,
+      defaultRestartPolicy: 'on-failure'
     });
     await mgr.start();
     expect(logger.info).toHaveBeenCalledWith('SubprocessManager started');
@@ -20,8 +21,9 @@ describe('SubprocessManager', () => {
     const mgr = new SubprocessManager({
       logger: createMockLogger(),
       defaultStallTimeoutMs: 30_000,
-      defaultMemoryLimitBytes: 256 * 1024 * 1024,
-      memoryCheckIntervalMs: 0 // disable memory checks
+      defaultMemoryLimitMb: 256,
+      memoryCheckIntervalMs: 0,
+      defaultRestartPolicy: 'on-failure'
     });
     await mgr.start();
     const id = await mgr.spawnProcess({ command: 'echo', args: ['hello'] });
@@ -34,8 +36,9 @@ describe('SubprocessManager', () => {
     const mgr = new SubprocessManager({
       logger: createMockLogger(),
       defaultStallTimeoutMs: 30_000,
-      defaultMemoryLimitBytes: 256 * 1024 * 1024,
-      memoryCheckIntervalMs: 0
+      defaultMemoryLimitMb: 256,
+      memoryCheckIntervalMs: 0,
+      defaultRestartPolicy: 'on-failure'
     });
     await mgr.start();
     await mgr.spawnProcess({ command: 'echo', args: ['a'] });
@@ -48,8 +51,9 @@ describe('SubprocessManager', () => {
     const mgr = new SubprocessManager({
       logger: createMockLogger(),
       defaultStallTimeoutMs: 30_000,
-      defaultMemoryLimitBytes: 256 * 1024 * 1024,
-      memoryCheckIntervalMs: 0
+      defaultMemoryLimitMb: 256,
+      memoryCheckIntervalMs: 0,
+      defaultRestartPolicy: 'on-failure'
     });
     await mgr.start();
     const id = await mgr.spawnProcess({ command: 'sleep', args: ['30'] });
@@ -62,8 +66,9 @@ describe('SubprocessManager', () => {
     const mgr = new SubprocessManager({
       logger: createMockLogger(),
       defaultStallTimeoutMs: 30_000,
-      defaultMemoryLimitBytes: 256 * 1024 * 1024,
-      memoryCheckIntervalMs: 0
+      defaultMemoryLimitMb: 256,
+      memoryCheckIntervalMs: 0,
+      defaultRestartPolicy: 'on-failure'
     });
     await mgr.start();
     const id = await mgr.spawnProcess({ command: 'echo', args: ['hello world'] });
@@ -77,14 +82,15 @@ describe('SubprocessManager', () => {
     const mgr = new SubprocessManager({
       logger: createMockLogger(),
       defaultStallTimeoutMs: 30_000,
-      defaultMemoryLimitBytes: 256 * 1024 * 1024,
-      memoryCheckIntervalMs: 0
+      defaultMemoryLimitMb: 256,
+      memoryCheckIntervalMs: 0,
+      defaultRestartPolicy: 'on-failure'
     });
     await mgr.start();
     await mgr.spawnProcess({ command: 'sleep', args: ['30'] });
     await mgr.spawnProcess({ command: 'sleep', args: ['30'] });
     await mgr.killAll();
-    expect(mgr.count()).toBe(2); // processes tracked but killed
+    expect(mgr.count()).toBe(2);
     await mgr.stop();
   });
 });

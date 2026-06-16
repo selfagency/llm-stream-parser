@@ -7,7 +7,7 @@ describe('Daemon', () => {
       config: {
         ipc: { socketPath: '/tmp/agentsy-test-daemon.sock' },
         acp: { enabled: false },
-        supervisor: { enabled: false },
+        supervisor: { restartPolicy: 'never' },
         sleep: { enabled: false },
         subprocess: { memoryCheckIntervalMs: 1 }
       }
@@ -24,7 +24,7 @@ describe('Daemon', () => {
       config: {
         ipc: { socketPath: '/tmp/agentsy-test-daemon2.sock' },
         acp: { enabled: false },
-        supervisor: { enabled: false },
+        supervisor: { restartPolicy: 'never' },
         sleep: { enabled: false },
         subprocess: { memoryCheckIntervalMs: 1 }
       }
@@ -39,7 +39,7 @@ describe('Daemon', () => {
       config: {
         ipc: { socketPath: '/tmp/agentsy-test-daemon3.sock' },
         acp: { enabled: false },
-        supervisor: { enabled: false },
+        supervisor: { restartPolicy: 'never' },
         sleep: { enabled: false },
         subprocess: { memoryCheckIntervalMs: 1 }
       }
@@ -59,13 +59,12 @@ describe('Daemon', () => {
       config: {
         ipc: { socketPath: '/tmp/agentsy-test-daemon4.sock' },
         acp: { enabled: false },
-        supervisor: { enabled: false },
+        supervisor: { restartPolicy: 'never' },
         sleep: { enabled: false },
         subprocess: { memoryCheckIntervalMs: 1 }
       }
     });
     await daemon.start();
-    // Access status via IPC handler
     expect(daemon.state).toBe('running');
     await daemon.stop();
   });

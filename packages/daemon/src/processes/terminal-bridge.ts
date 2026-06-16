@@ -18,7 +18,7 @@ export class TerminalBridge {
       command,
       ...(args === undefined ? {} : { args }),
       ...(cwd === undefined ? {} : { cwd }),
-      autoRestart: false
+      restartPolicy: 'never'
     });
   }
 

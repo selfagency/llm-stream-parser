@@ -4,17 +4,17 @@ import { DaemonConfigSchema, resolveConfig } from './config.js';
 describe('DaemonConfigSchema', () => {
   it('should apply defaults for empty config', () => {
     const config = DaemonConfigSchema.parse({});
-    expect(config.ipc.socketPath).toBe('/tmp/agentsy-daemon.sock');
+    expect(config.ipc.socketPath).toContain('daemon.sock');
     expect(config.ipc.maxConnections).toBe(10);
     expect(config.ipc.requestTimeoutMs).toBe(30_000);
-    expect(config.acp.enabled).toBe(false);
-    expect(config.acp.transport).toBe('stdio');
-    expect(config.supervisor.enabled).toBe(true);
+    expect(config.acp.enabled).toBe(true);
+    expect(config.acp.transport).toBe('websocket');
+    expect(config.supervisor.restartPolicy).toBe('always');
     expect(config.supervisor.maxRestarts).toBe(5);
     expect(config.sleep.enabled).toBe(true);
     expect(config.sleep.idleTimeoutMs).toBe(300_000);
     expect(config.subprocess.defaultStallTimeoutMs).toBe(30_000);
-    expect(config.subprocess.defaultMemoryLimitBytes).toBe(256 * 1024 * 1024);
+    expect(config.subprocess.defaultMemoryLimitMb).toBe(512);
     expect(config.logging.level).toBe('info');
     expect(config.shutdownTimeoutMs).toBe(30_000);
   });
@@ -22,13 +22,12 @@ describe('DaemonConfigSchema', () => {
   it('should override specific fields', () => {
     const config = DaemonConfigSchema.parse({
       ipc: { socketPath: '/tmp/custom.sock' },
-      acp: { enabled: true, transport: 'websocket' as const, websocketPort: 9999 },
+      acp: { enabled: true, transport: 'stdio' as const },
       logging: { level: 'debug' as const }
     });
     expect(config.ipc.socketPath).toBe('/tmp/custom.sock');
     expect(config.acp.enabled).toBe(true);
-    expect(config.acp.transport).toBe('websocket');
-    expect(config.acp.websocketPort).toBe(9999);
+    expect(config.acp.transport).toBe('stdio');
     expect(config.logging.level).toBe('debug');
   });
 
@@ -50,6 +49,6 @@ describe('resolveConfig', () => {
 
   it('should return defaults for empty input', () => {
     const config = resolveConfig({});
-    expect(config.ipc.socketPath).toBe('/tmp/agentsy-daemon.sock');
+    expect(config.ipc.socketPath).toContain('daemon.sock');
   });
 });

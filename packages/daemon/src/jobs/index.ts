@@ -1,10 +1,9 @@
 /**
- * Job scheduling subsystem.
- *
- * Cron + one-time job scheduler with SQLite-backed persistence.
+ * Jobs subsystem — Honker-backed durable queue and Bree-style scheduler.
  *
  * @module
  */
 
-export { JobQueue, type JobQueueDeps } from './job-queue.js';
-export { JobScheduler, type JobSchedulerDeps } from './scheduler.js';
+export { BreeScheduler, type BreeSchedulerConfig, type ScheduleDefinition } from './bree-scheduler.js';
+export { type EnqueueOptions, HonkerQueueAdapter, type HonkerQueueConfig, type Job } from './honker-queue.js';
+export { DEFAULT_JOB_DEFINITIONS, type JobDefinition } from './job-definitions.js';

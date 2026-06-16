@@ -1,4 +1,6 @@
 import type { MemoryEngine } from '@agentsy/memory';
+import type { CortexKitDb } from '@agentsy/shared/cortexkit';
+import { openCortexKitDb } from '@agentsy/shared/cortexkit';
 import { ACPServer } from './acp/acp-server.js';
 import { AgentHost } from './agents/agent-host.js';
 import { ScopeManager } from './agents/scope-manager.js';
@@ -6,9 +8,11 @@ import type { DaemonConfig } from './config.js';
 import { resolveConfig } from './config.js';
 import { ConnectorHost } from './connectors/connector-host.js';
 import { IPCServer } from './ipc/server.js';
-import { JobScheduler } from './jobs/scheduler.js';
+import { BreeScheduler } from './jobs/bree-scheduler.js';
+import { HonkerQueueAdapter } from './jobs/honker-queue.js';
 import { Sleeper } from './lifecycle/sleeper.js';
 import { Supervisor } from './lifecycle/supervisor.js';
+import { AgentPool } from './pool/agent-pool.js';
 import { SubprocessManager } from './processes/subprocess-manager.js';
 import { ServiceHost } from './services/service-host.js';
 import type { DeepPartial, Logger } from './types.js';
@@ -22,7 +26,7 @@ export interface DaemonDeps {
 }
 
 function createLogger(config: DaemonConfig['logging']): Logger {
-  const prefix = config.json ? '' : '[daemon] ';
+  const prefix = config.file ? '' : '[daemon] ';
   return {
     debug: (msg: string, ...args: unknown[]) => {
       if (config.level === 'debug') {
@@ -47,14 +51,17 @@ export class Daemon {
   private _state: DaemonState = 'stopped';
   private readonly _stateListeners = new Set<(state: DaemonState) => void>();
 
+  readonly db: CortexKitDb;
   readonly memory: MemoryEngine;
   readonly ipc: IPCServer;
   readonly acp: ACPServer;
+  readonly pool: AgentPool;
   readonly processes: SubprocessManager;
   readonly services: ServiceHost;
   readonly agents: AgentHost;
   readonly scopes: ScopeManager;
-  readonly jobs: JobScheduler;
+  readonly jobs: HonkerQueueAdapter;
+  readonly scheduler: BreeScheduler;
   readonly connectors: ConnectorHost;
   readonly supervisor: Supervisor;
   readonly sleeper: Sleeper;
@@ -66,8 +73,13 @@ export class Daemon {
     this.config = resolveConfig(deps.config);
     this.logger = createLogger(this.config.logging);
 
-    // Subsystems
+    // Single shared SQLite database — cortexkit context.db
+    // All subsystems (memory, Honker queues, etc.) share this one file.
+    // Turso sync targets this single database for remote replication.
+    this.db = openCortexKitDb();
+
     this.memory = deps.memoryEngine ?? (null as unknown as MemoryEngine);
+
     this.ipc =
       deps.ipcServer ??
       new IPCServer({
@@ -77,11 +89,22 @@ export class Daemon {
         logger: this.logger
       });
 
+    this.pool = new AgentPool({
+      filename: new URL('./pool/worker-entry.js', import.meta.url).href,
+      minThreads: this.config.pool.minThreads,
+      maxThreads: this.config.pool.maxThreads,
+      idleTimeoutMs: this.config.pool.idleTimeoutMs,
+      maxQueueSize: this.config.pool.maxQueueSize,
+      concurrentTasksPerWorker: this.config.pool.concurrentTasksPerWorker,
+      resourceLimits: this.config.pool.resourceLimits
+    });
+
     this.processes = new SubprocessManager({
       logger: this.logger,
       defaultStallTimeoutMs: this.config.subprocess.defaultStallTimeoutMs,
-      defaultMemoryLimitBytes: this.config.subprocess.defaultMemoryLimitBytes,
-      memoryCheckIntervalMs: this.config.subprocess.memoryCheckIntervalMs
+      defaultMemoryLimitMb: this.config.subprocess.defaultMemoryLimitMb,
+      memoryCheckIntervalMs: this.config.subprocess.memoryCheckIntervalMs,
+      defaultRestartPolicy: this.config.subprocess.defaultRestartPolicy
     });
 
     this.acp = new ACPServer({
@@ -90,21 +113,26 @@ export class Daemon {
       subprocessManager: this.processes
     });
 
-    this.services = new ServiceHost({
-      logger: this.logger
-    });
+    this.services = new ServiceHost({ logger: this.logger });
 
-    this.scopes = new ScopeManager({
-      logger: this.logger
-    });
+    this.scopes = new ScopeManager({ logger: this.logger });
 
     this.agents = new AgentHost({
       memory: this.memory,
       scopeManager: this.scopes,
+      pool: this.pool,
       logger: this.logger
     });
 
-    this.jobs = new JobScheduler({
+    // Honker queue uses the same shared cortexkit database
+    this.jobs = new HonkerQueueAdapter({
+      dbPath: this.db.name,
+      logger: this.logger
+    });
+
+    this.scheduler = new BreeScheduler({
+      queue: this.jobs,
+      root: this.config.jobs.jobDirectory,
       logger: this.logger
     });
 
@@ -132,7 +160,7 @@ export class Daemon {
     this.transition('starting');
 
     try {
-      // 1. Start memory engine (if it has initialize)
+      // 1. Start memory engine
       if (
         this.memory &&
         typeof (this.memory as unknown as { initialize?: () => Promise<void> }).initialize === 'function'
@@ -141,40 +169,46 @@ export class Daemon {
       }
       this.services.register('memory', this.memory as never);
 
-      // 2. Start job scheduler
+      // 2. Initialize Honker durable queue (same cortexkit DB)
       await this.jobs.start();
       this.services.register('jobs', this.jobs as never);
 
-      // 3. Initialize scope manager
+      // 3. Start Bree scheduler
+      await this.scheduler.start();
+      this.services.register('scheduler', this.scheduler as never);
+
+      // 4. Initialize scope manager
       await this.scopes.initialize();
 
-      // 4. Start agent host
+      // 5. Start agent host
       await this.agents.initialize();
 
-      // 5. Start subprocess manager
+      // 6. Start subprocess manager
       await this.processes.start();
 
-      // 6. Start connectors
+      // 7. Start connectors
       await this.connectors.initialize();
 
-      // 7. Start IPC server
+      // 8. Start IPC server
       await this.ipc.start();
       this.registerIPCHandlers();
 
-      // 8. Start ACP server
+      // 9. Start ACP server
       await this.acp.start(this.config.acp);
 
-      // 9. Enable supervisor
+      // 10. Enable supervisor
       this.supervisor.watch(this);
 
-      // 10. Enable sleeper
+      // 11. Enable sleeper
       this.sleeper.watch(this.services);
 
       this.transition('running');
       this.logger.info('Daemon started', {
         pid: process.pid,
         socket: this.config.ipc.socketPath,
-        acp: this.config.acp.enabled ? 'enabled' : 'disabled'
+        acp: this.config.acp.enabled ? 'enabled' : 'disabled',
+        agents: this.agents.count(),
+        services: this.services.count()
       });
     } catch (error) {
       this.transition('crashed');
@@ -195,8 +229,10 @@ export class Daemon {
       await withTimeout(this.acp.stop(), timeout);
       await withTimeout(this.ipc.stop(), timeout);
       await withTimeout(this.sleeper.stop(), timeout);
-      await withTimeout(this.supervisor.stop(), timeout);
+      await withTimeout(Promise.resolve(this.supervisor.stop()), timeout);
+      await withTimeout(this.scheduler.stop(), timeout);
       await withTimeout(this.processes.killAll(), timeout);
+      await withTimeout(this.pool.destroy(), timeout);
       await withTimeout(this.connectors.shutdown(), timeout);
       await withTimeout(this.agents.shutdown(), timeout);
       await withTimeout(this.jobs.stop(), timeout);
@@ -206,7 +242,7 @@ export class Daemon {
       ) {
         await withTimeout((this.memory as unknown as { shutdown: () => Promise<void> }).shutdown(), timeout);
       }
-
+      this.db.close();
       this.transition('stopped');
       this.logger.info('Daemon stopped');
     } catch (error) {
@@ -228,12 +264,12 @@ export class Daemon {
   private transition(state: DaemonState): void {
     const prev = this._state;
     this._state = state;
-    this.logger.debug(`Daemon state: ${prev} → ${state}`);
+    this.logger.debug('Daemon state: %s → %s', prev, state);
     for (const listener of this._stateListeners) {
       try {
         listener(state);
       } catch {
-        // don't let listeners crash daemon
+        /* don't let listeners crash daemon */
       }
     }
   }
@@ -257,10 +293,22 @@ export class Daemon {
       return Promise.resolve({ cancelled: true });
     });
 
-    this.ipc.handle('jobs.schedule', req => this.jobs.schedule(req));
-    this.ipc.handle('jobs.list', () => Promise.resolve(this.jobs.list()));
+    this.ipc.handle('jobs.enqueue', req => this.jobs.enqueue(req.payload, req.options as never));
+    this.ipc.handle('jobs.list', () => this.jobs.list());
     this.ipc.handle('jobs.cancel', req => {
       this.jobs.cancel(req.jobId as string);
+      return Promise.resolve({ cancelled: true });
+    });
+    this.ipc.handle('jobs.claim', req => this.jobs.claim(req.workerId as string, req.queueName as string));
+    this.ipc.handle('jobs.ack', req => {
+      this.jobs.ack(req.jobId as string);
+      return Promise.resolve({ acked: true });
+    });
+
+    this.ipc.handle('scheduler.schedule', req => this.scheduler.schedule(req as never));
+    this.ipc.handle('scheduler.list', () => this.scheduler.list());
+    this.ipc.handle('scheduler.cancel', req => {
+      this.scheduler.cancel(req.scheduleId as string);
       return Promise.resolve({ cancelled: true });
     });
 
@@ -270,6 +318,7 @@ export class Daemon {
       return { stopped: true };
     });
 
+    this.ipc.handle('pool.stats', () => Promise.resolve(this.pool.stats()));
     this.ipc.handle('display.render', req => Promise.resolve(this.handleDisplay(req)));
 
     this.ipc.handle('process.spawn', req =>
@@ -283,7 +332,7 @@ export class Daemon {
     this.ipc.handle('process.output', req => Promise.resolve(this.processes.getOutput(req.processId as string)));
   }
 
-  private getStatus(): Record<string, unknown> {
+  getStatus(): Record<string, unknown> {
     return {
       state: this._state,
       pid: process.pid,

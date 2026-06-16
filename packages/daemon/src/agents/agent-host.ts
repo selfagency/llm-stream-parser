@@ -1,10 +1,12 @@
 import type { MemoryEngine } from '@agentsy/memory';
+import type { AgentPool } from '../pool/agent-pool.js';
 import type { Logger } from '../types.js';
 import type { ScopeManager } from './scope-manager.js';
 
 export interface AgentHostDeps {
   logger: Logger;
   memory: MemoryEngine;
+  pool: AgentPool;
   scopeManager: ScopeManager;
 }
 
@@ -28,7 +30,7 @@ export class AgentHost {
     const memoryScope = (spec.memoryScope as string) ?? 'default';
 
     this.agents.set(id, { id, name, role, memoryScope });
-    this.deps.logger.info(`Agent spawned: ${id} (${name}, ${role})`);
+    this.deps.logger.info('Agent spawned: %s (%s, %s)', id, name, role);
 
     return Promise.resolve({ spec: { id } });
   }

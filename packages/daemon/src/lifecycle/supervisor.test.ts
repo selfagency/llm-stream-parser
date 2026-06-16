@@ -6,17 +6,32 @@ describe('Supervisor', () => {
   it('should watch daemon when enabled', () => {
     const logger = createMockLogger({ info: vi.fn() });
     const sup = new Supervisor({
-      policy: { enabled: true, maxRestarts: 5, restartWindowMs: 60_000, restartDelayMs: 1000 },
+      policy: {
+        restartPolicy: 'always',
+        maxRestarts: 5,
+        restartWindowMs: 60_000,
+        backoffBaseMs: 1000,
+        backoffMaxMs: 30_000,
+        backoffJitter: true
+      },
       logger
     });
-    sup.watch({} as never);
+    const mockDaemon = { onStateChange: vi.fn() };
+    sup.watch(mockDaemon as never);
     expect(logger.info).toHaveBeenCalledWith('Supervisor watching daemon');
   });
 
   it('should log disabled state', () => {
     const logger = createMockLogger({ info: vi.fn() });
     const sup = new Supervisor({
-      policy: { enabled: false, maxRestarts: 5, restartWindowMs: 60_000, restartDelayMs: 1000 },
+      policy: {
+        restartPolicy: 'never',
+        maxRestarts: 5,
+        restartWindowMs: 60_000,
+        backoffBaseMs: 1000,
+        backoffMaxMs: 30_000,
+        backoffJitter: true
+      },
       logger
     });
     sup.watch({} as never);
@@ -26,7 +41,14 @@ describe('Supervisor', () => {
   it('should stop cleanly', async () => {
     const logger = createMockLogger({ info: vi.fn() });
     const sup = new Supervisor({
-      policy: { enabled: true, maxRestarts: 5, restartWindowMs: 60_000, restartDelayMs: 1000 },
+      policy: {
+        restartPolicy: 'always',
+        maxRestarts: 5,
+        restartWindowMs: 60_000,
+        backoffBaseMs: 1000,
+        backoffMaxMs: 30_000,
+        backoffJitter: true
+      },
       logger
     });
     await sup.stop();

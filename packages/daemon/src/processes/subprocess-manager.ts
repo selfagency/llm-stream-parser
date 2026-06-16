@@ -1,15 +1,30 @@
 import { type ChildProcess, spawn } from 'node:child_process';
+import { EventEmitter } from 'node:events';
 import type { Logger } from '../types.js';
+
+export type RestartPolicy = 'always' | 'on-failure' | 'never';
 
 export interface SubprocessSpec {
   args?: string[];
-  autoRestart?: boolean;
+  backoffBaseMs?: number;
+  backoffJitter?: boolean;
+  backoffMaxMs?: number;
   command: string;
   cwd?: string;
   env?: Record<string, string>;
+  id?: string;
+  logging?: {
+    stdout?: string;
+    stderr?: string;
+    maxFileSizeBytes?: number;
+    maxFiles?: number;
+  };
   maxRestarts?: number;
-  memoryLimitBytes?: number;
+  memoryLimitMb?: number;
+  restartPolicy?: RestartPolicy;
+  restartWindowMs?: number;
   stallTimeoutMs?: number;
+  timeoutMs?: number;
 }
 
 export interface SubprocessState {
@@ -17,6 +32,7 @@ export interface SubprocessState {
   id: string;
   pid: number | null;
   restartCount: number;
+  restartTimestamps: number[];
   spec: SubprocessSpec;
   startedAt: number | null;
   status: 'running' | 'stopped' | 'crashed' | 'stalled' | 'killed';
@@ -26,19 +42,21 @@ export interface SubprocessState {
 }
 
 export interface SubprocessManagerDeps {
-  defaultMemoryLimitBytes: number;
+  defaultMemoryLimitMb: number;
+  defaultRestartPolicy: RestartPolicy;
   defaultStallTimeoutMs: number;
   logger: Logger;
   memoryCheckIntervalMs: number;
 }
 
-export class SubprocessManager {
+export class SubprocessManager extends EventEmitter {
   private readonly processes = new Map<string, SubprocessState>();
   private readonly childProcesses = new Map<string, ChildProcess>();
   private memoryCheckTimer: ReturnType<typeof setInterval> | null = null;
   private readonly deps: SubprocessManagerDeps;
 
   constructor(deps: SubprocessManagerDeps) {
+    super();
     this.deps = deps;
   }
 
@@ -54,7 +72,7 @@ export class SubprocessManager {
   }
 
   spawnProcess(spec: SubprocessSpec): Promise<string> {
-    const id = `proc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const id = spec.id ?? `proc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const state: SubprocessState = {
       id,
       spec,
@@ -65,12 +83,12 @@ export class SubprocessManager {
       restartCount: 0,
       exitCode: null,
       stdout: [],
-      stderr: []
+      stderr: [],
+      restartTimestamps: []
     };
 
     this.processes.set(id, state);
     this.spawnChild(id, spec, state);
-
     return Promise.resolve(id);
   }
 
@@ -84,24 +102,46 @@ export class SubprocessManager {
     state.pid = child.pid ?? null;
     this.childProcesses.set(id, child);
 
+    const stallTimeout = spec.stallTimeoutMs ?? this.deps.defaultStallTimeoutMs;
+    let lastActivity = Date.now();
+    const stallInterval = setInterval(
+      () => {
+        if (Date.now() - lastActivity > stallTimeout) {
+          state.status = 'stalled';
+          this.emit('process:stalled', { id });
+          child.kill('SIGTERM');
+          clearInterval(stallInterval);
+        }
+      },
+      Math.min(stallTimeout, 10_000)
+    ).unref();
+
     child.stdout?.on('data', (data: Buffer) => {
+      lastActivity = Date.now();
       state.stdout.push(data.toString());
     });
 
     child.stderr?.on('data', (data: Buffer) => {
+      lastActivity = Date.now();
       state.stderr.push(data.toString());
     });
 
     child.on('exit', code => {
+      clearInterval(stallInterval);
       state.exitCode = code;
       state.status = code === 0 ? 'stopped' : 'crashed';
       state.stoppedAt = Date.now();
       this.childProcesses.delete(id);
+      this.emit('process:exited', { id, code });
 
-      if (spec.autoRestart && state.restartCount < (spec.maxRestarts ?? 3)) {
-        state.restartCount++;
-        state.status = 'running';
-        this.spawnChild(id, spec, state);
+      if (this.shouldRestart(spec, code)) {
+        const delay = this.calculateBackoff(state);
+        if (delay >= 0) {
+          state.restartCount++;
+          state.status = 'running';
+          this.emit('process:restarted', { id, attempt: state.restartCount, delay });
+          setTimeout(() => this.spawnChild(id, spec, state), delay).unref();
+        }
       }
     });
 
@@ -110,20 +150,62 @@ export class SubprocessManager {
     });
   }
 
+  private shouldRestart(spec: SubprocessSpec, exitCode: number | null): boolean {
+    const policy = spec.restartPolicy ?? this.deps.defaultRestartPolicy;
+    if (policy === 'never') {
+      return false;
+    }
+    if (policy === 'always') {
+      return true;
+    }
+    if (policy === 'on-failure') {
+      return exitCode !== 0;
+    }
+    return false;
+  }
+
+  private calculateBackoff(state: SubprocessState): number {
+    const now = Date.now();
+    const windowMs = state.spec.restartWindowMs ?? 60_000;
+    const maxRestarts = state.spec.maxRestarts ?? 5;
+
+    // Clean old timestamps
+    state.restartTimestamps = state.restartTimestamps.filter(t => t >= now - windowMs);
+
+    if (state.restartTimestamps.length >= maxRestarts) {
+      this.deps.logger.warn(`Subprocess ${state.id} exceeded max restarts, giving up`);
+      return -1;
+    }
+
+    state.restartTimestamps.push(now);
+    const attempt = state.restartTimestamps.length;
+
+    const baseMs = state.spec.backoffBaseMs ?? 1000;
+    const maxMs = state.spec.backoffMaxMs ?? 30_000;
+    let delay = Math.min(baseMs * 2 ** (attempt - 1), maxMs);
+
+    if (state.spec.backoffJitter !== false) {
+      delay += Math.random() * delay * 0.25;
+    }
+
+    return Math.floor(delay);
+  }
+
   private checkMemoryUsage(): void {
     for (const [id, child] of this.childProcesses) {
       const state = this.processes.get(id);
-      if (!state?.spec.memoryLimitBytes) {
+      if (!state?.spec.memoryLimitMb) {
         continue;
       }
 
-      // Simple RSS check via pidusage equivalent
       try {
-        const rss = process.memoryUsage().rss; // Placeholder — real impl would use pidusage
-        if (rss > state.spec.memoryLimitBytes) {
-          this.deps.logger.warn(`Subprocess ${id} exceeded memory limit`, { rss, limit: state.spec.memoryLimitBytes });
+        const rss = process.memoryUsage().rss;
+        const limitBytes = (state.spec.memoryLimitMb ?? this.deps.defaultMemoryLimitMb) * 1024 * 1024;
+        if (rss > limitBytes) {
+          this.deps.logger.warn(`Subprocess ${id} exceeded memory limit`, { rss, limit: limitBytes });
           child.kill('SIGKILL');
           state.status = 'killed';
+          this.emit('process:killed', { id, reason: 'memory' });
         }
       } catch {
         // ignore
@@ -142,6 +224,7 @@ export class SubprocessManager {
       state.status = 'killed';
       state.stoppedAt = Date.now();
     }
+    this.emit('process:killed', { id, reason: 'manual' });
     return true;
   }
 
@@ -174,12 +257,11 @@ export class SubprocessManager {
     return Promise.resolve();
   }
 
-  async stop(): Promise<void> {
+  stop(): Promise<void> {
     if (this.memoryCheckTimer) {
       clearInterval(this.memoryCheckTimer);
       this.memoryCheckTimer = null;
     }
-    await this.killAll();
-    this.deps.logger.info('SubprocessManager stopped');
+    return this.killAll();
   }
 }

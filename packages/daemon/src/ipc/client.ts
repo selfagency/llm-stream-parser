@@ -82,7 +82,9 @@ export class IPCClient {
   private processLine(line: string): void {
     try {
       const message = JSON.parse(line) as Record<string, unknown>;
-      this.resolvePendingRequest(message) || this.routeStreamNotification(message);
+      if (!this.resolvePendingRequest(message)) {
+        this.routeStreamNotification(message);
+      }
     } catch (error) {
       console.error('Failed to parse IPC message:', error);
     }
@@ -90,7 +92,7 @@ export class IPCClient {
 
   private resolvePendingRequest(message: Record<string, unknown>): boolean {
     const msgId = message.id as string | undefined;
-    if (!msgId || !this.pendingRequests.has(msgId)) {
+    if (!(msgId && this.pendingRequests.has(msgId))) {
       return false;
     }
     const entry = this.pendingRequests.get(msgId);

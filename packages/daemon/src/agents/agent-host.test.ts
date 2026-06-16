@@ -3,10 +3,13 @@ import { createMockLogger } from '../test-utils.js';
 import { AgentHost } from './agent-host.js';
 
 describe('AgentHost', () => {
+  const mockPool = {} as never;
+
   it('should spawn and list agents', async () => {
     const host = new AgentHost({
       memory: {} as never,
       scopeManager: {} as never,
+      pool: mockPool,
       logger: createMockLogger()
     });
     await host.initialize();
@@ -24,6 +27,7 @@ describe('AgentHost', () => {
     const host = new AgentHost({
       memory: {} as never,
       scopeManager: {} as never,
+      pool: mockPool,
       logger: createMockLogger()
     });
     await host.initialize();
@@ -37,6 +41,7 @@ describe('AgentHost', () => {
     const host = new AgentHost({
       memory: {} as never,
       scopeManager: {} as never,
+      pool: mockPool,
       logger: createMockLogger()
     });
     const result = await host.send('agent-1', 'hello');
@@ -47,6 +52,7 @@ describe('AgentHost', () => {
     const host = new AgentHost({
       memory: {} as never,
       scopeManager: {} as never,
+      pool: mockPool,
       logger: createMockLogger()
     });
     const result = await host.startStream({});
@@ -59,6 +65,7 @@ describe('AgentHost', () => {
     const host = new AgentHost({
       memory: {} as never,
       scopeManager: {} as never,
+      pool: mockPool,
       logger
     });
     await host.initialize();

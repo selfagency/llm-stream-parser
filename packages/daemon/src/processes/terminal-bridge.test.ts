@@ -14,7 +14,7 @@ describe('TerminalBridge', () => {
       command: 'bash',
       args: ['-c', 'echo hi'],
       cwd: '/tmp',
-      autoRestart: false
+      restartPolicy: 'never'
     });
     expect(id).toBe('proc_123');
   });
@@ -28,7 +28,7 @@ describe('TerminalBridge', () => {
     await bridge.createTerminal('echo');
     expect(mockSpawn).toHaveBeenCalledWith({
       command: 'echo',
-      autoRestart: false
+      restartPolicy: 'never'
     });
   });
 

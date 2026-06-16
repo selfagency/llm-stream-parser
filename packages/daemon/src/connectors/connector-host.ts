@@ -1,7 +1,7 @@
 import type { Logger } from '../types.js';
 
 export interface ConnectorHostDeps {
-  config: { enabled: boolean };
+  config: { discord?: { token: string }; slack?: { token: string }; telegram?: { token: string } };
   logger: Logger;
 }
 
@@ -14,10 +14,6 @@ export class ConnectorHost {
   }
 
   initialize(): Promise<void> {
-    if (!this.deps.config.enabled) {
-      this.deps.logger.info('ConnectorHost disabled');
-      return Promise.resolve();
-    }
     this.deps.logger.info('ConnectorHost initialized');
     return Promise.resolve();
   }
