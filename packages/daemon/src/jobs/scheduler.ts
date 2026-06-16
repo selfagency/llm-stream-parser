@@ -6,18 +6,18 @@ export interface JobSchedulerDeps {
 
 export class JobScheduler {
   private readonly jobs = new Map<string, { id: string; type: string; status: string; scheduledAt: number }>();
-  private readonly deps: JobSchedulerDeps;
+  readonly logger: Logger;
 
   constructor(deps: JobSchedulerDeps) {
-    this.deps = deps;
+    this.logger = deps.logger;
   }
 
-  async start(): Promise<void> {
-    this.running = true;
-    this.deps.logger.info('JobScheduler started');
+  start(): Promise<void> {
+    this.logger.info('JobScheduler started');
+    return Promise.resolve();
   }
 
-  async schedule(spec: Record<string, unknown>): Promise<string> {
+  schedule(spec: Record<string, unknown>): Promise<string> {
     const id = `job_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     this.jobs.set(id, {
       id,
@@ -25,8 +25,8 @@ export class JobScheduler {
       status: 'scheduled',
       scheduledAt: Date.now()
     });
-    this.deps.logger.info(`Job scheduled: ${id}`);
-    return id;
+    this.logger.info(`Job scheduled: ${id}`);
+    return Promise.resolve(id);
   }
 
   list(): { id: string; type: string; status: string }[] {
@@ -45,9 +45,9 @@ export class JobScheduler {
     return this.jobs.size;
   }
 
-  async stop(): Promise<void> {
-    this.running = false;
+  stop(): Promise<void> {
     this.jobs.clear();
-    this.deps.logger.info('JobScheduler stopped');
+    this.logger.info('JobScheduler stopped');
+    return Promise.resolve();
   }
 }

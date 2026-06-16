@@ -36,7 +36,6 @@ export class IPCServer {
   }
 
   async start(): Promise<void> {
-    // Remove stale socket file
     try {
       await unlink(this.config.socketPath);
     } catch {
@@ -68,9 +67,8 @@ export class IPCServer {
     socket.on('data', (data: Buffer) => {
       buffer += data.toString('utf-8');
 
-      // Parse newline-delimited JSON
-      let newlineIdx: number;
-      while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+      let newlineIdx = buffer.indexOf('\n');
+      while (newlineIdx !== -1) {
         const line = buffer.slice(0, newlineIdx);
         buffer = buffer.slice(newlineIdx + 1);
 
@@ -79,6 +77,8 @@ export class IPCServer {
             this.config.logger.error('Error handling IPC message', { clientId, error });
           });
         }
+
+        newlineIdx = buffer.indexOf('\n');
       }
     });
 
@@ -161,19 +161,17 @@ export class IPCServer {
   }
 
   async stop(): Promise<void> {
-    // Close all client connections
     for (const [id, socket] of this.clients) {
       socket.destroy();
       this.clients.delete(id);
     }
 
-    // Close server
     if (this.server) {
-      await new Promise<void>(resolve => this.server?.close(() => resolve()));
+      const srv = this.server;
+      await new Promise<void>(resolve => srv.close(() => resolve()));
       this.server = null;
     }
 
-    // Clean up socket file
     try {
       await unlink(this.config.socketPath);
     } catch {

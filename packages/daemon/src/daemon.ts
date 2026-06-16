@@ -239,48 +239,48 @@ export class Daemon {
   }
 
   private registerIPCHandlers(): void {
-    this.ipc.handle('agent.spawn', async req => this.agents.spawn(req));
-    this.ipc.handle('agent.list', async () => this.agents.list());
-    this.ipc.handle('agent.kill', async req => {
+    this.ipc.handle('agent.spawn', req => this.agents.spawn(req));
+    this.ipc.handle('agent.list', () => Promise.resolve(this.agents.list()));
+    this.ipc.handle('agent.kill', req => {
       this.agents.kill(req.agentId as string);
-      return { killed: true };
+      return Promise.resolve({ killed: true });
     });
-    this.ipc.handle('agent.send', async req => this.agents.send(req.agentId as string, req.message as string));
+    this.ipc.handle('agent.send', req => this.agents.send(req.agentId as string, req.message as string));
 
-    this.ipc.handle('memory.recall', async () => ({ recalled: true }));
-    this.ipc.handle('memory.capture', async () => ({ captured: true }));
-    this.ipc.handle('memory.search', async () => ({ searched: true }));
+    this.ipc.handle('memory.recall', () => Promise.resolve({ recalled: true }));
+    this.ipc.handle('memory.capture', () => Promise.resolve({ captured: true }));
+    this.ipc.handle('memory.search', () => Promise.resolve({ searched: true }));
 
-    this.ipc.handle('stream.start', async req => this.agents.startStream(req));
-    this.ipc.handle('stream.cancel', async req => {
+    this.ipc.handle('stream.start', req => this.agents.startStream(req));
+    this.ipc.handle('stream.cancel', req => {
       this.agents.cancelStream(req.streamId as string);
-      return { cancelled: true };
+      return Promise.resolve({ cancelled: true });
     });
 
-    this.ipc.handle('jobs.schedule', async req => this.jobs.schedule(req));
-    this.ipc.handle('jobs.list', async () => this.jobs.list());
-    this.ipc.handle('jobs.cancel', async req => {
+    this.ipc.handle('jobs.schedule', req => this.jobs.schedule(req));
+    this.ipc.handle('jobs.list', () => Promise.resolve(this.jobs.list()));
+    this.ipc.handle('jobs.cancel', req => {
       this.jobs.cancel(req.jobId as string);
-      return { cancelled: true };
+      return Promise.resolve({ cancelled: true });
     });
 
-    this.ipc.handle('daemon.status', async () => this.getStatus());
+    this.ipc.handle('daemon.status', () => Promise.resolve(this.getStatus()));
     this.ipc.handle('daemon.shutdown', async () => {
       await this.stop();
       return { stopped: true };
     });
 
-    this.ipc.handle('display.render', async req => this.handleDisplay(req));
+    this.ipc.handle('display.render', req => Promise.resolve(this.handleDisplay(req)));
 
-    this.ipc.handle('process.spawn', async req =>
+    this.ipc.handle('process.spawn', req =>
       this.processes.spawnProcess(req as unknown as import('./processes/subprocess-manager.js').SubprocessSpec)
     );
-    this.ipc.handle('process.list', async () => this.processes.listProcesses());
-    this.ipc.handle('process.kill', async req => {
+    this.ipc.handle('process.list', () => Promise.resolve(this.processes.listProcesses()));
+    this.ipc.handle('process.kill', req => {
       this.processes.killProcess(req.processId as string);
-      return { killed: true };
+      return Promise.resolve({ killed: true });
     });
-    this.ipc.handle('process.output', async req => this.processes.getOutput(req.processId as string));
+    this.ipc.handle('process.output', req => Promise.resolve(this.processes.getOutput(req.processId as string)));
   }
 
   private getStatus(): Record<string, unknown> {

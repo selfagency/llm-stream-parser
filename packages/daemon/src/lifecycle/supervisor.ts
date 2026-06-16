@@ -14,23 +14,24 @@ export interface SupervisorDeps {
 }
 
 export class Supervisor {
-  private readonly deps: SupervisorDeps;
+  readonly logger: Logger;
+  private readonly policy: SupervisorPolicy;
 
   constructor(deps: SupervisorDeps) {
-    this.deps = deps;
+    this.logger = deps.logger;
+    this.policy = deps.policy;
   }
 
   watch(_daemon: Daemon): void {
-    if (!this.deps.policy.enabled) {
-      this.deps.logger.info('Supervisor disabled');
+    if (!this.policy.enabled) {
+      this.logger.info('Supervisor disabled');
       return;
     }
-    this.watching = true;
-    this.deps.logger.info('Supervisor watching daemon');
+    this.logger.info('Supervisor watching daemon');
   }
 
-  async stop(): Promise<void> {
-    this.watching = false;
-    this.deps.logger.info('Supervisor stopped');
+  stop(): Promise<void> {
+    this.logger.info('Supervisor stopped');
+    return Promise.resolve();
   }
 }

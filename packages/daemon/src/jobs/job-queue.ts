@@ -7,10 +7,6 @@ export interface JobQueueDeps {
 export class JobQueue {
   private queue: { id: string; payload: unknown; enqueuedAt: number }[] = [];
 
-  constructor(deps: JobQueueDeps) {
-    this.deps = deps;
-  }
-
   enqueue(payload: unknown): string {
     const id = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     this.queue.push({ id, payload, enqueuedAt: Date.now() });

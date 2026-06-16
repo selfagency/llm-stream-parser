@@ -65,9 +65,9 @@ describe('IPCServer + IPCClient integration', () => {
     await client2.connect(SOCKET_PATH);
 
     // Register a handler that sends a notification
-    server.handle('test.notify', async (_params, ctx) => {
+    server.handle('test.notify', (_params, ctx) => {
       ctx.sendNotification('test.event', { data: 42 });
-      return { sent: true };
+      return Promise.resolve({ sent: true });
     });
 
     const result = await client1.request('test.notify');

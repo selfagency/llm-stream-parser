@@ -13,12 +13,13 @@ export class ConnectorHost {
     this.deps = deps;
   }
 
-  async initialize(): Promise<void> {
+  initialize(): Promise<void> {
     if (!this.deps.config.enabled) {
       this.deps.logger.info('ConnectorHost disabled');
-      return;
+      return Promise.resolve();
     }
     this.deps.logger.info('ConnectorHost initialized');
+    return Promise.resolve();
   }
 
   register(name: string, type: string): void {
@@ -34,8 +35,9 @@ export class ConnectorHost {
     return Array.from(this.connectors.values());
   }
 
-  async shutdown(): Promise<void> {
+  shutdown(): Promise<void> {
     this.connectors.clear();
     this.deps.logger.info('ConnectorHost shut down');
+    return Promise.resolve();
   }
 }

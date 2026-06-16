@@ -13,8 +13,9 @@ export class ScopeManager {
     this.deps = deps;
   }
 
-  async initialize(): Promise<void> {
+  initialize(): Promise<void> {
     this.deps.logger.info('ScopeManager initialized');
+    return Promise.resolve();
   }
 
   /**

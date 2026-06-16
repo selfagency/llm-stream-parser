@@ -28,11 +28,12 @@ export class Sleeper {
     this.deps.logger.info('Sleeper watching services');
   }
 
-  async stop(): Promise<void> {
+  stop(): Promise<void> {
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
       this.pollTimer = null;
     }
     this.deps.logger.info('Sleeper stopped');
+    return Promise.resolve();
   }
 }

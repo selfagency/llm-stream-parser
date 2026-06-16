@@ -12,15 +12,16 @@ export class TUIBridge {
   }
 
   render(_data: unknown): string {
-    // TODO: Implement TUI rendering
     return '';
   }
 
-  async start(): Promise<void> {
+  start(): Promise<void> {
     this.deps.logger.info('TUIBridge started');
+    return Promise.resolve();
   }
 
-  async stop(): Promise<void> {
+  stop(): Promise<void> {
     this.deps.logger.info('TUIBridge stopped');
+    return Promise.resolve();
   }
 }

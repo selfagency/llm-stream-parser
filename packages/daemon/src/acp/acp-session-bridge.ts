@@ -28,7 +28,7 @@ export class ACPSessionBridge {
     this.additionalDirectories = deps.additionalDirectories ?? [];
   }
 
-  async handlePrompt(
+  handlePrompt(
     _prompt: string,
     _callbacks: {
       images?: Array<{ type: string; data: string; mimeType: string }>;
@@ -42,14 +42,12 @@ export class ACPSessionBridge {
     this.abortController = new AbortController();
 
     try {
-      // Stub: In production, this would route the prompt through the daemon's
-      // agent system and stream responses back through the callbacks.
       this.deps.logger.info('ACP session/prompt', {
         sessionId: this.sessionId,
         promptLength: _prompt.length
       });
 
-      return { stopReason: 'end_turn' };
+      return Promise.resolve({ stopReason: 'end_turn' });
     } finally {
       this.abortController = null;
     }
@@ -59,9 +57,8 @@ export class ACPSessionBridge {
     this.abortController?.abort();
   }
 
-  setMode(mode: string): void {
-    this.mode = mode;
-    this.deps.logger.debug(`Session mode set to "${mode}"`, { sessionId: this.sessionId });
+  setMode(_mode: string): void {
+    this.deps.logger.debug(`Session mode set to "${_mode}"`, { sessionId: this.sessionId });
   }
 
   setConfigOption(key: string, value: unknown): void {
@@ -69,8 +66,9 @@ export class ACPSessionBridge {
     this.deps.logger.debug('Config option set', { sessionId: this.sessionId, key, value });
   }
 
-  async close(): Promise<void> {
+  close(): Promise<void> {
     this.cancel();
     this.deps.logger.info('ACP session closed', { sessionId: this.sessionId });
+    return Promise.resolve();
   }
 }

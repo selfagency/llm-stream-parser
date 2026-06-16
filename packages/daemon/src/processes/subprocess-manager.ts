@@ -42,7 +42,7 @@ export class SubprocessManager {
     this.deps = deps;
   }
 
-  async start(): Promise<void> {
+  start(): Promise<void> {
     if (this.deps.memoryCheckIntervalMs > 0) {
       this.memoryCheckTimer = setInterval(() => {
         this.checkMemoryUsage();
@@ -50,9 +50,10 @@ export class SubprocessManager {
       this.memoryCheckTimer.unref();
     }
     this.deps.logger.info('SubprocessManager started');
+    return Promise.resolve();
   }
 
-  async spawnProcess(spec: SubprocessSpec): Promise<string> {
+  spawnProcess(spec: SubprocessSpec): Promise<string> {
     const id = `proc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const state: SubprocessState = {
       id,
@@ -70,7 +71,7 @@ export class SubprocessManager {
     this.processes.set(id, state);
     this.spawnChild(id, spec, state);
 
-    return id;
+    return Promise.resolve(id);
   }
 
   private spawnChild(id: string, spec: SubprocessSpec, state: SubprocessState): void {
@@ -160,7 +161,7 @@ export class SubprocessManager {
     return this.processes.size;
   }
 
-  async killAll(): Promise<void> {
+  killAll(): Promise<void> {
     for (const [id, child] of this.childProcesses) {
       child.kill('SIGTERM');
       const state = this.processes.get(id);
@@ -170,6 +171,7 @@ export class SubprocessManager {
       }
     }
     this.childProcesses.clear();
+    return Promise.resolve();
   }
 
   async stop(): Promise<void> {
