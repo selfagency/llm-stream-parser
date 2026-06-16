@@ -1,7 +1,18 @@
 import { ReadableStream } from 'node:stream/web';
+<<<<<<< Updated upstream
 import type { NormalizedChunk } from '@agentsy/shared';
 import { describe, expect, it } from 'vitest';
 
+||||||| Stash base
+import { describe, expect, it } from 'vitest';
+
+import type { NormalizedChunk } from '@agentsy/types';
+
+=======
+import type { NormalizedChunk } from '@agentsy/types';
+import { describe, expect, it } from 'vitest';
+
+>>>>>>> Stashed changes
 import { createSimpleTurnLoop, type TurnHandler } from './simple-turn.js';
 
 /**

@@ -1,9 +1,22 @@
 // fallow-ignore-file unused-file
 import { access, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../..');
+
+/**
+ * Resolve a user-supplied path and verify it stays within the project root.
+ * Prevents path traversal via CLI-controlled input.
+ */
+function resolveSafe(input: string, base: string): string {
+  const resolved = resolve(base, input);
+  const rel = relative(ROOT, resolved);
+  if (rel.startsWith('..')) {
+    throw new Error(`Path traversal blocked: "${input}" resolves outside project root`);
+  }
+  return resolved;
+}
 
 function rewriteDistExports(
   rootExports: Record<string, unknown>
@@ -32,7 +45,7 @@ function rewriteDistExports(
 
 async function main() {
   // If a package path is provided as an argument, use it; otherwise use root
-  const packagePath = process.argv[2] ? resolve(process.argv[2]) : ROOT;
+  const packagePath = process.argv[2] ? resolveSafe(process.argv[2], ROOT) : ROOT;
   const rootPkgPath = resolve(packagePath, 'package.json');
   const outDir = resolve(packagePath, 'dist');
   const raw = await readFile(rootPkgPath, 'utf-8');

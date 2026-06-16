@@ -1,4 +1,11 @@
+<<<<<<< Updated upstream
 import { parse as yamlParse } from 'yaml';
+||||||| Stash base
+import type { LoadedAgent, AgentSpec, TokenBudget } from '../specs/types.js';
+import * as yaml from 'yaml';
+=======
+import * as yaml from 'yaml';
+>>>>>>> Stashed changes
 import { AgentSpecSchema } from '../specs/schema.js';
 import type { AgentSpec, LoadedAgent, TokenBudget } from '../specs/types.js';
 

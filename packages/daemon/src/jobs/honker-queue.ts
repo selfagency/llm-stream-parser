@@ -155,7 +155,7 @@ export class HonkerQueueAdapter {
     }
 
     return {
-      id: String(r.id ?? ''),
+      id: typeof r.id === 'string' || typeof r.id === 'number' ? String(r.id) : '',
       queue,
       payload,
       priority: (opts.priority as number) ?? 0,

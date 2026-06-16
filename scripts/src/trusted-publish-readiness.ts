@@ -1,11 +1,23 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs as parseNodeArgs } from 'node:util';
 
 import { getPackageReleaseState, readReleaseState } from './release-state.js';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../..');
+
+/**
+ * Resolve a path and verify it stays within the project root.
+ */
+function resolveSafe(input: string): string {
+  const resolved = resolve(input);
+  const rel = relative(ROOT, resolved);
+  if (rel.startsWith('..')) {
+    throw new Error(`Path traversal blocked: "${input}" resolves outside project root`);
+  }
+  return resolved;
+}
 
 /** @param {unknown} repository */
 export function getRepositoryField(repository: unknown): string {
@@ -147,15 +159,18 @@ if (typeof process.argv[1] === 'string' && resolve(process.argv[1]) === resolve(
   const result = checkTrustedPublishReadiness({
     expectedRepo,
     expectedState,
-    packageDir: resolve(packageDir),
+    packageDir: resolveSafe(packageDir),
     packageName,
-    releaseStatePath: resolve(releaseStatePath),
+    releaseStatePath: resolveSafe(releaseStatePath),
     workflowFilename,
-    ...(args['root-dir'] === undefined ? {} : { rootDir: resolve(args['root-dir']) })
+    ...(args['root-dir'] === undefined ? {} : { rootDir: resolveSafe(args['root-dir']) })
   });
 
   if (!result.ok) {
-    console.error(result.error);
+    console.error(`Trusted publishing readiness check failed for ${packageName}.`);
+    if (typeof result.error === 'string' && result.error.length > 0) {
+      console.error(result.error);
+    }
     process.exit(1);
   }
 
