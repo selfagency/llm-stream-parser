@@ -134,23 +134,31 @@ export class ToolCallAccumulator {
   }
 
   /**
+   * Returns the name accumulated so far for the call at the given `index`.
+   */
+  public getPendingName(index: number): string | undefined {
+    return this.calls.get(index)?.name;
+  }
+
+  /**
+   * Returns the id accumulated so far for the call at the given `index`.
+   */
+  public getPendingId(index: number): string | undefined {
+    return this.calls.get(index)?.id;
+  }
+
+  /**
    * Returns the `name` and `id` accumulated so far for the call at the given `index`.
    * Useful for building `tool_call_delta` OutputParts for deltas that arrive after
    * the initial header delta (which carries the name/id).
    */
   public getPendingCallInfo(index: number): { name?: string; id?: string } | undefined {
-    const pending = this.calls.get(index);
-    if (pending === undefined) {
+    const name = this.getPendingName(index);
+    const id = this.getPendingId(index);
+    if (name === undefined && id === undefined) {
       return;
     }
-    const result: { name?: string; id?: string } = {};
-    if (pending.name !== undefined) {
-      result.name = pending.name;
-    }
-    if (pending.id !== undefined) {
-      result.id = pending.id;
-    }
-    return result;
+    return { ...(name !== undefined && { name }), ...(id !== undefined && { id }) };
   }
 
   /**

@@ -180,25 +180,28 @@ function extractBareJsonToolCalls(text: string, knownTools: Set<string>): XmlToo
   }
 
   const candidates: unknown[] = Array.isArray(parsed) ? parsed : [parsed];
-  const results: XmlToolCall[] = [];
+  return candidates
+    .map(candidate => parseToolCallCandidate(candidate, knownTools))
+    .filter((call): call is XmlToolCall => call !== null);
+}
 
-  for (const candidate of candidates) {
-    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
-      continue;
-    }
-    const obj: Record<string, unknown> = candidate as Record<string, unknown>;
-    const name = typeof obj.name === 'string' ? obj.name : null;
-    if (!(name && knownTools.has(name))) {
-      continue;
-    }
-    const args = obj.arguments ?? obj.parameters ?? {};
-    const parameters =
-      typeof args === 'object' && !Array.isArray(args) ? ({ ...args } as JsonObject) : ({} as JsonObject);
-
-    results.push({ name, parameters, format: 'json-wrapped' });
+/**
+ * Parse a single tool call candidate object.
+ */
+function parseToolCallCandidate(candidate: unknown, knownTools: Set<string>): XmlToolCall | null {
+  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
+    return null;
   }
+  const obj: Record<string, unknown> = candidate as Record<string, unknown>;
+  const name = typeof obj.name === 'string' ? obj.name : null;
+  if (!(name && knownTools.has(name))) {
+    return null;
+  }
+  const args = obj.arguments ?? obj.parameters ?? {};
+  const parameters =
+    typeof args === 'object' && !Array.isArray(args) ? ({ ...args } as JsonObject) : ({} as JsonObject);
 
-  return results;
+  return { name, parameters, format: 'json-wrapped' };
 }
 
 function extractJsonWrappedToolCall(rawTag: string, inner: string, knownTools: Set<string>): XmlToolCall | null {

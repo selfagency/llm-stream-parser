@@ -30,25 +30,42 @@ const EMPTY: RateLimitHeaderSnapshot = {
 export function parseRateLimitHeaders(headers: Headers | Record<string, string>): RateLimitHeaderSnapshot {
   const normalized = genericHeaderParser(headers);
 
-  const intOrZero = (value: string | undefined): number => {
-    if (value === undefined || value === '') {
-      return 0;
-    }
-    const parsed = Number.parseInt(value, 10);
-    return Number.isFinite(parsed) ? parsed : 0;
-  };
-
   const result: RateLimitHeaderSnapshot = {
-    rpmLimit: intOrZero(normalized['x-ratelimit-limit-requests'] ?? normalized['x-ratelimit-limit-rpm']),
-    rpmRemaining: intOrZero(normalized['x-ratelimit-remaining-requests'] ?? normalized['x-ratelimit-remaining-rpm']),
-    rpmResetSeconds: intOrZero(normalized['x-ratelimit-reset-requests'] ?? normalized['x-ratelimit-reset-rpm']),
-    tpmLimit: intOrZero(normalized['x-ratelimit-limit-tokens'] ?? normalized['x-ratelimit-limit-tpm']),
-    tpmRemaining: intOrZero(normalized['x-ratelimit-remaining-tokens'] ?? normalized['x-ratelimit-remaining-tpm']),
-    tpmResetSeconds: intOrZero(normalized['x-ratelimit-reset-tokens'] ?? normalized['x-ratelimit-reset-tpm'])
+    rpmLimit: parseMetric(normalized, ['x-ratelimit-limit-requests', 'x-ratelimit-limit-rpm']),
+    rpmRemaining: parseMetric(normalized, ['x-ratelimit-remaining-requests', 'x-ratelimit-remaining-rpm']),
+    rpmResetSeconds: parseMetric(normalized, ['x-ratelimit-reset-requests', 'x-ratelimit-reset-rpm']),
+    tpmLimit: parseMetric(normalized, ['x-ratelimit-limit-tokens', 'x-ratelimit-limit-tpm']),
+    tpmRemaining: parseMetric(normalized, ['x-ratelimit-remaining-tokens', 'x-ratelimit-remaining-tpm']),
+    tpmResetSeconds: parseMetric(normalized, ['x-ratelimit-reset-tokens', 'x-ratelimit-reset-tpm'])
   };
 
-  if (result.rpmLimit === 0 && result.rpmRemaining === 0 && result.tpmLimit === 0 && result.tpmRemaining === 0) {
+  if (isEmptySnapshot(result)) {
     return EMPTY;
   }
   return result;
+}
+
+/**
+ * Parse a single metric from normalized headers, checking alternate header names.
+ */
+function parseMetric(normalized: Record<string, string>, keys: string[]): number {
+  for (const key of keys) {
+    const value = normalized[key];
+    if (value !== undefined && value !== '') {
+      const parsed = Number.parseInt(value, 10);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+  }
+  return 0;
+}
+
+/**
+ * Check if a snapshot is empty (all limits and remaining values are zero).
+ */
+function isEmptySnapshot(snapshot: RateLimitHeaderSnapshot): boolean {
+  return (
+    snapshot.rpmLimit === 0 && snapshot.rpmRemaining === 0 && snapshot.tpmLimit === 0 && snapshot.tpmRemaining === 0
+  );
 }

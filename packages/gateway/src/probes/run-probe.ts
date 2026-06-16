@@ -163,43 +163,60 @@ export function defaultApiParse(response: { body: string; headers: Record<string
   if (fromHeaders !== null) {
     return fromHeaders;
   }
+  return parseJsonBody(response.body);
+}
+
+function parseJsonBody(body: string): ParsedUsage | null {
   try {
-    const json = JSON.parse(response.body) as unknown;
+    const json = JSON.parse(body) as unknown;
     if (typeof json !== 'object' || json === null) {
       return null;
     }
     const obj = json as Record<string, unknown>;
+
     const usage = obj.usage;
     if (typeof usage === 'object' && usage !== null) {
-      const u = usage as Record<string, unknown>;
-      return snapshotFromPairs([
-        ['creditsRemaining', numberOrUndefined(u.credits_remaining ?? u.creditsRemaining)],
-        ['rpmLimit', numberOrUndefined(u.rpm_limit ?? u.rpmLimit)],
-        ['rpmRemaining', numberOrUndefined(u.rpm_remaining ?? u.rpmRemaining)],
-        ['tpmLimit', numberOrUndefined(u.tpm_limit ?? u.tpmLimit)],
-        ['tpmRemaining', numberOrUndefined(u.tpm_remaining ?? u.tpmRemaining)]
-      ]);
+      return parseUsageObject(usage as Record<string, unknown>);
     }
+
     const rateLimit = obj.rate_limit;
     if (typeof rateLimit === 'object' && rateLimit !== null) {
-      const r = rateLimit as Record<string, unknown>;
-      return snapshotFromPairs([
-        ['rpmLimit', numberOrUndefined(r.rpm_limit)],
-        ['rpmRemaining', numberOrUndefined(r.rpm_remaining)],
-        ['tpmLimit', numberOrUndefined(r.tpm_limit)],
-        ['tpmRemaining', numberOrUndefined(r.tpm_remaining)]
-      ]);
+      return parseRateLimitObject(rateLimit as Record<string, unknown>);
     }
-    return snapshotFromPairs([
-      ['creditsRemaining', numberOrUndefined(obj.credits_remaining ?? obj.creditsRemaining)],
-      ['rpmLimit', numberOrUndefined(obj.rpm_limit ?? obj.rpmLimit)],
-      ['rpmRemaining', numberOrUndefined(obj.rpm_remaining ?? obj.rpmRemaining)],
-      ['tpmLimit', numberOrUndefined(obj.tpm_limit ?? obj.tpmLimit)],
-      ['tpmRemaining', numberOrUndefined(obj.tpm_remaining ?? obj.tpmRemaining)]
-    ]);
+
+    return parseTopLevelFields(obj);
   } catch {
     return null;
   }
+}
+
+function parseUsageObject(u: Record<string, unknown>): ParsedUsage | null {
+  return snapshotFromPairs([
+    ['creditsRemaining', numberOrUndefined(u.credits_remaining ?? u.creditsRemaining)],
+    ['rpmLimit', numberOrUndefined(u.rpm_limit ?? u.rpmLimit)],
+    ['rpmRemaining', numberOrUndefined(u.rpm_remaining ?? u.rpmRemaining)],
+    ['tpmLimit', numberOrUndefined(u.tpm_limit ?? u.tpmLimit)],
+    ['tpmRemaining', numberOrUndefined(u.tpm_remaining ?? u.tpmRemaining)]
+  ]);
+}
+
+function parseRateLimitObject(r: Record<string, unknown>): ParsedUsage | null {
+  return snapshotFromPairs([
+    ['rpmLimit', numberOrUndefined(r.rpm_limit)],
+    ['rpmRemaining', numberOrUndefined(r.rpm_remaining)],
+    ['tpmLimit', numberOrUndefined(r.tpm_limit)],
+    ['tpmRemaining', numberOrUndefined(r.tpm_remaining)]
+  ]);
+}
+
+function parseTopLevelFields(obj: Record<string, unknown>): ParsedUsage | null {
+  return snapshotFromPairs([
+    ['creditsRemaining', numberOrUndefined(obj.credits_remaining ?? obj.creditsRemaining)],
+    ['rpmLimit', numberOrUndefined(obj.rpm_limit ?? obj.rpmLimit)],
+    ['rpmRemaining', numberOrUndefined(obj.rpm_remaining ?? obj.rpmRemaining)],
+    ['tpmLimit', numberOrUndefined(obj.tpm_limit ?? obj.tpmLimit)],
+    ['tpmRemaining', numberOrUndefined(obj.tpm_remaining ?? obj.tpmRemaining)]
+  ]);
 }
 
 function snapshotFromPairs(entries: [keyof ParsedUsage, number | undefined][]): ParsedUsage | null {
