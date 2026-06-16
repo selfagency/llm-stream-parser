@@ -3,14 +3,14 @@ import type { AgentExecutionContext } from './types.js';
 /**
  * Load context for a task
  */
-export async function loadTaskContext(context: AgentExecutionContext): Promise<void> {
+export async function loadTaskContext(_context: AgentExecutionContext): Promise<void> {
   // Phase 5: Implement context loading from memory
 }
 
 /**
  * Store task results
  */
-export async function storeTaskResults(context: AgentExecutionContext, results: unknown): Promise<void> {
+export async function storeTaskResults(_context: AgentExecutionContext, _results: unknown): Promise<void> {
   // Phase 5: Implement result storage
 }
 

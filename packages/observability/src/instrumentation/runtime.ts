@@ -15,7 +15,7 @@
  * ```
  */
 
-import type { RuntimeOptions, RuntimeTask, RuntimeTaskResult } from '@agentsy/types';
+import type { RuntimeOptions, RuntimeTask, RuntimeTaskResult } from '@agentsy/shared';
 
 import type { Span, Tracer } from '../core/types.js';
 

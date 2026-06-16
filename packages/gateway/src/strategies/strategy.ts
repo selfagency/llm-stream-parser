@@ -65,7 +65,7 @@ export function matchesRequest(entry: ProviderEntry, request: SelectionContext['
   if (requires.length === 0) {
     return true;
   }
-  const caps = entry.capabilities as import('@agentsy/types').ProviderCapabilities | undefined;
+  const caps = entry.capabilities as import('@agentsy/shared').ProviderCapabilities | undefined;
   if (caps === undefined) {
     return false;
   }
@@ -77,7 +77,7 @@ export function matchesRequest(entry: ProviderEntry, request: SelectionContext['
   return true;
 }
 
-function checkCapability(caps: import('@agentsy/types').ProviderCapabilities, requirement: string): boolean {
+function checkCapability(caps: import('@agentsy/shared').ProviderCapabilities, requirement: string): boolean {
   switch (requirement) {
     case 'tools':
       return caps.supportsTools === true;

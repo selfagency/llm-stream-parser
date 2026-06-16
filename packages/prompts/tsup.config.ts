@@ -4,7 +4,7 @@ export default defineConfig({
   clean: true,
   dts: true,
   entry: ['src/index.ts'],
-  external: ['@agentsy/types'],
+  external: ['@agentsy/shared'],
   format: ['esm'],
   sourcemap: true
 });

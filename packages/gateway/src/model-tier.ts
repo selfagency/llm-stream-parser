@@ -25,8 +25,8 @@ export {
 export { ModelRegistry, modelRegistry } from './model-registry.js';
 export { type ReplicaPhase, ReplicaRegistry } from './replica-registry.js';
 export { DefaultReplicaSelector, type ReplicaSelectionContext, type ReplicaSelector } from './replica-selector.js';
+export { buildRoutingDiagnostic, formatRoutingDiagnostic, type RoutingDiagnostic } from './routing-diagnostics.js';
 export { computeReplicaScore, type ReplicaScoreInput, type ReplicaScoreWeights } from './score/replica-score.js';
-export { type RoutingDiagnostic, buildRoutingDiagnostic, formatRoutingDiagnostic } from './routing-diagnostics.js';
 export { DefaultTierAwareModelSelector } from './selector.js';
 export { type SpilloverResult, spillover } from './spillover.js';
 export type {

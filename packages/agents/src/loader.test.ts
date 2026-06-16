@@ -36,7 +36,7 @@ describe('Agent Specs', () => {
       description: "Missing required role field"
     `;
 
-    await expect(parseAgentSpec(yaml)).rejects.toThrow();
+    expect(() => parseAgentSpec(yaml)).toThrow();
   });
 });
 

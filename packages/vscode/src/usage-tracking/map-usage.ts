@@ -1,4 +1,4 @@
-import type { UsageInfo } from '@agentsy/types';
+import type { UsageInfo } from '@agentsy/shared';
 
 export interface VSCodeUsage {
   completionTokens: number;

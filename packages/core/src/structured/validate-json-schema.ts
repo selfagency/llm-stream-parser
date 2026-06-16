@@ -1,4 +1,4 @@
-import type { JsonObject } from '@agentsy/types';
+import type { JsonObject } from '@agentsy/shared';
 import type { ParseJsonOptions } from './parse-json.js';
 import { DEFAULT_MAX_JSON_DEPTH, DEFAULT_MAX_JSON_KEYS, parseJson } from './parse-json.js';
 

@@ -1,4 +1,4 @@
-import type { JsonObject } from '@agentsy/types';
+import type { JsonObject } from '@agentsy/shared';
 
 import { buildRepairPrompt } from './build-repair-prompt.js';
 import type { ValidateJsonSchemaOptions } from './validate-json-schema.js';

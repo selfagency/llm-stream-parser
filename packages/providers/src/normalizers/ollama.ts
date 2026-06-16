@@ -1,4 +1,4 @@
-import type { FinishReason } from '@agentsy/types';
+import type { FinishReason } from '@agentsy/shared';
 
 import type { NativeToolCallDelta, NormalizerResult, UsageInfo } from './types.js';
 import { isObject, toNumber } from './utils.js';

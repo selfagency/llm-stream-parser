@@ -9,7 +9,7 @@
  * functions — only the provider call is mocked via `executeProviderCall`.
  */
 
-import type { CompletionRequest, CompletionResponse } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse } from '@agentsy/shared';
 import { describe, expect, it } from 'vitest';
 
 import { createModelGatewayClient, type ReplicaCallFunction } from './model-gateway-client.js';

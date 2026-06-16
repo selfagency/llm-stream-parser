@@ -1,4 +1,4 @@
-import type { UsageInfo } from '@agentsy/types';
+import type { UsageInfo } from '@agentsy/shared';
 
 import type { XmlToolCall } from '../../tool-calls/index.js';
 

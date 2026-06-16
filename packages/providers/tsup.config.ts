@@ -18,7 +18,7 @@ export default defineConfig({
     '@agentsy/core/processor',
     '@agentsy/core/structured',
     '@agentsy/core/tool-calls',
-    '@agentsy/types',
+    '@agentsy/shared',
     'zod'
   ],
   format: ['esm', 'cjs'],

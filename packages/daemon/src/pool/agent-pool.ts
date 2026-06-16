@@ -41,12 +41,36 @@ class PriorityTaskQueue {
   }
 }
 
+interface PiscinaPool {
+  completed: number;
+  destroy: () => Promise<void>;
+  duration: number;
+  queueSize: number;
+  run: (task: unknown, opts?: { signal?: AbortSignal; name?: string }) => Promise<unknown>;
+  runTime: number;
+  threads: { length: number }[];
+  utilization: number;
+  waitTime: number;
+}
+
 export class AgentPool {
-  // Piscina is a default export class; InstanceType inference fails in DTS builds
-  private readonly piscina: ReturnType<typeof createPiscinaPool>;
+  // Piscina is a namespace export; use inferred pool type
+  private readonly piscina: PiscinaPool;
 
   constructor(config: AgentPoolConfig) {
-    this.piscina = createPiscinaPool(config);
+    this.piscina = new (Piscina as unknown as new (opts: Record<string, unknown>) => PiscinaPool)({
+      filename: config.filename,
+      minThreads: config.minThreads ?? 2,
+      maxThreads: config.maxThreads ?? 4,
+      idleTimeoutMs: config.idleTimeoutMs ?? 30_000,
+      maxQueue: config.maxQueueSize ?? 100,
+      concurrentTasksPerWorker: config.concurrentTasksPerWorker ?? 1,
+      resourceLimits: config.resourceLimits ?? {
+        maxOldGenerationSizeMb: 256,
+        maxYoungGenerationSizeMb: 64
+      },
+      taskQueue: new PriorityTaskQueue()
+    });
   }
 
   // fallow-ignore-next-line unused-class-member
@@ -54,10 +78,13 @@ export class AgentPool {
     task: TaskPayload,
     options?: { signal?: AbortSignal; priority?: 'high' | 'normal' | 'low' }
   ): Promise<T> {
-    return this.piscina.run(task, {
-      signal: options?.signal as never,
-      name: task.type
-    }) as Promise<T>;
+    const taskWithPriority = { ...task, priority: options?.priority ?? 'normal' };
+    const runOpts: { signal?: AbortSignal; name?: string } = {};
+    if (options?.signal) {
+      runOpts.signal = options.signal;
+    }
+    runOpts.name = task.type;
+    return this.piscina.run(taskWithPriority, runOpts) as Promise<T>;
   }
 
   stats(): PoolStats {
@@ -75,34 +102,4 @@ export class AgentPool {
   async destroy(): Promise<void> {
     await this.piscina.destroy();
   }
-}
-
-function createPiscinaPool(config: AgentPoolConfig) {
-  return new (
-    Piscina as unknown as new (
-      opts: Record<string, unknown>
-    ) => {
-      run: (task: unknown, opts?: Record<string, unknown>) => Promise<unknown>;
-      threads: { length: number }[];
-      queueSize: number;
-      completed: number;
-      utilization: number;
-      waitTime: number;
-      runTime: number;
-      duration: number;
-      destroy: () => Promise<void>;
-    }
-  )({
-    filename: config.filename,
-    minThreads: config.minThreads ?? 2,
-    maxThreads: config.maxThreads ?? 4,
-    idleTimeoutMs: config.idleTimeoutMs ?? 30_000,
-    maxQueue: config.maxQueueSize ?? 100,
-    concurrentTasksPerWorker: config.concurrentTasksPerWorker ?? 1,
-    resourceLimits: config.resourceLimits ?? {
-      maxOldGenerationSizeMb: 256,
-      maxYoungGenerationSizeMb: 64
-    },
-    taskQueue: new PriorityTaskQueue()
-  });
 }

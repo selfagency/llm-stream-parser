@@ -1,7 +1,7 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { startDaemon } from './start.js';
 import type { DaemonDeps } from '../daemon.js';
+import { startDaemon } from './start.js';
 import { stopDaemon } from './stop.js';
 
 const DEFAULT_SOCKET_PATH = join(homedir(), '.agentsy', 'daemon.sock');

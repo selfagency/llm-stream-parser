@@ -9,39 +9,39 @@ export interface CouncilMember {
 }
 
 export interface CouncilDefinition {
-  name: string;
-  description: string;
-  members: CouncilMember[];
   chairman: CouncilMember;
+  description: string;
   domain: 'coding' | 'research' | 'review' | 'architecture' | 'general';
   maxTokensPerMember?: number;
+  members: CouncilMember[];
+  name: string;
   timeoutMs?: number;
 }
 
 export interface FirstOpinion {
+  durationMs: number;
   member: CouncilMember;
   response: string;
   tokenUsage: { input: number; output: number };
-  durationMs: number;
 }
 
 export interface ReviewScore {
-  reviewer: CouncilMember;
-  target: CouncilMember;
   accuracy: number;
   insight: number;
   reasoning: string;
+  reviewer: CouncilMember;
+  target: CouncilMember;
 }
 
 export interface CouncilResult {
+  chairman: CouncilMember;
+  dissentingOpinions: Array<{ member: CouncilMember; opinion: string }>;
   finalAnswer: string;
   opinions: FirstOpinion[];
-  reviews: ReviewScore[];
   rankings: Array<{ member: CouncilMember; avgScore: number }>;
-  dissentingOpinions: Array<{ member: CouncilMember; opinion: string }>;
-  totalTokenUsage: { input: number; output: number };
+  reviews: ReviewScore[];
   totalDurationMs: number;
-  chairman: CouncilMember;
+  totalTokenUsage: { input: number; output: number };
 }
 
 export type CouncilEvent =

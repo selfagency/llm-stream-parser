@@ -1,5 +1,5 @@
 import { createUniversalClient } from '@agentsy/providers';
-import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/shared';
 
 import { buildNoopClient } from '../noop-client.js';
 import { DefaultTierAwareModelSelector } from '../selector.js';

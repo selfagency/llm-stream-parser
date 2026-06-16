@@ -5,8 +5,8 @@
  * Emits INTERRUPT events to notify frontends of interruption requests.
  */
 
-import type { RunInterruptedEvent } from '@agentsy/types';
-import { EventType } from '@agentsy/types';
+import type { RunInterruptedEvent } from '@agentsy/shared';
+import { EventType } from '@agentsy/shared';
 
 /**
  * Interrupt reason codes.

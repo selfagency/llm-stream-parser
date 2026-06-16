@@ -62,6 +62,11 @@
       "import": "./dist/connectors/index.js",
       "require": "./dist/connectors/index.cjs"
     },
+    "./mcp": {
+      "types": "./dist/mcp/index.d.ts",
+      "import": "./dist/mcp/index.js",
+      "require": "./dist/mcp/index.cjs"
+    },
     "./db": {
       "types": "./dist/db/index.d.ts",
       "import": "./dist/db/index.js",
@@ -88,7 +93,7 @@
   },
   "dependencies": {
     "@agentsy/memory": "workspace:*",
-    "@agentsy/types": "workspace:*",
+    "@agentsy/shared": "workspace:*",
     "better-sqlite3": "^11.10.0",
     "bree": "^9.2.3",
     "piscina": "^4.7.0",
@@ -103,7 +108,7 @@
     "vitest": "^4.1.8"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "packageManager": "pnpm@10.33.2"
 }

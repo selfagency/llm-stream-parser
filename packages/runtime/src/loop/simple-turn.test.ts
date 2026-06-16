@@ -1,7 +1,7 @@
 import { ReadableStream } from 'node:stream/web';
-import { describe, expect, it } from 'vitest';
 
-import type { NormalizedChunk } from '@agentsy/types';
+import type { NormalizedChunk } from '@agentsy/shared';
+import { describe, expect, it } from 'vitest';
 
 import { createSimpleTurnLoop, type TurnHandler } from './simple-turn.js';
 

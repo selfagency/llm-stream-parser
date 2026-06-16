@@ -1,4 +1,4 @@
-import type { SessionStore } from '@agentsy/types';
+import type { SessionStore } from '@agentsy/shared';
 import { describe, expect, it, vi } from 'vitest';
 import type { RoutingState } from './checkpoint.js';
 import {

@@ -1,12 +1,12 @@
-import type { SkillMetadata, TokenBudget } from '../specs/types.js';
 import type { AgentExecutionContext } from '../runtime/types.js';
+import type { SkillMetadata, TokenBudget } from '../specs/types.js';
 import { parseCostRange } from './types.js';
 
 /**
  * Select skills to apply based on budget and task
  */
 export function selectSkills(
-  context: AgentExecutionContext,
+  _context: AgentExecutionContext,
   applicableSkills: SkillMetadata[],
   budget: TokenBudget
 ): SkillMetadata[] {
@@ -59,7 +59,7 @@ export function deactivateSkill(context: AgentExecutionContext, skillName: strin
  * Track cost for a skill during selection
  */
 export class SelectionCostTracker {
-  private costs = new Map<string, number>();
+  private readonly costs = new Map<string, number>();
 
   addCost(skillName: string, cost: number): void {
     this.costs.set(skillName, (this.costs.get(skillName) ?? 0) + cost);

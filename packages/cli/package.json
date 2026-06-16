@@ -47,20 +47,20 @@
     "test:e2e:dev": "npx @microsoft/tui-test"
   },
   "dependencies": {
-    "@agentsy/connectors": "workspace:*",
     "@agentsy/core": "workspace:*",
+    "@agentsy/daemon": "workspace:*",
     "@agentsy/gateway": "workspace:*",
     "@agentsy/guardrails": "workspace:*",
     "@agentsy/memory": "workspace:*",
     "@agentsy/models": "workspace:*",
     "@agentsy/plugins": "workspace:*",
     "@agentsy/providers": "workspace:*",
-    "@agentsy/renderers": "workspace:*",
+    "@agentsy/ui": "workspace:*",
     "@agentsy/runtime": "workspace:*",
     "@agentsy/secrets": "workspace:*",
     "@agentsy/session": "workspace:*",
     "@agentsy/tokenomics": "workspace:*",
-    "@agentsy/types": "workspace:*",
+    "@agentsy/shared": "workspace:*",
     "zod": "^3.25.76"
   },
   "devDependencies": {

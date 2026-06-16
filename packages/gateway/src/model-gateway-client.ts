@@ -27,7 +27,7 @@
  * ```
  */
 
-import type { CompletionRequest, CompletionResponse } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse } from '@agentsy/shared';
 
 import { getLogicalModel } from './logical-models.js';
 import type { ReplicaRegistry } from './replica-registry.js';

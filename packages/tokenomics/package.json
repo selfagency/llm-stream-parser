@@ -85,7 +85,7 @@
   "dependencies": {
     "@agentsy/core": "workspace:*",
     "@agentsy/observability": "workspace:*",
-    "@agentsy/types": "workspace:*",
+    "@agentsy/shared": "workspace:*",
     "better-sqlite3": "^12.10.0",
     "tiktoken": "1.0.22"
   },

@@ -7,7 +7,7 @@
  */
 
 import type { UniversalClient } from '@agentsy/providers';
-import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/shared';
 import { describe, expect, it } from 'vitest';
 
 import { createLoadBalancedClient } from '../client.js';

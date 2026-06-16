@@ -5,8 +5,8 @@
  * Enables STATE_SNAPSHOT and STATE_DELTA events for incremental state updates.
  */
 
-import type { JsonPatchOperation, StateDeltaEvent, StateSnapshotEvent } from '@agentsy/types';
-import { EventType } from '@agentsy/types';
+import type { JsonPatchOperation, StateDeltaEvent, StateSnapshotEvent } from '@agentsy/shared';
+import { EventType } from '@agentsy/shared';
 
 /**
  * Represents a JSON Patch operation per RFC 6902.

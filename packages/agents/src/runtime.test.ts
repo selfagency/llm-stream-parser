@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { executeAgent, initializeAgent } from './runtime/index.js';
 import type { AgentSpec } from '../specs/types.js';
+import { executeAgent, initializeAgent } from './runtime/index.js';
 
 describe('Agent Runtime', () => {
   it('should initialize agent from spec', () => {

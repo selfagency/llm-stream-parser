@@ -2,37 +2,37 @@
  * Messaging protocol for inter-agent communication
  */
 
-export enum MessagePriority {
-  LOW = 'low',
-  NORMAL = 'normal',
-  HIGH = 'high',
-  CRITICAL = 'critical'
-}
+export const MessagePriority = {
+  LOW: 'low',
+  NORMAL: 'normal',
+  HIGH: 'high',
+  CRITICAL: 'critical'
+} as const;
+export type MessagePriority = (typeof MessagePriority)[keyof typeof MessagePriority];
 
-export enum MessageType {
-  TASK = 'task',
-  RESULT = 'result',
-  ERROR = 'error',
-  STATUS = 'status',
-  REQUEST = 'request',
-  RESPONSE = 'response',
-  EVENT = 'event'
-}
+export const MessageType = {
+  TASK: 'task',
+  RESULT: 'result',
+  ERROR: 'error',
+  STATUS: 'status',
+  REQUEST: 'request',
+  RESPONSE: 'response',
+  EVENT: 'event'
+} as const;
+export type MessageType = (typeof MessageType)[keyof typeof MessageType];
 
 export interface AgentMessage {
-  id: string;
-  type: MessageType;
-  priority: MessagePriority;
-  sender: string;
-  recipient?: string;
-  payload: unknown;
-  timestamp: number;
   correlationId?: string;
+  id: string;
+  payload: unknown;
+  priority: MessagePriority;
+  recipient?: string;
+  sender: string;
+  timestamp: number;
+  type: MessageType;
 }
 
-export interface MessageHandler {
-  (message: AgentMessage): Promise<AgentMessage | void>;
-}
+export type MessageHandler = (message: AgentMessage) => Promise<AgentMessage | undefined>;
 
 /**
  * Simple message bus for agent communication
@@ -60,7 +60,9 @@ export class MessageBus {
    */
   unsubscribe(pattern: string, handler: MessageHandler): void {
     const existing = this.handlers.get(pattern);
-    if (!existing) return;
+    if (!existing) {
+      return;
+    }
     this.handlers.set(
       pattern,
       existing.filter(h => h !== handler)
@@ -95,10 +97,7 @@ export class MessageBus {
   /**
    * Send a message and wait for a response (request-response pattern)
    */
-  async request(
-    message: Omit<AgentMessage, 'id' | 'timestamp'>,
-    timeoutMs = 30_000
-  ): Promise<AgentMessage | undefined> {
+  request(message: Omit<AgentMessage, 'id' | 'timestamp'>, timeoutMs = 30_000): Promise<AgentMessage | undefined> {
     const correlationId = crypto.randomUUID();
     const fullMessage: AgentMessage = {
       ...message,
@@ -113,16 +112,19 @@ export class MessageBus {
         resolve(undefined);
       }, timeoutMs);
 
-      const handler: MessageHandler = async (response: AgentMessage) => {
+      const handler: MessageHandler = (response: AgentMessage) => {
         if (response.correlationId === correlationId) {
           clearTimeout(timeout);
           this.unsubscribe(`correlation:${correlationId}`, handler);
           resolve(response);
         }
+        return Promise.resolve(undefined);
       };
 
       this.subscribe(`correlation:${correlationId}`, handler);
-      void this.publish(fullMessage);
+      this.publish(fullMessage).catch(() => {
+        /* ignore publish errors */
+      });
     });
   }
 
@@ -144,9 +146,15 @@ export class MessageBus {
     if (pattern.startsWith('correlation:')) {
       return message.correlationId === pattern.slice('correlation:'.length);
     }
-    if (pattern === '*') return true;
-    if (pattern === message.type) return true;
-    if (pattern === message.sender) return true;
+    if (pattern === '*') {
+      return true;
+    }
+    if (pattern === message.type) {
+      return true;
+    }
+    if (pattern === message.sender) {
+      return true;
+    }
     return false;
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@agentsy/shared",
   "version": "0.0.0",
-  "description": "Shared CortexKit integration utilities for @agentsy",
+  "description": "Shared types, utilities, and CortexKit integration for @agentsy",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -20,17 +20,22 @@
   },
   "scripts": {
     "build": "tsup",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "vitest --run --passWithNoTests",
+    "coverage": "vitest --run --coverage"
   },
   "dependencies": {
     "@cortexkit/aft-bridge": "^0.37.1",
-    "better-sqlite3": "^12.1.0"
+    "better-sqlite3": "^12.1.0",
+    "type-fest": "5.7.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.9.0",
+    "@vitest/coverage-v8": "^4.1.8",
     "tsup": "^8.5.1",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "^4.1.8"
   },
   "engines": {
     "node": ">=18"

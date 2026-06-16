@@ -10,6 +10,7 @@ export function createErrorRecoveryHook(): AgentHookDefinition {
   return {
     name: 'error-recovery',
     description: 'Attempt recovery from agent execution errors',
+    // biome-ignore lint/suspicious/useAwait: handler interface requires Promise<void>
     handler: async (context: AgentExecutionContext): Promise<void> => {
       const { state } = context;
       const errors = state.errors;
@@ -18,7 +19,8 @@ export function createErrorRecoveryHook(): AgentHookDefinition {
         return;
       }
 
-      const lastError = errors[errors.length - 1];
+      const lastErrorIndex = errors.length - 1;
+      const lastError = errors[lastErrorIndex];
       if (!lastError) {
         return;
       }
@@ -36,6 +38,7 @@ export function createRetryStrategyHook(): AgentHookDefinition {
   return {
     name: 'retry-strategy',
     description: 'Implement exponential backoff for retries',
+    // biome-ignore lint/suspicious/useAwait: handler interface requires Promise<void>
     handler: async (context: AgentExecutionContext): Promise<void> => {
       const { state } = context;
       const retryCount = state.failedSteps.filter(s => s.startsWith('retry:')).length;

@@ -1,4 +1,5 @@
 import type { MemoryEngine } from '@agentsy/memory';
+import { z } from 'zod';
 import { ACPServer } from './acp/acp-server.js';
 import { AgentHost } from './agents/agent-host.js';
 import { ScopeManager } from './agents/scope-manager.js';
@@ -7,7 +8,7 @@ import { resolveConfig } from './config.js';
 import { ConnectorHost } from './connectors/connector-host.js';
 import { UnifiedDB } from './db/unified-db.js';
 import { IPCServer } from './ipc/server.js';
-import { BreeScheduler } from './jobs/bree-scheduler.js';
+import { TimerScheduler } from './jobs/bree-scheduler.js';
 import { HonkerQueueAdapter } from './jobs/honker-queue.js';
 import { Sleeper } from './lifecycle/sleeper.js';
 import { Supervisor } from './lifecycle/supervisor.js';
@@ -15,6 +16,64 @@ import { AgentPool } from './pool/agent-pool.js';
 import { SubprocessManager } from './processes/subprocess-manager.js';
 import { ServiceHost } from './services/service-host.js';
 import type { DeepPartial, Logger } from './types.js';
+
+/**
+ * MemoryEngine with lifecycle methods required by the daemon.
+ * The base MemoryEngine interface doesn't expose initialize/shutdown,
+ * so we define a narrower interface here.
+ */
+export interface DaemonMemoryEngine extends MemoryEngine {
+  initialize?(): Promise<void>;
+  shutdown?(): Promise<void>;
+}
+
+// ── IPC param schemas ──────────────────────────────────
+const AgentIdSchema = z.object({ agentId: z.string().min(1) });
+const AgentSendSchema = z.object({ agentId: z.string().min(1), message: z.string() });
+const StreamIdSchema = z.object({ streamId: z.string().min(1) });
+const JobIdSchema = z.object({ jobId: z.string().min(1) });
+const JobClaimSchema = z.object({ workerId: z.string().min(1), queueName: z.string().min(1).optional() });
+const ScheduleIdSchema = z.object({ scheduleId: z.string().min(1) });
+const ProcessIdSchema = z.object({ processId: z.string().min(1) });
+
+const SubprocessSpecSchema = z.object({
+  id: z.string().optional(),
+  command: z
+    .string()
+    .min(1, 'command is required')
+    .refine(cmd => !(cmd.includes('/') || cmd.includes('..')), 'command must not contain path separators'),
+  args: z.array(z.string()).optional(),
+  cwd: z.string().optional(),
+  env: z.record(z.string()).optional(),
+  timeoutMs: z.number().positive().optional(),
+  stallTimeoutMs: z.number().positive().optional(),
+  restartPolicy: z.enum(['always', 'on-failure', 'never']).optional(),
+  maxRestarts: z.number().int().positive().optional(),
+  restartWindowMs: z.number().positive().optional(),
+  backoffBaseMs: z.number().positive().optional(),
+  backoffMaxMs: z.number().positive().optional(),
+  backoffJitter: z.boolean().optional(),
+  memoryLimitMb: z.number().positive().optional()
+});
+
+/**
+ * Resolve a log level string to a numeric priority.
+ */
+function resolveLevel(level: string | undefined): number {
+  if (level === 'debug') {
+    return 10;
+  }
+  if (level === 'info') {
+    return 20;
+  }
+  if (level === 'warn') {
+    return 30;
+  }
+  if (level === 'error') {
+    return 40;
+  }
+  return 20;
+}
 
 export type DaemonState = 'starting' | 'running' | 'stopping' | 'stopped' | 'crashed';
 
@@ -27,23 +86,49 @@ export interface DaemonDeps {
 }
 
 function createLogger(config: DaemonConfig['logging']): Logger {
-  const prefix = config.file ? '' : '[daemon] ';
+  const prefix = config.file ?? '[daemon] ';
+  const configuredLevel = resolveLevel(config.level);
+
+  function shouldLog(level: 'debug' | 'info' | 'warn' | 'error'): boolean {
+    const levelValue = resolveLevel(level);
+    return levelValue >= configuredLevel;
+  }
+
   return {
     debug: (msg: string, ...args: unknown[]) => {
-      if (config.level === 'debug') {
+      if (shouldLog('debug')) {
         console.debug('%s%s', prefix, msg, ...args);
       }
     },
-    info: (msg: string, ...args: unknown[]) => console.info('%s%s', prefix, msg, ...args),
-    warn: (msg: string, ...args: unknown[]) => console.warn('%s%s', prefix, msg, ...args),
-    error: (msg: string, ...args: unknown[]) => console.error('%s%s', prefix, msg, ...args),
-    child: (_name: string): Logger => createLogger({ ...config, level: config.level })
+    info: (msg: string, ...args: unknown[]) => {
+      if (shouldLog('info')) {
+        console.info('%s%s', prefix, msg, ...args);
+      }
+    },
+    warn: (msg: string, ...args: unknown[]) => {
+      if (shouldLog('warn')) {
+        console.warn('%s%s', prefix, msg, ...args);
+      }
+    },
+    error: (msg: string, ...args: unknown[]) => {
+      if (shouldLog('error')) {
+        console.error('%s%s', prefix, msg, ...args);
+      }
+    },
+    child: (name: string): Logger =>
+      createLogger({
+        ...config,
+        level: config.level,
+        file: `[daemon][${name}]`
+      })
   };
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  // Swallow late rejections so they don't become unhandled rejections
+  const guarded: Promise<T> = promise.catch(() => undefined as T);
   return Promise.race([
-    promise,
+    guarded,
     new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms).unref())
   ]);
 }
@@ -53,7 +138,7 @@ export class Daemon {
   private readonly _stateListeners = new Set<(state: DaemonState) => void>();
 
   readonly db: UnifiedDB;
-  readonly memory: MemoryEngine;
+  readonly memory: DaemonMemoryEngine | null;
   readonly ipc: IPCServer;
   readonly acp: ACPServer;
   readonly pool: AgentPool;
@@ -62,7 +147,7 @@ export class Daemon {
   readonly agents: AgentHost;
   readonly scopes: ScopeManager;
   readonly jobs: HonkerQueueAdapter;
-  readonly scheduler: BreeScheduler;
+  readonly scheduler: TimerScheduler;
   readonly connectors: ConnectorHost;
   readonly supervisor: Supervisor;
   readonly sleeper: Sleeper;
@@ -90,7 +175,7 @@ export class Daemon {
         logger: this.logger
       });
 
-    this.memory = deps.memoryEngine ?? (null as unknown as MemoryEngine);
+    this.memory = deps.memoryEngine ?? null;
 
     this.ipc =
       deps.ipcServer ??
@@ -132,7 +217,7 @@ export class Daemon {
     this.scopes = new ScopeManager({ logger: this.logger });
 
     this.agents = new AgentHost({
-      memory: this.memory,
+      memory: this.memory as MemoryEngine,
       scopeManager: this.scopes,
       pool: this.pool,
       logger: this.logger
@@ -145,7 +230,7 @@ export class Daemon {
       logger: this.logger
     });
 
-    this.scheduler = new BreeScheduler({
+    this.scheduler = new TimerScheduler({
       queue: this.jobs,
       root: this.config.jobs.jobDirectory,
       logger: this.logger
@@ -153,7 +238,7 @@ export class Daemon {
 
     this.connectors = new ConnectorHost({
       logger: this.logger,
-      config: this.config.connectors as never
+      config: this.config.connectors
     });
 
     this.supervisor = new Supervisor({
@@ -180,21 +265,18 @@ export class Daemon {
       await this.db.migrate();
 
       // 2. Start memory engine
-      if (
-        this.memory &&
-        typeof (this.memory as unknown as { initialize?: () => Promise<void> }).initialize === 'function'
-      ) {
-        await (this.memory as unknown as { initialize: () => Promise<void> }).initialize();
+      if (this.memory?.initialize) {
+        await this.memory.initialize();
       }
-      this.services.register('memory', this.memory as never);
+      this.services.register('memory', this.memory);
 
       // 3. Initialize Honker durable queue (same DB file)
       await this.jobs.start();
-      this.services.register('jobs', this.jobs as never);
+      this.services.register('jobs', this.jobs);
 
       // 4. Start Bree scheduler
       await this.scheduler.start();
-      this.services.register('scheduler', this.scheduler as never);
+      this.services.register('scheduler', this.scheduler);
 
       // 5. Initialize scope manager
       await this.scopes.initialize();
@@ -221,6 +303,16 @@ export class Daemon {
       // 12. Enable sleeper
       this.sleeper.watch(this.services);
 
+      // 13. Catch uncaught exceptions/rejections so supervisor can react
+      process.on('uncaughtException', err => {
+        this.logger.error('Uncaught exception, transitioning to crashed', err);
+        this.transition('crashed');
+      });
+      process.on('unhandledRejection', (reason: Error) => {
+        this.logger.error('Unhandled rejection, transitioning to crashed', reason);
+        this.transition('crashed');
+      });
+
       this.transition('running');
       this.logger.info('Daemon started', {
         pid: process.pid,
@@ -239,7 +331,8 @@ export class Daemon {
   }
 
   async stop(graceful = true): Promise<void> {
-    if (this._state !== 'running') {
+    // Allow stop from running, crashed, or starting states
+    if (this._state === 'stopped' || this._state === 'stopping') {
       return;
     }
 
@@ -257,13 +350,14 @@ export class Daemon {
       await withTimeout(this.connectors.shutdown(), timeout);
       await withTimeout(this.agents.shutdown(), timeout);
       await withTimeout(this.jobs.stop(), timeout);
-      if (
-        this.memory &&
-        typeof (this.memory as unknown as { shutdown?: () => Promise<void> }).shutdown === 'function'
-      ) {
-        await withTimeout((this.memory as unknown as { shutdown: () => Promise<void> }).shutdown(), timeout);
+      if (this.memory?.shutdown) {
+        await withTimeout(this.memory.shutdown(), timeout);
       }
       await withTimeout(this.db.close(), timeout);
+
+      // Remove process-level handlers
+      process.removeAllListeners('uncaughtException');
+      process.removeAllListeners('unhandledRejection');
 
       this.transition('stopped');
       this.logger.info('Daemon stopped');
@@ -300,10 +394,20 @@ export class Daemon {
     this.ipc.handle('agent.spawn', req => this.agents.spawn(req));
     this.ipc.handle('agent.list', () => Promise.resolve(this.agents.list()));
     this.ipc.handle('agent.kill', req => {
-      this.agents.kill(req.agentId as string);
+      const parsed = AgentIdSchema.safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid agentId'), { code: -32_602 }));
+      }
+      this.agents.kill(parsed.data.agentId);
       return Promise.resolve({ killed: true });
     });
-    this.ipc.handle('agent.send', req => this.agents.send(req.agentId as string, req.message as string));
+    this.ipc.handle('agent.send', req => {
+      const parsed = AgentSendSchema.safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid agentId or message'), { code: -32_602 }));
+      }
+      return this.agents.send(parsed.data.agentId, parsed.data.message);
+    });
 
     this.ipc.handle('memory.recall', () => Promise.resolve({ recalled: true }));
     this.ipc.handle('memory.capture', () => Promise.resolve({ captured: true }));
@@ -311,26 +415,48 @@ export class Daemon {
 
     this.ipc.handle('stream.start', req => this.agents.startStream(req));
     this.ipc.handle('stream.cancel', req => {
-      this.agents.cancelStream(req.streamId as string);
+      const parsed = StreamIdSchema.safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid streamId'), { code: -32_602 }));
+      }
+      this.agents.cancelStream(parsed.data.streamId);
       return Promise.resolve({ cancelled: true });
     });
 
     this.ipc.handle('jobs.enqueue', req => this.jobs.enqueue(req.payload, req.options as never));
     this.ipc.handle('jobs.list', () => this.jobs.list());
     this.ipc.handle('jobs.cancel', req => {
-      this.jobs.cancel(req.jobId as string);
+      const parsed = JobIdSchema.safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid jobId'), { code: -32_602 }));
+      }
+      this.jobs.cancel(parsed.data.jobId);
       return Promise.resolve({ cancelled: true });
     });
-    this.ipc.handle('jobs.claim', req => this.jobs.claim(req.workerId as string, req.queueName as string));
+    this.ipc.handle('jobs.claim', req => {
+      const parsed = JobClaimSchema.safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid workerId or queueName'), { code: -32_602 }));
+      }
+      return this.jobs.claim(parsed.data.workerId, parsed.data.queueName);
+    });
     this.ipc.handle('jobs.ack', req => {
-      this.jobs.ack(req.jobId as string);
+      const parsed = JobIdSchema.safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid jobId'), { code: -32_602 }));
+      }
+      this.jobs.ack(parsed.data.jobId);
       return Promise.resolve({ acked: true });
     });
 
     this.ipc.handle('scheduler.schedule', req => this.scheduler.schedule(req as never));
     this.ipc.handle('scheduler.list', () => this.scheduler.list());
     this.ipc.handle('scheduler.cancel', req => {
-      this.scheduler.cancel(req.scheduleId as string);
+      const parsed = ScheduleIdSchema.safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid scheduleId'), { code: -32_602 }));
+      }
+      this.scheduler.cancel(parsed.data.scheduleId);
       return Promise.resolve({ cancelled: true });
     });
 
@@ -343,15 +469,31 @@ export class Daemon {
     this.ipc.handle('pool.stats', () => Promise.resolve(this.pool.stats()));
     this.ipc.handle('display.render', req => Promise.resolve(this.handleDisplay(req)));
 
-    this.ipc.handle('process.spawn', req =>
-      this.processes.spawnProcess(req as unknown as import('./processes/subprocess-manager.js').SubprocessSpec)
-    );
+    this.ipc.handle('process.spawn', req => {
+      const parsed = SubprocessSpecSchema.safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(
+          Object.assign(new Error(parsed.error.issues.map(i => i.message).join('; ')), { code: -32_602 })
+        );
+      }
+      return this.processes.spawnProcess(parsed.data as import('./processes/subprocess-manager.js').SubprocessSpec);
+    });
     this.ipc.handle('process.list', () => Promise.resolve(this.processes.listProcesses()));
     this.ipc.handle('process.kill', req => {
-      this.processes.killProcess(req.processId as string);
+      const parsed = ProcessIdSchema.safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid processId'), { code: -32_602 }));
+      }
+      this.processes.killProcess(parsed.data.processId);
       return Promise.resolve({ killed: true });
     });
-    this.ipc.handle('process.output', req => Promise.resolve(this.processes.getOutput(req.processId as string)));
+    this.ipc.handle('process.output', req => {
+      const parsed = ProcessIdSchema.safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid processId'), { code: -32_602 }));
+      }
+      return Promise.resolve(this.processes.getOutput(parsed.data.processId));
+    });
   }
 
   getStatus(): Record<string, unknown> {

@@ -24,10 +24,12 @@ export {
   type ReplicaCallFunction
 } from './model-gateway-client.js';
 export {
+  buildRoutingDiagnostic,
   type CircuitState,
   computeReplicaScore,
   DefaultReplicaSelector,
   DefaultTierAwareModelSelector,
+  formatRoutingDiagnostic,
   getAllLogicalModels,
   getLogicalModel,
   getLogicalModelsByTier,
@@ -51,8 +53,6 @@ export {
   type ReplicaSelectionContext,
   type ReplicaSelector,
   type RoutingDiagnostic,
-  buildRoutingDiagnostic,
-  formatRoutingDiagnostic,
   type SpilloverResult,
   spillover,
   type TierAwareModelSelector,

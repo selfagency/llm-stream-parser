@@ -1,4 +1,4 @@
-<<<<<<< Updated upstream
+
 
 # @agentsy/memory — Implementation Plan v2
 
@@ -1552,8 +1552,6 @@ All logic lives in `@agentsy/memory`. CLI only provides argument parsing and `ch
 | Canary false positives             | `staleThreshold` and `degradationThreshold` are configurable; `refresh` action (not `archive`) is the default for stale memories, giving them a chance to prove relevance |
 | @agentsy/cli not installed         | Daemon and MCP server are fully independent; CLI is optional convenience wrapper                                                                                          |
 |                                    |                                                                                                                                                                           |
-
-=======
 
 ## @agentsy/memory — Implementation Plan v2
 

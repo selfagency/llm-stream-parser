@@ -1,4 +1,4 @@
-import type { SessionStore } from '@agentsy/types';
+import type { SessionStore } from '@agentsy/shared';
 
 /**
  * Routing state for model replica failover continuity.

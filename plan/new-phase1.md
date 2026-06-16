@@ -23,7 +23,7 @@ Phase 1 incorporates battle-tested patterns from six established projects:
 
 Create `packages/daemon/` with the following structure:
 
-```
+```text
 packages/daemon/
 ├── package.json
 ├── tsconfig.json

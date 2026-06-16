@@ -1,7 +1,11 @@
 import type { Logger } from '../types.js';
 
 export interface ConnectorHostDeps {
-  config: { discord?: { token: string }; slack?: { token: string }; telegram?: { token: string } };
+  config: {
+    discord?: { token: string } | undefined;
+    slack?: { token: string } | undefined;
+    telegram?: { token: string } | undefined;
+  };
   logger: Logger;
 }
 

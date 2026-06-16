@@ -55,7 +55,7 @@
   "dependencies": {
     "@agentsy/core": "workspace:*",
     "@agentsy/runtime": "workspace:*",
-    "@agentsy/types": "workspace:*",
+    "@agentsy/shared": "workspace:*",
     "yaml": "^2.6.0",
     "zod": "^4.4.3"
   },

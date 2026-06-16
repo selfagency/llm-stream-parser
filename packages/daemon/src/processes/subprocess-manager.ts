@@ -1,4 +1,5 @@
-import { type ChildProcess, spawn } from 'node:child_process';
+import { type ChildProcess, execSync, spawn } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import type { Logger } from '../types.js';
 
@@ -52,6 +53,8 @@ export interface SubprocessManagerDeps {
 export class SubprocessManager extends EventEmitter {
   private readonly processes = new Map<string, SubprocessState>();
   private readonly childProcesses = new Map<string, ChildProcess>();
+  private readonly stallIntervals = new Map<string, ReturnType<typeof setInterval>>();
+  private readonly restartTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private memoryCheckTimer: ReturnType<typeof setInterval> | null = null;
   private readonly deps: SubprocessManagerDeps;
 
@@ -72,7 +75,7 @@ export class SubprocessManager extends EventEmitter {
   }
 
   spawnProcess(spec: SubprocessSpec): Promise<string> {
-    const id = spec.id ?? `proc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const id = spec.id ?? `proc_${randomUUID().slice(0, 8)}`;
     const state: SubprocessState = {
       id,
       spec,
@@ -93,9 +96,36 @@ export class SubprocessManager extends EventEmitter {
   }
 
   private spawnChild(id: string, spec: SubprocessSpec, state: SubprocessState): void {
+    // Only inherit safe env vars — don't leak secrets to subprocesses
+    const { PATH, LANG, LC_ALL, HOME, TMPDIR, USER, SHELL, TERM } = process.env;
+    const safeEnv: Record<string, string> = {};
+    if (PATH) {
+      safeEnv.PATH = PATH;
+    }
+    if (LANG) {
+      safeEnv.LANG = LANG;
+    }
+    if (LC_ALL) {
+      safeEnv.LC_ALL = LC_ALL;
+    }
+    if (HOME) {
+      safeEnv.HOME = HOME;
+    }
+    if (TMPDIR) {
+      safeEnv.TMPDIR = TMPDIR;
+    }
+    if (USER) {
+      safeEnv.USER = USER;
+    }
+    if (SHELL) {
+      safeEnv.SHELL = SHELL;
+    }
+    if (TERM) {
+      safeEnv.TERM = TERM;
+    }
     const child = spawn(spec.command, spec.args ?? [], {
       cwd: spec.cwd,
-      env: { ...process.env, ...spec.env },
+      env: { ...safeEnv, ...spec.env },
       stdio: ['pipe', 'pipe', 'pipe']
     });
 
@@ -111,23 +141,36 @@ export class SubprocessManager extends EventEmitter {
           this.emit('process:stalled', { id });
           child.kill('SIGTERM');
           clearInterval(stallInterval);
+          this.stallIntervals.delete(id);
         }
       },
       Math.min(stallTimeout, 10_000)
     ).unref();
+    this.stallIntervals.set(id, stallInterval);
 
     child.stdout?.on('data', (data: Buffer) => {
       lastActivity = Date.now();
-      state.stdout.push(data.toString());
+      const line = data.toString();
+      state.stdout.push(line);
+      // Ring buffer: cap at 1000 lines
+      if (state.stdout.length > 1000) {
+        state.stdout.splice(0, state.stdout.length - 1000);
+      }
     });
 
     child.stderr?.on('data', (data: Buffer) => {
       lastActivity = Date.now();
-      state.stderr.push(data.toString());
+      const line = data.toString();
+      state.stderr.push(line);
+      // Ring buffer: cap at 1000 lines
+      if (state.stderr.length > 1000) {
+        state.stderr.splice(0, state.stderr.length - 1000);
+      }
     });
 
     child.on('exit', code => {
       clearInterval(stallInterval);
+      this.stallIntervals.delete(id);
       state.exitCode = code;
       state.status = code === 0 ? 'stopped' : 'crashed';
       state.stoppedAt = Date.now();
@@ -140,7 +183,11 @@ export class SubprocessManager extends EventEmitter {
           state.restartCount++;
           state.status = 'running';
           this.emit('process:restarted', { id, attempt: state.restartCount, delay });
-          setTimeout(() => this.spawnChild(id, spec, state), delay).unref();
+          const timer = setTimeout(() => {
+            this.restartTimers.delete(id);
+            this.spawnChild(id, spec, state);
+          }, delay).unref();
+          this.restartTimers.set(id, timer);
         }
       }
     });
@@ -199,10 +246,13 @@ export class SubprocessManager extends EventEmitter {
       }
 
       try {
-        const rss = process.memoryUsage().rss;
+        const childRss = getChildRss(child.pid ?? null);
+        if (childRss === null) {
+          continue; // Platform not supported or process already gone
+        }
         const limitBytes = (state.spec.memoryLimitMb ?? this.deps.defaultMemoryLimitMb) * 1024 * 1024;
-        if (rss > limitBytes) {
-          this.deps.logger.warn(`Subprocess ${id} exceeded memory limit`, { rss, limit: limitBytes });
+        if (childRss > limitBytes) {
+          this.deps.logger.warn(`Subprocess ${id} exceeded memory limit`, { rss: childRss, limit: limitBytes });
           child.kill('SIGKILL');
           state.status = 'killed';
           this.emit('process:killed', { id, reason: 'memory' });
@@ -214,6 +264,9 @@ export class SubprocessManager extends EventEmitter {
   }
 
   killProcess(id: string): boolean {
+    // Clean up timers and intervals
+    this.clearProcessTimers(id);
+
     const child = this.childProcesses.get(id);
     if (!child) {
       return false;
@@ -226,6 +279,19 @@ export class SubprocessManager extends EventEmitter {
     }
     this.emit('process:killed', { id, reason: 'manual' });
     return true;
+  }
+
+  private clearProcessTimers(id: string): void {
+    const stallInterval = this.stallIntervals.get(id);
+    if (stallInterval) {
+      clearInterval(stallInterval);
+      this.stallIntervals.delete(id);
+    }
+    const restartTimer = this.restartTimers.get(id);
+    if (restartTimer) {
+      clearTimeout(restartTimer);
+      this.restartTimers.delete(id);
+    }
   }
 
   listProcesses(): SubprocessState[] {
@@ -245,16 +311,28 @@ export class SubprocessManager extends EventEmitter {
   }
 
   killAll(): Promise<void> {
-    for (const [id, child] of this.childProcesses) {
-      child.kill('SIGTERM');
-      const state = this.processes.get(id);
-      if (state) {
-        state.status = 'killed';
-        state.stoppedAt = Date.now();
-      }
+    // Clear all timers first
+    for (const id of this.stallIntervals.keys()) {
+      this.clearProcessTimers(id);
     }
-    this.childProcesses.clear();
-    return Promise.resolve();
+    for (const id of this.restartTimers.keys()) {
+      this.clearProcessTimers(id);
+    }
+
+    const exits = Array.from(this.childProcesses.entries()).map(
+      ([_id, child]) =>
+        new Promise<void>(resolve => {
+          child.once('exit', () => resolve());
+          child.kill('SIGTERM');
+          setTimeout(() => {
+            child.kill('SIGKILL');
+            resolve();
+          }, 5000).unref();
+        })
+    );
+    return Promise.all(exits).then(() => {
+      this.childProcesses.clear();
+    });
   }
 
   stop(): Promise<void> {
@@ -263,5 +341,59 @@ export class SubprocessManager extends EventEmitter {
       this.memoryCheckTimer = null;
     }
     return this.killAll();
+  }
+}
+
+/**
+ * Get the RSS (resident set size) of a child process by PID.
+ * Returns null on unsupported platforms or if the process is gone.
+ */
+const rssReaders: Record<string, (pid: number) => number | null> = {
+  linux: pid => {
+    const status = execSync(`grep VmRSS /proc/${pid}/status 2>/dev/null || true`, {
+      encoding: 'utf-8',
+      timeout: 1000
+    });
+    const match = status.match(/VmRSS:\s+(\d+)\s+kB/);
+    return match?.[1] ? Number.parseInt(match[1], 10) * 1024 : null;
+  },
+  darwin: pid => {
+    const output = execSync(`ps -p ${pid} -o rss= 2>/dev/null || true`, {
+      encoding: 'utf-8',
+      timeout: 1000
+    });
+    const trimmed = output.trim();
+    return trimmed ? Number.parseInt(trimmed, 10) * 1024 : null;
+  },
+  win32: pid => {
+    const output = execSync(`wmic process where processid=${pid} get workingsetsize /format:csv 2>nul || echo ""`, {
+      encoding: 'utf-8',
+      timeout: 1000
+    });
+    const match = output.match(/\n(\d+)/);
+    return match?.[1] ? Number.parseInt(match[1], 10) : null;
+  }
+};
+
+function getChildRss(pid: number | null): number | null {
+  if (pid === null || pid <= 0) {
+    return null;
+  }
+  const platform = process.platform;
+  let reader: ((pid: number) => number | null) | undefined;
+  if (platform === 'linux') {
+    reader = rssReaders.linux;
+  } else if (platform === 'darwin') {
+    reader = rssReaders.darwin;
+  } else if (platform === 'win32') {
+    reader = rssReaders.win32;
+  } else {
+    return null;
+  }
+  // biome-ignore lint/style/noNonNullAssertion: reader is assigned in every non-returning branch above
+  try {
+    return reader!(pid);
+  } catch {
+    return null;
   }
 }

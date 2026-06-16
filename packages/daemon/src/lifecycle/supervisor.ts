@@ -50,6 +50,7 @@ export class Supervisor {
 
     if (this.restartTimestamps.length > this.deps.policy.maxRestarts) {
       this.deps.logger.error(`Daemon exceeded ${this.deps.policy.maxRestarts} crashes. Giving up.`);
+      await daemon.stop(false);
       process.exit(1);
     }
 

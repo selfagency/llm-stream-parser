@@ -1,4 +1,4 @@
-import type { JsonObject } from '@agentsy/types';
+import type { JsonObject } from '@agentsy/shared';
 
 /**
  * Shared provider-facing tools payload contract that is interoperable with NativeTool[].

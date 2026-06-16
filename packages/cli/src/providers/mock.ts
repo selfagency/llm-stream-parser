@@ -7,7 +7,7 @@
 
 import { ReadableStream } from 'node:stream/web';
 
-import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/shared';
 
 /** Minimum delay between mock chunks in milliseconds. */
 const DEFAULT_CHUNK_DELAY_MS = 15;

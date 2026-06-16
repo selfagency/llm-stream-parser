@@ -20,8 +20,8 @@ import type {
   ToolCallArgsEvent,
   ToolCallEndEvent,
   ToolCallStartEvent
-} from '@agentsy/types';
-import { EventType } from '@agentsy/types';
+} from '@agentsy/shared';
+import { EventType } from '@agentsy/shared';
 
 /**
  * Represents events from createPipeline.

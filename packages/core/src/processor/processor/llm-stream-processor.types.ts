@@ -1,4 +1,4 @@
-import type { ConversationEvent, FinishReason, ToolCallState, UsageInfo } from '@agentsy/types';
+import type { ConversationEvent, FinishReason, ToolCallState, UsageInfo } from '@agentsy/shared';
 
 import type { ThinkingTagPair } from '../../thinking/index.js';
 import type { XmlToolCall } from '../../tool-calls/index.js';
