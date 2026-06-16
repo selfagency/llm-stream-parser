@@ -117,7 +117,9 @@
     "@aws-sdk/client-secrets-manager",
     "@azure/identity",
     "@azure/keyvault-secrets",
-    "@google-cloud/secret-manager"
+    "@google-cloud/secret-manager",
+    "piscina",
+    "bree"
   ],
   // Intentional duplicate exports across namespace-barrel module boundaries
   "ignoreExports": [

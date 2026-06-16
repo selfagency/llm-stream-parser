@@ -88,7 +88,6 @@
   },
   "dependencies": {
     "@agentsy/memory": "workspace:*",
-    "@agentsy/shared": "workspace:*",
     "@agentsy/types": "workspace:*",
     "better-sqlite3": "^11.10.0",
     "bree": "^9.2.3",

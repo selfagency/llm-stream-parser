@@ -4,15 +4,15 @@ import type { DeepPartial } from './types.js';
 
 // ── Helper: resolve default paths ─────────────────────
 
-export function defaultDbPath(): string {
+function defaultDbPath(): string {
   return path.join(os.homedir(), '.agentsy', 'agentsy.db');
 }
 
-export function defaultSocketPath(): string {
+function defaultSocketPath(): string {
   return path.join(os.homedir(), '.agentsy', 'daemon.sock');
 }
 
-export function defaultJobDirectory(): string {
+function defaultJobDirectory(): string {
   return path.join(os.homedir(), '.agentsy', 'jobs');
 }
 

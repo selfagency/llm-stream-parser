@@ -1,5 +1,6 @@
 import type { Logger } from '../types.js';
 
+// fallow-ignore-next-line unused-type
 export interface JobQueueDeps {
   logger: Logger;
 }
