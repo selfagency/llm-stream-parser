@@ -127,6 +127,27 @@ E2E specs use `@microsoft/tui-test` and are located in `packages/cli/src/e2e/`. 
 
 This repo uses **GitButler** via the `but` CLI for all write git operations — commit, stage, branch, push, pull requests. See `.agents/skills/but/` for the full skill reference.
 
+### GitButler MCP Server
+
+GitButler ships an MCP server that exposes workflow actions directly to AI tools. When connected, your assistant can record changes, create commits, and manage branches without running shell commands — the assistant calls MCP tools instead.
+
+**Setup** — start the MCP server:
+
+```bash
+but mcp                                 # Default mode (recommended)
+but mcp --internal                      # Internal mode (exposes additional tools)
+```
+
+**MCP Client Configuration:**
+
+| Client | Config |
+|--------|--------|
+| **Claude Code** | `claude mcp add gitbutler but mcp` |
+| **VS Code** | Command Palette → `MCP: List Servers` → Add Server → stdio → command: `but` args: `["mcp"]` |
+| **Cursor** | `~/.cursor/mcp.json`: `{"mcpServers":{"gitbutler":{"command":"but","args":["mcp"]}}}` |
+
+The server exposes tools for recording changes, creating commits, updating branches, and managing workspace state. After each meaningful edit batch, call the GitButler update-branches tool to persist changes with context. See [blog.gitbutler.com/using-gb-mcp](https://blog.gitbutler.com/using-gb-mcp) for the full guide.
+
 ### Workspace model
 
 GitButler is **not** traditional Git. It keeps one working directory while organizing changes into separate branches (stacks). You don't switch branches by checking out — you assign file changes to stacks and they coexist.
