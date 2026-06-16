@@ -1,6 +1,6 @@
 // fallow-ignore-file unused-file
 import { access, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { resolve, relative } from 'node:path';
+import { relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../..');

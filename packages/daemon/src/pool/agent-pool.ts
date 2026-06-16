@@ -42,15 +42,15 @@ class PriorityTaskQueue {
 }
 
 interface PiscinaPool {
-  run: (task: unknown, opts?: { signal?: AbortSignal; name?: string }) => Promise<unknown>;
-  threads: { length: number }[];
-  queueSize: number;
   completed: number;
+  destroy: () => Promise<void>;
+  duration: number;
+  queueSize: number;
+  run: (task: unknown, opts?: { signal?: AbortSignal; name?: string }) => Promise<unknown>;
+  runTime: number;
+  threads: { length: number }[];
   utilization: number;
   waitTime: number;
-  runTime: number;
-  duration: number;
-  destroy: () => Promise<void>;
 }
 
 export class AgentPool {

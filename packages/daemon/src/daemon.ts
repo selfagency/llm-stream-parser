@@ -60,10 +60,18 @@ const SubprocessSpecSchema = z.object({
  * Resolve a log level string to a numeric priority.
  */
 function resolveLevel(level: string | undefined): number {
-  if (level === 'debug') return 10;
-  if (level === 'info') return 20;
-  if (level === 'warn') return 30;
-  if (level === 'error') return 40;
+  if (level === 'debug') {
+    return 10;
+  }
+  if (level === 'info') {
+    return 20;
+  }
+  if (level === 'warn') {
+    return 30;
+  }
+  if (level === 'error') {
+    return 40;
+  }
   return 20;
 }
 
