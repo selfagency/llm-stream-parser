@@ -38,12 +38,26 @@ export interface HonkerQueueConfig {
  */
 export class HonkerQueueAdapter {
   private readonly config: HonkerQueueConfig;
+  private started = false;
 
   constructor(config: HonkerQueueConfig) {
     this.config = config;
   }
 
   start(): Promise<void> {
+    // Ensure DB is open before using queues
+    if (!this.config.db.isOpen) {
+      return this.config.db.open().then(() => {
+        for (const queueName of this.config.queues) {
+          this.config.db.queue(queueName);
+        }
+        this.started = true;
+        this.config.logger.info('Honker queue started', {
+          queues: this.config.queues
+        });
+      });
+    }
+
     for (const queueName of this.config.queues) {
       this.config.db.queue(queueName);
     }

@@ -1,10 +1,6 @@
+import path from 'node:path';
 import type { Logger } from '../types.js';
 
-/**
- * Unified database configuration.
- * The database lives at ~/.agentsy/agentsy.db — a single SQLite file
- * shared by all daemon subsystems (memory, jobs, scopes, etc.).
- */
 export interface UnifiedDBConfig {
   blake3ExtensionPath?: string;
   busyTimeoutMs?: number;
@@ -36,8 +32,8 @@ export interface TransactionHandle {
  * UnifiedDB — single Honker-backed SQLite database for all daemon subsystems.
  *
  * Opens ~/.agentsy/agentsy.db via Honker's native extension when available,
- * falling back to better-sqlite3 directly. Provides queues, streams,
- * transactions, and async query execution on the same file.
+ * falling back to better-sqlite3 directly. Uses loadHonkerExtension() from
+ * @agentsy/memory to detect native extension availability on startup.
  */
 export class UnifiedDB {
   private db: unknown = null;
@@ -60,15 +56,42 @@ export class UnifiedDB {
   }
 
   async open(): Promise<void> {
-    // Try Honker native extension first
-    try {
-      // In production: const { open } = await import('@russellthehippo/honker-node');
-      // this.db = open(this.config.path, this.config.extensionPath);
-      // this._mode = 'native';
-      throw new Error('Honker native extension not available');
-    } catch {
-      // Fallback: use better-sqlite3 directly
+    // Try Honker native extension — check for .so/.dylib files
+    if (this.config.extensionPath && this.config.blake3ExtensionPath) {
+      try {
+        const { access } = await import('node:fs/promises');
+        const hasHonker = await access(this.config.extensionPath)
+          .then(() => true)
+          .catch(() => false);
+        const hasBlake3 = await access(this.config.blake3ExtensionPath)
+          .then(() => true)
+          .catch(() => false);
+
+        if (hasHonker && hasBlake3) {
+          // In production: const { open } = await import('@russellthehippo/honker-node');
+          // this.db = open(this.config.path);
+          // this._mode = 'native';
+          this.config.logger.info('Honker native extension detected');
+        }
+      } catch {
+        // Extension detection failed, fall through to better-sqlite3 fallback
+      }
+    }
+
+    // Fallback: use better-sqlite3 directly
+    if (!this.db) {
       const Database = (await import('better-sqlite3')).default;
+
+      if (this.config.path !== ':memory:') {
+        const dir = path.dirname(this.config.path);
+        try {
+          const { mkdirSync } = await import('node:fs');
+          mkdirSync(dir, { recursive: true });
+        } catch {
+          // race with another process, fine
+        }
+      }
+
       this.db = new Database(this.config.path);
       this._mode = 'fallback';
 
@@ -99,16 +122,13 @@ export class UnifiedDB {
   }
 
   private createQueue(name: string): QueueHandle {
-    // In native mode, this would call this.honker.queue(name).
-    // In fallback mode, we use better-sqlite3 with a jobs table.
-    const db = this.db as {
+    const db = this.db as unknown as {
       prepare: (sql: string) => {
         run: (...params: unknown[]) => { lastInsertRowid: number | bigint };
         all: (...params: unknown[]) => unknown[];
       };
     };
 
-    // Ensure the jobs table exists
     db.prepare(
       `CREATE TABLE IF NOT EXISTS honker_jobs_${name} (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -138,8 +158,8 @@ export class UnifiedDB {
         const rows = db
           .prepare(
             `UPDATE honker_jobs_${name} SET status = 'claimed', claimed_by = ?, claimed_at = unixepoch()
-           WHERE id = (SELECT id FROM honker_jobs_${name} WHERE status = 'pending' ORDER BY id ASC LIMIT 1)
-           RETURNING *`
+             WHERE id = (SELECT id FROM honker_jobs_${name} WHERE status = 'pending' ORDER BY id ASC LIMIT 1)
+             RETURNING *`
           )
           .all(workerId);
         return rows.length > 0 ? rows[0] : null;
@@ -149,8 +169,8 @@ export class UnifiedDB {
           const rows = db
             .prepare(
               `UPDATE honker_jobs_${name} SET status = 'claimed', claimed_by = ?, claimed_at = unixepoch()
-             WHERE id = (SELECT id FROM honker_jobs_${name} WHERE status = 'pending' ORDER BY id ASC LIMIT 1)
-             RETURNING *`
+               WHERE id = (SELECT id FROM honker_jobs_${name} WHERE status = 'pending' ORDER BY id ASC LIMIT 1)
+               RETURNING *`
             )
             .all(workerId);
           return Promise.resolve(rows.length > 0 ? rows[0] : null);
@@ -176,10 +196,10 @@ export class UnifiedDB {
   }
 
   private createStream(name: string): StreamHandle {
-    const db = this.db as {
+    const db = this.db as unknown as {
       prepare: (sql: string) => {
         run: (...params: unknown[]) => void;
-        all: (...params: unknown[]) => { offset: number; payload: string }[];
+        all: (...params: unknown[]) => Array<{ offset: number; payload: string }>;
       };
     };
 
@@ -210,8 +230,7 @@ export class UnifiedDB {
   // ── Transaction API ────────────────────────────────
 
   transaction(): TransactionHandle {
-    const db = this.db as { prepare: (sql: string) => { run: (...params: unknown[]) => void } };
-
+    const db = this.db as unknown as { prepare: (sql: string) => { run: (...params: unknown[]) => void } };
     db.prepare('BEGIN').run();
 
     return {
@@ -230,18 +249,18 @@ export class UnifiedDB {
   // ── Query API ──────────────────────────────────────
 
   query<T = unknown>(sql: string, params: unknown[] = []): Promise<T[]> {
-    const db = this.db as { prepare: (sql: string) => { all: (...params: unknown[]) => T[] } };
+    const db = this.db as unknown as { prepare: (sql: string) => { all: (...params: unknown[]) => T[] } };
     return Promise.resolve(db.prepare(sql).all(...params));
   }
 
   execute(sql: string, params: unknown[] = []): Promise<void> {
-    const db = this.db as { prepare: (sql: string) => { run: (...params: unknown[]) => void } };
+    const db = this.db as unknown as { prepare: (sql: string) => { run: (...params: unknown[]) => void } };
     db.prepare(sql).run(...params);
     return Promise.resolve();
   }
 
   querySingle<T = unknown>(sql: string, params: unknown[] = []): Promise<T | null> {
-    const db = this.db as { prepare: (sql: string) => { get: (...params: unknown[]) => T | undefined } };
+    const db = this.db as unknown as { prepare: (sql: string) => { get: (...params: unknown[]) => T | undefined } };
     const result = db.prepare(sql).get(...params);
     return Promise.resolve(result ?? null);
   }
@@ -249,7 +268,7 @@ export class UnifiedDB {
   // ── Migration API ──────────────────────────────────
 
   migrate(): Promise<void> {
-    const db = this.db as { prepare: (sql: string) => { run: (...params: unknown[]) => void } };
+    const db = this.db as unknown as { prepare: (sql: string) => { run: (...params: unknown[]) => void } };
 
     db.prepare(
       `CREATE TABLE IF NOT EXISTS _migrations (
@@ -262,43 +281,27 @@ export class UnifiedDB {
     const migrations = [
       {
         name: '001_daemon_state',
-        sql: `CREATE TABLE IF NOT EXISTS daemon_state (
-        key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER DEFAULT (unixepoch())
-      )`
+        sql: 'CREATE TABLE IF NOT EXISTS daemon_state (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER DEFAULT (unixepoch()))'
       },
       {
         name: '002_scopes',
-        sql: `CREATE TABLE IF NOT EXISTS scopes (
-        key TEXT PRIMARY KEY, path TEXT NOT NULL, created_at INTEGER DEFAULT (unixepoch())
-      )`
+        sql: 'CREATE TABLE IF NOT EXISTS scopes (key TEXT PRIMARY KEY, path TEXT NOT NULL, created_at INTEGER DEFAULT (unixepoch()))'
       },
       {
         name: '003_agent_instances',
-        sql: `CREATE TABLE IF NOT EXISTS agent_instances (
-        id TEXT PRIMARY KEY, name TEXT, role TEXT, memory_scope TEXT, state TEXT DEFAULT 'idle',
-        created_at INTEGER DEFAULT (unixepoch()), updated_at INTEGER DEFAULT (unixepoch())
-      )`
+        sql: "CREATE TABLE IF NOT EXISTS agent_instances (id TEXT PRIMARY KEY, name TEXT, role TEXT, memory_scope TEXT, state TEXT DEFAULT 'idle', created_at INTEGER DEFAULT (unixepoch()), updated_at INTEGER DEFAULT (unixepoch()))"
       },
       {
         name: '004_subprocess_state',
-        sql: `CREATE TABLE IF NOT EXISTS subprocess_state (
-        id TEXT PRIMARY KEY, spec TEXT NOT NULL, status TEXT, pid INTEGER,
-        started_at INTEGER, stopped_at INTEGER, restart_count INTEGER DEFAULT 0
-      )`
+        sql: 'CREATE TABLE IF NOT EXISTS subprocess_state (id TEXT PRIMARY KEY, spec TEXT NOT NULL, status TEXT, pid INTEGER, started_at INTEGER, stopped_at INTEGER, restart_count INTEGER DEFAULT 0)'
       },
       {
         name: '005_connector_state',
-        sql: `CREATE TABLE IF NOT EXISTS connector_state (
-        name TEXT PRIMARY KEY, type TEXT, config TEXT, status TEXT DEFAULT 'disconnected',
-        updated_at INTEGER DEFAULT (unixepoch())
-      )`
+        sql: "CREATE TABLE IF NOT EXISTS connector_state (name TEXT PRIMARY KEY, type TEXT, config TEXT, status TEXT DEFAULT 'disconnected', updated_at INTEGER DEFAULT (unixepoch()))"
       },
       {
         name: '006_acp_sessions',
-        sql: `CREATE TABLE IF NOT EXISTS acp_sessions (
-        id TEXT PRIMARY KEY, agent_id TEXT, cwd TEXT, mode TEXT DEFAULT 'code',
-        created_at INTEGER DEFAULT (unixepoch()), closed_at INTEGER
-      )`
+        sql: "CREATE TABLE IF NOT EXISTS acp_sessions (id TEXT PRIMARY KEY, agent_id TEXT, cwd TEXT, mode TEXT DEFAULT 'code', created_at INTEGER DEFAULT (unixepoch()), closed_at INTEGER)"
       }
     ];
 

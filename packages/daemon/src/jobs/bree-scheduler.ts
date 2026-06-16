@@ -26,6 +26,7 @@ export class BreeScheduler {
   private readonly definitions = new Map<string, ScheduleDefinition>();
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly config: BreeSchedulerConfig;
+  private started = false;
 
   constructor(config: BreeSchedulerConfig) {
     this.config = config;

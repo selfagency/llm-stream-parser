@@ -6,19 +6,23 @@ export interface WorkerTask {
 }
 
 export default function (task: WorkerTask): Promise<unknown> {
-  switch (task.type) {
-    case 'agent.compute':
-      return handleAgentCompute(task.payload);
-    case 'embedding.generate':
-      return handleEmbedding(task.payload);
-    case 'rag.index':
-      return handleRagIndex(task.payload);
-    case 'rag.query':
-      return handleRagQuery(task.payload);
-    case 'memory.consolidate':
-      return handleMemoryConsolidate(task.payload);
-    default:
-      throw new Error(`Unknown task type: ${task.type}`);
+  try {
+    switch (task.type) {
+      case 'agent.compute':
+        return handleAgentCompute(task.payload);
+      case 'embedding.generate':
+        return handleEmbedding(task.payload);
+      case 'rag.index':
+        return handleRagIndex(task.payload);
+      case 'rag.query':
+        return handleRagQuery(task.payload);
+      case 'memory.consolidate':
+        return handleMemoryConsolidate(task.payload);
+      default:
+        return Promise.reject(new Error(`Unknown task type: ${task.type}`));
+    }
+  } catch (error) {
+    return Promise.reject(error);
   }
 }
 
