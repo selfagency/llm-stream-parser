@@ -26,12 +26,12 @@ function createLogger(config: DaemonConfig['logging']): Logger {
   return {
     debug: (msg: string, ...args: unknown[]) => {
       if (config.level === 'debug') {
-        console.debug(`${prefix}${msg}`, ...args);
+        console.debug('%s%s', prefix, msg, ...args);
       }
     },
-    info: (msg: string, ...args: unknown[]) => console.info(`${prefix}${msg}`, ...args),
-    warn: (msg: string, ...args: unknown[]) => console.warn(`${prefix}${msg}`, ...args),
-    error: (msg: string, ...args: unknown[]) => console.error(`${prefix}${msg}`, ...args),
+    info: (msg: string, ...args: unknown[]) => console.info('%s%s', prefix, msg, ...args),
+    warn: (msg: string, ...args: unknown[]) => console.warn('%s%s', prefix, msg, ...args),
+    error: (msg: string, ...args: unknown[]) => console.error('%s%s', prefix, msg, ...args),
     child: (_name: string): Logger => createLogger({ ...config, level: config.level })
   };
 }

@@ -71,44 +71,53 @@ export class IPCClient {
       const line = this.buffer.slice(0, newlineIdx);
       this.buffer = this.buffer.slice(newlineIdx + 1);
 
-      if (!line.trim()) {
-        newlineIdx = this.buffer.indexOf('\n');
-        continue;
-      }
-
-      try {
-        const message = JSON.parse(line) as Record<string, unknown>;
-
-        if (message.id && this.pendingRequests.has(message.id as string)) {
-          const entry = this.pendingRequests.get(message.id as string);
-          if (entry) {
-            const { resolve, reject } = entry;
-            this.pendingRequests.delete(message.id as string);
-            if (message.error) {
-              reject(new Error((message.error as { message: string }).message));
-            } else {
-              resolve(message.result);
-            }
-          }
-        }
-
-        if (message.method === 'stream.chunk') {
-          const params = message.params as { streamId: string; chunk: Record<string, unknown> };
-          this.streamListeners.get(params.streamId)?.push(params.chunk);
-        }
-        if (message.method === 'stream.end') {
-          const params = message.params as { streamId: string };
-          this.streamListeners.get(params.streamId)?.end();
-        }
-        if (message.method === 'stream.error') {
-          const params = message.params as { streamId: string; error: Error };
-          this.streamListeners.get(params.streamId)?.error(params.error);
-        }
-      } catch (error) {
-        console.error('Failed to parse IPC message:', error);
+      if (line.trim()) {
+        this.processLine(line);
       }
 
       newlineIdx = this.buffer.indexOf('\n');
+    }
+  }
+
+  private processLine(line: string): void {
+    try {
+      const message = JSON.parse(line) as Record<string, unknown>;
+      this.resolvePendingRequest(message) || this.routeStreamNotification(message);
+    } catch (error) {
+      console.error('Failed to parse IPC message:', error);
+    }
+  }
+
+  private resolvePendingRequest(message: Record<string, unknown>): boolean {
+    const msgId = message.id as string | undefined;
+    if (!msgId || !this.pendingRequests.has(msgId)) {
+      return false;
+    }
+    const entry = this.pendingRequests.get(msgId);
+    if (!entry) {
+      return false;
+    }
+    const { resolve, reject } = entry;
+    this.pendingRequests.delete(msgId);
+    if (message.error) {
+      reject(new Error((message.error as { message: string }).message));
+    } else {
+      resolve(message.result);
+    }
+    return true;
+  }
+
+  private routeStreamNotification(message: Record<string, unknown>): void {
+    const method = message.method as string | undefined;
+    if (method === 'stream.chunk') {
+      const params = message.params as { streamId: string; chunk: Record<string, unknown> };
+      this.streamListeners.get(params.streamId)?.push(params.chunk);
+    } else if (method === 'stream.end') {
+      const params = message.params as { streamId: string };
+      this.streamListeners.get(params.streamId)?.end();
+    } else if (method === 'stream.error') {
+      const params = message.params as { streamId: string; error: Error };
+      this.streamListeners.get(params.streamId)?.error(params.error);
     }
   }
 
