@@ -7,7 +7,7 @@ export * from './types.js';
 /**
  * Load and parse an agent specification from YAML content
  */
-export function parseAgentSpec(yamlContent: string): AgentSpec {
+export async function parseAgentSpec(yamlContent: string): Promise<AgentSpec> {
   const parsed = yamlParse(yamlContent) as unknown;
   const validated = AgentSpecSchema.parse(parsed) as AgentSpec;
   return validated;
@@ -17,7 +17,7 @@ export function parseAgentSpec(yamlContent: string): AgentSpec {
  * Create a LoadedAgent from an AgentSpec
  * Note: Hooks resolution and budget initialization will be done in Phase 3 and Phase 5
  */
-export function createLoadedAgent(spec: AgentSpec): Promise<LoadedAgent> {
+export function createLoadedAgent(spec: AgentSpec): LoadedAgent {
   const hooks = new Map<string, Array<(context: unknown) => Promise<void> | void>>();
 
   if (spec.hooks) {

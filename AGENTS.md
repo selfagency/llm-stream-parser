@@ -63,7 +63,9 @@ Use the highest-level tool available. Prefer IDE actions and repository-native s
 
 1. **VS Code / language-server actions** for symbol-aware operations
 2. **Repository tooling** via root scripts and per-package scripts
-3. **Terminal commands** only when no higher-level option exists
+3. **`but` CLI** (GitButler) for all git write operations — commit, stage, branch, push, PR creation. Never use raw `git` for write operations.
+4. **Raw git** for read-only operations only (`git log`, `git diff`, `git cherry`, `git rev-parse`)
+5. **Terminal commands** only when no higher-level option exists
 
 ## Toolchain and Commands
 
@@ -120,6 +122,103 @@ pnpm --filter @agentsy/cli test:e2e
 ```
 
 E2E specs use `@microsoft/tui-test` and are located in `packages/cli/src/e2e/`. Each CLI command with a non-trivial output or interactive flow should have a corresponding `.spec.ts` file when it meaningfully validates behavior. See `docs/developers/contributing.md` for the full workflow.
+
+## Git Workflow with GitButler
+
+This repo uses **GitButler** via the `but` CLI for all write git operations — commit, stage, branch, push, pull requests. See `.agents/skills/but/` for the full skill reference.
+
+### Workspace model
+
+GitButler is **not** traditional Git. It keeps one working directory while organizing changes into separate branches (stacks). You don't switch branches by checking out — you assign file changes to stacks and they coexist.
+
+- ❌ Don't use `git status`, `git commit`, `git checkout` for write operations
+- ✅ Use `but status`, `but commit`, `but` commands for all writes
+- ✅ Read-only git is fine (`git log`, `git diff`, `git cherry`, `git rev-parse`)
+
+### Every session startup
+
+```bash
+but pull           # Sync — prevents stale-base conflicts
+but status --json  # Check existing branches and unser changes
+```
+
+### Branch management
+
+```bash
+but branch new <name>                    # New independent branch (e.g. feat/add-auth)
+but branch new <name> -a <anchor>       # Stacked branch (depends on anchor)
+but unapply <branch>                     # Remove from workspace (keeps commits)
+but apply <branch>                       # Bring back into workspace
+```
+
+Branch naming: `feat/`, `fix/`, `chore/`, `refactor/` prefixes.
+
+### Commit flow
+
+```bash
+but status --json                         # Get CLI IDs for changed files/hunks
+but commit <branch> -m "msg" --changes <id>,<id>   # Commit specific files
+but commit <branch> -m "msg"             # Commit all uncommitted changes to branch
+but absorb                                # Auto-amend changes into detected commits
+but squash <commits>                      # Combine commits
+but reword <id>                           # Change commit message
+```
+
+**Commit early, commit often.** GitButler makes history editing trivial — small atomic commits are better than large uncommitted piles.
+
+### History editing (direct commands, not interactive rebase)
+
+```bash
+but rub <source> <dest>                   # Universal edit: stage/amend/squash/move
+but amend <file-id> <commit-id>           # Amend file into specific commit
+but reword <id>                           # Change commit message
+```
+
+### Remote operations
+
+```bash
+but pull                                  # Update with upstream
+but push [branch]                         # Push to remote
+but pr new <branch>                       # Push + create PR (default target)
+but pr new <branch> -m "Title..."         # PR with inline message
+but pr new <branch> -F message.txt        # PR with file message
+but config target origin/<branch>         # Set PR target branch
+```
+
+### Post-merge flow
+
+After a PR is squash-merged:
+
+```bash
+but unapply <merged-branch>    # MUST do BEFORE pull
+but pull                        # Pull merged changes
+```
+
+**Critical**: `but pull` before unapplying causes orphan branch errors. For recovery paths, see `.agents/skills/but/SKILL.md`.
+
+### Safety rules
+
+1. **Never discard changes you didn't create.** Unassigned changes in `zz` may belong to other agents, sessions, or the user.
+2. **Always assign your changes to a branch immediately.** Don't leave edits sitting in `zz`.
+3. **Validate branch ownership before commit.** Confirm each changed file/hunk belongs to the intended branch, then commit only those IDs.
+4. **Run `but status --json` to verify state.** Plugin notifications are ~55% reliable — don't trust them alone.
+5. **Use `--json` flag for all commands** when running as an agent (structured, parseable output).
+6. **Use `--changes` flag on commit** to commit specific files/hunks by CLI ID rather than committing everything.
+
+### Known issues
+
+| Issue | Workaround |
+|-------|------------|
+| `but resolve` loses target config | Re-run `but config target origin/<branch>` after resolution |
+| `but absorb` hunk lock | Use `but amend <file> <commit>` for explicit control |
+| `but pr new` has no `--base` flag | Set target first: `but config target origin/<branch>` |
+| `but config target` requires unapply | Unapply all branches → change target → re-apply |
+| `but commit` pre-commit hook fails | Run `bun run format` then `but commit --no-hooks` |
+| `but pull` before unapply | **Always** unapply merged branches before pulling |
+| Split-hunk files stuck in `zz` | `but diff --json` for hunk IDs, then commit each hunk individually |
+| `but teardown` → `but setup` resets target | Re-run `but config target origin/<branch>` after setup |
+
+See `.agents/skills/but/SKILL.md` for the complete command reference, surgical repair workflows, and additional troubleshooting.
 
 ## Runtime and Language Baseline
 
@@ -456,6 +555,9 @@ LLMStreamProcessor and similar components:
 ## Common Gotchas
 
 - Do **not** recommend `task ...` commands — there is no Taskfile in this repo
+- Do **not** use raw `git` for write operations — use `but` CLI instead (commit, stage, branch, push, PR)
+- Do **not** trust `but` plugin notifications alone (~55% reliability) — verify state with `but status --json`
+- Do **not** leave changes uncommitted in `zz` (unassigned) at the end of work — `but status --json` then commit or stage to a branch
 - Do **not** use hypothetical package names (`@agentsy/agent`, `@agentsy/adapters`) — they don't exist
 - Do **not** add `any` to "fix" strict TypeScript friction — use proper types or `unknown`
 - Do **not** forget `.js` extensions on relative TypeScript imports — it's required by verbatimModuleSyntax

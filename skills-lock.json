@@ -55,6 +55,12 @@
       "skillPath": "skills/.experimental/build-mcp-server/SKILL.md",
       "computedHash": "c82bc2de61ebfcdce564487a6af7f91e5606c4bc333cc4fb774a725e4d8c65f1"
     },
+    "but": {
+      "source": "gaboe/opencode-gitbutler",
+      "sourceType": "github",
+      "skillPath": "skill/gitbutler/SKILL.md",
+      "computedHash": "5745a31408fcbd80acfe36febd60f4d794d3cb1a9c01cf8006ffefb22063f982"
+    },
     "cavecrew": {
       "source": "JuliusBrussee/caveman",
       "sourceType": "github",
