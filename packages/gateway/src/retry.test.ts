@@ -111,4 +111,91 @@ describe('retryWithFailover', () => {
     });
     expect(seen).toEqual([['a', 'result-a']]);
   });
+
+  describe('classifyReason', () => {
+    const singleProvider: ProviderEntry[] = [{ id: 'a', name: 'A', provider: 'openai' }];
+
+    it('should classify rate-limit errors by status code 429', async () => {
+      const health = new ProviderHealthRegistry();
+      const ctx = context({ health, providers: singleProvider });
+      const err = new Error('Too Many Requests');
+      (err as { status?: number }).status = 429;
+
+      await expect(
+        retryWithFailover(ctx, () => Promise.reject(err), { maxAttemptsPerProvider: 1 })
+      ).rejects.toMatchObject({
+        failures: [{ providerId: 'a', reason: 'rate-limited' }]
+      });
+    });
+
+    it('should classify rate-limit errors by message pattern', async () => {
+      const health = new ProviderHealthRegistry();
+      const ctx = context({ health, providers: singleProvider });
+
+      await expect(
+        retryWithFailover(ctx, () => Promise.reject(new Error('rate limit exceeded')), { maxAttemptsPerProvider: 1 })
+      ).rejects.toMatchObject({
+        failures: [{ providerId: 'a', reason: 'rate-limited' }]
+      });
+    });
+
+    it('should not match "rate" substring in non-rate errors', async () => {
+      const health = new ProviderHealthRegistry();
+      const ctx = context({ health, providers: singleProvider });
+
+      await expect(
+        retryWithFailover(ctx, () => Promise.reject(new Error('iterate at a fast rate')), { maxAttemptsPerProvider: 1 })
+      ).rejects.toMatchObject({
+        failures: [{ providerId: 'a', reason: 'error' }]
+      });
+    });
+
+    it('should classify timeout errors', async () => {
+      const health = new ProviderHealthRegistry();
+      const ctx = context({ health, providers: singleProvider });
+
+      await expect(
+        retryWithFailover(ctx, () => Promise.reject(new Error('Request timed out')), { maxAttemptsPerProvider: 1 })
+      ).rejects.toMatchObject({
+        failures: [{ providerId: 'a', reason: 'timeout' }]
+      });
+    });
+
+    it('should classify connection errors', async () => {
+      const health = new ProviderHealthRegistry();
+      const ctx = context({ health, providers: singleProvider });
+
+      await expect(
+        retryWithFailover(ctx, () => Promise.reject(new Error('connection refused')), { maxAttemptsPerProvider: 1 })
+      ).rejects.toMatchObject({
+        failures: [{ providerId: 'a', reason: 'connection_error' }]
+      });
+    });
+
+    it('should classify service_unavailable by status 503', async () => {
+      const health = new ProviderHealthRegistry();
+      const ctx = context({ health, providers: singleProvider });
+      const err = new Error('Service Unavailable');
+      (err as { status?: number }).status = 503;
+
+      await expect(
+        retryWithFailover(ctx, () => Promise.reject(err), { maxAttemptsPerProvider: 1 })
+      ).rejects.toMatchObject({
+        failures: [{ providerId: 'a', reason: 'service_unavailable' }]
+      });
+    });
+
+    it('should classify server_error by status 500', async () => {
+      const health = new ProviderHealthRegistry();
+      const ctx = context({ health, providers: singleProvider });
+      const err = new Error('Internal Server Error');
+      (err as { status?: number }).status = 500;
+
+      await expect(
+        retryWithFailover(ctx, () => Promise.reject(err), { maxAttemptsPerProvider: 1 })
+      ).rejects.toMatchObject({
+        failures: [{ providerId: 'a', reason: 'server_error' }]
+      });
+    });
+  });
 });

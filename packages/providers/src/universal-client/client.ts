@@ -6,7 +6,7 @@ import { ReadableStream } from 'node:stream/web';
 
 import type { CompletionRequest, CompletionResponse, NormalizedChunk, UsageInfo } from '@agentsy/types';
 
-import type { NormalizerProvider } from '../pipeline/index.js';
+import type { NormalizerProvider, PipelineEvent } from '../pipeline/index.js';
 import { createPipeline } from '../pipeline/index.js';
 
 /**
@@ -360,36 +360,52 @@ export function createUniversalClient(config: UniversalClientConfig): UniversalC
         provider
       });
 
-      const chunks: NormalizedChunk[] = [];
-      for await (const event of pipeline) {
-        if (event.type === 'delta' && event.content) {
-          chunks.push({ content: event.content });
-        } else if (event.type === 'tool_call' && event.tool_call) {
-          chunks.push({
-            tool_calls: [
-              {
-                function: {
-                  arguments: event.tool_call.parameters,
-                  name: event.tool_call.name
-                }
-              }
-            ]
-          });
-        } else if (event.type === 'thinking' && event.thinking) {
-          chunks.push({ thinking: event.thinking });
-        }
-      }
-
+      // True streaming: emit chunks as they arrive from the pipeline
       const stream = new ReadableStream<NormalizedChunk>({
-        start(controller) {
-          for (const chunk of chunks) {
-            controller.enqueue(chunk);
-          }
-          controller.close();
+        async start(controller) {
+          await readPipelineToStream(pipeline, controller);
         }
       });
 
       return stream;
     }
   };
+}
+
+/**
+ * Read events from the pipeline and enqueue normalized chunks into the
+ * ReadableStream controller. Extracted from the inline start() closure
+ * to keep cognitive complexity under the limit.
+ *
+ * Handles `delta`, `tool_call`, and `thinking` events. The `message_done`
+ * event is silently consumed — it carries no data to enqueue, and the
+ * stream controller closes naturally when the pipeline iterator completes.
+ */
+async function readPipelineToStream(
+  pipeline: AsyncIterable<PipelineEvent>,
+  controller: ReadableStreamDefaultController<NormalizedChunk>
+): Promise<void> {
+  try {
+    for await (const event of pipeline) {
+      if (event.type === 'delta' && event.content) {
+        controller.enqueue({ content: event.content });
+      } else if (event.type === 'tool_call' && event.tool_call) {
+        controller.enqueue({
+          tool_calls: [
+            {
+              function: {
+                arguments: event.tool_call.parameters,
+                name: event.tool_call.name
+              }
+            }
+          ]
+        });
+      } else if (event.type === 'thinking' && event.thinking) {
+        controller.enqueue({ thinking: event.thinking });
+      }
+    }
+    controller.close();
+  } catch (error) {
+    controller.error(error);
+  }
 }

@@ -130,18 +130,33 @@ export function createRuntimeHookRegistry(): HookRegistry {
     // Sort by priority descending
     const sorted = [...handlers.values()].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
 
+    let currentPayload: unknown = event;
+    let hasTransform = false;
+
     for (const entry of sorted) {
       const result = await entry.handler(event);
 
-      // If result is a transform, pass it through
+      // If result is a transform, compose it
       if ('transform' in result) {
-        return result;
+        const transform = result.transform as Record<string, unknown>;
+        if (hasTransform) {
+          // Multiple transforms: compose by merging into accumulated payload
+          currentPayload = { ...(currentPayload as Record<string, unknown>), ...transform };
+        } else {
+          currentPayload = { ...event, ...transform };
+          hasTransform = true;
+        }
+        continue;
       }
 
-      // If result blocks, stop the chain
+      // If result blocks, stop the chain immediately
       if (!result.continue) {
         return result;
       }
+    }
+
+    if (hasTransform) {
+      return { transform: currentPayload };
     }
 
     return { continue: true };

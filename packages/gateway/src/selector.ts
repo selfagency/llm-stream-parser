@@ -123,11 +123,13 @@ export class DefaultTierAwareModelSelector implements TierAwareModelSelector {
       filtered = filtered.filter(m => !excluded.has(m.providerId));
     }
     if (constraints.maxUsdPer1KInput !== undefined) {
-      const max = constraints.maxUsdPer1KInput;
+      // Convert user-facing per-1K to internal per-1M (model registry stores per-1M)
+      const max = constraints.maxUsdPer1KInput * 1000;
       filtered = filtered.filter(m => m.cost.inputPer1MTokens <= max);
     }
     if (constraints.maxUsdPer1KOutput !== undefined) {
-      const max = constraints.maxUsdPer1KOutput;
+      // Convert user-facing per-1K to internal per-1M (model registry stores per-1M)
+      const max = constraints.maxUsdPer1KOutput * 1000;
       filtered = filtered.filter(m => m.cost.outputPer1MTokens <= max);
     }
 
