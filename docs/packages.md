@@ -31,6 +31,7 @@
 
 | Package | Role | Status | Docs |
 | --- | --- | --- | --- |
+| `@agentsy/daemon` | Long-lived daemon process with IPC, ACP, subprocess management, and lifecycle orchestration | Internal | [Package page](./packages/daemon.md) |
 | `@agentsy/orchestrator` | Agent orchestration and scheduling | Published | [Package page](./packages/orchestrator.md) |
 | `@agentsy/runtime` | Agent execution runtime with sandboxing and AG-UI protocol adapter | Published | [Package page](./packages/runtime.md) |
 | `@agentsy/guardrails` | Safety and validation boundaries | Published | [Package page](./packages/guardrails.md) |
