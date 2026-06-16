@@ -92,7 +92,14 @@ export class HonkerQueueAdapter {
     return Promise.resolve(this.mapJob(job, queueName));
   }
 
-  ack(_jobId: string): Promise<void> {
+  ack(jobId: string, queueName = 'default'): Promise<void> {
+    this.config.db.queue(queueName);
+    const numericId = Number.parseInt(jobId.replace(/^job_/, ''), 10);
+    if (!Number.isNaN(numericId)) {
+      return this.config.db.execute(`UPDATE honker_jobs_${queueName} SET status = 'completed' WHERE id = ?`, [
+        numericId
+      ]);
+    }
     return Promise.resolve();
   }
 

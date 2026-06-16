@@ -338,14 +338,17 @@ export class UnifiedDB {
     ];
 
     for (const migration of migrations) {
-      const existing = db.prepare('SELECT id FROM _migrations WHERE name = ?').get(migration.name) as
-        | { id: number }
-        | undefined;
-      if (!existing) {
-        db.prepare(migration.sql).run();
-        db.prepare('INSERT INTO _migrations (name) VALUES (?)').run(migration.name);
-        this.config.logger.debug('Applied migration', { name: migration.name });
-      }
+      // Wrap each migration in a transaction for atomicity
+      db.transaction((): void => {
+        const existing = db.prepare('SELECT id FROM _migrations WHERE name = ?').get(migration.name) as
+          | { id: number }
+          | undefined;
+        if (!existing) {
+          db.prepare(migration.sql).run();
+          db.prepare('INSERT INTO _migrations (name) VALUES (?)').run(migration.name);
+          this.config.logger.debug('Applied migration', { name: migration.name });
+        }
+      })();
     }
 
     this.config.logger.info('Database migrations complete');
