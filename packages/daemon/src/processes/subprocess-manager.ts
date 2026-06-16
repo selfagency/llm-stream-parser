@@ -329,47 +329,43 @@ export class SubprocessManager extends EventEmitter {
  * Get the RSS (resident set size) of a child process by PID.
  * Returns null on unsupported platforms or if the process is gone.
  */
+const rssReaders: Record<string, (pid: number) => number | null> = {
+  linux: pid => {
+    const status = execSync(`grep VmRSS /proc/${pid}/status 2>/dev/null || true`, {
+      encoding: 'utf-8',
+      timeout: 1000
+    });
+    const match = status.match(/VmRSS:\s+(\d+)\s+kB/);
+    return match?.[1] ? Number.parseInt(match[1], 10) * 1024 : null;
+  },
+  darwin: pid => {
+    const output = execSync(`ps -p ${pid} -o rss= 2>/dev/null || true`, {
+      encoding: 'utf-8',
+      timeout: 1000
+    });
+    const trimmed = output.trim();
+    return trimmed ? Number.parseInt(trimmed, 10) * 1024 : null;
+  },
+  win32: pid => {
+    const output = execSync(`wmic process where processid=${pid} get workingsetsize /format:csv 2>nul || echo ""`, {
+      encoding: 'utf-8',
+      timeout: 1000
+    });
+    const match = output.match(/\n(\d+)/);
+    return match?.[1] ? Number.parseInt(match[1], 10) : null;
+  }
+};
+
 function getChildRss(pid: number | null): number | null {
   if (pid === null || pid <= 0) {
     return null;
   }
-
+  const reader = rssReaders[process.platform];
+  if (!reader) {
+    return null; // Unsupported platform
+  }
   try {
-    const platform = process.platform;
-    if (platform === 'linux') {
-      const status = execSync(`grep VmRSS /proc/${pid}/status 2>/dev/null || true`, {
-        encoding: 'utf-8',
-        timeout: 1000
-      });
-      const match = status.match(/VmRSS:\s+(\d+)\s+kB/);
-      if (match?.[1]) {
-        return Number.parseInt(match[1], 10) * 1024;
-      }
-      return null;
-    }
-    if (platform === 'darwin') {
-      const output = execSync(`ps -p ${pid} -o rss= 2>/dev/null || true`, {
-        encoding: 'utf-8',
-        timeout: 1000
-      });
-      const trimmed = output.trim();
-      if (trimmed) {
-        return Number.parseInt(trimmed, 10) * 1024;
-      }
-      return null;
-    }
-    if (platform === 'win32') {
-      const output = execSync(`wmic process where processid=${pid} get workingsetsize /format:csv 2>nul || echo ""`, {
-        encoding: 'utf-8',
-        timeout: 1000
-      });
-      const match = output.match(/\n(\d+)/);
-      if (match?.[1]) {
-        return Number.parseInt(match[1], 10);
-      }
-      return null;
-    }
-    return null;
+    return reader(pid);
   } catch {
     return null;
   }
