@@ -43,6 +43,16 @@ function rewriteDistExports(
   return distExports;
 }
 
+async function resolveReadmeSource(packagePath: string): Promise<string> {
+  const pkgReadme = resolve(packagePath, 'README.md');
+  try {
+    await access(pkgReadme);
+    return pkgReadme;
+  } catch {
+    return resolve(ROOT, 'README.md');
+  }
+}
+
 async function main() {
   // If a package path is provided as an argument, use it; otherwise use root
   const packagePath = process.argv[2] ? resolveSafe(process.argv[2], ROOT) : ROOT;
@@ -112,11 +122,7 @@ async function main() {
   await writeFile(resolve(outDir, 'package.json'), `${JSON.stringify(distPkg, null, 2)}\n`, 'utf-8');
   console.log('Wrote', resolve(outDir, 'package.json'));
 
-  const pkgReadme = resolve(packagePath, 'README.md');
-  const rootReadme = resolve(ROOT, 'README.md');
-  const readmeSrc = await access(pkgReadme)
-    .then(() => pkgReadme)
-    .catch(() => rootReadme);
+  const readmeSrc = await resolveReadmeSource(packagePath);
   const readmeDest = resolve(outDir, 'README.md');
   await copyFile(readmeSrc, readmeDest);
   console.log('Copied', readmeSrc, 'to', readmeDest);

@@ -232,6 +232,9 @@ export class SubprocessManager extends EventEmitter {
     let delay = Math.min(baseMs * 2 ** (attempt - 1), maxMs);
 
     if (state.spec.backoffJitter !== false) {
+      // nosemgrep: insecure-randomness -- Math.random() is used for retry-backoff jitter.
+      // Predictability of jitter confers no advantage; jitter exists to prevent thundering-herd
+      // retries, not to provide cryptographic randomness.
       delay += Math.random() * delay * 0.25;
     }
 

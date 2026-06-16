@@ -22,6 +22,7 @@ import type {
   ToolCallStartEvent
 } from '@agentsy/shared';
 import { EventType } from '@agentsy/shared';
+import { randomUUID } from 'node:crypto';
 
 /**
  * Represents events from createPipeline.
@@ -66,7 +67,7 @@ export interface AdapterOptions {
  * Creates a unique message ID for tracking separate message streams.
  */
 function generateMessageId(): string {
-  return `msg_${Math.random().toString(36).slice(2, 11)}`;
+  return `msg_${randomUUID()}`;
 }
 
 /**

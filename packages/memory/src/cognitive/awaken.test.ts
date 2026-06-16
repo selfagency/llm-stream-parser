@@ -210,6 +210,8 @@ describe('awaken', () => {
       const item = createTestMemoryItem({
         content: `Event ${i} content`,
         tokenCount: 8,
+        // nosemgrep: insecure-randomness -- Math.random() is used only for test fixture importance randomization;
+        // no security-sensitive operation depends on this value.
         importance: 0.5 + Math.random() * 0.5
       });
       sensoryBuffer.write(item);

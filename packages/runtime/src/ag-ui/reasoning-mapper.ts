@@ -13,6 +13,7 @@ import type {
   ReasoningStartEvent
 } from '@agentsy/shared';
 import { EventType } from '@agentsy/shared';
+import { randomUUID } from 'node:crypto';
 
 export interface ReasoningMapperOptions {
   encryptReasoning?: boolean;
@@ -51,7 +52,7 @@ export function mapReasoningToEvents(
   }
 
   const { runId, threadId, encryptReasoning } = options;
-  const messageId = `msg_${Math.random().toString(36).slice(2, 11)}`;
+  const messageId = `msg_${randomUUID()}`;
   const timestamp = new Date().toISOString();
 
   // REASONING_START

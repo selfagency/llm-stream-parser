@@ -7,6 +7,7 @@
  * use an in-memory SQLite store.
  */
 
+import { randomUUID } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { emitGitAiCheckpoint } from '../attribution/git-ai-adapter.js';
 import { aggregateGitAiStats, readGitAiCommitStats } from '../attribution/git-ai-notes.js';
@@ -49,7 +50,7 @@ vi.mock('node:fs', () => ({
 
 function makeEntry(overrides: Partial<SessionLedgerEntry> = {}): SessionLedgerEntry {
   const base: SessionLedgerEntry = {
-    id: `entry_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    id: `entry_${randomUUID()}`,
     sessionId: 'sess_test',
     agentId: 'test-agent',
     modelId: 'claude-sonnet-4',

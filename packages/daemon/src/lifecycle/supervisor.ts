@@ -58,6 +58,9 @@ export class Supervisor {
     let delay = Math.min(this.deps.policy.backoffBaseMs * 2 ** (attempt - 1), this.deps.policy.backoffMaxMs);
 
     if (this.deps.policy.backoffJitter) {
+      // nosemgrep: insecure-randomness -- Math.random() is used for retry-backoff jitter.
+      // Predictability of jitter confers no advantage; jitter exists to prevent thundering-herd
+      // retries, not to provide cryptographic randomness.
       delay += Math.random() * delay * 0.25;
     }
 
