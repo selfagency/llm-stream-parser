@@ -380,11 +380,19 @@ function getChildRss(pid: number | null): number | null {
     return null;
   }
   const platform = process.platform;
-  if (platform !== 'linux' && platform !== 'darwin' && platform !== 'win32') {
-    return null; // Unsupported platform
+  let reader: ((pid: number) => number | null) | undefined;
+  if (platform === 'linux') {
+    reader = rssReaders.linux;
+  } else if (platform === 'darwin') {
+    reader = rssReaders.darwin;
+  } else if (platform === 'win32') {
+    reader = rssReaders.win32;
+  } else {
+    return null;
   }
+  // biome-ignore lint/style/noNonNullAssertion: reader is assigned in every non-returning branch above
   try {
-    return rssReaders[platform](pid);
+    return reader!(pid);
   } catch {
     return null;
   }
