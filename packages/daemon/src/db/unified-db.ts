@@ -110,7 +110,7 @@ export class UnifiedDB {
    * Prevents SQL injection via table-name interpolation.
    */
   private validateName(name: string): void {
-    if (!/^[A-Za-z_][A-Za-z0-9_]{0,62}$/.test(name)) {
+    if (!/^[A-Za-z_]\w{0,62}$/.test(name)) {
       throw new RangeError(
         `Invalid queue/stream name: "${name}". Must be a valid SQL identifier (alphanumeric + underscore, max 63 chars).`
       );
