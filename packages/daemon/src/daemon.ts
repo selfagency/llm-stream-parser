@@ -1,12 +1,11 @@
 import type { MemoryEngine } from '@agentsy/memory';
-import type { CortexKitDb } from '@agentsy/shared/cortexkit';
-import { openCortexKitDb } from '@agentsy/shared/cortexkit';
 import { ACPServer } from './acp/acp-server.js';
 import { AgentHost } from './agents/agent-host.js';
 import { ScopeManager } from './agents/scope-manager.js';
 import type { DaemonConfig } from './config.js';
 import { resolveConfig } from './config.js';
 import { ConnectorHost } from './connectors/connector-host.js';
+import { UnifiedDB } from './db/unified-db.js';
 import { IPCServer } from './ipc/server.js';
 import { BreeScheduler } from './jobs/bree-scheduler.js';
 import { HonkerQueueAdapter } from './jobs/honker-queue.js';
@@ -21,8 +20,10 @@ export type DaemonState = 'starting' | 'running' | 'stopping' | 'stopped' | 'cra
 
 export interface DaemonDeps {
   config: DeepPartial<DaemonConfig>;
+  db?: UnifiedDB;
   ipcServer?: IPCServer;
   memoryEngine?: MemoryEngine;
+  pool?: AgentPool;
 }
 
 function createLogger(config: DaemonConfig['logging']): Logger {
@@ -51,7 +52,7 @@ export class Daemon {
   private _state: DaemonState = 'stopped';
   private readonly _stateListeners = new Set<(state: DaemonState) => void>();
 
-  readonly db: CortexKitDb;
+  readonly db: UnifiedDB;
   readonly memory: MemoryEngine;
   readonly ipc: IPCServer;
   readonly acp: ACPServer;
@@ -73,10 +74,21 @@ export class Daemon {
     this.config = resolveConfig(deps.config);
     this.logger = createLogger(this.config.logging);
 
-    // Single shared SQLite database — cortexkit context.db
-    // All subsystems (memory, Honker queues, etc.) share this one file.
-    // Turso sync targets this single database for remote replication.
-    this.db = openCortexKitDb();
+    // Unified database: ~/.agentsy/agentsy.db — single file for all subsystems
+    this.db =
+      deps.db ??
+      new UnifiedDB({
+        path: this.config.database.path,
+        ...('extensionPath' in this.config.database && this.config.database.extensionPath
+          ? { extensionPath: this.config.database.extensionPath }
+          : {}),
+        ...('blake3ExtensionPath' in this.config.database && this.config.database.blake3ExtensionPath
+          ? { blake3ExtensionPath: this.config.database.blake3ExtensionPath }
+          : {}),
+        walMode: this.config.database.walMode,
+        busyTimeoutMs: this.config.database.busyTimeoutMs,
+        logger: this.logger
+      });
 
     this.memory = deps.memoryEngine ?? (null as unknown as MemoryEngine);
 
@@ -89,15 +101,17 @@ export class Daemon {
         logger: this.logger
       });
 
-    this.pool = new AgentPool({
-      filename: new URL('./pool/worker-entry.js', import.meta.url).href,
-      minThreads: this.config.pool.minThreads,
-      maxThreads: this.config.pool.maxThreads,
-      idleTimeoutMs: this.config.pool.idleTimeoutMs,
-      maxQueueSize: this.config.pool.maxQueueSize,
-      concurrentTasksPerWorker: this.config.pool.concurrentTasksPerWorker,
-      resourceLimits: this.config.pool.resourceLimits
-    });
+    this.pool =
+      deps.pool ??
+      new AgentPool({
+        filename: new URL('./pool/worker-entry.js', import.meta.url).href,
+        minThreads: this.config.pool.minThreads,
+        maxThreads: this.config.pool.maxThreads,
+        idleTimeoutMs: this.config.pool.idleTimeoutMs,
+        maxQueueSize: this.config.pool.maxQueueSize,
+        concurrentTasksPerWorker: this.config.pool.concurrentTasksPerWorker,
+        resourceLimits: this.config.pool.resourceLimits
+      });
 
     this.processes = new SubprocessManager({
       logger: this.logger,
@@ -124,9 +138,10 @@ export class Daemon {
       logger: this.logger
     });
 
-    // Honker queue uses the same shared cortexkit database
+    // Honker queue adapter uses the unified database
     this.jobs = new HonkerQueueAdapter({
-      dbPath: this.db.name,
+      db: this.db,
+      queues: this.config.jobs.queues,
       logger: this.logger
     });
 
@@ -138,7 +153,7 @@ export class Daemon {
 
     this.connectors = new ConnectorHost({
       logger: this.logger,
-      config: this.config.connectors
+      config: this.config.connectors as never
     });
 
     this.supervisor = new Supervisor({
@@ -160,7 +175,11 @@ export class Daemon {
     this.transition('starting');
 
     try {
-      // 1. Start memory engine
+      // 1. Open unified database + run migrations
+      await this.db.open();
+      await this.db.migrate();
+
+      // 2. Start memory engine
       if (
         this.memory &&
         typeof (this.memory as unknown as { initialize?: () => Promise<void> }).initialize === 'function'
@@ -169,37 +188,37 @@ export class Daemon {
       }
       this.services.register('memory', this.memory as never);
 
-      // 2. Initialize Honker durable queue (same cortexkit DB)
+      // 3. Initialize Honker durable queue (same DB file)
       await this.jobs.start();
       this.services.register('jobs', this.jobs as never);
 
-      // 3. Start Bree scheduler
+      // 4. Start Bree scheduler
       await this.scheduler.start();
       this.services.register('scheduler', this.scheduler as never);
 
-      // 4. Initialize scope manager
+      // 5. Initialize scope manager
       await this.scopes.initialize();
 
-      // 5. Start agent host
+      // 6. Start agent host
       await this.agents.initialize();
 
-      // 6. Start subprocess manager
+      // 7. Start subprocess manager
       await this.processes.start();
 
-      // 7. Start connectors
+      // 8. Start connectors
       await this.connectors.initialize();
 
-      // 8. Start IPC server
+      // 9. Start IPC server
       await this.ipc.start();
       this.registerIPCHandlers();
 
-      // 9. Start ACP server
+      // 10. Start ACP server
       await this.acp.start(this.config.acp);
 
-      // 10. Enable supervisor
+      // 11. Enable supervisor
       this.supervisor.watch(this);
 
-      // 11. Enable sleeper
+      // 12. Enable sleeper
       this.sleeper.watch(this.services);
 
       this.transition('running');
@@ -207,6 +226,8 @@ export class Daemon {
         pid: process.pid,
         socket: this.config.ipc.socketPath,
         acp: this.config.acp.enabled ? 'enabled' : 'disabled',
+        db: this.config.database.path,
+        dbMode: this.db.mode,
         agents: this.agents.count(),
         services: this.services.count()
       });
@@ -242,7 +263,8 @@ export class Daemon {
       ) {
         await withTimeout((this.memory as unknown as { shutdown: () => Promise<void> }).shutdown(), timeout);
       }
-      this.db.close();
+      await withTimeout(this.db.close(), timeout);
+
       this.transition('stopped');
       this.logger.info('Daemon stopped');
     } catch (error) {
@@ -338,6 +360,7 @@ export class Daemon {
       pid: process.pid,
       uptime: process.uptime(),
       memory: process.memoryUsage(),
+      dbMode: this.db.mode,
       agents: this.agents.count(),
       processes: this.processes.count(),
       jobs: this.jobs.count(),

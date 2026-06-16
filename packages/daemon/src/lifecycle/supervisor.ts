@@ -20,7 +20,7 @@ export interface SupervisorDeps {
  */
 export class Supervisor {
   private readonly deps: SupervisorDeps;
-  private readonly restartTimestamps: number[] = [];
+  private restartTimestamps: number[] = [];
   private watching = false;
 
   constructor(deps: SupervisorDeps) {

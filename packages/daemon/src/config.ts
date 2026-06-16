@@ -1,12 +1,29 @@
 import os from 'node:os';
 import path from 'node:path';
-import { z } from 'zod';
 import type { DeepPartial } from './types.js';
+
+// ── Helper: resolve default paths ─────────────────────
+
+export function defaultDbPath(): string {
+  return path.join(os.homedir(), '.agentsy', 'agentsy.db');
+}
+
+export function defaultSocketPath(): string {
+  return path.join(os.homedir(), '.agentsy', 'daemon.sock');
+}
+
+export function defaultJobDirectory(): string {
+  return path.join(os.homedir(), '.agentsy', 'jobs');
+}
+
+// ── Zod Schema ────────────────────────────────────────
+
+import { z } from 'zod';
 
 export const DaemonConfigSchema = z.object({
   ipc: z
     .object({
-      socketPath: z.string().default(path.join(os.homedir(), '.agentsy', 'daemon.sock')),
+      socketPath: z.string().default(defaultSocketPath()),
       maxConnections: z.number().int().positive().default(10),
       requestTimeoutMs: z.number().int().positive().default(30_000)
     })
@@ -23,8 +40,11 @@ export const DaemonConfigSchema = z.object({
 
   database: z
     .object({
-      path: z.string().default(''),
-      walMode: z.boolean().default(true)
+      path: z.string().default(defaultDbPath()),
+      extensionPath: z.string().optional(),
+      blake3ExtensionPath: z.string().optional(),
+      walMode: z.boolean().default(true),
+      busyTimeoutMs: z.number().int().positive().default(5000)
     })
     .default({}),
 
@@ -46,7 +66,7 @@ export const DaemonConfigSchema = z.object({
 
   jobs: z
     .object({
-      jobDirectory: z.string().default(path.join(os.homedir(), '.agentsy', 'jobs')),
+      jobDirectory: z.string().default(defaultJobDirectory()),
       defaultRetries: z.number().int().nonnegative().default(3),
       defaultRetryDelayMs: z.number().int().positive().default(1000),
       defaultTimeoutMs: z.number().int().positive().default(30_000),
@@ -116,8 +136,7 @@ export const DaemonConfigSchema = z.object({
       slack: z.object({ token: z.string() }).optional(),
       telegram: z.object({ token: z.string() }).optional()
     })
-    .default({})
-    .transform(v => v as { discord?: { token: string }; slack?: { token: string }; telegram?: { token: string } }),
+    .default({}),
 
   shutdownTimeoutMs: z.number().int().positive().default(30_000)
 });

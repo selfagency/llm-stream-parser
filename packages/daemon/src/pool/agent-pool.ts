@@ -42,22 +42,11 @@ class PriorityTaskQueue {
 }
 
 export class AgentPool {
-  private readonly piscina: Piscina;
+  // Piscina is a default export class; InstanceType inference fails in DTS builds
+  private readonly piscina: ReturnType<typeof createPiscinaPool>;
 
   constructor(config: AgentPoolConfig) {
-    this.piscina = new Piscina({
-      filename: config.filename,
-      minThreads: config.minThreads ?? 2,
-      maxThreads: config.maxThreads ?? 4,
-      idleTimeoutMs: config.idleTimeoutMs ?? 30_000,
-      maxQueue: config.maxQueueSize ?? 100,
-      concurrentTasksPerWorker: config.concurrentTasksPerWorker ?? 1,
-      resourceLimits: config.resourceLimits ?? {
-        maxOldGenerationSizeMb: 256,
-        maxYoungGenerationSizeMb: 64
-      },
-      taskQueue: new PriorityTaskQueue()
-    });
+    this.piscina = createPiscinaPool(config);
   }
 
   runTask<T = TaskResult>(
@@ -85,4 +74,34 @@ export class AgentPool {
   async destroy(): Promise<void> {
     await this.piscina.destroy();
   }
+}
+
+function createPiscinaPool(config: AgentPoolConfig) {
+  return new (
+    Piscina as unknown as new (
+      opts: Record<string, unknown>
+    ) => {
+      run: (task: unknown, opts?: Record<string, unknown>) => Promise<unknown>;
+      threads: { length: number }[];
+      queueSize: number;
+      completed: number;
+      utilization: number;
+      waitTime: number;
+      runTime: number;
+      duration: number;
+      destroy: () => Promise<void>;
+    }
+  )({
+    filename: config.filename,
+    minThreads: config.minThreads ?? 2,
+    maxThreads: config.maxThreads ?? 4,
+    idleTimeoutMs: config.idleTimeoutMs ?? 30_000,
+    maxQueue: config.maxQueueSize ?? 100,
+    concurrentTasksPerWorker: config.concurrentTasksPerWorker ?? 1,
+    resourceLimits: config.resourceLimits ?? {
+      maxOldGenerationSizeMb: 256,
+      maxYoungGenerationSizeMb: 64
+    },
+    taskQueue: new PriorityTaskQueue()
+  });
 }

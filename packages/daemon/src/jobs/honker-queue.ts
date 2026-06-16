@@ -1,3 +1,4 @@
+import type { UnifiedDB } from '../db/unified-db.js';
 import type { Logger } from '../types.js';
 
 export interface EnqueueOptions {
@@ -24,81 +25,38 @@ export interface Job {
 }
 
 export interface HonkerQueueConfig {
-  dbPath: string;
+  db: UnifiedDB;
   logger: Logger;
+  queues: string[];
 }
 
+/**
+ * Honker-backed durable queue adapter using the daemon's UnifiedDB.
+ *
+ * Provides transactional enqueue, claim/ack semantics, retries with backoff,
+ * priority queues, delayed jobs, and cross-process wake via SQLite.
+ */
 export class HonkerQueueAdapter {
   private readonly config: HonkerQueueConfig;
-  private readonly queues = new Map<
-    string,
-    {
-      enqueue: (payload: unknown, opts?: Record<string, unknown>) => string;
-      claimOne: (workerId: string) => unknown | null;
-      claimWaker: () => { next: (workerId: string) => Promise<unknown | null>; ack: (jobId: string) => void };
-    }
-  >();
 
   constructor(config: HonkerQueueConfig) {
     this.config = config;
   }
 
   start(): Promise<void> {
-    this.ensureQueue('default');
-    this.ensureQueue('agents');
-    this.ensureQueue('maintenance');
-    this.ensureQueue('indexing');
-
+    for (const queueName of this.config.queues) {
+      this.config.db.queue(queueName);
+    }
     this.started = true;
     this.config.logger.info('Honker queue started', {
-      dbPath: this.config.dbPath,
-      queues: Array.from(this.queues.keys())
+      queues: this.config.queues
     });
     return Promise.resolve();
   }
 
-  private ensureQueue(_name: string): void {
-    const name = _name;
-    const queueMap = new Map<string, { id: string; payload: unknown; opts?: Record<string, unknown> }[]>();
-    queueMap.set(name, []);
-
-    this.queues.set(name, {
-      enqueue: (payload: unknown, opts?: Record<string, unknown>) => {
-        const id = `job_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        const q = queueMap.get(name);
-        if (q) {
-          q.push({ id, payload, ...(opts === undefined ? {} : { opts }) });
-        }
-        return id;
-      },
-      claimOne: (_workerId: string) => {
-        const q = queueMap.get(name);
-        if (!q || q.length === 0) {
-          return null;
-        }
-        return q.shift() ?? null;
-      },
-      claimWaker: () => ({
-        next: (_workerId: string) => {
-          const q = queueMap.get(name);
-          if (!q || q.length === 0) {
-            return Promise.resolve(null);
-          }
-          return Promise.resolve(q.shift() ?? null);
-        },
-        ack: (_jobId: string) => {
-          // no-op in stub
-        }
-      })
-    });
-  }
-
   enqueue(payload: unknown, options: EnqueueOptions = {}): Promise<string> {
     const queueName = options.queue ?? 'default';
-    const q = this.queues.get(queueName);
-    if (!q) {
-      throw new Error(`Queue not found: ${queueName}`);
-    }
+    const q = this.config.db.queue(queueName);
 
     const opts: Record<string, unknown> = {};
     if (options.priority) {
@@ -120,20 +78,16 @@ export class HonkerQueueAdapter {
       opts.timeoutS = Math.ceil(options.timeoutMs / 1000);
     }
 
-    return Promise.resolve(q.enqueue(payload, opts));
+    const jobId = q.enqueue(payload, Object.keys(opts).length > 0 ? opts : undefined);
+    return Promise.resolve(jobId);
   }
 
   claim(workerId: string, queueName = 'default'): Promise<Job | null> {
-    const q = this.queues.get(queueName);
-    if (!q) {
-      throw new Error(`Queue not found: ${queueName}`);
-    }
-
+    const q = this.config.db.queue(queueName);
     const job = q.claimOne(workerId);
     if (!job) {
       return Promise.resolve(null);
     }
-
     return Promise.resolve(this.mapJob(job, queueName));
   }
 
@@ -162,26 +116,26 @@ export class HonkerQueueAdapter {
   private mapJob(raw: unknown, queue: string): Job {
     const r = raw as {
       id: string;
-      payload: unknown;
+      payload: string;
+      opts?: string;
       priority?: number;
       retries?: number;
       retryCount?: number;
-      runAt?: number;
-      expiresAt?: number;
-      claimedBy?: string;
-      createdAt?: number;
+      claimed_by?: string;
+      created_at?: number;
     };
+    const opts = r.opts ? (JSON.parse(r.opts) as Record<string, unknown>) : {};
     return {
-      id: r.id,
+      id: String(r.id),
       queue,
-      payload: r.payload,
-      priority: r.priority ?? 0,
-      retries: r.retries ?? 3,
+      payload: typeof r.payload === 'string' ? JSON.parse(r.payload) : r.payload,
+      priority: (opts.priority as number) ?? 0,
+      retries: (opts.retries as number) ?? 3,
       retryCount: r.retryCount ?? 0,
-      runAt: r.runAt ? new Date(r.runAt) : null,
-      expiresAt: r.expiresAt ? new Date(r.expiresAt) : null,
-      claimedBy: r.claimedBy ?? null,
-      createdAt: new Date(r.createdAt ?? Date.now())
+      runAt: opts.runAt ? new Date(opts.runAt as number) : null,
+      expiresAt: opts.expiresAt ? new Date(opts.expiresAt as number) : null,
+      claimedBy: r.claimed_by ?? null,
+      createdAt: new Date((r.created_at ?? Date.now()) * 1000)
     };
   }
 }

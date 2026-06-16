@@ -14,6 +14,7 @@ export default defineConfig({
     'agents/index': 'src/agents/index.ts',
     'jobs/index': 'src/jobs/index.ts',
     'connectors/index': 'src/connectors/index.ts',
+    'db/index': 'src/db/index.ts',
     'display/index': 'src/display/index.ts',
     'cli/index': 'src/cli/index.ts'
   },
