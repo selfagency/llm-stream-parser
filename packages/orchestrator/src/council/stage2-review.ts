@@ -1,9 +1,9 @@
 import type { CouncilDefinition, FirstOpinion, ReviewScore } from './types.js';
 
 interface ExecuteModelOptions {
+  messages: Array<{ role: string; content: string }>;
   model: string;
   provider: string;
-  messages: Array<{ role: string; content: string }>;
 }
 
 /**
@@ -46,6 +46,9 @@ const SCORE_PATTERNS: Record<string, RegExp> = {
 };
 
 function parseScore(text: string, field: string): number {
+  if (!Object.hasOwn(SCORE_PATTERNS, field)) {
+    return 5;
+  }
   const pattern = SCORE_PATTERNS[field];
   if (pattern === undefined) {
     return 5;
@@ -60,6 +63,44 @@ function parseScore(text: string, field: string): number {
 function extractReasoning(text: string): string {
   const match = text.match(/Reasoning:\s*([\s\S]*?)(?:\n\n|$)/);
   return match?.[1]?.trim() ?? text;
+}
+
+/**
+ * Anonymize opinions for cross-review
+ */
+function anonymizeOpinions(opinions: FirstOpinion[]): Array<{ label: string; content: string }> {
+  return opinions.map((o, i) => ({
+    label: `Response ${i + 1}`,
+    content: o.response
+  }));
+}
+
+/**
+ * Process a single review for a reviewer-opinion pair
+ */
+async function processReview(
+  reviewer: CouncilDefinition['members'][number],
+  opinion: FirstOpinion,
+  opinions: FirstOpinion[],
+  options: {
+    execute: (opts: ExecuteModelOptions) => Promise<{ text: string; usage: { input: number; output: number } }>;
+  }
+): Promise<ReviewScore> {
+  const anonymizedOpinions = anonymizeOpinions(opinions);
+  const reviewPrompt = buildReviewPrompt(reviewer, anonymizedOpinions, opinion);
+  const review = await options.execute({
+    model: reviewer.model,
+    provider: reviewer.provider,
+    messages: [{ role: 'user', content: reviewPrompt }]
+  });
+
+  return {
+    reviewer,
+    target: opinion.member,
+    accuracy: parseScore(review.text, 'accuracy'),
+    insight: parseScore(review.text, 'insight'),
+    reasoning: extractReasoning(review.text)
+  };
 }
 
 /**
@@ -85,25 +126,8 @@ export async function collectCrossReviews(
         continue;
       }
 
-      const anonymizedOpinions = opinions.map((o, i) => ({
-        label: `Response ${i + 1}`,
-        content: o.response
-      }));
-
-      const reviewPrompt = buildReviewPrompt(reviewer, anonymizedOpinions, opinion);
-      const review = await options.execute({
-        model: reviewer.model,
-        provider: reviewer.provider,
-        messages: [{ role: 'user', content: reviewPrompt }]
-      });
-
-      reviews.push({
-        reviewer,
-        target: opinion.member,
-        accuracy: parseScore(review.text, 'accuracy'),
-        insight: parseScore(review.text, 'insight'),
-        reasoning: extractReasoning(review.text)
-      });
+      const review = await processReview(reviewer, opinion, opinions, options);
+      reviews.push(review);
 
       onEvent?.({
         type: 'review_complete',

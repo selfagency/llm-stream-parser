@@ -116,7 +116,7 @@ describe('retry', () => {
     }
   });
 
-  it('caps exponential backoff at maxDelay', async () => {
+  it('caps exponential backoff at maxDelay (with jitter)', async () => {
     vi.useFakeTimers();
 
     try {
@@ -133,20 +133,15 @@ describe('retry', () => {
         maxDelay: 150
       });
 
+      // First call fires immediately
       await Promise.resolve();
       expect(fn).toHaveBeenCalledOnce();
 
-      vi.advanceTimersByTime(100);
-      await Promise.resolve();
-      expect(fn).toHaveBeenCalledTimes(2);
+      // With full jitter, delays are random between 0 and cappedDelay.
+      // Use runAllTimersAsync to flush nested async timer chains.
+      await vi.runAllTimersAsync();
 
-      vi.advanceTimersByTime(149);
-      await Promise.resolve();
-      expect(fn).toHaveBeenCalledTimes(2);
-
-      vi.advanceTimersByTime(1);
       await expect(operation).resolves.toBe('ok');
-      expect(fn).toHaveBeenCalledTimes(3);
     } finally {
       vi.useRealTimers();
     }

@@ -198,37 +198,37 @@ function buildContextFingerprint(entry: SessionLedgerEntry, keys: string[]): str
 function extractDominantKind(entry: SessionLedgerEntry): FrustrationEventKind {
   const reasons = entry.frustration.reasons;
   if (reasons.length === 0) {
-    return 'tool_rejection' as FrustrationEventKind;
+    return 'tool_rejection';
   }
 
   const reason = reasons[0]?.toLowerCase() ?? '';
 
   if (reason.includes('rewrite') || reason.includes('revert')) {
-    return 'immediate_rewrite' as FrustrationEventKind;
+    return 'immediate_rewrite';
   }
   if (reason.includes('retry') || reason.includes('timeout')) {
-    return 'rapid_retry' as FrustrationEventKind;
+    return 'rapid_retry';
   }
   if (reason.includes('reject') || reason.includes('denied')) {
-    return 'tool_rejection' as FrustrationEventKind;
+    return 'tool_rejection';
   }
   if (reason.includes('repair') || reason.includes('fix')) {
-    return 'repair_loop' as FrustrationEventKind;
+    return 'repair_loop';
   }
   if (reason.includes('error') || reason.includes('fail')) {
-    return 'post_write_error' as FrustrationEventKind;
+    return 'post_write_error';
   }
   if (reason.includes('abandon') || reason.includes('quit')) {
-    return 'session_abandonment' as FrustrationEventKind;
+    return 'session_abandonment';
   }
   if (reason.includes('negative')) {
-    return 'explicit_negative' as FrustrationEventKind;
+    return 'explicit_negative';
   }
   if (reason.includes('switch') || reason.includes('swap')) {
-    return 'model_switch' as FrustrationEventKind;
+    return 'model_switch';
   }
 
-  return 'tool_rejection' as FrustrationEventKind;
+  return 'tool_rejection';
 }
 
 /**

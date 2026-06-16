@@ -126,6 +126,14 @@ export class QuotaTrackerRegistry {
     return tracker;
   }
 
+  /**
+   * Get an existing tracker for a provider, or undefined if none registered.
+   * Unlike `for()`, this does not auto-create a tracker.
+   */
+  getTracker(providerId: string): QuotaTracker | undefined {
+    return this.#trackers.get(providerId);
+  }
+
   list(): QuotaTracker[] {
     return [...this.#trackers.values()];
   }

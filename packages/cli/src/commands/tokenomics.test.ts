@@ -235,7 +235,7 @@ describe('runTokenomicsCommand', () => {
       (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('"period"')
     );
     expect(jsonCall).toBeDefined();
-    const parsed = JSON.parse((jsonCall as NonNullable<typeof jsonCall>)[0] as string);
+    const parsed = JSON.parse(jsonCall?.[0] as string);
     expect(parsed).toHaveProperty('spend');
     expect(parsed).toHaveProperty('output');
   });
@@ -297,7 +297,8 @@ describe('runTokenomicsCommand', () => {
       (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('"pendingPatches"')
     );
     expect(jsonCall).toBeDefined();
-    const parsed = JSON.parse((jsonCall as NonNullable<typeof jsonCall>)[0] as string);
+    const jsonCallValue = jsonCall as unknown[];
+    const parsed = JSON.parse(jsonCallValue[0] as string);
     expect(parsed).toHaveProperty('pendingPatches');
   });
 
@@ -318,7 +319,7 @@ describe('runTokenomicsCommand', () => {
       (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('"failureModes"')
     );
     expect(jsonCall).toBeDefined();
-    const parsed = JSON.parse((jsonCall as NonNullable<typeof jsonCall>)[0] as string);
+    const parsed = JSON.parse(jsonCall![0] as string);
     expect(parsed).toHaveProperty('failureModes');
     expect(parsed.failureModes).toHaveLength(2);
   });
@@ -377,7 +378,8 @@ describe('runTokenomicsCommand', () => {
       (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('"adapters"')
     );
     expect(jsonCall).toBeDefined();
-    const parsed = JSON.parse((jsonCall as NonNullable<typeof jsonCall>)[0] as string);
+    const jsonCallValue = jsonCall as unknown[];
+    const parsed = JSON.parse(jsonCallValue[0] as string);
     expect(parsed).toHaveProperty('adapters');
     expect(parsed.adapters).toHaveLength(6);
   });

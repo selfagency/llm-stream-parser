@@ -177,7 +177,7 @@ describe('recognizePatterns', () => {
     const result = recognizePatterns([...rewriteEntries, ...rejectEntries]);
     expect(result.length).toBe(2);
 
-    const kinds = result.map(f => f.dominantSignalKind).sort();
+    const kinds = result.map(f => f.dominantSignalKind).sort((a, b) => a.localeCompare(b));
     expect(kinds).toContain('immediate_rewrite');
     expect(kinds).toContain('tool_rejection');
   });

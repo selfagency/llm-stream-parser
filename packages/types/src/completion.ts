@@ -51,7 +51,7 @@ export interface CompletionRequest {
  */
 export interface CompletionMessage {
   /** Message content or parts. */
-  content: string | ContentPart[];
+  content: string | ContentPart[] | null;
   /** Message role. */
   role: 'system' | 'user' | 'assistant' | 'tool';
 
@@ -62,6 +62,16 @@ export interface CompletionMessage {
    * @deprecated Use toolCallId instead.
    */
   toolName?: string;
+
+  /** Tool calls made by the assistant (for role: 'assistant'). */
+  tool_calls?: Array<{
+    id: string;
+    type: 'function';
+    function: {
+      name: string;
+      arguments: string;
+    };
+  }>;
 }
 
 /**

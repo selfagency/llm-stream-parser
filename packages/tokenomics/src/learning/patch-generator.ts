@@ -182,7 +182,7 @@ function parseGenerationOutput(output: string): ParsedGeneration {
     }
   }
 
-  const targetPathMatch = output.match(/^TARGET_PATH:\s*(.+)$/m);
+  const targetPathMatch = /^TARGET_PATH:\s*(.+)$/m.exec(output);
   if (targetPathMatch?.[1]) {
     result.targetPath = targetPathMatch[1].trim();
   }

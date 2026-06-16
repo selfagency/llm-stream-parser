@@ -16,6 +16,13 @@ interface ChunkCallbacks {
   onToolCall?: (id: string, name: string, args: unknown) => void;
 }
 
+/** @internal — a tool call extracted from the stream, pending storage in history */
+interface ExtractedToolCall {
+  id: string;
+  name: string;
+  args: unknown;
+}
+
 /**
  * Minimal streaming handler interface — avoids direct @agentsy/core/@agentsy/providers dependency.
  * Both `LoadBalancedClient` from @agentsy/gateway and the mock client satisfy this interface.
@@ -150,6 +157,7 @@ export function createSimpleTurnLoop(options: SimpleTurnLoopOptions): SimpleTurn
     let accThinking = '';
     let finishReason: string | undefined;
     let usage: UsageInfo | undefined;
+    const extractedToolCalls: ExtractedToolCall[] = [];
 
     try {
       const stream = await handler.stream({ messages, model, stream: true });
@@ -163,9 +171,12 @@ export function createSimpleTurnLoop(options: SimpleTurnLoopOptions): SimpleTurn
       if (onThinking) {
         callbacks.onThinking = onThinking;
       }
-      if (onToolCall) {
-        callbacks.onToolCall = onToolCall;
-      }
+      // Always capture tool calls for history, forwarding to user callback if provided
+      callbacks.onToolCall = (id: string, name: string, args: unknown): void => {
+        extractedToolCalls.push({ id, name, args });
+        onToolCall?.(id, name, args);
+      };
+
       const result = await readStream(reader, callbacks);
       activeReader = null;
 
@@ -182,9 +193,25 @@ export function createSimpleTurnLoop(options: SimpleTurnLoopOptions): SimpleTurn
       throw error;
     }
 
-    // Append assistant response to history
-    if (accText || accThinking) {
-      messages.push({ role: 'assistant', content: accText });
+    // Append assistant response to history, including tool calls
+    if (accText || accThinking || extractedToolCalls.length > 0) {
+      const assistantMessage: CompletionMessage = {
+        role: 'assistant',
+        content: accText || null
+      };
+
+      if (extractedToolCalls.length > 0) {
+        assistantMessage.tool_calls = extractedToolCalls.map(tc => ({
+          id: tc.id,
+          type: 'function' as const,
+          function: {
+            name: tc.name,
+            arguments: typeof tc.args === 'string' ? tc.args : JSON.stringify(tc.args)
+          }
+        }));
+      }
+
+      messages.push(assistantMessage);
     }
 
     const result: TurnResult = {

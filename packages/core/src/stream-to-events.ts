@@ -150,12 +150,17 @@ function* emitToolCallsEvent(
   if (!chunk.tool_calls) {
     return;
   }
+  // Per-function-name counter to disambiguate same-named tool calls
+  const nameCounters = new Map<string, number>();
   for (const tc of chunk.tool_calls) {
-    const id = tc.function?.name ?? `tc_${meta.chunkIndex}`;
+    const name = tc.function?.name ?? 'unknown';
+    const count = nameCounters.get(name) ?? 0;
+    nameCounters.set(name, count + 1);
+    const id = `${name}_${count}`;
     if (!toolCursors.has(id)) {
       const cursor: ToolCallCursor = {
         id,
-        name: tc.function?.name ?? 'unknown',
+        name,
         argsBuffer: ''
       };
       toolCursors.set(id, cursor);
@@ -165,7 +170,7 @@ function* emitToolCallsEvent(
         timestamp: meta.timestamp,
         payload: {
           id,
-          name: tc.function?.name ?? 'unknown',
+          name,
           args: tc.function?.arguments ?? null
         }
       };

@@ -198,4 +198,53 @@ describe('createRuntimeHookRegistry', () => {
 
     expect(result).toHaveProperty('transform');
   });
+
+  it('composes multiple transforms from different handlers', async () => {
+    const registry = createRuntimeHookRegistry();
+
+    registry.register('UserPromptSubmit', async () => ({
+      continue: true as const,
+      transform: { a: 1 }
+    }));
+
+    registry.register('UserPromptSubmit', async () => ({
+      continue: true as const,
+      transform: { b: 2 }
+    }));
+
+    const result = await registry.fire({
+      type: 'UserPromptSubmit',
+      input: 'hello',
+      sessionId: 'sess_1'
+    });
+
+    expect(result).toHaveProperty('transform');
+    expect((result as { transform: Record<string, unknown> }).transform).toMatchObject({
+      a: 1,
+      b: 2
+    });
+  });
+
+  it('composes transforms with block stopping the chain', async () => {
+    const registry = createRuntimeHookRegistry();
+
+    registry.register('UserPromptSubmit', async () => ({
+      continue: true as const,
+      transform: { a: 1 }
+    }));
+
+    registry.register('UserPromptSubmit', async () => ({
+      continue: false as const,
+      reason: 'blocked after transform'
+    }));
+
+    const result = await registry.fire({
+      type: 'UserPromptSubmit',
+      input: 'hello',
+      sessionId: 'sess_1'
+    });
+
+    // Block should take precedence over transform
+    expect(result).toEqual({ continue: false, reason: 'blocked after transform' });
+  });
 });

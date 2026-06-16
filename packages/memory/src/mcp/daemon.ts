@@ -172,12 +172,16 @@ export async function startDaemon(
   // Write PID file
   writeFileSync(config.pidFile, String(process.pid), 'utf-8');
 
+  // Mutable reference to the active server — updated on restart
+  const activeServer: { current: ReturnType<typeof createMemoryMCPServer> } = { current: server };
+
   // Track restarts for crash recovery
   const restartTimestamps: number[] = [];
 
   async function runWithRestart(): Promise<void> {
     try {
-      await server.start();
+      await activeServer.current.start();
+      // Server runs until crash — this line won't be reached unless it exits normally
     } catch (err) {
       if (!config.restart) {
         throw err;
@@ -198,14 +202,14 @@ export async function startDaemon(
       // Wait before restarting
       await new Promise(resolve => setTimeout(resolve, config.restartDelay));
 
-      // Re-create engine and server for clean state
+      // Create fresh engine and server for clean state
       const newEngine = createMemoryEngine(engineOptions);
-      createMemoryMCPServer(newEngine, {
+      const newServer = createMemoryMCPServer(newEngine, {
         ...serverOptions,
         ...fullConfig.mcp
       });
-      // Note: the new server is not wired into this closure; production code
-      // would restructure to allow swapping the server reference.
+      // Update the mutable reference so shutdown() closes the new server
+      activeServer.current = newServer;
 
       return runWithRestart();
     }
@@ -220,7 +224,7 @@ export async function startDaemon(
     shuttingDown = true;
 
     try {
-      await server.close();
+      await activeServer.current.close();
     } catch {
       // Ignore close errors during shutdown
     }
