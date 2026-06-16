@@ -4,21 +4,21 @@
  * which features are available.
  */
 export const AGENT_CAPABILITIES = {
-  loadSession: true,
+  loadSession: false,
   sessionCapabilities: {
-    close: true,
-    list: true,
-    delete: true,
-    resume: true,
-    additionalDirectories: true
+    close: false,
+    list: false,
+    delete: false,
+    resume: false,
+    additionalDirectories: false
   },
   promptCapabilities: {
     image: false,
     audio: false,
-    embeddedContext: true
+    embeddedContext: false
   },
   mcpCapabilities: {
-    http: true,
-    sse: true
+    http: false,
+    sse: false
   }
 } as const;

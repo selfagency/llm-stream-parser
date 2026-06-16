@@ -81,7 +81,15 @@ export class IPCServer {
 
     socket.on('data', (data: Buffer) => {
       // Use TextDecoder with stream:true to handle UTF-8 split across chunks
-      buffer += decoder.decode(data, { stream: true });
+      const decoded = decoder.decode(data, { stream: true });
+
+      // Enforce max message size to prevent OOM
+      if (buffer.length + decoded.length > MAX_MESSAGE_BYTES) {
+        this.config.logger.warn('Message too large, dropping connection', { clientId });
+        socket.destroy();
+        return;
+      }
+      buffer += decoded;
 
       let newlineIdx = buffer.indexOf('\n');
       while (newlineIdx !== -1) {

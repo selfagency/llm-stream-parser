@@ -1,4 +1,5 @@
 import { type ChildProcess, execSync, spawn } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import type { Logger } from '../types.js';
 
@@ -74,7 +75,7 @@ export class SubprocessManager extends EventEmitter {
   }
 
   spawnProcess(spec: SubprocessSpec): Promise<string> {
-    const id = spec.id ?? `proc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const id = spec.id ?? `proc_${randomUUID().slice(0, 8)}`;
     const state: SubprocessState = {
       id,
       spec,

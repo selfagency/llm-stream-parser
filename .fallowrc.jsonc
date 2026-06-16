@@ -6,9 +6,9 @@
   "publicPackages": [
     "@agentsy/context",
     "@agentsy/core",
+    "@agentsy/daemon",
     "@agentsy/gateway",
     "@agentsy/guardrails",
-    "@agentsy/mcp",
     "@agentsy/memory",
     "@agentsy/models",
     "@agentsy/observability",
@@ -16,14 +16,13 @@
     "@agentsy/plugins",
     "@agentsy/prompts",
     "@agentsy/providers",
-    "@agentsy/renderers",
     "@agentsy/retrieval",
     "@agentsy/runtime",
     "@agentsy/secrets",
     "@agentsy/session",
+    "@agentsy/shared",
     "@agentsy/tokenomics",
     "@agentsy/tools",
-    "@agentsy/types",
     "@agentsy/ui"
   ],
   // Explicit entry points for packages when package.json exports are insufficient.
@@ -92,9 +91,7 @@
   // fallow's unused-dependencies check.
   // Cloud SDK optional peer deps — used via dynamic import() at runtime
   "ignoreDependencies": [
-    "@agentsy/types",
     "@agentsy/core",
-    "@agentsy/renderers",
     "@agentsy/runtime",
     "@agentsy/memory",
     "@agentsy/providers",
@@ -108,6 +105,7 @@
     "@agentsy/models",
     "@agentsy/observability",
     "@agentsy/secrets",
+    "@agentsy/shared",
     "isolated-vm",
     "zod",
     "@agentsy/tokenomics",

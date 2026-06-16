@@ -284,6 +284,16 @@ export class Daemon {
       // 12. Enable sleeper
       this.sleeper.watch(this.services);
 
+      // 13. Catch uncaught exceptions/rejections so supervisor can react
+      process.on('uncaughtException', err => {
+        this.logger.error('Uncaught exception, transitioning to crashed', err);
+        this.transition('crashed');
+      });
+      process.on('unhandledRejection', (reason: Error) => {
+        this.logger.error('Unhandled rejection, transitioning to crashed', reason);
+        this.transition('crashed');
+      });
+
       this.transition('running');
       this.logger.info('Daemon started', {
         pid: process.pid,
@@ -325,6 +335,10 @@ export class Daemon {
         await withTimeout(this.memory.shutdown(), timeout);
       }
       await withTimeout(this.db.close(), timeout);
+
+      // Remove process-level handlers
+      process.removeAllListeners('uncaughtException');
+      process.removeAllListeners('unhandledRejection');
 
       this.transition('stopped');
       this.logger.info('Daemon stopped');

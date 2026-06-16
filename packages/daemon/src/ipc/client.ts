@@ -25,7 +25,9 @@ export class IPCClient {
       this.socket.once('error', reject);
 
       // Attach a permanent error handler once connect resolves
-      this.socket.on('connect_error', () => {});
+      this.socket.on('connect_error', () => {
+        /* connect_error not emitted by regular sockets; here for safety */
+      });
     });
   }
 

@@ -97,7 +97,8 @@ export class HonkerQueueAdapter {
   }
 
   cancel(jobId: string, queueName = 'default'): Promise<void> {
-    const q = this.config.db.queue(queueName);
+    // Validate queue exists
+    this.config.db.queue(queueName);
     const numericId = Number.parseInt(jobId.replace(/^job_/, ''), 10);
     if (!Number.isNaN(numericId)) {
       // Direct SQL via UnifiedDB query API
@@ -107,7 +108,8 @@ export class HonkerQueueAdapter {
   }
 
   list(queueName = 'default'): Promise<Job[]> {
-    const q = this.config.db.queue(queueName);
+    // Validate queue exists
+    this.config.db.queue(queueName);
     return this.config.db
       .query(`SELECT * FROM honker_jobs_${queueName} WHERE status IN ('pending', 'claimed') ORDER BY id ASC LIMIT 100`)
       .then(rows => rows.map(r => this.mapJob(r, queueName)));

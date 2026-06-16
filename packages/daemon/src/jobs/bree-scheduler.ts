@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { Logger } from '../types.js';
 import type { EnqueueOptions, HonkerQueueAdapter } from './honker-queue.js';
 
@@ -51,7 +52,7 @@ export class TimerScheduler {
   }
 
   schedule(def: Omit<ScheduleDefinition, 'id' | 'enabled'>): Promise<string> {
-    const id = `sched_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const id = `sched_${randomUUID().slice(0, 8)}`;
     const full: ScheduleDefinition = { ...def, id, enabled: true };
     this.definitions.set(id, full);
 

@@ -41,7 +41,7 @@ class PriorityTaskQueue {
   }
 }
 
-type PiscinaPool = {
+interface PiscinaPool {
   run: (task: unknown, opts?: { signal?: AbortSignal; name?: string }) => Promise<unknown>;
   threads: { length: number }[];
   queueSize: number;
@@ -51,7 +51,7 @@ type PiscinaPool = {
   runTime: number;
   duration: number;
   destroy: () => Promise<void>;
-};
+}
 
 export class AgentPool {
   // Piscina is a namespace export; use inferred pool type

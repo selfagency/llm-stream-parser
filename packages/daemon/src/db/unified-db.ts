@@ -161,7 +161,7 @@ export class UnifiedDB {
         const stmt = `INSERT INTO honker_jobs_${name} (payload, opts) VALUES (?, ?)`;
         t.execute(stmt, [JSON.stringify(payload), opts ? JSON.stringify(opts) : null]);
         // Can't return lastInsertRowid via TransactionHandle.execute — caller gets no ID
-        return `job_tx`;
+        return 'job_tx';
       },
       claimOne: (workerId: string) => {
         const rows = db
