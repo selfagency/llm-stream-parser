@@ -1,5 +1,7 @@
 # Agent Instructions — @agentsy Monorepo
 
+<!-- This file is intentionally a single document. The agentsy repo uses per-package IMPLEMENTATION-PLAN.md files for detailed planning. -->
+
 Production-oriented TypeScript monorepo for LLM stream parsing, agent infrastructure, and VS Code integration. The `plan/` directory contains phased implementation plans but most domains have been promoted to manifest-backed packages.
 
 ## Repo Identity
@@ -319,9 +321,9 @@ For test inputs that intentionally include mixed HTML/XML or other exceptions, u
 ### `@agentsy/memory`
 
 - Durable knowledge layer, not a hidden orchestration dependency
-- Should remain pluggable so consumers can substitute backends when needed
+- Memory backend must be substitutable via the `MemoryProvider` interface (defined in `packages/memory/src/types.ts`). At least one alternative backend (e.g. Turso, libsql) must be published before v1.0.
 - Prefer abstract interfaces for memory providers, retrievers, and lifecycle hooks
-- Expose as both Agentsy-native package and standalone Model Context Protocol (MCP) server or plugin surface when possible
+- The memory package must expose both an Agentsy-native API (default export) and an MCP server entry point (`packages/memory/src/mcp/server.ts`) by v0.4.0.
 
 ### Internal workspace packages
 
@@ -548,7 +550,7 @@ LLMStreamProcessor and similar components:
 - Update docs when public APIs, commands, package names, or workflows change
 - Keep root docs aligned with current monorepo structure (README.md lists current packages)
 - Do not reintroduce stale references to obsolete packages or missing tooling
-- Update implementation-plan documents only when genuinely planning future work; actual implementation belongs in `IMPLEMENTATION-PLAN.md` files within packages
+- Update implementation-plan documents only when genuinely planning future work; actual implementation belongs in `packages/<name>/IMPLEMENTATION-PLAN.md` files
 
 ## CI and Integration
 
