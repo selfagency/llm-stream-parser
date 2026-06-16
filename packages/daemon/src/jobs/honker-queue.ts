@@ -127,6 +127,7 @@ export class HonkerQueueAdapter {
     return Promise.resolve();
   }
 
+  // fallow-ignore-next-line complexity
   private mapJob(raw: unknown, queue: string): Job {
     const r = raw as {
       id: string;

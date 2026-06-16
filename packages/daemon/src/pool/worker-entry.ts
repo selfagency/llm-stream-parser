@@ -5,6 +5,7 @@ export interface WorkerTask {
   type: string;
 }
 
+// fallow-ignore-next-line unused-export
 export default function (task: WorkerTask): Promise<unknown> {
   try {
     switch (task.type) {
