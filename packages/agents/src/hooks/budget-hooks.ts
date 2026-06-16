@@ -10,7 +10,8 @@ export function createBudgetCheckHook(): AgentHookDefinition {
   return {
     name: 'budget-check',
     description: 'Check token budget before skill execution',
-    handler: (context: AgentExecutionContext): void => {
+    // biome-ignore lint/suspicious/useAwait: handler interface requires Promise<void>
+    handler: async (context: AgentExecutionContext): Promise<void> => {
       const { tokens } = context;
       const softLimit = tokens.total * 0.8;
 

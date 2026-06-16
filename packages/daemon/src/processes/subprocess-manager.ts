@@ -379,12 +379,12 @@ function getChildRss(pid: number | null): number | null {
   if (pid === null || pid <= 0) {
     return null;
   }
-  const reader = rssReaders[process.platform];
-  if (!reader) {
+  const platform = process.platform;
+  if (platform !== 'linux' && platform !== 'darwin' && platform !== 'win32') {
     return null; // Unsupported platform
   }
   try {
-    return reader(pid);
+    return rssReaders[platform](pid);
   } catch {
     return null;
   }

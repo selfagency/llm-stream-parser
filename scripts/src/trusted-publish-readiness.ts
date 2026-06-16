@@ -167,10 +167,7 @@ if (typeof process.argv[1] === 'string' && resolve(process.argv[1]) === resolve(
   });
 
   if (!result.ok) {
-    console.error(`Trusted publishing readiness check failed for ${packageName}.`);
-    if (typeof result.error === 'string' && result.error.length > 0) {
-      console.error(result.error);
-    }
+    console.error(`Trusted publishing readiness check failed for ${packageName}: ${result.error}`);
     process.exit(1);
   }
 

@@ -42,7 +42,8 @@ export function createApprovalGateHook(): AgentHookDefinition {
   return {
     name: 'approval-gate',
     description: 'Gate destructive operations requiring user approval',
-    handler: (context: AgentExecutionContext): void => {
+    // biome-ignore lint/suspicious/useAwait: handler interface requires Promise<void>
+    handler: async (context: AgentExecutionContext): Promise<void> => {
       const { state } = context;
       const lastSkill = state.completedSteps.at(-1);
 

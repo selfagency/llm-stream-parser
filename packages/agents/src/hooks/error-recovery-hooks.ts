@@ -10,7 +10,8 @@ export function createErrorRecoveryHook(): AgentHookDefinition {
   return {
     name: 'error-recovery',
     description: 'Attempt recovery from agent execution errors',
-    handler: (context: AgentExecutionContext): void => {
+    // biome-ignore lint/suspicious/useAwait: handler interface requires Promise<void>
+    handler: async (context: AgentExecutionContext): Promise<void> => {
       const { state } = context;
       const errors = state.errors;
 
@@ -37,7 +38,8 @@ export function createRetryStrategyHook(): AgentHookDefinition {
   return {
     name: 'retry-strategy',
     description: 'Implement exponential backoff for retries',
-    handler: (context: AgentExecutionContext): void => {
+    // biome-ignore lint/suspicious/useAwait: handler interface requires Promise<void>
+    handler: async (context: AgentExecutionContext): Promise<void> => {
       const { state } = context;
       const retryCount = state.failedSteps.filter(s => s.startsWith('retry:')).length;
       const backoffMs = Math.min(1000 * 2 ** retryCount, 30_000);
