@@ -12,14 +12,14 @@ export interface UnifiedDBConfig {
 
 export interface QueueHandle {
   claimOne(workerId: string): unknown | null;
-  claimWaker(): { next: (workerId: string) => Promise<unknown | null>; ack: (jobId: string) => void };
+  claimWaker(): { next: (workerId: string) => Promise<unknown>; ack: (jobId: string) => void };
   enqueue(payload: unknown, opts?: Record<string, unknown>): string;
   enqueueTx(tx: unknown, payload: unknown, opts?: Record<string, unknown>): string;
 }
 
 export interface StreamHandle {
   append(payload: unknown): void;
-  read(consumerId: string, offset?: number): Promise<{ payload: unknown; offset: number }[]>;
+  read(consumerId: string, offset?: number): Promise<Array<{ payload: unknown; offset: number }>>;
 }
 
 export interface TransactionHandle {

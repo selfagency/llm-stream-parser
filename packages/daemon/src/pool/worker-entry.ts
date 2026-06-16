@@ -5,8 +5,8 @@ export interface WorkerTask {
   type: string;
 }
 
-// fallow-ignore-next-line unused-export
-export default function (task: WorkerTask): Promise<unknown> {
+// Named function for Piscina worker entry point (SonarCloud: name function)
+export default function handleWorkerTask(task: WorkerTask): Promise<unknown> {
   try {
     switch (task.type) {
       case 'agent.compute':

@@ -1,6 +1,10 @@
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { IPCClient } from '../ipc/client.js';
 
-export async function daemonStatus(socketPath = '/tmp/agentsy-daemon.sock'): Promise<Record<string, unknown>> {
+const DEFAULT_SOCKET_PATH = join(homedir(), '.agentsy', 'daemon.sock');
+
+export async function daemonStatus(socketPath = DEFAULT_SOCKET_PATH): Promise<Record<string, unknown>> {
   const client = new IPCClient();
   try {
     await client.connect(socketPath);

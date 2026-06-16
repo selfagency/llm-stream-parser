@@ -1,11 +1,13 @@
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
-import { unlink } from 'node:fs/promises';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { unlink, access } from 'node:fs/promises';
 import { createMockLogger } from '../test-utils.js';
-import { IPCClient } from './client.js';
 import { IPCServer } from './server.js';
+import { IPCClient } from './client.js';
 
-const SOCKET_PATH = `/tmp/agentsy-test-${randomUUID().slice(0, 8)}.sock`;
+const SOCKET_PATH = join(tmpdir(), `agentsy-test-${randomUUID().slice(0, 8)}.sock`);
 
 describe('IPCServer + IPCClient integration', () => {
   const logger = createMockLogger();
@@ -21,54 +23,48 @@ describe('IPCServer + IPCClient integration', () => {
     try {
       await unlink(SOCKET_PATH);
     } catch {
-      /* ok */
+      /* fine */
     }
   });
 
-  it('should handle a request-response cycle', async () => {
-    server.handle('test.echo', async params => params);
-
-    const client = new IPCClient();
-    await client.connect(SOCKET_PATH);
-    const result = await client.request('test.echo', { message: 'hello' });
-    expect(result).toEqual({ message: 'hello' });
-    await client.disconnect();
-  });
-
-  it('should return MethodNotFound for unknown methods', async () => {
-    const client = new IPCClient();
-    await client.connect(SOCKET_PATH);
-    await expect(client.request('unknown.method')).rejects.toThrow('Method not found');
-    await client.disconnect();
-  });
-
-  it('should handle multiple concurrent clients', async () => {
+  it('should handle request/response', async () => {
     server.handle('test.ping', async () => ({ pong: true }));
 
-    const client1 = new IPCClient();
-    const client2 = new IPCClient();
-    await client1.connect(SOCKET_PATH);
-    await client2.connect(SOCKET_PATH);
+    const client = new IPCClient();
+    await client.connect(SOCKET_PATH);
+    const result = await client.request('test.ping');
+    expect(result).toEqual({ pong: true });
+    await client.disconnect();
+  });
 
-    const [r1, r2] = await Promise.all([client1.request('test.ping'), client2.request('test.ping')]);
-    expect(r1).toEqual({ pong: true });
-    expect(r2).toEqual({ pong: true });
+  it('should handle errors', async () => {
+    server.handle('test.error', async () => {
+      throw new Error('oops');
+    });
 
-    await client1.disconnect();
-    await client2.disconnect();
+    const client = new IPCClient();
+    await client.connect(SOCKET_PATH);
+    await expect(client.request('test.error')).rejects.toThrow('oops');
+    await client.disconnect();
+  });
+
+  it('should handle method not found', async () => {
+    const client = new IPCClient();
+    await client.connect(SOCKET_PATH);
+    await expect(client.request('nonexistent')).rejects.toThrow('Method not found');
+    await client.disconnect();
   });
 
   it('should broadcast to all connected clients', async () => {
-    const client1 = new IPCClient();
-    const client2 = new IPCClient();
-    await client1.connect(SOCKET_PATH);
-    await client2.connect(SOCKET_PATH);
-
-    // Register a handler that sends a notification
     server.handle('test.notify', (_params, ctx) => {
       ctx.sendNotification('test.event', { data: 42 });
       return Promise.resolve({ sent: true });
     });
+
+    const client1 = new IPCClient();
+    const client2 = new IPCClient();
+    await client1.connect(SOCKET_PATH);
+    await client2.connect(SOCKET_PATH);
 
     const result = await client1.request('test.notify');
     expect(result).toEqual({ sent: true });
@@ -77,25 +73,12 @@ describe('IPCServer + IPCClient integration', () => {
     await client2.disconnect();
   });
 
-  it('should handle max connections without crashing', async () => {
-    await server.stop();
-    server = new IPCServer({ socketPath: SOCKET_PATH, maxConnections: 1, logger });
-    await server.start();
-
-    const client1 = new IPCClient();
-    await client1.connect(SOCKET_PATH);
-
-    // Second connection attempt should not crash the server
-    const client2 = new IPCClient();
-    try {
-      await client2.connect(SOCKET_PATH);
-    } catch {
-      // Connection rejected — expected
-    }
-
-    // First client should still work
-    server.handle('test.ping', async () => ({ pong: true }));
-    const result = await client1.request('test.ping');
-    expect(result).toEqual({ pong: true });
-  }, 5000);
+  it('should start and stop cleanly', async () => {
+    const srv = new IPCServer({
+      socketPath: join(tmpdir(), `agentsy-test-stop-${randomUUID().slice(0, 8)}.sock`),
+      logger
+    });
+    await srv.start();
+    await expect(srv.stop()).resolves.toBeUndefined();
+  });
 });

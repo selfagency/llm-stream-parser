@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { describe, expect, it } from 'vitest';
 import { UnifiedDB } from '../db/unified-db.js';
 import { createMockLogger } from '../test-utils.js';
@@ -7,16 +9,8 @@ import { HonkerQueueAdapter } from './honker-queue.js';
 async function createTestScheduler(): Promise<BreeScheduler> {
   const db = new UnifiedDB({ path: ':memory:', logger: createMockLogger() });
   await db.open();
-  const queue = new HonkerQueueAdapter({
-    db,
-    queues: ['default'],
-    logger: createMockLogger()
-  });
-  return new BreeScheduler({
-    queue,
-    root: '/tmp/test-jobs',
-    logger: createMockLogger()
-  });
+  const queue = new HonkerQueueAdapter({ db, queues: ['default'], logger: createMockLogger() });
+  return new BreeScheduler({ queue, root: join(tmpdir(), 'test-jobs'), logger: createMockLogger() });
 }
 
 describe('BreeScheduler', () => {

@@ -21,11 +21,11 @@ describe('DaemonConfigSchema', () => {
 
   it('should override specific fields', () => {
     const config = DaemonConfigSchema.parse({
-      ipc: { socketPath: '/tmp/custom.sock' },
+      ipc: { socketPath: '/var/run/custom.sock' },
       acp: { enabled: true, transport: 'stdio' as const },
       logging: { level: 'debug' as const }
     });
-    expect(config.ipc.socketPath).toBe('/tmp/custom.sock');
+    expect(config.ipc.socketPath).toBe('/var/run/custom.sock');
     expect(config.acp.enabled).toBe(true);
     expect(config.acp.transport).toBe('stdio');
     expect(config.logging.level).toBe('debug');
@@ -42,8 +42,8 @@ describe('DaemonConfigSchema', () => {
 
 describe('resolveConfig', () => {
   it('should return full config from partial', () => {
-    const config = resolveConfig({ ipc: { socketPath: '/tmp/test.sock' } });
-    expect(config.ipc.socketPath).toBe('/tmp/test.sock');
+    const config = resolveConfig({ ipc: { socketPath: '/var/run/test.sock' } });
+    expect(config.ipc.socketPath).toBe('/var/run/test.sock');
     expect(config.shutdownTimeoutMs).toBe(30_000);
   });
 
