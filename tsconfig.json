@@ -22,6 +22,8 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "paths": {
+      "@agentsy/daemon": ["packages/daemon/src/index.ts"],
+      "@agentsy/daemon/*": ["packages/daemon/src/*"],
       "@agentsy/context": ["packages/context/src/index.ts"],
       "@agentsy/connectors": ["packages/connectors/src/index.ts"],
       "@agentsy/guardrails": ["packages/guardrails/src/index.ts"],
