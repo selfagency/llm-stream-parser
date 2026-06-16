@@ -29,28 +29,29 @@ export interface AgentHookDefinition {
 /**
  * Available lifecycle hooks for agents
  */
-export enum AgentLifecycleHook {
-  PRE_INIT = 'preInit',
-  POST_INIT = 'postInit',
-  PRE_TURN = 'preTurn',
-  SKILL_SELECTION = 'skillSelection',
-  PRE_SKILL = 'preSkill',
-  POST_SKILL = 'postSkill',
-  POST_TURN = 'postTurn',
-  ON_ERROR = 'onError',
-  ON_RETRY = 'onRetry',
-  PRE_CLEANUP = 'preCleanup',
-  POST_CLEANUP = 'postCleanup',
-  LAYER_TRANSITION = 'layerTransition',
-  STEP_EXECUTE = 'stepExecute',
-  STEP_TRANSITION = 'stepTransition'
-}
+export const AgentLifecycleHook = {
+  PRE_INIT: 'preInit',
+  POST_INIT: 'postInit',
+  PRE_TURN: 'preTurn',
+  SKILL_SELECTION: 'skillSelection',
+  PRE_SKILL: 'preSkill',
+  POST_SKILL: 'postSkill',
+  POST_TURN: 'postTurn',
+  ON_ERROR: 'onError',
+  ON_RETRY: 'onRetry',
+  PRE_CLEANUP: 'preCleanup',
+  POST_CLEANUP: 'postCleanup',
+  LAYER_TRANSITION: 'layerTransition',
+  STEP_EXECUTE: 'stepExecute',
+  STEP_TRANSITION: 'stepTransition'
+} as const;
+export type AgentLifecycleHook = (typeof AgentLifecycleHook)[keyof typeof AgentLifecycleHook];
 
 /**
  * Agent hook registry for managing agent-specific hooks
  */
 export class AgentHookRegistry {
-  private hooks: Map<AgentLifecycleHook, AgentHookDefinition[]> = new Map();
+  private readonly hooks: Map<AgentLifecycleHook, AgentHookDefinition[]> = new Map();
 
   /**
    * Register a hook

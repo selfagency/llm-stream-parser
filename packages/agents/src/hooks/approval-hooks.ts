@@ -42,9 +42,9 @@ export function createApprovalGateHook(): AgentHookDefinition {
   return {
     name: 'approval-gate',
     description: 'Gate destructive operations requiring user approval',
-    handler: async (context: AgentExecutionContext): Promise<void> => {
+    handler: (context: AgentExecutionContext): void => {
       const { state } = context;
-      const lastSkill = state.completedSteps[state.completedSteps.length - 1];
+      const lastSkill = state.completedSteps.at(-1);
 
       if (lastSkill && isDestructiveSkill(lastSkill)) {
         state.failedSteps.push(`approval-required:${lastSkill}`);

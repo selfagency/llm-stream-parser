@@ -319,7 +319,7 @@ describe('runTokenomicsCommand', () => {
       (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('"failureModes"')
     );
     expect(jsonCall).toBeDefined();
-    const parsed = JSON.parse(jsonCall![0] as string);
+    const parsed = JSON.parse(jsonCall?.[0] as string);
     expect(parsed).toHaveProperty('failureModes');
     expect(parsed.failureModes).toHaveLength(2);
   });

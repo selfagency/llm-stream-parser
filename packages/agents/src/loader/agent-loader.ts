@@ -7,7 +7,7 @@ export * from './types.js';
 /**
  * Load and parse an agent specification from YAML content
  */
-export async function parseAgentSpec(yamlContent: string): Promise<AgentSpec> {
+export function parseAgentSpec(yamlContent: string): AgentSpec {
   const parsed = yamlParse(yamlContent) as unknown;
   const validated = AgentSpecSchema.parse(parsed) as AgentSpec;
   return validated;

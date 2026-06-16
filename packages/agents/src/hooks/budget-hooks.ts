@@ -33,7 +33,7 @@ export function createBudgetDeductionHook(): AgentHookDefinition {
   return {
     name: 'budget-deduction',
     description: 'Deduct actual token usage after skill execution',
-    handler: async (context: AgentExecutionContext): Promise<void> => {
+    handler: (context: AgentExecutionContext): void => {
       const { tokens, agent } = context;
       const estimatedCost = 1000;
       tokens.used += estimatedCost;

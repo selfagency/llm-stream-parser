@@ -4,7 +4,7 @@ import type { AgentExecutionContext } from './types.js';
  * Allocate tokens for a task
  */
 export function allocateTokens(context: AgentExecutionContext, amount: number, description: string): void {
-  const { agent, tokens } = context;
+  const { tokens } = context;
 
   if (amount > tokens.remaining) {
     throw new Error(`Insufficient tokens: need ${amount}, have ${tokens.remaining}`);

@@ -147,7 +147,7 @@ async function executeStep(
 /**
  * Validate step preconditions
  */
-async function validatePreconditions(step: { id: string }, context: AgentExecutionContext): Promise<void> {
+async function validatePreconditions(_step: { id: string }, _context: AgentExecutionContext): Promise<void> {
   // Implementation: validate step dependencies, budget, etc.
 }
 
@@ -155,9 +155,9 @@ async function validatePreconditions(step: { id: string }, context: AgentExecuti
  * Validate step postconditions
  */
 async function validatePostconditions(
-  step: { id: string },
-  result: unknown,
-  context: AgentExecutionContext
+  _step: { id: string },
+  _result: unknown,
+  _context: AgentExecutionContext
 ): Promise<void> {
   // Implementation: validate step output, etc.
 }
@@ -165,7 +165,11 @@ async function validatePostconditions(
 /**
  * Execute a layer (for parallel mode)
  */
-async function executeLayer(layer: AgentLayer, context: AgentExecutionContext, options: ExecuteOptions): Promise<void> {
+async function executeLayer(
+  layer: AgentLayer,
+  context: AgentExecutionContext,
+  _options: ExecuteOptions
+): Promise<void> {
   context.state.currentLayer = layer.role;
   await executeAgentHooks('layerTransition', context);
 
@@ -181,10 +185,10 @@ async function executeLayer(layer: AgentLayer, context: AgentExecutionContext, o
 /**
  * Decompose a task into steps
  */
-async function decomposeSteps(
-  task: string,
-  context: AgentExecutionContext
-): Promise<Array<{ id: string; goal: string; dependsOn?: string[] }>> {
+function decomposeSteps(
+  _task: string,
+  _context: AgentExecutionContext
+): Array<{ id: string; goal: string; dependsOn?: string[] }> {
   // Implementation: decompose task into atomic steps
   // For now, return a placeholder
   return [
