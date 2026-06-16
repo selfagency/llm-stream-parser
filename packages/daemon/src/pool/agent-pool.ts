@@ -49,6 +49,7 @@ export class AgentPool {
     this.piscina = createPiscinaPool(config);
   }
 
+  // fallow-ignore-next-line unused-class-member
   runTask<T = TaskResult>(
     task: TaskPayload,
     options?: { signal?: AbortSignal; priority?: 'high' | 'normal' | 'low' }
