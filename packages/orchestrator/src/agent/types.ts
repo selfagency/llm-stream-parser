@@ -1,10 +1,10 @@
 import type { OutputPart, ProcessedOutput, StreamChunk } from '@agentsy/core/processor';
 import type { XmlToolCall } from '@agentsy/core/tool-calls';
 import type { AgUiEvent, InterruptController } from '@agentsy/runtime/ag-ui';
-import type { FinishReason, UsageInfo } from '@agentsy/types';
+import type { FinishReason, UsageInfo } from '@agentsy/shared';
 
 export type { OutputPart, ProcessedOutput, StreamChunk } from '@agentsy/core/processor';
-export type { FinishReason } from '@agentsy/types';
+export type { FinishReason } from '@agentsy/shared';
 
 export type StopCondition = (state: AgentLoopState) => boolean;
 

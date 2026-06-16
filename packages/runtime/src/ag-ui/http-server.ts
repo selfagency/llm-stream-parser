@@ -11,7 +11,7 @@
  * - Compatible with Node.js http, Hono, Express, Fastify, etc.
  */
 
-import type { AgUiEvent } from '@agentsy/types';
+import type { AgUiEvent } from '@agentsy/shared';
 
 /**
  * Options for SSE stream creation.

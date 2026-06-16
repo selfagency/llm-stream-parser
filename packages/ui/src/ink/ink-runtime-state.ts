@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import type { XmlToolCall } from '@agentsy/core/tool-calls';
-import type { JsonObject } from '@agentsy/types';
+import type { JsonObject } from '@agentsy/shared';
 // @ts-expect-error -- ink has no default export; needed for type-only reference
 import type typeInk from 'ink';
 import type typeReact from 'react';

@@ -93,7 +93,7 @@
     "coverage": "vitest --run --coverage"
   },
   "dependencies": {
-    "@agentsy/types": "workspace:*",
+    "@agentsy/shared": "workspace:*",
     "zod": "^4.4.3",
     "zod-to-json-schema": "^3.25.2"
   },

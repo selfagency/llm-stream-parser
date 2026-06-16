@@ -3,7 +3,7 @@ import { LLMStreamProcessor } from '@agentsy/core/processor';
 import type { ValidateJsonSchemaOptions } from '@agentsy/core/structured';
 import { validateJsonSchema } from '@agentsy/core/structured';
 import type { XmlToolCall } from '@agentsy/core/tool-calls';
-import type { JsonObject } from '@agentsy/types';
+import type { JsonObject } from '@agentsy/shared';
 
 /**
  * Async generator that processes every chunk from a normalised LLM stream

@@ -1,4 +1,4 @@
-import type { NativeToolCallDelta } from '@agentsy/types';
+import type { NativeToolCallDelta } from '@agentsy/shared';
 
 /** Context passed to a tool-call parser for each processed text chunk. */
 export interface ToolCallParserContext {

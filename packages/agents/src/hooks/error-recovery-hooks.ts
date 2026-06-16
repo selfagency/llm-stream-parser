@@ -10,7 +10,7 @@ export function createErrorRecoveryHook(): AgentHookDefinition {
   return {
     name: 'error-recovery',
     description: 'Attempt recovery from agent execution errors',
-    handler: async (context: AgentExecutionContext): Promise<void> => {
+    handler: (context: AgentExecutionContext): void => {
       const { state } = context;
       const errors = state.errors;
 
@@ -18,7 +18,8 @@ export function createErrorRecoveryHook(): AgentHookDefinition {
         return;
       }
 
-      const lastError = errors[errors.length - 1];
+      const lastErrorIndex = errors.length - 1;
+      const lastError = errors[lastErrorIndex];
       if (!lastError) {
         return;
       }
@@ -36,7 +37,7 @@ export function createRetryStrategyHook(): AgentHookDefinition {
   return {
     name: 'retry-strategy',
     description: 'Implement exponential backoff for retries',
-    handler: async (context: AgentExecutionContext): Promise<void> => {
+    handler: (context: AgentExecutionContext): void => {
       const { state } = context;
       const retryCount = state.failedSteps.filter(s => s.startsWith('retry:')).length;
       const backoffMs = Math.min(1000 * 2 ** retryCount, 30_000);

@@ -55,14 +55,6 @@ export interface CompletionMessage {
   /** Message role. */
   role: 'system' | 'user' | 'assistant' | 'tool';
 
-  /** Optional tool call result (for role: 'tool'). */
-  toolCallId?: string;
-  /**
-   * Name of the tool (for role: 'tool').
-   * @deprecated Use toolCallId instead.
-   */
-  toolName?: string;
-
   /** Tool calls made by the assistant (for role: 'assistant'). */
   tool_calls?: Array<{
     id: string;
@@ -72,6 +64,14 @@ export interface CompletionMessage {
       arguments: string;
     };
   }>;
+
+  /** Optional tool call result (for role: 'tool'). */
+  toolCallId?: string;
+  /**
+   * Name of the tool (for role: 'tool').
+   * @deprecated Use toolCallId instead.
+   */
+  toolName?: string;
 }
 
 /**

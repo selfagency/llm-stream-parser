@@ -1,4 +1,4 @@
-import type { JsonObject, NativeToolCallDelta, ToolCallState } from '@agentsy/types';
+import type { JsonObject, NativeToolCallDelta, ToolCallState } from '@agentsy/shared';
 
 import { parseJson } from '../structured/index.js';
 

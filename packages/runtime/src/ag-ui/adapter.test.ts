@@ -14,8 +14,8 @@ import type {
   ToolCallArgsEvent,
   ToolCallEndEvent,
   ToolCallStartEvent
-} from '@agentsy/types';
-import { EventType } from '@agentsy/types';
+} from '@agentsy/shared';
+import { EventType } from '@agentsy/shared';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { PipelineEvent } from './adapter.js';
 import { toAgUiStream } from './adapter.js';

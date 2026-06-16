@@ -65,14 +65,15 @@ export function createApprovalTrackingHook(): AgentHookDefinition {
   return {
     name: 'approval-tracking',
     description: 'Track approved operations for audit trail',
-    handler: async (context: AgentExecutionContext): Promise<void> => {
+    handler: (context: AgentExecutionContext): void => {
       const { results, state } = context;
       const completed = [...state.completedSteps];
 
       if (completed.length > 0) {
+        const completedIndex = completed.length - 1;
         const audit = results.get('approvalAudit') ?? [];
         (audit as Array<{ step: string; timestamp: number }>).push({
-          step: completed[completed.length - 1]!,
+          step: completed[completedIndex] as string,
           timestamp: Date.now()
         });
         results.set('approvalAudit', audit);

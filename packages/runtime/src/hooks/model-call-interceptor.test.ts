@@ -1,5 +1,5 @@
 /* oxlint-disable xss/no-mixed-html -- Test inputs intentionally include string content */
-import type { CompletionRequest, CompletionResponse } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse } from '@agentsy/shared';
 import { describe, expect, it, vi } from 'vitest';
 import type { ModelCallInterceptorInput } from './model-call-interceptor.js';
 import { interceptModelCall } from './model-call-interceptor.js';

@@ -1,19 +1,19 @@
-import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { UnifiedDB } from '../db/unified-db.js';
 import { createMockLogger } from '../test-utils.js';
-import { BreeScheduler } from './bree-scheduler.js';
+import { TimerScheduler } from './bree-scheduler.js';
 import { HonkerQueueAdapter } from './honker-queue.js';
 
-async function createTestScheduler(): Promise<BreeScheduler> {
+async function createTestScheduler(): Promise<TimerScheduler> {
   const db = new UnifiedDB({ path: ':memory:', logger: createMockLogger() });
   await db.open();
   const queue = new HonkerQueueAdapter({ db, queues: ['default'], logger: createMockLogger() });
-  return new BreeScheduler({ queue, root: join(tmpdir(), 'test-jobs'), logger: createMockLogger() });
+  return new TimerScheduler({ queue, root: join(tmpdir(), 'test-jobs'), logger: createMockLogger() });
 }
 
-describe('BreeScheduler', () => {
+describe('TimerScheduler', () => {
   it('should start and stop', async () => {
     const scheduler = await createTestScheduler();
     await scheduler.start();

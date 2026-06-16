@@ -9,7 +9,7 @@ describe('createProcessorEventAdapter', () => {
       accumulateNativeToolCalls: true
     });
     const onToolCallDelta = vi.fn<() => void>();
-    const onStep = vi.fn<(stepIndex: number, usage?: import('@agentsy/types').UsageInfo) => void>();
+    const onStep = vi.fn<(stepIndex: number, usage?: import('@agentsy/shared').UsageInfo) => void>();
     const onFinish = vi.fn<() => void>();
 
     createProcessorEventAdapter(processor, {

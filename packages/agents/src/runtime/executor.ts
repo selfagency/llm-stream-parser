@@ -1,5 +1,5 @@
+import type { AgentLayer } from '../specs/types.js';
 import type { AgentExecutionContext, ExecuteOptions, ExecutionResult } from './types.js';
-import type { AgentLayer, AgentSpec } from '../specs/types.js';
 
 /**
  * Execute an agent with the given context and options
@@ -67,7 +67,9 @@ async function executeSequential(context: AgentExecutionContext, options: Execut
   const steps = await decomposeSteps(context.task, context);
 
   for (const step of steps) {
-    if (!step) continue;
+    if (!step) {
+      continue;
+    }
 
     await executeAgentHooks('preSkill', context);
 
@@ -97,7 +99,9 @@ async function executeSisyphus(context: AgentExecutionContext, options: ExecuteO
 
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
-    if (!step) continue;
+    if (!step) {
+      continue;
+    }
 
     context.state.currentStep = i;
 
@@ -206,6 +210,6 @@ async function executeAgentHooks(lifecycle: string, context: AgentExecutionConte
   }
 }
 
-export * from './types.js';
 export * from './budget.js';
 export * from './context.js';
+export * from './types.js';

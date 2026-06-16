@@ -4,7 +4,7 @@
 
 import { ReadableStream } from 'node:stream/web';
 
-import type { CompletionRequest, CompletionResponse, NormalizedChunk, UsageInfo } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse, NormalizedChunk, UsageInfo } from '@agentsy/shared';
 
 import type { NormalizerProvider, PipelineEvent } from '../pipeline/index.js';
 import { createPipeline } from '../pipeline/index.js';

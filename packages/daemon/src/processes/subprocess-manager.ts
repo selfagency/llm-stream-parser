@@ -1,4 +1,4 @@
-import { type ChildProcess, spawn } from 'node:child_process';
+import { type ChildProcess, execSync, spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import type { Logger } from '../types.js';
 
@@ -93,9 +93,17 @@ export class SubprocessManager extends EventEmitter {
   }
 
   private spawnChild(id: string, spec: SubprocessSpec, state: SubprocessState): void {
+    // Only inherit safe env vars — don't leak secrets to subprocesses
+    const safeEnv: Record<string, string> = {};
+    for (const key of ['PATH', 'LANG', 'LC_ALL', 'HOME', 'TMPDIR', 'USER', 'SHELL', 'TERM'] as const) {
+      const val = process.env[key];
+      if (val) {
+        safeEnv[key] = val;
+      }
+    }
     const child = spawn(spec.command, spec.args ?? [], {
       cwd: spec.cwd,
-      env: { ...process.env, ...spec.env },
+      env: { ...safeEnv, ...spec.env },
       stdio: ['pipe', 'pipe', 'pipe']
     });
 
@@ -118,12 +126,22 @@ export class SubprocessManager extends EventEmitter {
 
     child.stdout?.on('data', (data: Buffer) => {
       lastActivity = Date.now();
-      state.stdout.push(data.toString());
+      const line = data.toString();
+      state.stdout.push(line);
+      // Ring buffer: cap at 1000 lines
+      if (state.stdout.length > 1000) {
+        state.stdout.splice(0, state.stdout.length - 1000);
+      }
     });
 
     child.stderr?.on('data', (data: Buffer) => {
       lastActivity = Date.now();
-      state.stderr.push(data.toString());
+      const line = data.toString();
+      state.stderr.push(line);
+      // Ring buffer: cap at 1000 lines
+      if (state.stderr.length > 1000) {
+        state.stderr.splice(0, state.stderr.length - 1000);
+      }
     });
 
     child.on('exit', code => {
@@ -199,10 +217,13 @@ export class SubprocessManager extends EventEmitter {
       }
 
       try {
-        const rss = process.memoryUsage().rss;
+        const childRss = getChildRss(child.pid ?? null);
+        if (childRss === null) {
+          continue; // Platform not supported or process already gone
+        }
         const limitBytes = (state.spec.memoryLimitMb ?? this.deps.defaultMemoryLimitMb) * 1024 * 1024;
-        if (rss > limitBytes) {
-          this.deps.logger.warn(`Subprocess ${id} exceeded memory limit`, { rss, limit: limitBytes });
+        if (childRss > limitBytes) {
+          this.deps.logger.warn(`Subprocess ${id} exceeded memory limit`, { rss: childRss, limit: limitBytes });
           child.kill('SIGKILL');
           state.status = 'killed';
           this.emit('process:killed', { id, reason: 'memory' });
@@ -245,16 +266,20 @@ export class SubprocessManager extends EventEmitter {
   }
 
   killAll(): Promise<void> {
-    for (const [id, child] of this.childProcesses) {
-      child.kill('SIGTERM');
-      const state = this.processes.get(id);
-      if (state) {
-        state.status = 'killed';
-        state.stoppedAt = Date.now();
-      }
-    }
-    this.childProcesses.clear();
-    return Promise.resolve();
+    const exits = Array.from(this.childProcesses.entries()).map(
+      ([_id, child]) =>
+        new Promise<void>(resolve => {
+          child.once('exit', () => resolve());
+          child.kill('SIGTERM');
+          setTimeout(() => {
+            child.kill('SIGKILL');
+            resolve();
+          }, 5000).unref();
+        })
+    );
+    return Promise.all(exits).then(() => {
+      this.childProcesses.clear();
+    });
   }
 
   stop(): Promise<void> {
@@ -263,5 +288,55 @@ export class SubprocessManager extends EventEmitter {
       this.memoryCheckTimer = null;
     }
     return this.killAll();
+  }
+}
+
+/**
+ * Get the RSS (resident set size) of a child process by PID.
+ * Returns null on unsupported platforms or if the process is gone.
+ */
+function getChildRss(pid: number | null): number | null {
+  if (pid === null || pid <= 0) {
+    return null;
+  }
+
+  try {
+    const platform = process.platform;
+    if (platform === 'linux') {
+      const status = execSync(`grep VmRSS /proc/${pid}/status 2>/dev/null || true`, {
+        encoding: 'utf-8',
+        timeout: 1000
+      });
+      const match = status.match(/VmRSS:\s+(\d+)\s+kB/);
+      if (match?.[1]) {
+        return Number.parseInt(match[1], 10) * 1024;
+      }
+      return null;
+    }
+    if (platform === 'darwin') {
+      const output = execSync(`ps -p ${pid} -o rss= 2>/dev/null || true`, {
+        encoding: 'utf-8',
+        timeout: 1000
+      });
+      const trimmed = output.trim();
+      if (trimmed) {
+        return Number.parseInt(trimmed, 10) * 1024;
+      }
+      return null;
+    }
+    if (platform === 'win32') {
+      const output = execSync(`wmic process where processid=${pid} get workingsetsize /format:csv 2>nul || echo ""`, {
+        encoding: 'utf-8',
+        timeout: 1000
+      });
+      const match = output.match(/\n(\d+)/);
+      if (match?.[1]) {
+        return Number.parseInt(match[1], 10);
+      }
+      return null;
+    }
+    return null;
+  } catch {
+    return null;
   }
 }

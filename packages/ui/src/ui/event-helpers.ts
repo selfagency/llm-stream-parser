@@ -1,4 +1,4 @@
-import type { FinishReason, UsageInfo } from '@agentsy/types';
+import type { FinishReason, UsageInfo } from '@agentsy/shared';
 
 import type { UIConversation, UIMessagePart, UIMessagePartWithoutCreatedAt, UIToolCallPart } from './types.js';
 

@@ -1,4 +1,5 @@
 import path from 'node:path';
+import type Database from 'better-sqlite3';
 import type { Logger } from '../types.js';
 
 export interface UnifiedDBConfig {
@@ -32,11 +33,10 @@ export interface TransactionHandle {
  * UnifiedDB — single Honker-backed SQLite database for all daemon subsystems.
  *
  * Opens ~/.agentsy/agentsy.db via Honker's native extension when available,
- * falling back to better-sqlite3 directly. Uses loadHonkerExtension() from
- * @agentsy/memory to detect native extension availability on startup.
+ * falling back to better-sqlite3 directly.
  */
 export class UnifiedDB {
-  private db: unknown = null;
+  private db: Database.Database | null = null;
   private readonly queues = new Map<string, QueueHandle>();
   private readonly streams = new Map<string, StreamHandle>();
   private readonly config: UnifiedDBConfig;
@@ -55,9 +55,8 @@ export class UnifiedDB {
     return this._open;
   }
 
-  // fallow-ignore-next-line complexity
   async open(): Promise<void> {
-    // Try Honker native extension — check for .so/.dylib files
+    // Try Honker native extension
     if (this.config.extensionPath && this.config.blake3ExtensionPath) {
       try {
         const { access } = await import('node:fs/promises');
@@ -69,13 +68,10 @@ export class UnifiedDB {
           .catch(() => false);
 
         if (hasHonker && hasBlake3) {
-          // In production: const { open } = await import('@russellthehippo/honker-node');
-          // this.db = open(this.config.path);
-          // this._mode = 'native';
           this.config.logger.info('Honker native extension detected');
         }
       } catch {
-        // Extension detection failed, fall through to better-sqlite3 fallback
+        // Extension detection failed, fall through to better-sqlite3
       }
     }
 
@@ -97,9 +93,9 @@ export class UnifiedDB {
       this._mode = 'fallback';
 
       if (this.config.walMode !== false) {
-        (this.db as { pragma: (s: string) => void }).pragma('journal_mode = WAL');
+        this.db.pragma('journal_mode = WAL');
       }
-      (this.db as { pragma: (s: string) => void }).pragma(`busy_timeout = ${this.config.busyTimeoutMs ?? 5000}`);
+      this.db.pragma(`busy_timeout = ${this.config.busyTimeoutMs ?? 5000}`);
     }
 
     this._open = true;
@@ -109,9 +105,22 @@ export class UnifiedDB {
     });
   }
 
+  /**
+   * Validate a queue or stream name against SQL identifier rules.
+   * Prevents SQL injection via table-name interpolation.
+   */
+  private validateName(name: string): void {
+    if (!/^[A-Za-z_][A-Za-z0-9_]{0,62}$/.test(name)) {
+      throw new RangeError(
+        `Invalid queue/stream name: "${name}". Must be a valid SQL identifier (alphanumeric + underscore, max 63 chars).`
+      );
+    }
+  }
+
   // ── Queue API ──────────────────────────────────────
 
   queue(name: string): QueueHandle {
+    this.validateName(name);
     const existing = this.queues.get(name);
     if (existing) {
       return existing;
@@ -123,12 +132,10 @@ export class UnifiedDB {
   }
 
   private createQueue(name: string): QueueHandle {
-    const db = this.db as unknown as {
-      prepare: (sql: string) => {
-        run: (...params: unknown[]) => { lastInsertRowid: number | bigint };
-        all: (...params: unknown[]) => unknown[];
-      };
-    };
+    const db = this.db;
+    if (!db) {
+      throw new Error('UnifiedDB not opened');
+    }
 
     db.prepare(
       `CREATE TABLE IF NOT EXISTS honker_jobs_${name} (
@@ -176,8 +183,12 @@ export class UnifiedDB {
             .all(workerId);
           return Promise.resolve(rows.length > 0 ? rows[0] : null);
         },
-        ack: (_jobId: string) => {
-          db.prepare(`UPDATE honker_jobs_${name} SET status = 'completed' WHERE id = ?`).run(_jobId);
+        ack: (jobId: string) => {
+          const numericId = Number.parseInt(jobId.replace(/^job_/, ''), 10);
+          if (Number.isNaN(numericId)) {
+            throw new RangeError(`Invalid job ID: "${jobId}"`);
+          }
+          db.prepare(`UPDATE honker_jobs_${name} SET status = 'completed' WHERE id = ?`).run(numericId);
         }
       })
     };
@@ -186,6 +197,7 @@ export class UnifiedDB {
   // ── Stream API ─────────────────────────────────────
 
   stream(name: string): StreamHandle {
+    this.validateName(name);
     const existing = this.streams.get(name);
     if (existing) {
       return existing;
@@ -197,12 +209,10 @@ export class UnifiedDB {
   }
 
   private createStream(name: string): StreamHandle {
-    const db = this.db as unknown as {
-      prepare: (sql: string) => {
-        run: (...params: unknown[]) => void;
-        all: (...params: unknown[]) => Array<{ offset: number; payload: string }>;
-      };
-    };
+    const db = this.db;
+    if (!db) {
+      throw new Error('UnifiedDB not opened');
+    }
 
     db.prepare(
       `CREATE TABLE IF NOT EXISTS honker_streams_${name} (
@@ -217,13 +227,16 @@ export class UnifiedDB {
         db.prepare(`INSERT INTO honker_streams_${name} (payload) VALUES (?)`).run(JSON.stringify(payload));
       },
       read: (_consumerId: string, offset?: number) => {
-        const rows =
+        const rows = (
           offset === undefined
             ? db.prepare(`SELECT offset, payload FROM honker_streams_${name} ORDER BY offset ASC`).all()
             : db
                 .prepare(`SELECT offset, payload FROM honker_streams_${name} WHERE offset > ? ORDER BY offset ASC`)
-                .all(offset);
-        return Promise.resolve(rows.map(r => ({ payload: JSON.parse(r.payload), offset: r.offset })));
+                .all(offset)
+        ) as Record<string, unknown>[];
+        return Promise.resolve(
+          rows.map(r => ({ payload: JSON.parse(r.payload as string), offset: r.offset as number }))
+        );
       }
     };
   }
@@ -231,7 +244,10 @@ export class UnifiedDB {
   // ── Transaction API ────────────────────────────────
 
   transaction(): TransactionHandle {
-    const db = this.db as unknown as { prepare: (sql: string) => { run: (...params: unknown[]) => void } };
+    const db = this.db;
+    if (!db) {
+      throw new Error('UnifiedDB not opened');
+    }
     db.prepare('BEGIN').run();
 
     return {
@@ -250,26 +266,35 @@ export class UnifiedDB {
   // ── Query API ──────────────────────────────────────
 
   query<T = unknown>(sql: string, params: unknown[] = []): Promise<T[]> {
-    const db = this.db as unknown as { prepare: (sql: string) => { all: (...params: unknown[]) => T[] } };
-    return Promise.resolve(db.prepare(sql).all(...params));
+    if (!this.db) {
+      throw new Error('UnifiedDB not opened');
+    }
+    return Promise.resolve(this.db.prepare(sql).all(...params) as T[]);
   }
 
   execute(sql: string, params: unknown[] = []): Promise<void> {
-    const db = this.db as unknown as { prepare: (sql: string) => { run: (...params: unknown[]) => void } };
-    db.prepare(sql).run(...params);
+    if (!this.db) {
+      throw new Error('UnifiedDB not opened');
+    }
+    this.db.prepare(sql).run(...params);
     return Promise.resolve();
   }
 
   querySingle<T = unknown>(sql: string, params: unknown[] = []): Promise<T | null> {
-    const db = this.db as unknown as { prepare: (sql: string) => { get: (...params: unknown[]) => T | undefined } };
-    const result = db.prepare(sql).get(...params);
+    if (!this.db) {
+      throw new Error('UnifiedDB not opened');
+    }
+    const result = this.db.prepare(sql).get(...params) as T | undefined;
     return Promise.resolve(result ?? null);
   }
 
   // ── Migration API ──────────────────────────────────
 
   migrate(): Promise<void> {
-    const db = this.db as unknown as { prepare: (sql: string) => { run: (...params: unknown[]) => void } };
+    const db = this.db;
+    if (!db) {
+      throw new Error('UnifiedDB not opened');
+    }
 
     db.prepare(
       `CREATE TABLE IF NOT EXISTS _migrations (
@@ -307,9 +332,9 @@ export class UnifiedDB {
     ];
 
     for (const migration of migrations) {
-      const existing = (
-        db.prepare('SELECT id FROM _migrations WHERE name = ?') as unknown as { get: (...params: unknown[]) => unknown }
-      ).get(migration.name);
+      const existing = db.prepare('SELECT id FROM _migrations WHERE name = ?').get(migration.name) as
+        | { id: number }
+        | undefined;
       if (!existing) {
         db.prepare(migration.sql).run();
         db.prepare('INSERT INTO _migrations (name) VALUES (?)').run(migration.name);
@@ -332,7 +357,7 @@ export class UnifiedDB {
     this.queues.clear();
     this.streams.clear();
     if (this.db) {
-      (this.db as { close: () => void }).close();
+      this.db.close();
       this.db = null;
     }
     this._open = false;

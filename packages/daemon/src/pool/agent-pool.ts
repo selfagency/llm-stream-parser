@@ -54,7 +54,9 @@ export class AgentPool {
     task: TaskPayload,
     options?: { signal?: AbortSignal; priority?: 'high' | 'normal' | 'low' }
   ): Promise<T> {
-    return this.piscina.run(task, {
+    // Merge priority onto the task so PriorityTaskQueue.push() can read it
+    const taskWithPriority = { ...task, priority: options?.priority ?? 'normal' };
+    return this.piscina.run(taskWithPriority, {
       signal: options?.signal as never,
       name: task.type
     }) as Promise<T>;

@@ -1,10 +1,10 @@
-import type { CouncilDefinition, FirstOpinion, ReviewScore, CouncilMember } from './types.js';
 import { calculateRankings } from './stage2-review.js';
+import type { CouncilDefinition, CouncilMember, FirstOpinion, ReviewScore } from './types.js';
 
 interface ExecuteModelOptions {
+  messages: Array<{ role: string; content: string }>;
   model: string;
   provider: string;
-  messages: Array<{ role: string; content: string }>;
 }
 
 /**
@@ -14,10 +14,14 @@ function identifyDissentingOpinions(
   opinions: FirstOpinion[],
   rankings: Array<{ member: CouncilMember; avgScore: number }>
 ): Array<{ member: CouncilMember; opinion: string }> {
-  if (rankings.length < 2) { return []; }
+  if (rankings.length < 2) {
+    return [];
+  }
 
   const lowest = rankings.at(-1);
-  if (!lowest) { return []; }
+  if (!lowest) {
+    return [];
+  }
 
   const dissenting = opinions.find(
     o => o.member.model === lowest.member.model && o.member.provider === lowest.member.provider

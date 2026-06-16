@@ -4,8 +4,8 @@
  * Verifies SSE streaming, CORS preflight, and error handling
  */
 
-import type { AgUiEvent } from '@agentsy/types';
-import { EventType } from '@agentsy/types';
+import type { AgUiEvent } from '@agentsy/shared';
+import { EventType } from '@agentsy/shared';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createAgentRunHandler, createExpressMiddleware, createHonoHandler, createSSEStream } from './http-server.js';

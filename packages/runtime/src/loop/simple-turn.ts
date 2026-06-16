@@ -1,4 +1,4 @@
-import type { CompletionMessage, NormalizedChunk, UsageInfo } from '@agentsy/types';
+import type { CompletionMessage, NormalizedChunk, UsageInfo } from '@agentsy/shared';
 
 /** @internal — accumulated state while reading a stream chunk by chunk */
 interface ChunkProcessingState {
@@ -18,9 +18,9 @@ interface ChunkCallbacks {
 
 /** @internal — a tool call extracted from the stream, pending storage in history */
 interface ExtractedToolCall {
+  args: unknown;
   id: string;
   name: string;
-  args: unknown;
 }
 
 /**

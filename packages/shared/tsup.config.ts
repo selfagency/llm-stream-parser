@@ -5,7 +5,8 @@ export default defineConfig({
   dts: true,
   entry: {
     index: 'src/index.ts',
-    'cortexkit/index': 'src/cortexkit/index.ts'
+    'cortexkit/index': 'src/cortexkit/index.ts',
+    'types/index': 'src/types/index.ts'
   },
   external: ['better-sqlite3', '@cortexkit/aft-bridge'],
   format: ['esm', 'cjs'],

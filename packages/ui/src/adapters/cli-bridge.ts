@@ -6,11 +6,11 @@
  * directly from the runtime turn loop.
  *
  * This module sits at the boundary between `@agentsy/runtime/loop` and
- * `@agentsy/renderers/ink` — it is intentionally thin and stateless.
+ * `@agentsy/ui/ink` — it is intentionally thin and stateless.
  */
 
 import type { XmlToolCall } from '@agentsy/core/tool-calls';
-import type { JsonObject } from '@agentsy/types';
+import type { JsonObject } from '@agentsy/shared';
 
 import type { InkRuntimeListeners } from '../ink/ink-runtime-state.js';
 
@@ -20,7 +20,7 @@ import type { InkRuntimeListeners } from '../ink/ink-runtime-state.js';
  * Subset of `TurnEventOptions` from `@agentsy/runtime/loop` that the bridge
  * forwards to an `InkRuntimeController`.
  *
- * Defined locally so `@agentsy/renderers` does not take a hard dependency on
+ * Defined locally so `@agentsy/ui` does not take a hard dependency on
  * `@agentsy/runtime`.
  */
 export interface CliStreamBridgeEvents {

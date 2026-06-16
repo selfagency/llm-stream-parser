@@ -1,4 +1,4 @@
-import type { BaseRendererOptions, ThinkingStyle } from '@agentsy/renderers';
+import type { BaseRendererOptions, ThinkingStyle } from '@agentsy/ui';
 
 import type { MinimalChatResponseStream } from './create-vs-code-chat-renderer.js';
 import { createVSCodeChatRenderer } from './create-vs-code-chat-renderer.js';

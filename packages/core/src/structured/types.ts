@@ -2,7 +2,7 @@
  * Streaming type utilities for typed partial JSON.
  * Inspired by gjp-4-gpt's symbolic completion markers and jsonchunk's DeepPartial pattern.
  */
-import type { PartialDeep } from '@agentsy/types';
+import type { PartialDeep } from '@agentsy/shared';
 
 /**
  * Symbolic marker for streaming completion status.

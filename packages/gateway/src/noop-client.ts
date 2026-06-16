@@ -6,7 +6,7 @@
  * added to `LoadBalancedClient`.
  */
 
-import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/shared';
 
 import { DefaultTierAwareModelSelector } from './selector.js';
 import { ModelSwitcher } from './switcher.js';

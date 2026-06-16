@@ -1,5 +1,5 @@
 import type { StreamChunk } from '@agentsy/core/processor';
-import type { RendererHandle } from '@agentsy/renderers';
+import type { RendererHandle } from '@agentsy/ui';
 
 import type { ApiKeyChangeListener } from '../types/index.js';
 

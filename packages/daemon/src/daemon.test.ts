@@ -1,5 +1,5 @@
-import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { Daemon } from './daemon.js';
 import { UnifiedDB } from './db/unified-db.js';
@@ -12,17 +12,15 @@ function createTestDB(): UnifiedDB {
 function createMockPool() {
   return {
     runTask: vi.fn().mockResolvedValue({}),
-    stats: vi
-      .fn()
-      .mockReturnValue({
-        threads: 0,
-        queueSize: 0,
-        completed: 0,
-        utilization: 0,
-        waitTime: 0,
-        runTime: 0,
-        duration: 0
-      }),
+    stats: vi.fn().mockReturnValue({
+      threads: 0,
+      queueSize: 0,
+      completed: 0,
+      utilization: 0,
+      waitTime: 0,
+      runTime: 0,
+      duration: 0
+    }),
     destroy: vi.fn().mockResolvedValue(undefined)
   } as never;
 }

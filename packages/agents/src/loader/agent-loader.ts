@@ -1,14 +1,14 @@
-import type { LoadedAgent, AgentSpec, TokenBudget } from '../specs/types.js';
-import * as yaml from 'yaml';
+import { parse as yamlParse } from 'yaml';
 import { AgentSpecSchema } from '../specs/schema.js';
+import type { AgentSpec, LoadedAgent, TokenBudget } from '../specs/types.js';
 
 export * from './types.js';
 
 /**
  * Load and parse an agent specification from YAML content
  */
-export async function parseAgentSpec(yamlContent: string): Promise<AgentSpec> {
-  const parsed = yaml.parse(yamlContent) as unknown;
+export function parseAgentSpec(yamlContent: string): AgentSpec {
+  const parsed = yamlParse(yamlContent) as unknown;
   const validated = AgentSpecSchema.parse(parsed) as AgentSpec;
   return validated;
 }
@@ -17,7 +17,7 @@ export async function parseAgentSpec(yamlContent: string): Promise<AgentSpec> {
  * Create a LoadedAgent from an AgentSpec
  * Note: Hooks resolution and budget initialization will be done in Phase 3 and Phase 5
  */
-export async function createLoadedAgent(spec: AgentSpec): Promise<LoadedAgent> {
+export function createLoadedAgent(spec: AgentSpec): Promise<LoadedAgent> {
   const hooks = new Map<string, Array<(context: unknown) => Promise<void> | void>>();
 
   if (spec.hooks) {
@@ -67,7 +67,7 @@ export async function loadAllAgents(directory: string): Promise<Map<string, Load
       const loaded = await createLoadedAgent(spec);
       agents.set(spec.name, loaded);
     }
-  } catch (error) {
+  } catch {
     // Directory doesn't exist or can't be read
   }
 

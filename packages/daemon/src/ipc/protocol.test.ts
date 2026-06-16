@@ -34,8 +34,9 @@ describe('IPCRequestSchema', () => {
     expect(() => IPCRequestSchema.parse({ jsonrpc: '1.0', id: 'x', method: 'test' })).toThrow();
   });
 
-  it('should reject missing id', () => {
-    expect(() => IPCRequestSchema.parse({ jsonrpc: '2.0', method: 'test' })).toThrow();
+  it('should accept missing id (notification)', () => {
+    const result = IPCRequestSchema.parse({ jsonrpc: '2.0', method: 'test' });
+    expect(result.id).toBeUndefined();
   });
 });
 

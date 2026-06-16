@@ -1,4 +1,4 @@
-import type { JsonObject } from '@agentsy/types';
+import type { JsonObject } from '@agentsy/shared';
 import { Box } from 'ink';
 import { useEffect, useState } from 'react';
 

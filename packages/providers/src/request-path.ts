@@ -1,6 +1,6 @@
 import type { ReadableStream } from 'node:stream/web';
 
-import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/shared';
 
 import type { NormalizerProvider } from './pipeline/create-pipeline.js';
 import { createUniversalClient, type UniversalClientConfig } from './universal-client/client.js';

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import type { JsonObject } from '@agentsy/types';
+import type { JsonObject } from '@agentsy/shared';
 import type * as inkNS from 'ink';
 import type * as reactNS from 'react';
 import type { InkRendererHandle, InkRendererOptions } from './create-ink-renderer.js';

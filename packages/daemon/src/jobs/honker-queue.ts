@@ -38,7 +38,6 @@ export interface HonkerQueueConfig {
  */
 export class HonkerQueueAdapter {
   private readonly config: HonkerQueueConfig;
-  private started = false;
 
   constructor(config: HonkerQueueConfig) {
     this.config = config;
@@ -51,7 +50,6 @@ export class HonkerQueueAdapter {
         for (const queueName of this.config.queues) {
           this.config.db.queue(queueName);
         }
-        this.started = true;
         this.config.logger.info('Honker queue started', {
           queues: this.config.queues
         });
@@ -61,7 +59,6 @@ export class HonkerQueueAdapter {
     for (const queueName of this.config.queues) {
       this.config.db.queue(queueName);
     }
-    this.started = true;
     this.config.logger.info('Honker queue started', {
       queues: this.config.queues
     });
@@ -122,7 +119,6 @@ export class HonkerQueueAdapter {
   }
 
   stop(): Promise<void> {
-    this.started = false;
     this.config.logger.info('Honker queue stopping');
     return Promise.resolve();
   }

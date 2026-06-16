@@ -1,11 +1,11 @@
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { unlink, access } from 'node:fs/promises';
+import { unlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createMockLogger } from '../test-utils.js';
-import { IPCServer } from './server.js';
 import { IPCClient } from './client.js';
+import { IPCServer } from './server.js';
 
 const SOCKET_PATH = join(tmpdir(), `agentsy-test-${randomUUID().slice(0, 8)}.sock`);
 
@@ -38,7 +38,7 @@ describe('IPCServer + IPCClient integration', () => {
   });
 
   it('should handle errors', async () => {
-    server.handle('test.error', async () => {
+    server.handle('test.error', () => {
       throw new Error('oops');
     });
 

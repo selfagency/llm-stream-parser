@@ -1,5 +1,5 @@
 import { LLMStreamProcessor } from '@agentsy/core/processor';
-import type { FinishReason, JsonObject } from '@agentsy/types';
+import type { FinishReason, JsonObject } from '@agentsy/shared';
 import { describe, expect, it, vi } from 'vitest';
 
 import { applyConversationEvent } from './event-sourcing.js';

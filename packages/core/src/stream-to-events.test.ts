@@ -1,4 +1,4 @@
-import type { NormalizedChunk } from '@agentsy/types';
+import type { NormalizedChunk } from '@agentsy/shared';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createStreamEventAdapter, type StreamRuntimeEvent, streamToEvents } from './stream-to-events.js';

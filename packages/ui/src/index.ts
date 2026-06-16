@@ -1,48 +1,41 @@
 /**
- * Event-sourced UI state machine for managing conversation state.
+ * Renderers for llm-stream-parser: composable output targets for streamed LLM responses.
  *
- * Provides immutable conversation state management with reactive listeners.
- * All state transitions are driven by discrete events.
+ * Each renderer follows the `RendererHandle` interface (`write(chunk)` / `end()`) and can be
+ * plugged into any pipeline that generates streaming chunks. Renderers own their internal
+ * `LLMStreamProcessor` instance (factory pattern) and emit to their configured output target.
+ *
+ * ## Available Renderers
+ *
+ * - **Plain Text** (`./plain`) — Zero-dependency text accumulation, configurable thinking blocks
+ * - **CLI** (`./cli`) — ANSI-rich markdown rendering for terminal output (requires `cli-markdown` peer dep)
+ * - **Streaming Markdown** (`./streaming-md`) — Append-only DOM streaming for browsers (requires `streaming-markdown` + `dompurify` peer deps)
+ * - **VS Code Chat** (`./vscode`) — Streaming output for VS Code extensions via ChatResponseStream (no new deps, uses duck-typed interface)
+ * - **Ink** (`./ink`) — Streaming React/Ink renderer for terminal output (requires `ink` + `react` peer deps)
  *
  * @example
  * ```typescript
- * import {
- *   createConversationStore,
- *   applyConversationEvent,
- *   type UIMessage,
- *   type ConversationEvent,
- * } from '@selfagency/llm-stream-parser/ui';
+ * import { createPlainTextRenderer } from '@selfagency/llm-stream-parser/renderers/plain';
  *
- * // Create store
- * const store = createConversationStore('conv-1');
- *
- * // Subscribe to changes
- * store.subscribe((state) => {
- *   console.log(`Conversation has ${state.messages.length} messages`);
+ * const renderer = createPlainTextRenderer({
+ *   showThinking: true,
+ *   output: (text) => console.log(text),
  * });
  *
- * // Dispatch events
- * store.dispatch({ type: 'message_started', role: 'user', messageId: 'msg-1' });
- * store.dispatch({ type: 'text_part_added', messageId: 'msg-1', text: 'Hello' });
- * store.dispatch({ type: 'message_finished', messageId: 'msg-1' });
+ * await renderer.write('Hello ');
+ * await renderer.write('World');
+ * await renderer.end();
  * ```
  */
 
-export { applyConversationEvent } from './event-sourcing.js';
-export {
-  bindProcessorToConversationStore,
-  type ConversationStoreBridge,
-  createConversationStoreFromProcessor
-} from './processor-bridge.js';
-export { type ConversationStore, createConversationStore, type StoreListener } from './store.js';
+export { createInkRuntimeController, loadInkRenderModules } from './ink/ink-runtime-state.js';
+export { createPlainTextRenderer, type PlainTextRendererOptions } from './plain/index.js';
+export { createSharedRendererHandle, createStepChangeEmitter } from './shared.js';
 export type {
-  ConversationEvent,
-  UIConversation,
-  UIErrorPart,
-  UIMessage,
-  UIMessagePart,
-  UIStepPart,
-  UITextPart,
-  UIThinkingPart,
-  UIToolCallPart
+  BaseRendererOptions,
+  CancellationToken,
+  OnToolCall,
+  RendererHandle,
+  TextOutput,
+  ThinkingStyle
 } from './types.js';

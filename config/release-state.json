@@ -12,12 +12,11 @@
     "@agentsy/processor": "oidc-ready",
     "@agentsy/providers": "oidc-ready",
     "@agentsy/recovery": "oidc-ready",
-    "@agentsy/renderers": "oidc-ready",
     "@agentsy/sse": "oidc-ready",
     "@agentsy/structured": "oidc-ready",
     "@agentsy/thinking": "oidc-ready",
     "@agentsy/tool-calls": "oidc-ready",
-    "@agentsy/types": "oidc-ready",
+    "@agentsy/shared": "oidc-ready",
     "@agentsy/ui": "oidc-ready",
     "@agentsy/vscode": "oidc-ready",
     "@agentsy/xml-filter": "oidc-ready"

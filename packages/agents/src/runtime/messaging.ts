@@ -20,19 +20,17 @@ export enum MessageType {
 }
 
 export interface AgentMessage {
-  id: string;
-  type: MessageType;
-  priority: MessagePriority;
-  sender: string;
-  recipient?: string;
-  payload: unknown;
-  timestamp: number;
   correlationId?: string;
+  id: string;
+  payload: unknown;
+  priority: MessagePriority;
+  recipient?: string;
+  sender: string;
+  timestamp: number;
+  type: MessageType;
 }
 
-export interface MessageHandler {
-  (message: AgentMessage): Promise<AgentMessage | void>;
-}
+export type MessageHandler = (message: AgentMessage) => Promise<AgentMessage | void>;
 
 /**
  * Simple message bus for agent communication
@@ -60,7 +58,9 @@ export class MessageBus {
    */
   unsubscribe(pattern: string, handler: MessageHandler): void {
     const existing = this.handlers.get(pattern);
-    if (!existing) return;
+    if (!existing) {
+      return;
+    }
     this.handlers.set(
       pattern,
       existing.filter(h => h !== handler)
@@ -144,9 +144,15 @@ export class MessageBus {
     if (pattern.startsWith('correlation:')) {
       return message.correlationId === pattern.slice('correlation:'.length);
     }
-    if (pattern === '*') return true;
-    if (pattern === message.type) return true;
-    if (pattern === message.sender) return true;
+    if (pattern === '*') {
+      return true;
+    }
+    if (pattern === message.type) {
+      return true;
+    }
+    if (pattern === message.sender) {
+      return true;
+    }
     return false;
   }
 }

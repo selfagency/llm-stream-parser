@@ -22,7 +22,7 @@
  * ```
  */
 
-import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/shared';
 
 import type { Span, Tracer } from '../core/types.js';
 

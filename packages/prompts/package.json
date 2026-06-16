@@ -33,7 +33,7 @@
     "format": "biome format"
   },
   "dependencies": {
-    "@agentsy/types": "workspace:*"
+    "@agentsy/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.9.0",

@@ -12,7 +12,7 @@ export default defineConfig({
     skills: 'src/skills/index.ts',
     slash: 'src/slash/index.ts'
   },
-  external: ['@agentsy/types'],
+  external: ['@agentsy/shared'],
   format: ['esm', 'cjs'],
   sourcemap: true,
   splitting: false,

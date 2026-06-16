@@ -1,4 +1,4 @@
-import type { NormalizedChunk } from '@agentsy/types';
+import type { NormalizedChunk } from '@agentsy/shared';
 
 /**
  * Typed runtime events emitted by the stream-to-events adapter.

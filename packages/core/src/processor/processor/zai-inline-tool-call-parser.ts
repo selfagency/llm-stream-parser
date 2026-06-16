@@ -1,4 +1,4 @@
-import type { NativeToolCallDelta } from '@agentsy/types';
+import type { NativeToolCallDelta } from '@agentsy/shared';
 
 import type { ToolCallParser, ToolCallParserContext, ToolCallParserResult } from './tool-call-parser.js';
 

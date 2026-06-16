@@ -33,7 +33,6 @@
   },
   "dependencies": {
     "@agentsy/shared": "workspace:*",
-    "@agentsy/types": "workspace:*",
     "@cortexkit/magic-context": "^0.23.0",
     "zod": "^3.24.5"
   },

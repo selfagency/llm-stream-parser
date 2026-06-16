@@ -1,4 +1,4 @@
-import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/shared';
 import { ProviderHealthRegistry } from './health/provider-health-registry.js';
 import { buildNoopClient } from './noop-client.js';
 import { MetricsCollector } from './observability/metrics-collector.js';

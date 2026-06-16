@@ -47,7 +47,7 @@
     "@agentsy/memory": "workspace:*",
     "@agentsy/observability": "workspace:*",
     "@agentsy/runtime": "workspace:*",
-    "@agentsy/types": "workspace:*",
+    "@agentsy/shared": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {
