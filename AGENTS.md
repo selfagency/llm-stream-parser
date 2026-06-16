@@ -129,24 +129,17 @@ This repo uses **GitButler** via the `but` CLI for all write git operations — 
 
 ### GitButler MCP Server
 
-GitButler ships an MCP server that exposes workflow actions directly to AI tools. When connected, your assistant can record changes, create commits, and manage branches without running shell commands — the assistant calls MCP tools instead.
+GitButler ships an MCP server (`but mcp`) that exposes workflow actions as callable tools. When the MCP server is running, you have access to GitButler operations through tool calls instead of shell commands — use these in preference to the `but` CLI.
 
-**Setup** — start the MCP server:
+The key tool is **update-branches**, which records your edits and creates commits with context. Call it after each meaningful edit batch, passing:
 
-```bash
-but mcp                                 # Default mode (recommended)
-but mcp --internal                      # Internal mode (exposes additional tools)
-```
+- `fullPrompt` — the exact prompt that generated the changes
+- `changesSummary` — a short bullet list of what was changed and why
+- `currentWorkingDirectory` — the full root path of the Git project
 
-**MCP Client Configuration:**
+Example usage pattern: after editing files, call `but_gitbutler_update_branches` to persist the changes rather than running `but commit` via the terminal. This produces structured commits with richer context than raw CLI commits.
 
-| Client | Config |
-|--------|--------|
-| **Claude Code** | `claude mcp add gitbutler but mcp` |
-| **VS Code** | Command Palette → `MCP: List Servers` → Add Server → stdio → command: `but` args: `["mcp"]` |
-| **Cursor** | `~/.cursor/mcp.json`: `{"mcpServers":{"gitbutler":{"command":"but","args":["mcp"]}}}` |
-
-The server exposes tools for recording changes, creating commits, updating branches, and managing workspace state. After each meaningful edit batch, call the GitButler update-branches tool to persist changes with context. See [blog.gitbutler.com/using-gb-mcp](https://blog.gitbutler.com/using-gb-mcp) for the full guide.
+When the MCP server is not available, fall back to the `but` CLI commands described below.
 
 ### Workspace model
 
