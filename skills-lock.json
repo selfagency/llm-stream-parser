@@ -265,6 +265,12 @@
       "skillPath": ".claude/skills/ink-cli/SKILL.md",
       "computedHash": "61dd73f4b05daa978f0ff589439cb311bf1c05af9f4642f169e9ab87f25d4f1a"
     },
+    "langfuse": {
+      "source": "langfuse/skills",
+      "sourceType": "github",
+      "skillPath": "skills/langfuse/SKILL.md",
+      "computedHash": "4c5fd7416a341ca8b56b2efcd96f68f867205f0b774ecb12f3078db490c0d5f3"
+    },
     "lsp-setup": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
