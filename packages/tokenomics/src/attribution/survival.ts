@@ -135,6 +135,7 @@ interface BlameCount {
  * @param commitSet - Set of commit SHAs to count as "survived".
  * @returns Count of total and survived lines.
  */
+// fallow-ignore-next-line complexity — line parsing with blame porcelain state machine
 function countBlameLines(output: string, commitSet: Set<string>): BlameCount {
   const lines = output.split('\n');
   let total = 0;

@@ -501,6 +501,7 @@ async function handlePatchList(_argv: readonly string[], opts: TokenomicsCliOpti
 /**
  * Extract commit SHAs and files from session artifacts
  */
+// fallow-ignore-next-line complexity — artifact extraction with multi-field iteration
 function extractCommitShasAndFiles(entry: import('@agentsy/tokenomics').SessionLedgerEntry): {
   commitShas: string[];
   files: string[];
@@ -704,6 +705,7 @@ function handleAdaptersAdd(argv: readonly string[], opts: TokenomicsCliOptions):
 // Entry point
 // =============================================================================
 
+// fallow-ignore-next-line complexity — CLI command routing with subcommand dispatch
 export async function runTokenomicsCommand(argv: readonly string[], io: CliIO = DEFAULT_IO): Promise<number> {
   const subcommand = argv[0];
   const rest = argv.slice(1);

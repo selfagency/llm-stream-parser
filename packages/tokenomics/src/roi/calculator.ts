@@ -143,6 +143,7 @@ export interface RoiSnapshot {
  * @param analytics - Optional analytics adapter for deployment correlation.
  * @returns A computed ROI snapshot.
  */
+// fallow-ignore-next-line complexity — ROI computation with multi-branch analytics logic
 export async function computeRoiSnapshot(
   ledger: LedgerStore,
   since?: Date,

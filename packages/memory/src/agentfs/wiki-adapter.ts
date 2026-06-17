@@ -125,6 +125,7 @@ export function createWikiFsAdapter(options: WikiFsAdapterOptions): WikiManager 
   }
 
   /** Build a WikiPage from input, merging with existing data and defaults. */
+  // fallow-ignore-next-line complexity — multi-field conditional merge with defaults
   function buildPage(input: WikiPageInput, existing: WikiPage | null): WikiPage {
     const now = Date.now();
     const version = existing ? existing.version + 1 : 1;

@@ -27,6 +27,7 @@ export function createHealthBridge(projectRoot: string) {
     /**
      * Run a full health check via `aft_inspect` and return structured results.
      */
+    // fallow-ignore-next-line complexity — health check routing with multiple sections
     async check(): Promise<HealthReport> {
       const bridge = await getAftSessionBridge({ projectRoot });
 

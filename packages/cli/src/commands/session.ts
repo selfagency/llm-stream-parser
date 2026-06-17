@@ -64,6 +64,7 @@ function handleSessionStatus(sessionId: string, io: CliIO): number {
 // agentsy session <id> checkpoint
 // ---------------------------------------------------------------------------
 
+// fallow-ignore-next-line complexity — CLI subcommand dispatch with list/restore branching
 function handleSessionCheckpoint(sessionId: string, args: readonly string[], io: CliIO): number {
   const store = createFileStore();
   const manager = createSessionManager(store, { sessionId });

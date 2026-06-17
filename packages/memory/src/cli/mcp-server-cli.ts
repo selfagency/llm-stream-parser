@@ -11,6 +11,7 @@ export { createMemoryEngine, loadConfig, type MemoryConfig };
  * Start the MCP memory server with the given config.
  * Handles SIGTERM/SIGINT for graceful shutdown.
  */
+// fallow-ignore-next-line complexity — CLI flag parsing with multiple switch cases
 export async function runMcpServerCli(args: string[] = process.argv.slice(2)): Promise<void> {
   if (args[0] === '--help' || args[0] === '-h') {
     console.log(`

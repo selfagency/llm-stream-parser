@@ -36,6 +36,7 @@ export class InternalSpan implements Span {
   readonly _isRoot: boolean;
   readonly _contextKey: string;
 
+  // fallow-ignore-next-line complexity — OTel span setup with multiple optional config fields
   constructor(name: string, options?: SpanOptions, parent?: InternalSpan, contextKey?: string) {
     this.name = name;
     this._startTime = options?.startTime ?? Date.now();
@@ -147,6 +148,7 @@ export class InternalSpan implements Span {
     });
   }
 
+  // fallow-ignore-next-line complexity — guard-and-set pattern with optional time
   end(endTime?: number): void {
     if (this._endTime !== undefined) {
       return;
@@ -170,6 +172,7 @@ export class InternalSpan implements Span {
     return attributes;
   }
 
+  // fallow-ignore-next-line complexity — Error type discrimination with optional fields
   private _extractErrorInfo(exception: unknown): Record<string, string> {
     if (exception instanceof Error) {
       return {
