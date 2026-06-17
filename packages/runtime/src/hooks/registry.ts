@@ -139,13 +139,18 @@ export function createRuntimeHookRegistry(): HookRegistry {
 
         // If result is a transform, compose it
         if ('transform' in result) {
-          const transform = result.transform as Record<string, unknown>;
-          if (hasTransform) {
-            // Multiple transforms: compose by merging into accumulated payload
-            currentPayload = { ...(currentPayload as Record<string, unknown>), ...transform };
+          const transform = result.transform;
+          // Type guard: ensure we only spread object transforms
+          if (typeof transform === 'object' && transform !== null) {
+            if (hasTransform) {
+              // Multiple transforms: compose by merging into accumulated payload
+              currentPayload = { ...(currentPayload as Record<string, unknown>), ...transform };
+            } else {
+              currentPayload = { ...event, ...transform };
+              hasTransform = true;
+            }
           } else {
-            currentPayload = { ...event, ...transform };
-            hasTransform = true;
+            // Skip non-object transforms (silently ignore for resilience)
           }
           continue;
         }

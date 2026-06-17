@@ -1,14 +1,12 @@
 /**
- * Hook event types for the runtime lifecycle.
+ * Hook configuration types for the runtime lifecycle.
  *
- * These discriminated-union events are fired by the `HookRegistry` at
- * specific points in the task execution lifecycle. Each handler receives
- * the full event context and can return a `HookResult` to influence
- * whether execution continues, blocks, or transforms the payload.
+ * These configuration types enable Claude-Code style hooks with
+ * command, prompt, http, and agent capabilities, plus an optional
+ * filter to control execution.
  */
 
-/** Result returned by a single hook handler. */
-export type HookResult = { continue: true } | { continue: false; reason: string } | { transform: unknown };
+import type { HookResult } from './types.js';
 
 /** Context available to filter functions.
  *

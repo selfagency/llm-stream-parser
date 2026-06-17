@@ -39,6 +39,12 @@ function failUnsettledTools(
   error: unknown,
   onToolCallUpdate?: (id: string, state: 'output-error', output: string) => void
 ): void {
+  // Log for debugging when tool calls are being failed due to stream error
+  if (pendingToolCalls.size > 0) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`[failUnsettledTools] Failing ${pendingToolCalls.size} pending tool call(s): ${errorMessage}`);
+  }
+
   for (const [toolCallId, _pending] of pendingToolCalls) {
     onToolCallUpdate?.(
       toolCallId,
