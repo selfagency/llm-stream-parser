@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -204,7 +205,7 @@ describe('Phase 0: Memory File Compression Validation', () => {
   it('backup preserves original content exactly', async () => {
     // Use a temp directory to avoid file conflicts
     const uniqueName = `test-memory-${Date.now()}.md`;
-    const uniqueFile = `/tmp/${uniqueName}`;
+    const uniqueFile = join(tmpdir(), uniqueName);
     writeFileSync(uniqueFile, SAMPLE_MEMORY_FILE, 'utf-8');
 
     try {
