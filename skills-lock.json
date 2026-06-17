@@ -467,7 +467,7 @@
       "source": "vercel/turborepo",
       "sourceType": "github",
       "skillPath": "skills/turborepo/SKILL.md",
-      "computedHash": "86321159df24738b6482c4872b06a0a63fafcf9c393da6bccc32538a4e6393c5"
+      "computedHash": "b7c3165ae67a2892d6195a5b2cba15c8d96341f5c64ddd0d3ce4225c94a2ae83"
     },
     "typescript": {
       "source": "pproenca/dot-skills",

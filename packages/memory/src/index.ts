@@ -267,7 +267,6 @@ export {
 } from './wiki/local-embedding-engine.js';
 export { createNavigationSystem, type NavigationSystem } from './wiki/navigation-system.js';
 export { createVersionTracker, type VersionTracker } from './wiki/version-tracker.js';
-export { type PageDiff } from './wiki/wiki-utils.js';
 export {
   type ConceptRelation,
   createWikiManager,
@@ -282,6 +281,7 @@ export {
   type WikiPageHistoryEntry,
   type WikiPageInput
 } from './wiki/wiki-manager.js';
+export type { PageDiff } from './wiki/wiki-utils.js';
 
 export interface MemoryRecord {
   content: string;

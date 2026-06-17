@@ -4,7 +4,7 @@ import { createBudgetCheckHook, createBudgetDeductionHook } from './hooks/budget
 import { createErrorRecoveryHook, createRetryStrategyHook } from './hooks/error-recovery-hooks.js';
 import { createMemoryPostTurnHook, createMemoryPreTurnHook } from './hooks/memory-hooks.js';
 import { createDefaultHookMap, executeHooks, resolveAgentHooks } from './hooks/resolver.js';
-import { AgentLifecycleHook, type AgentHookDefinition } from './hooks/types.js';
+import { type AgentHookDefinition, AgentLifecycleHook } from './hooks/types.js';
 import type { AgentExecutionContext, AgentSpec, LoadedAgent } from './specs/types.js';
 
 function createMockContext(overrides?: Partial<AgentExecutionContext>): AgentExecutionContext {
