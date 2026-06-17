@@ -398,7 +398,8 @@ function getChildRss(pid: number | null): number | null {
     return null;
   }
   try {
-    return reader?.(pid);
+    // biome-ignore lint/style/noNonNullAssertion: reader is assigned in every non-returning branch above
+    return reader!(pid);
   } catch {
     return null;
   }
