@@ -44,7 +44,23 @@ function nonMatchingEvent(): RuntimeHookEvent {
 
 function createMockPipeline(result: GuardrailResult): GuardrailPipeline {
   return {
-    evaluate: vi.fn().mockResolvedValue(result)
+    evaluate: vi
+      .fn()
+      .mockResolvedValue({
+        result,
+        receipt: {
+          policyId: 'test',
+          decision: result.status,
+          reasonCode: 'TEST',
+          riskTier: 'moderate',
+          surface: 'input',
+          phase: result.phase,
+          timestamp: new Date().toISOString(),
+          correlationId: 'test',
+          sessionId: 'test',
+          detections: []
+        }
+      })
   } as unknown as GuardrailPipeline;
 }
 
