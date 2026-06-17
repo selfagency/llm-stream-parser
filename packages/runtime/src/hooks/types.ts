@@ -8,7 +8,11 @@
  */
 
 /** Result returned by a single hook handler. */
-export type HookResult = { continue: true } | { continue: false; reason: string } | { transform: unknown };
+export type HookResult =
+  | { continue: true }
+  | { continue: true; transform: unknown }
+  | { continue: false; reason: string }
+  | { transform: unknown };
 
 /** Fired when raw user input arrives, before any model call. */
 export interface UserPromptSubmitEvent {

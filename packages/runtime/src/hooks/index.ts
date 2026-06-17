@@ -1,3 +1,4 @@
+export type { HookConfig, HookContext } from './schema.js';
 export type { RoutingState } from '../checkpoint.js';
 export type { ApprovalGate } from './approval-hook.js';
 export { createApprovalHook, isDestructiveTool } from './approval-hook.js';
