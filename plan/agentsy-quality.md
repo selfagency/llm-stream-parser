@@ -243,8 +243,9 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 #### Step 10.1: Add `ignorePatterns` to `.fallowrc.jsonc`
 
 - **Finding source:** Fallback reports complexity, dead-code, and duplication findings across `.agents/**` (skill definitions, quality-gate scripts, CLI review runner shell scripts, etc.). These are tooling, not framework code.
-- **Config documentation:** [Fallow configuration reference — `ignorePatterns`](https://docs.fallow.tools/configuration/). Per the JSON schema (https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json), `ignorePatterns` is a top-level array of glob strings that excludes files from **all** analyses (dead code, duplication, complexity/health). This is distinct from `duplicates.ignore` and `health.ignore`, which only scope their own analysis.
+- **Config documentation:** [Fallow configuration reference — `ignorePatterns`](https://docs.fallow.tools/configuration/). Per the JSON schema (<https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json>), `ignorePatterns` is a top-level array of glob strings that excludes files from **all** analyses (dead code, duplication, complexity/health). This is distinct from `duplicates.ignore` and `health.ignore`, which only scope their own analysis.
 - **Recommended fix:** Add `ignorePatterns` as a top-level key in `.fallowrc.jsonc`, sibling to `entry` / `publicPackages` / `audit`. The primary entry is `.agents/**`; the remaining entries are standard build/dep artifacts that should also be excluded:
+
   ```jsonc
   {
     "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
@@ -277,6 +278,7 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
     // ... rest of existing config unchanged
   }
   ```
+
   **Key details:**
   - `ignorePatterns` is the top-level switch; it applies to dead-code, duplication, AND complexity analyses. This is different from `duplicates.ignore` (which only affects duplication) and `health.ignore` (which only affects complexity).
   - Array fields are **replaced entirely** on override, not concatenated. So if any `extends` config sets `ignorePatterns`, the child's `ignorePatterns` replaces it entirely. Verify no parent config is being extended.
@@ -291,6 +293,7 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 - **Current config:** `sonar.sources=packages` — this limits source scanning to the `packages/` directory. However, SonarCloud may still scan `.agents/` if it's picked up by the scanner's file discovery (especially if the CI action uses `sonar-scanner` without a strict `sonar.projectBaseDir` or if the scanner auto-discovers files). The current `sonar.exclusions=**/*.md` only excludes markdown files.
 - **Config documentation:** [SonarCloud project analysis scope](https://docs.sonarsource.com/sonarqube-server/latest/project-administration/analysis-scope/). `sonar.exclusions` accepts a comma-separated list of glob patterns relative to the project root.
 - **Recommended fix:** Update `sonar-project.properties`:
+
   ```properties
   # Path to source directories
   sonar.sources=packages
@@ -302,6 +305,7 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
   # Exclude test files from duplication detection (already set)
   sonar.cpd.exclusions=**/*.test.ts
   ```
+
   **Key details:**
   - `sonar.exclusions` is comma-separated, not an array. Each entry is a glob relative to the project root.
   - `**/*.md` is kept from the existing config.
@@ -328,11 +332,13 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 **Goal:** Close the 3 HIGH-severity security findings. These are CI/release-impacting and should land first.
 
 #### Step 1.1: Remove or validate `workflow_dispatch` `tag` input in `release.yml`
+
 - **Finding:** HIGH Security — Command Injection. `.github/workflows/release.yml:8`.
 - **Root cause:** The workflow accepts a `tag` input via `workflow_dispatch`. The tag is parsed by an inline `github-script` step that uses `tag.match(...)`, and the parsed value is then used to look up `packages/${packageDir}` for release. While the workflow also runs `Test & Build` CI validation before publishing, the `tag` input itself is not validated against a strict pattern before use. SonarCloud flags this because workflow_dispatch inputs can be attacker-influenced if the workflow also runs on `pull_request_target` (it doesn't here, but the rule is conservative).
 - **Recommended fix:** Two options, in order of preference:
   1. **Remove the `workflow_dispatch` trigger entirely.** The workflow already triggers on `push: tags: ["@agentsy/*@*", "v*"]`. Maintainers who want to dispatch a release manually can `git tag` + `git push origin <tag>`. This eliminates the input vector.
   2. **If manual dispatch is required,** validate the input with a strict regex in the first step and fail fast on mismatch:
+
      ```yaml
      - name: Validate tag input
        run: |
@@ -341,35 +347,44 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
            exit 1
          fi
      ```
+
      Avoid interpolating `${{ inputs.tag }}` directly into a shell command — use an env var instead:
+
      ```yaml
      env:
        TAG_INPUT: ${{ inputs.tag }}
      ```
+
 - **Verification:** Trigger a workflow_dispatch with a malformed tag (e.g. `"; rm -rf /"`) and confirm the workflow exits non-zero without side effects. Confirm a valid tag still works.
 - **Rollback:** Revert the workflow file.
 
 #### Step 1.2: Update `esbuild` from `0.28.0` to `0.28.1`
+
 - **Finding:** HIGH Security — Insecure dependency. `pnpm-lock.yaml:1151`. GHSA-gv7w-rqvm-qjhr: esbuild missing binary integrity verification in Deno module enables RCE via `NPM_CONFIG_REGISTRY`.
 - **Root cause:** `esbuild@0.28.0` is pinned in `pnpm-lock.yaml`. The fix is in `0.28.1`.
 - **Recommended fix:**
+
   ```bash
   pnpm update esbuild@^0.28.1 --recursive
   pnpm install --frozen-lockfile=false
   git diff pnpm-lock.yaml  # verify only esbuild bumped
   ```
+
   If `packages/vscode/pnpm-lock.yaml` has its own pin, update it too.
 - **Verification:** `pnpm audit` reports no esbuild advisory. `pnpm build` still passes.
 - **Rollback:** Revert `pnpm-lock.yaml`.
 
 #### Step 1.3: Replace hardcoded secret in `context-injections.test.ts`
+
 - **Finding:** HIGH Security — Insecure Storage (hardcoded password). `packages/plugins/src/audit/context-injections.test.ts:47`.
 - **Root cause:** `const secret = 'test-secret-key-12345'; // Not a real credential — test fixture only`. The comment is correct, but static analyzers and security auditors cannot distinguish this from a real hardcoded secret. The string matches the "looks like an API key" heuristic.
 - **Recommended fix:** Replace with a placeholder that obviously cannot be a real credential:
+
   ```ts
   // Use a clearly-fake placeholder that doesn't match secret-detection heuristics.
   const TEST_INPUT = 'plain-text-input-for-hash-test';
   ```
+
   Or, if the test specifically needs a secret-shaped string, use a value that's already publicly known to be a test fixture (e.g. the classic `AKIAIOSFODNN7EXAMPLE` from AWS docs) and add a `// nosemgrep` or `// biome-ignore` suppression with a justification.
 - **Verification:** `pnpm lint` no longer flags the line. The test still passes.
 - **Rollback:** Revert the test file.
@@ -383,30 +398,37 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 **Goal:** Address the 14 complexity findings in `packages/providers/`, `packages/core/`, `packages/gateway/`. These are independent and can be parallelized.
 
 #### Step 4.1: `packages/providers/src/universal-client/client.ts` — `buildHeaders` (29)
+
 - **Fix:** Apply Pattern A (dispatch table). See the example in Cross-Cutting Patterns above.
 - **Verification:** `pnpm --filter @agentsy/providers test` passes. `biome lint` no longer flags complexity.
 
 #### Step 4.2: `packages/providers/src/normalizers/mistral.ts` — `normalizeMistralChunk` (14)
+
 - **Fix:** Split into `parseMistralChoice(raw)`, `parseMistralDelta(raw)`, `parseMistralUsage(raw)`. The main function dispatches on the chunk type and delegates.
 - **Verification:** `pnpm --filter @agentsy/providers test` passes.
 
 #### Step 4.3: `packages/providers/src/normalizers/normalizers.test.ts` (1426 NCLOC)
+
 - **Fix:** Split the test file by provider: `normalizers.openai.test.ts`, `normalizers.anthropic.test.ts`, `normalizers.mistral.test.ts`, `normalizers.gemini.test.ts`, etc. Each file < 300 lines.
 - **Verification:** All tests still pass. Coverage unchanged.
 
 #### Step 4.4: `packages/core/src/tool-calls/extract-xml-tool-calls.ts` — `extractBareJsonToolCalls` (18), `parseXmlElement` (13)
+
 - **Fix:** Convert `extractBareJsonToolCalls` into a small state machine: states `idle`, `in-brace`, `in-string`, `escape`. Each state has a handler. Convert `parseXmlElement` into a parser combinator: `sequence(literal('<'), tagName, attrs, literal('>'))`.
 - **Verification:** `pnpm --filter @agentsy/core test` passes.
 
 #### Step 4.5: `packages/core/src/tool-calls/tool-call-accumulator.ts` — `getPendingCallInfo` (24)
+
 - **Fix:** Split into `getPendingName(index)` and `getPendingId(index)`. Each is a simple lookup. The combined `getPendingCallInfo` becomes a 3-line function returning `{ name: getPendingName(index), id: getPendingId(index) }`.
 - **Verification:** Tests pass.
 
 #### Step 4.6: `packages/core/src/structured/repair-state-machine.ts` — `feedCharToStateMachine` (14)
+
 - **Fix:** Apply Pattern C (state-handler map). See Cross-Cutting Patterns above.
 - **Verification:** Tests pass.
 
 #### Step 4.7: `packages/core/src/processor/processor/llm-stream-processor.ts` (1039 NCLOC)
+
 - **Fix:** Split the file by concern:
   - `llm-stream-processor.ts` — the main class, < 400 lines.
   - `processor-stats.ts` — already exists; verify it holds the stats logic.
@@ -419,22 +441,27 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 - **Verification:** `pnpm --filter @agentsy/core test` passes.
 
 #### Step 4.8: `packages/gateway/src/registry/local-providers.ts` — `registerLocalProviders` (16)
+
 - **Fix:** Apply Pattern A. Each provider gets its own `registerXxxProvider(registry)` function. `registerLocalProviders` calls each in sequence.
 - **Verification:** `pnpm --filter @agentsy/gateway test` passes.
 
 #### Step 4.9: `packages/gateway/src/quota/header-parser.ts` — `parseRateLimitHeaders` (17)
+
 - **Fix:** Split into `parseStandardHeaders(headers)`, `parseVendorHeaders(headers)`, `parseRemainingHeaders(headers)`. Or apply Pattern A with a `HEADER_PARSERS: Record<string, (value: string, snapshot: RateLimitHeaderSnapshot) => void>` table.
 - **Verification:** Tests pass.
 
 #### Step 4.10: `packages/gateway/src/switcher.ts` — `getCurrentConfig` (17)
+
 - **Fix:** Extract the model-resolution and provider-resolution logic into two helper functions. `getCurrentConfig` becomes a 4-line function.
 - **Verification:** Tests pass.
 
 #### Step 4.11: `packages/gateway/src/probes/run-probe.ts` — `defaultApiParse` (29)
+
 - **Fix:** Apply Pattern A. Each response shape (OpenAI, Anthropic, Gemini, Mistral, Cohere, etc.) gets its own `parseXxxResponse(response): ParsedUsage | null` function. `defaultApiParse` tries each in order.
 - **Verification:** Tests pass.
 
 #### Step 4.12: `packages/gateway/src/strategies/strategies.ts` — `constructor` (13), `createStrategy` (14)
+
 - **Fix:** For `createStrategy`, apply Pattern A: `STRATEGY_FACTORIES: Record<StrategyName, (options) => RoutingStrategy>`. For the constructor, extract the option-validation into a `validateStrategyOptions(options)` function.
 - **Verification:** Tests pass.
 
@@ -445,50 +472,62 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 **Goal:** Address the 13 complexity findings in the remaining packages.
 
 #### Step 5.1: `packages/memory/src/config.ts` — `loadConfig` (33)
+
 - **Fix:** Split into `loadDbConfig(overrides)`, `loadMcpConfig(overrides)`, `loadHooksConfig(overrides)`, `loadTiersConfig(overrides)`, `loadBudgetConfig(overrides)`, `loadDecayConfig(overrides)`. `loadConfig` becomes a 10-line function that composes them.
 - **Verification:** `pnpm --filter @agentsy/memory test` passes.
 
 #### Step 5.2: `packages/memory/src/sync/turso-manager.ts` — `validateSyncConfig` (15)
+
 - **Fix:** Split into `validateSyncUrl(config)`, `validateSyncAuthToken(config)`, `validateSyncInterval(config)`. Each returns a list of errors. `validateSyncConfig` concatenates.
 - **Verification:** Tests pass.
 
 #### Step 5.3: `packages/memory/src/agentfs/wiki-adapter.ts` — `upsertPage` (24)
+
 - **Fix:** Split into `resolveExistingPage(input)`, `createNewPage(input)`, `updateExistingPage(existing, input)`, `computeDiff(existing, input)`. `upsertPage` orchestrates.
 - **Verification:** Tests pass.
 
 #### Step 5.4: `packages/memory/src/cognitive/learning/observation-extractor.ts` — `extractCorrective` (14)
+
 - **Fix:** Apply Pattern B. Split into 3–4 sub-extractors: `_extractCorrectionSignal(content)`, `_extractTrigger(content)`, `_extractAction(content)`, `_extractOutcome(content)`.
 - **Verification:** Tests pass.
 
 #### Step 5.5: `packages/retrieval/src/search/index.ts` — `vectorSearch` (13), `search` (13)
+
 - **Fix:** Extract the score-computation, filter-application, and result-sorting logic into helpers. Each function becomes a 5-line orchestrator.
 - **Verification:** `pnpm --filter @agentsy/retrieval test` passes.
 
 #### Step 5.6: `packages/retrieval/__tests__/search.test.ts` — anonymous (14)
+
 - **Fix:** The complex `it('should sort results by relevance')` callback should be split into separate `it` cases for each sort scenario, or extracted into a `expectSortedByRelevance(results)` helper.
 - **Verification:** Tests pass.
 
 #### Step 5.7: `packages/ui/src/event-helpers.ts` — anonymous (16)
+
 - **Fix:** Extract the `msg => { ... }` mapping callback into a named `applyEventToMessage(msg, state)` function.
 - **Verification:** `pnpm --filter @agentsy/ui test` passes.
 
 #### Step 5.8: `packages/ui/src/event-sourcing.ts` — `applyConversationEvent` (22)
+
 - **Fix:** Apply Pattern A. `EVENT_HANDLERS: Record<ConversationEventType, (state, event) => UIConversation>`. `applyConversationEvent` dispatches.
 - **Verification:** Tests pass.
 
 #### Step 5.9: `packages/session/src/state/reducers.ts` — `reduceSessionState` (13)
+
 - **Fix:** Apply Pattern A. `ACTION_HANDLERS: Record<ReducerActionType, (state, action) => SessionState>`.
 - **Verification:** Tests pass.
 
 #### Step 5.10: `packages/runtime/src/sandbox/virtual/virtual-sandbox.ts` — anonymous (15)
+
 - **Fix:** Extract the `(msg: WorkerMessage) => { ... }` callback into a named `handleWorkerMessage(msg, ctx)` function.
 - **Verification:** Tests pass.
 
 #### Step 5.11: `packages/vscode/src/test/mocks/vscode.ts` — `constructor` (13)
+
 - **Fix:** The `Uri` mock constructor has 5 optional parameters with branching logic. Split into `parseUriArgs(schemeOrValue?, authority?, path?, query?, fragment?)` that returns a structured object, then the constructor calls it.
 - **Verification:** Tests pass.
 
 #### Step 5.12: `packages/vscode/src/usage-tracking/usage-status-bar.ts` — `updateDisplay` (13)
+
 - **Fix:** Extract the icon-selection, text-formatting, and tooltip-generation logic into 3 helpers.
 - **Verification:** Tests pass.
 
@@ -497,38 +536,47 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 ### Phase 6: CLI / orchestrator / observability / renderers / models / scripts complexity
 
 #### Step 6.1: `packages/cli/src/commands/chat.ts` — `runChatCommand` (15), `createProviderClient` (17)
+
 - **Fix:** For `createProviderClient`, apply Pattern A: `CLIENT_FACTORIES: Record<ProviderId, (config) => ProviderClient>`. For `runChatCommand`, extract the argument-parsing, provider-setup, session-creation, and message-loop into 4 helpers.
 - **Verification:** `pnpm --filter @agentsy/cli test` passes. `pnpm --filter @agentsy/cli test:e2e` passes.
 
 #### Step 6.2: `packages/orchestrator/src/core/engine.test.ts` — `createAgent` (15), `createBaseSpec` (17)
+
 - **Fix:** These are test-fixture builders. Split into `withAgentId(overrides)`, `withCapabilities(overrides)`, etc. — a builder/fluent-API pattern. Or apply defaults via `mergeDeep(defaults, overrides)` and reduce the branching.
 - **Verification:** Tests pass.
 
 #### Step 6.3: `packages/orchestrator/src/agents/registry.test.ts` — `createAgent` (15)
+
 - **Fix:** Same as 6.2.
 - **Verification:** Tests pass.
 
 #### Step 6.4: `packages/observability/src/core/logger.ts` — `log` (13)
+
 - **Fix:** Split into `formatMessage(level, message, attributes)`, `formatError(error)`, `shouldLog(level)`, `writeOutput(formatted)`. The `log` method becomes a 5-line orchestrator.
 - **Verification:** `pnpm --filter @agentsy/observability test` passes.
 
 #### Step 6.5: `packages/renderers/src/ink/ink-stream-renderer.tsx` — `buildRenderOptions` (13)
+
 - **Fix:** Split into `resolveThemeOptions(config)`, `resolveLayoutOptions(config)`, `resolveBehaviorOptions(config)`.
 - **Verification:** Tests pass.
 
 #### Step 6.6: `packages/models/src/index.ts` — `buildRecommendation` (19)
+
 - **Fix:** Split into `scoreModels(inputs)`, `filterByCapabilities(inputs)`, `rankByPreference(inputs)`, `selectTopPick(scored)`. `buildRecommendation` orchestrates.
 - **Verification:** `pnpm --filter @agentsy/models test` passes.
 
 #### Step 6.7: `packages/scripts/src/release.ts` — `main` (15)
+
 - **Fix:** Split into `parseReleaseArgs(argv)`, `detectReleaseTarget(args)`, `runRelease(target)`, `printReleaseSummary(result)`. `main` becomes a 4-line orchestrator.
 - **Verification:** `pnpm --filter @agentsy/scripts test` passes.
 
 #### Step 6.8: `packages/scripts/src/trusted-publish-readiness.ts` — `validateRepositoryMatch` (13)
+
 - **Fix:** Split into `normalizeExpectedRepo(repo)`, `normalizeActualRepo(repo)`, `compareNormalized(expected, actual)`.
 - **Verification:** Tests pass.
 
 #### Step 6.9: `packages/scripts/src/preview-themes.ts` — `displayThemePreview` (17)
+
 - **Fix:** Split into `loadTheme(name)`, `renderThemeToANSI(theme)`, `printThemeComparison(themes)`.
 - **Verification:** Tests pass.
 
@@ -539,17 +587,21 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 ### Phase 8: Documentation and lockfile findings
 
 #### Step 8.1: `AGENTS.md` — fix vague conditional at line 209
+
 - **Finding:** MEDIUM Best-practice — "Vague conditional: 'Should remain pluggable so consumers can substitute backends when needed'."
 - **Fix:** Replace with a concrete commitment, e.g.:
-  ```
+
+  ```text
   - Memory backend must be substitutable via the `MemoryProvider` interface (defined in `packages/memory/src/types.ts`). At least one alternative backend (e.g. Turso, libsql) must be published before v1.0.
   ```
 
 #### Step 8.2: `AGENTS.md` — fix vague conditional at line 211
+
 - **Finding:** MEDIUM Best-practice — "Expose as both Agentsy-native package and standalone MCP server or plugin surface when possible."
 - **Fix:** Replace with: "The memory package must expose both an Agentsy-native API (default export) and an MCP server entry point (`packages/memory/src/mcp/server.ts`) by v0.4.0."
 
 #### Step 8.3: `AGENTS.md` — fix missing `IMPLEMENTATION-PLAN.md` reference at line 1
+
 - **Finding:** HIGH Error-prone — "Referenced file IMPLEMENTATION-PLAN.md not found in workspace."
 - **Root cause:** AGENTS.md line 438 says "actual implementation belongs in `IMPLEMENTATION-PLAN.md` files within packages" — but the static analyzer is looking for a root-level `IMPLEMENTATION-PLAN.md`. The per-package files exist (20 of them), but the root file doesn't.
 - **Fix:** Either:
@@ -558,6 +610,7 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 - **Verification:** The static analyzer no longer flags the reference.
 
 #### Step 8.4: `AGENTS.md` — file-splitting suggestion (SOUL.md, USER.md, TOOLS.md)
+
 - **Finding:** MEDIUM Best-practice — "Only 1 file found with 100+ lines. Consider splitting into modular files for better organization."
 - **Root cause:** AGENTS.md is 478 lines. The analyzer suggests splitting into `SOUL.md` (personality), `USER.md` (user context), `TOOLS.md` (tool documentation). This is a generic agent-instruction template suggestion; it doesn't necessarily fit the agentsy repo's structure.
 - **Fix:** This is a soft suggestion. Two options:
@@ -566,9 +619,11 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 - **Verification:** The analyzer no longer flags AGENTS.md.
 
 #### Step 8.5: `pnpm-lock.yaml` (7636 NCLOC) and `packages/vscode/pnpm-lock.yaml` (2108 NCLOC)
+
 - **Finding:** CRITICAL Code complexity (file NCLOC).
 - **Root cause:** Lockfiles are not code; they're machine-generated manifests. The NCLOC metric is meaningless for them.
 - **Fix:** Add `pnpm-lock.yaml` and `packages/vscode/pnpm-lock.yaml` to the static analyzer's ignore list. For Fallow, add to `.fallowrc.jsonc`:
+
   ```jsonc
   "ignore": [
     "pnpm-lock.yaml",
@@ -576,10 +631,13 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
     "**/pnpm-lock.yaml"
   ]
   ```
+
   For SonarCloud, add to `sonar-project.properties`:
-  ```
+
+  ```text
   sonar.exclusions=**/pnpm-lock.yaml,**/package-lock.json,**/yarn.lock
   ```
+
 - **Verification:** The analyzer no longer reports NCLOC for lockfiles.
 
 ---
@@ -587,6 +645,7 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 ### Phase 9: Additional SonarCloud findings (cognitive complexity, security hotspots, code smells)
 
 **Goal:** Close the 25 additional SonarCloud findings that were not in the original Fallow pass. These span five categories:
+
 - **Cognitive complexity** (5 findings) — functions flagged for *cognitive* (not cyclomatic) complexity, which weights nested branches higher.
 - **Insecure randomness former-hotspots** (8 findings) — `Math.random()` used in non-security-sensitive contexts (test fixtures, jitter, dedup keys). SonarCloud flags these as "former-hotspots" requiring verification that they're not used for security.
 - **Dynamic code execution safety** (2 findings) — `vm.runInContext` of user-supplied code in the sandbox worker and the REPL tool. These need explicit safety verification, not suppression.
@@ -597,8 +656,10 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 #### Step 9.1: Code smells — quick fixes (Phase 9a)
 
 ##### 9.1.1 `packages/cli/src/cli.ts:10` — prefer top-level await
+
 - **Finding:** Medium Code Smell — "Prefer top-level await over an async function `main` call."
 - **Root cause:** The file is:
+
   ```ts
   async function main(): Promise<void> {
     const argv = process.argv.slice(2);
@@ -607,8 +668,10 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
   }
   main();
   ```
+
   `main()` is an async IIFE-equivalent that could be inlined at top level since the file is ESM (package.json has `"type": "module"`).
 - **Recommended fix:**
+
   ```ts
   #!/usr/bin/env node
   import { runCli } from './index.js';
@@ -617,14 +680,17 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
   const exitCode = await runCli(argv);
   process.exit(exitCode);
   ```
+
   Top-level await is supported in ESM (target `es2022` per tsconfig). This removes the wrapper function entirely.
 - **Verification:** `pnpm --filter @agentsy/cli build && node packages/cli/dist/cli.js --help` still works. `pnpm --filter @agentsy/cli test` passes.
 - **Rollback:** Revert the file.
 
 ##### 9.1.2 `packages/memory/src/retrieval/rag/sanitization.ts:3` — simplify regex
+
 - **Finding:** Major Code Smell — "Simplify this regular expression to reduce its complexity from 24 to the 20 allowed."
 - **Root cause:** `const SECRET_PATTERN = /(sk-[a-z0-9]{20,}|sk_[a-z0-9_-]{8,}|api[_-]?key\s*[=:]\s*\S+|bearer\s+[a-z0-9._-]{10,})/giu;` — SonarCloud scores regex complexity at 24 due to the 4 alternations with quantifiers.
 - **Recommended fix:** Split into a composed pattern using an array join, or factor common prefixes:
+
   ```ts
   const SECRET_ALTERNATIVES = [
     'sk-[a-z0-9]{20,}',
@@ -634,15 +700,18 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
   ];
   const SECRET_PATTERN = new RegExp(`(${SECRET_ALTERNATIVES.join('|')})`, 'giu');
   ```
+
   This reduces the *literal* regex complexity score (the array is data, not a regex literal). Functionally equivalent.
 - **Alternative:** Keep the regex but add a `// nosemgrep: sonar-regex-complexity` suppression with justification: `// 4-way alternation is intentional; splitting reduces readability.`
 - **Verification:** `pnpm --filter @agentsy/memory test` passes. The redaction behavior is unchanged (test fixtures cover each alternative).
 - **Rollback:** Revert the file.
 
 ##### 9.1.3 `packages/renderers/src/ink/components/chat/transcript.tsx:78` — extract nested ternary
+
 - **Finding:** Major Code Smell — "Extract this nested ternary operation into an independent statement."
 - **Root cause:** Line 78: `{...(cursorSymbol === undefined ? {} : { symbol: cursorSymbol })}` — this is a conditional spread, not technically a nested ternary, but SonarCloud flags the ternary-inside-spread pattern. Similar patterns appear at lines 92 and 93 (`{...(modelName === undefined ? {} : { modelName })}` and `{...(elapsedSec === undefined ? {} : { elapsedSec })}`).
 - **Recommended fix:** Extract a helper:
+
   ```tsx
   function optionalProp<T>(value: T | undefined, key: string): Record<string, T> {
     return value === undefined ? {} : { [key]: value };
@@ -654,7 +723,9 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
     {...optionalProp(cursorSymbol, 'symbol')}
   />
   ```
+
   Or, if the `StreamingCursor` and `StatusFooter` components accept `undefined` props directly (which they typically do in React), just pass the prop unconditionally:
+
   ```tsx
   <StreamingCursor
     color={palette.assistantAccent}
@@ -662,21 +733,26 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
     symbol={cursorSymbol}
   />
   ```
+
   This is cleaner and avoids the conditional-spread entirely. Verify the component handles `undefined`.
 - **Verification:** `pnpm --filter @agentsy/renderers test` passes. Visual inspection of the rendered output.
 - **Rollback:** Revert the file.
 
 ##### 9.1.4 `packages/renderers/src/ink/create-ink-renderer.ts:6` — use default import
+
 - **Finding:** Minor Code Smell — "Prefer using the default import over named import."
 - **Root cause:** Line 6: `import { default as InkStreamRenderer } from './ink-stream-renderer.tsx';` — the `{ default as X }` syntax is discouraged; `import InkStreamRenderer from '...'` is the canonical form.
 - **Recommended fix:**
+
   ```ts
   import InkStreamRenderer from './ink-stream-renderer.tsx';
   ```
+
 - **Verification:** `pnpm --filter @agentsy/renderers build` passes.
 - **Rollback:** Revert the line.
 
 ##### 9.1.5 `packages/runtime/src/index.test.ts` — expected an error object to be thrown
+
 - **Finding:** Medium Code Smell — "Expected an error object to be thrown."
 - **Root cause:** The test file has `await expect(...).rejects.toThrow('Runtime spawn depth exceeded maxDepth')` (and 2 more similar). SonarCloud's rule `javascript:S5958` wants `toThrow` to receive an `Error` object (or a regex / Error subclass) rather than a plain string, because string matching against `error.message` can pass for non-Error throws.
 - **Recommended fix:** Two options:
@@ -692,9 +768,11 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 These are functions flagged for *cognitive* complexity (which weights nesting higher than cyclomatic). Apply the same patterns (A: dispatch table, B: validator sequence, C: state machine) but with extra attention to nesting depth.
 
 ##### 9.2.1 `packages/memory/src/cognitive/awaken.ts:102` — `applyDecayMoves` (cognitive 28 → target ≤ 15)
+
 - **Finding:** Critical Code Smell — "Refactor this function to reduce its Cognitive Complexity from 28 to the 15 allowed."
 - **Root cause:** `applyDecayMoves` has a nested structure: `for result → if !currentTier → continue → if promote → if nextIdx < length → if nextTier → promote` (4 levels of nesting inside a loop). The `else if demote` branch mirrors the promote branch.
 - **Recommended fix:** Extract two helpers, one per action:
+
   ```ts
   function applyPromote(result: DecayedItem, tiers: AwakenDeps['tiers']): void {
     const currentTier = tiers[result.tier];
@@ -732,14 +810,17 @@ These are functions flagged for *cognitive* complexity (which weights nesting hi
     }
   }
   ```
+
   Each helper has cognitive complexity ≤ 5. The main function is a 3-line loop.
 - **Verification:** `pnpm --filter @agentsy/memory test` passes. The `awaken.test.ts` fixtures (including the 30-item stress test) pass unchanged.
 - **Rollback:** Revert the file.
 
 ##### 9.2.2 `packages/memory/src/cognitive/learning/dialectic-resolver.ts:142` — `detectContradictionsInternal` (cognitive 17 → target ≤ 15)
+
 - **Finding:** Critical Code Smell.
 - **Root cause:** Nested loop: `for i → if visited → continue → for j → if visited → continue → if isContradiction → ...`. The inner loop has 3 levels of nesting.
 - **Recommended fix:** Extract the inner loop into a helper:
+
   ```ts
   function findContradictingObservations(
     observations: Observation[],
@@ -771,13 +852,16 @@ These are functions flagged for *cognitive* complexity (which weights nesting hi
     return groups;
   }
   ```
+
 - **Verification:** `pnpm --filter @agentsy/memory test` passes.
 - **Rollback:** Revert the file.
 
 ##### 9.2.3 `packages/scripts/src/release-shared.ts:346` — `waitForWorkflow` (cognitive 19 → target ≤ 15)
+
 - **Finding:** Critical Code Smell.
 - **Root cause:** A polling loop with 5 branches: `if !run → if autoDispatch && !triggered → dispatch; else → wait` / `else if run.status !== completed → update spinner` / `else if conclusion === success → return` / `else if conclusion === cancelled → re-dispatch` / `else → fail`. The nesting comes from the `if (!run)` branch having two sub-branches.
 - **Recommended fix:** Extract a `handlePollResult(run, ctx)` helper that takes the run and a context object (`{ triggered, cancelledRunIds, spinner, name }`) and returns one of `{ kind: 'continue' }`, `{ kind: 'success' }`, `{ kind: 'fail', message }`, or `{ kind: 'redispatch' }`. The main loop becomes:
+
   ```ts
   while (Date.now() < deadline) {
     const run = await fetchLatestRun(octokit, workflow.id, owner, repo, headSha, branch, cancelledRunIds);
@@ -788,14 +872,17 @@ These are functions flagged for *cognitive* complexity (which weights nesting hi
     await sleep(pollMs);
   }
   ```
+
   Each helper has cognitive complexity ≤ 5.
 - **Verification:** `pnpm --filter @agentsy/scripts test` passes. Test with a mock Octokit that returns various run states.
 - **Rollback:** Revert the file.
 
 ##### 9.2.4 `packages/scripts/src/write-dist-package.ts` — `main` (cognitive 18 → target ≤ 15)
+
 - **Finding:** Critical Code Smell.
 - **Root cause:** The `main` function (line 33) reads `package.json`, destructures 11 fields with conditional inclusion, calls `rewriteDistExports`, builds the dist package object, and writes it. The cognitive load comes from the many conditional fields (`bugs?`, `repository?`, `author?`, `private?`, `publishConfig?`).
 - **Recommended fix:** Extract a `buildDistPackage(pkg, distExports)` helper that takes the parsed root package.json and the rewritten exports, and returns the dist package object. The `main` function becomes:
+
   ```ts
   async function main() {
     const packagePath = process.argv[2] ? resolve(process.argv[2]) : ROOT;
@@ -805,6 +892,7 @@ These are functions flagged for *cognitive* complexity (which weights nesting hi
     await writeDistPackage(packagePath, distPkg);
   }
   ```
+
   `buildDistPackage` is a pure function with no nesting (just conditional spreads).
 - **Verification:** `pnpm --filter @agentsy/scripts test` passes. Run `write-dist-package` against a sample package and verify the output is byte-identical.
 - **Rollback:** Revert the file.
@@ -816,29 +904,36 @@ SonarCloud flags `Math.random()` as a "former-hotspot" — it's not necessarily 
 The general rule: if `Math.random()` is used for **test fixtures, jitter, dedup keys, or non-cryptographic IDs**, suppress with a justification. If it's used for **tokens, nonces, IDs that appear in URLs/audit logs, or anything that could be a security boundary**, replace with `crypto`.
 
 ##### 9.3.1 `packages/gateway/src/strategies/strategies.ts` — weighted random selection
+
 - **Finding:** "Make sure that using this pseudorandom number generator is safe here."
 - **Root cause:** `let target = Math.random() * total;` in a weighted-random load balancer. This selects which provider replica receives a request.
 - **Assessment:** **Safe.** Weighted random selection for load balancing is not a security-sensitive operation. An attacker who can predict the RNG cannot gain anything — they'd still get *some* replica, and the selection is observable anyway.
 - **Recommended fix:** Add a suppression comment:
+
   ```ts
   // nosemgrep: insecure-randomness -- Math.random() is used for weighted-random load balancing.
   // Prediction of the selected replica confers no advantage: the selection is observable
   // and any eligible replica is authorized to handle the request.
   let target = Math.random() * total;
   ```
+
 - **Verification:** SonarCloud marks the hotspot as "Safe" / "Acknowledged".
 - **Rollback:** Revert the comment.
 
 ##### 9.3.2 `packages/memory/src/agentfs/tier-adapter.test.ts` — test ID generation
+
 - **Finding:** Insecure randomness hotspot.
 - **Root cause:** `id: \`test-${Math.random().toString(36).slice(2, 10)}\`` — generates a random suffix for test fixture IDs.
 - **Assessment:** **Safe.** Test fixtures don't need cryptographic randomness.
 - **Recommended fix:** Either suppress:
+
   ```ts
   // nosemgrep: insecure-randomness-test-id -- test fixture only; no security sensitivity.
   id: `test-${Math.random().toString(36).slice(2, 10)}`,
   ```
+
   Or replace with a deterministic counter (better for test reproducibility):
+
   ```ts
   let testIdCounter = 0;
   function makeItem(overrides: Partial<MemoryItem> = {}): MemoryItem {
@@ -848,11 +943,13 @@ The general rule: if `Math.random()` is used for **test fixtures, jitter, dedup 
     };
   }
   ```
+
   The deterministic counter is preferred — it makes test failures reproducible.
 - **Verification:** `pnpm --filter @agentsy/memory test` passes.
 - **Rollback:** Revert the change.
 
 ##### 9.3.3 `packages/memory/src/cognitive/awaken.test.ts` — importance randomization
+
 - **Finding:** Insecure randomness hotspot.
 - **Root cause:** `importance: 0.5 + Math.random() * 0.5` — randomizes importance in a stress-test fixture.
 - **Assessment:** **Safe.** Test fixture.
@@ -860,46 +957,56 @@ The general rule: if `Math.random()` is used for **test fixtures, jitter, dedup 
 - **Verification:** Tests pass.
 
 ##### 9.3.4 `packages/memory/src/coordination/scheduler.test.ts` — scheduling jitter
+
 - **Finding:** Insecure randomness hotspot.
 - **Root cause:** `scheduler.schedule(id, 100 + Math.random() * 50, fn);` — randomized scheduling delay in a test.
 - **Assessment:** **Safe.** Already has a `nosemgrep: insecure-randomness-test-jitter` comment with justification. SonarCloud may not recognize the `nosemgrep` suppression syntax — check if SonarCloud has its own suppression comment format.
 - **Recommended fix:** If SonarCloud doesn't honor `nosemgrep`, add a SonarCloud-specific suppression:
+
   ```ts
   // nosemgrep: insecure-randomness-test-jitter
   // sonar: insecure-randomness — Math.random() is used only for scheduling jitter in unit tests;
   // no security-sensitive operation depends on this value.
   scheduler.schedule(id, 100 + Math.random() * 50, fn);
   ```
+
   Or use a fixed delay (`100`) and remove the randomization if the test doesn't require it.
 - **Verification:** SonarCloud marks the hotspot as acknowledged.
 
 ##### 9.3.5 `packages/memory/src/retrieval/injection.ts:78` — dedup key generation
+
 - **Finding:** Insecure randomness hotspot.
-- **Root cause:** `const tag = tagMatch?.[1] ?? \`__raw__:${Math.random().toString(36).slice(2)}\`;` — generates a random tag for XML blocks that don't have a parseable tag.
+- **Root cause:** `const tag = tagMatch?.[1] ?? \`**raw**:${Math.random().toString(36).slice(2)}\`;` — generates a random tag for XML blocks that don't have a parseable tag.
 - **Assessment:** **Safe but should be deterministic.** The random tag is used as a dedup key. If two raw blocks get different random tags, they won't be deduped — which is the intent (each raw block is unique). But using a hash of the block content would be more deterministic and avoid the RNG entirely.
 - **Recommended fix:** Replace with a content-based hash:
+
   ```ts
   import { createHash } from 'node:crypto';
   const tag = tagMatch?.[1] ?? `__raw__:${createHash('sha1').update(block).digest('hex').slice(0, 8)}`;
   ```
+
   This is deterministic, doesn't use RNG, and dedupes identical raw blocks (which is probably the desired behavior).
 - **Verification:** `pnpm --filter @agentsy/memory test` passes. Check that the dedup behavior is correct for identical raw blocks.
 - **Rollback:** Revert the change.
 
 ##### 9.3.6 `packages/orchestrator/src/recovery/policy.ts:335` — backoff jitter
+
 - **Finding:** Insecure randomness hotspot.
 - **Root cause:** `const jitter = delay * config.jitterFraction * (Math.random() - 0.5);` — adds random jitter to retry backoff.
 - **Assessment:** **Safe.** Retry jitter is a standard pattern to prevent thundering-herd retries. Predictability of the jitter confers no advantage — an attacker who can predict the jitter can only time their retry slightly differently.
 - **Recommended fix:** Suppress with justification:
+
   ```ts
   // nosemgrep: insecure-randomness -- Math.random() is used for retry-backoff jitter.
   // Predictability of jitter confers no advantage; jitter exists to prevent thundering-herd
   // retries, not to provide cryptographic randomness.
   const jitter = delay * config.jitterFraction * (Math.random() - 0.5);
   ```
+
 - **Verification:** SonarCloud acknowledges the hotspot.
 
 ##### 9.3.7 `packages/memory/src/agentfs/tier-adapter.test.ts` — `fp-${now}` fingerprint (line ~28)
+
 - **Finding:** Insecure randomness hotspot (same file as 9.3.2, different line).
 - **Root cause:** `fingerprint: \`fp-${now}\`` where `now = performance.now()`. Not actually `Math.random()`, but SonarCloud may flag the related `Math.random()` usage in `makeItem`.
 - **Assessment:** **Safe.** Test fixture.
@@ -907,6 +1014,7 @@ The general rule: if `Math.random()` is used for **test fixtures, jitter, dedup 
 - **Verification:** Tests pass.
 
 ##### 9.3.8 Cross-cutting: replace `Math.random()` in production code where IDs are exposed
+
 - **Note:** Beyond the flagged findings, audit all `Math.random()` usage in `packages/**` (excluding `*.test.ts`). Any usage that generates IDs appearing in URLs, audit logs, or external APIs should use `crypto.randomUUID()`. The CLI's `Math.random().toString(36).slice(2, 8)` pattern for job/agent/schedule IDs (flagged in the daemon review) is the most prominent example.
 - **Recommended fix:** `rg -n "Math\.random\(\)" packages/ --glob '!*.test.ts'` and audit each hit.
 - **Verification:** No `Math.random()` in production code paths that generate externally-visible identifiers.
@@ -916,6 +1024,7 @@ The general rule: if `Math.random()` is used for **test fixtures, jitter, dedup 
 Two findings flag `vm.runInContext` of user-supplied code. These need explicit safety review, not blind suppression.
 
 ##### 9.4.1 `packages/runtime/src/sandbox/virtual/sandbox-worker.ts:52` — `runInContext`
+
 - **Finding:** "Make sure that this dynamic injection or execution of code is safe."
 - **Root cause:** `const result: unknown = runInContext(code, context, { displayErrors: true, timeout });` — executes user-provided `code` inside a `vm.Context`.
 - **Safety analysis:** The code already has:
@@ -940,6 +1049,7 @@ Two findings flag `vm.runInContext` of user-supplied code. These need explicit s
 - **Rollback:** Revert comment changes; keep the hardening tests.
 
 ##### 9.4.2 `packages/tools/src/tools/repl/index.ts:28` — `script.runInContext`
+
 - **Finding:** "Make sure that this dynamic injection or execution of code is safe."
 - **Root cause:** The `repl_execute` tool executes arbitrary JavaScript via `vm.Script` + `runInContext`. The tool is annotated `destructiveHint: true, requiresApproval: true` — so it requires human approval before running.
 - **Safety analysis:** Less hardened than `sandbox-worker.ts`:
@@ -949,6 +1059,7 @@ Two findings flag `vm.runInContext` of user-supplied code. These need explicit s
   - **But:** the `vm` escape caveats still apply.
 - **Recommended fix:**
   1. **Route through `sandbox-worker.ts`:** The REPL tool should use the worker-based sandbox (9.4.1) instead of running inline. This gives the `worker.terminate()` fallback. The tool becomes:
+
      ```ts
      handler: async input => {
        const code = ...;
@@ -957,6 +1068,7 @@ Two findings flag `vm.runInContext` of user-supplied code. These need explicit s
        return { ok: true, data: { result: String(result), code } };
      }
      ```
+
   2. **Enforce approval:** The tool already declares `requiresApproval: true`. Verify the runtime's approval hook (Phase 1 of the daemon review) actually enforces this. If the approval gate is bypassed, the tool can execute arbitrary code with no human review.
   3. **Audit log:** Every `repl_execute` invocation should be audit-logged with the code, the caller, the timestamp, and the approval decision.
 - **Verification:** Add a test that verifies `repl_execute` routes through the worker sandbox. Add a test that the approval gate blocks unapproved invocations.
@@ -967,10 +1079,12 @@ Two findings flag `vm.runInContext` of user-supplied code. These need explicit s
 Three findings flag `spawnSync`/`execSync` calls that inherit `process.env.PATH`. The risk: if `PATH` includes a writable directory (e.g. `~/.local/bin`, `./node_modules/.bin`), an attacker who can write to that directory can hijack the spawned command.
 
 ##### 9.5.1 `scripts/postinstall-aft.mjs:14, 23` — `execSync('npx ...')`
+
 - **Finding:** "Make sure the 'PATH' variable only contains fixed, unwriteable directories."
 - **Root cause:** `execSync('npx --yes @cortexkit/aft@latest doctor', { env: { ...process.env, CI: 'true' } })` — spreads `process.env` (including `PATH`) into the child. `npx` then resolves `node` and `@cortexkit/aft` via `PATH`.
 - **Risk assessment:** Medium. Postinstall scripts run during `pnpm install`. If an attacker can plant a malicious `node` or `npx` binary on the user's `PATH` (e.g. via a compromised `~/.local/bin`), they get code execution during install. However, the user's `PATH` is their own — they've trusted it.
 - **Recommended fix:** Adopt the `withSafePathEnv()` pattern from `release-git.ts`:
+
   ```js
   import { execSync } from 'node:child_process';
   import { safePathEnv } from '../packages/scripts/src/release-git.ts';
@@ -983,12 +1097,14 @@ Three findings flag `spawnSync`/`execSync` calls that inherit `process.env.PATH`
     });
   }
   ```
+
   Where `safePathEnv()` returns `process.env` with `PATH` restricted to `/usr/bin:/bin:/usr/sbin:/sbin` (or platform equivalent). Extract `safePathEnv` to a shared utility since it's used in 3 places.
 - **Alternative:** Use `pnpm exec` instead of `npx` — pnpm resolves packages from the project's `node_modules` and doesn't depend on `PATH`.
 - **Verification:** `pnpm install` still resolves AFT. Test with a poisoned `PATH` (a directory containing a malicious `node` script) and verify the malicious script isn't invoked.
 - **Rollback:** Revert to `process.env`.
 
 ##### 9.5.2 `packages/scripts/src/release-git.ts:13, 26` — `spawnSync('git', ...)`, `spawnSync('which'/'where', ...)`
+
 - **Finding:** "Make sure the 'PATH' variable only contains fixed, unwriteable directories."
 - **Root cause:** Already uses `withSafePathEnv()` (line 4: `const SAFE_PATH = ['/usr/bin', '/bin', '/usr/sbin', '/sbin'].join(':');`). Has `nosemgrep: command-injection-path` suppressions with justification comments.
 - **Assessment:** **Already mitigated.** SonarCloud may not recognize the `nosemgrep` suppression, or the rule wants an explicit SonarCloud suppression.
@@ -1000,6 +1116,7 @@ Three findings flag `spawnSync`/`execSync` calls that inherit `process.env.PATH`
 - **Rollback:** Revert.
 
 ##### 9.5.3 Cross-cutting: extract `safePathEnv()` utility and audit all `spawnSync`/`execSync`
+
 - **Note:** Beyond the 3 flagged findings, audit all `spawnSync`/`execSync`/`spawn` calls in `packages/**` and `scripts/**`. Any that pass `process.env` (or don't set `env` at all, which inherits `process.env`) should use `safePathEnv()`.
 - **Recommended fix:** `rg -n "spawnSync\(|execSync\(|spawn\(" packages/ scripts/ --glob '!*.test.ts'` and audit each hit. Extract `safePathEnv()` to `packages/shared/src/safe-path.ts`.
 - **Verification:** All `spawn*` calls in production code use `safePathEnv()` or have a documented justification.
@@ -1008,11 +1125,13 @@ Three findings flag `spawnSync`/`execSync` calls that inherit `process.env.PATH`
 
 Five findings flag test files that use `/tmp/...` paths. `/tmp` is publicly writable on Unix, so a symlink attack or race condition could let another user interfere with the test.
 
-##### 9.6.1 `packages/cli/src/commands/guardrails.test.ts:291, 304, 320` — `/tmp/test-policy.yaml` etc.
+##### 9.6.1 `packages/cli/src/commands/guardrails.test.ts:291, 304, 320` — `/tmp/test-policy.yaml` etc
+
 - **Finding:** 3× Critical Vulnerability — "Make sure publicly writable directories are used safely here."
 - **Root cause:** The test passes `/tmp/test-policy.yaml`, `/tmp/test-policy.json`, `/tmp/bad-policy.yaml` as the policy path argument. These are *mocked* paths — `existsSync` and `readFile` are vi-mocked, so no actual file IO happens. But SonarCloud flags the literal `/tmp/...` string.
 - **Assessment:** **False positive (with caveats).** The test mocks the FS, so no actual `/tmp` access occurs. But the pattern is fragile: if the mocks are ever removed, the test would write to `/tmp` (publicly writable) and be vulnerable to symlink attacks.
 - **Recommended fix:** Use `os.tmpdir()` + a per-test unique subdirectory, or use a mocked path that's clearly fake:
+
   ```ts
   import { tmpdir } from 'node:os';
   import { join } from 'node:path';
@@ -1020,31 +1139,40 @@ Five findings flag test files that use `/tmp/...` paths. `/tmp` is publicly writ
   const TEST_POLICY_DIR = join(tmpdir(), `agentsy-guardrails-test-${process.pid}`);
   const TEST_POLICY_PATH = join(TEST_POLICY_DIR, 'test-policy.yaml');
   ```
+
   Or, since the FS is mocked, use a clearly-fake path that doesn't match any real directory:
+
   ```ts
   const TEST_POLICY_PATH = '/nonexistent-test-path/policy.yaml';
   ```
+
   The second approach is simpler and sufficient since the FS is mocked. Verify the mocks cover all `existsSync`/`readFile` calls.
 - **Verification:** `pnpm --filter @agentsy/cli test` passes. SonarCloud no longer flags the lines.
 - **Rollback:** Revert the paths.
 
 ##### 9.6.2 `packages/runtime/src/hooks/guardrail-hooks.test.ts:151, 153` — `/tmp/test` in tool-call args
+
 - **Finding:** 2× Critical Vulnerability.
 - **Root cause:** Lines 151, 153: `preToolCallEvent('write_file', { path: '/tmp/test' })` — the test passes a tool-call event with `path: '/tmp/test'`. This is a *test fixture* representing what a tool call might look like; no actual file write happens.
 - **Assessment:** **False positive.** The test doesn't write to `/tmp/test` — it passes the path as a string to the guardrail hook, which stringifies it. SonarCloud flags the literal `/tmp/...`.
 - **Recommended fix:** Use a clearly-fake path:
+
   ```ts
   await hook.handler(preToolCallEvent('write_file', { path: '/fake-path/test' }));
   ```
+
   Or use `os.tmpdir()` if the test needs a real path:
+
   ```ts
   import { tmpdir } from 'node:os';
   await hook.handler(preToolCallEvent('write_file', { path: join(tmpdir(), 'agentsy-test-hook') }));
   ```
+
 - **Verification:** `pnpm --filter @agentsy/runtime test` passes. SonarCloud no longer flags the lines.
 - **Rollback:** Revert.
 
 ##### 9.6.3 Cross-cutting: audit all test files for `/tmp/` literals
+
 - **Note:** Beyond the 5 flagged findings, `rg -n '"/tmp/' packages/ --glob '*.test.ts'` to find other test files using `/tmp` literals. Replace with `os.tmpdir()` or clearly-fake paths.
 - **Recommended fix:** Run the grep above and replace each hit.
 - **Verification:** No `/tmp/` literals in test files (or each is justified with a comment).
@@ -1058,6 +1186,7 @@ Five findings flag test files that use `/tmp/...` paths. `/tmp` is publicly writ
 **Why this is a later phase:** Unlike the earlier phases (which fix scanner findings with clear mechanical fixes), Phase 11 findings require maintainers to make product decisions: "Is this export dead code that should be removed, or is it a public API that hasn't been consumed yet?" "Is this duplicated code that should be extracted, or is the duplication intentional (two providers with similar shapes)?" These decisions require domain knowledge and shouldn't be rushed.
 
 **Fallow output summary (from the user's provided scan):**
+
 - 39 unused files
 - 22 unused exports (in files already reported as unused + 6 more in used files)
 - 4 unused type exports
@@ -1100,9 +1229,11 @@ Five findings flag test files that use `/tmp/...` paths. `/tmp` is publicly writ
 - **Findings:** `@octokit/rest`, `ora`, `zx` are imported in code but missing from `package.json`.
 - **Root cause:** These packages are used in `scripts/src/release-shared.ts` (and related) but aren't declared in `scripts/package.json` (or `packages/scripts/package.json`). They're resolved via hoisted `node_modules` but aren't declared dependencies, which breaks in strict environments (pnpm strict mode, Docker, CI with `--frozen-lockfile`).
 - **Recommended fix:** Add the missing dependencies to the correct `package.json`:
+
   ```bash
   pnpm --filter @agentsy/scripts add @octokit/rest ora zx
   ```
+
   Verify the versions match what's already in the lockfile.
 - **Verification:** `pnpm install --frozen-lockfile` succeeds. `pnpm --filter @agentsy/scripts build` passes.
 - **Rollback:** Remove the dependencies.
@@ -1404,6 +1535,7 @@ For each finding, the file:line, current complexity (where applicable), and the 
 ## Verification Checklist
 
 ### Phase 1 — Security
+
 - [ ] `release.yml` no longer accepts an unvalidated `tag` input (or `workflow_dispatch` is removed entirely)
 - [ ] `esbuild` is at `^0.28.1` in `pnpm-lock.yaml`; `pnpm audit` reports no esbuild advisory
 - [ ] `context-injections.test.ts` no longer contains a secret-shaped hardcoded string
@@ -1411,6 +1543,7 @@ For each finding, the file:line, current complexity (where applicable), and the 
 - [ ] `pnpm test` passes
 
 ### Phase 4 — Provider / gateway / core
+
 - [ ] `buildHeaders` uses a dispatch table; complexity ≤ 5
 - [ ] `normalizeMistralChunk` split into 3 helpers; complexity ≤ 5
 - [ ] `normalizers.test.ts` split by provider; each file < 300 lines
@@ -1428,6 +1561,7 @@ For each finding, the file:line, current complexity (where applicable), and the 
 - [ ] `pnpm --filter @agentsy/gateway test` passes
 
 ### Phase 5 — Memory / retrieval / UI / session / runtime / vscode
+
 - [ ] `loadConfig` split into 6 helpers; complexity ≤ 8
 - [ ] `validateSyncConfig` split; complexity ≤ 8
 - [ ] `upsertPage` split; complexity ≤ 8
@@ -1443,6 +1577,7 @@ For each finding, the file:line, current complexity (where applicable), and the 
 - [ ] All affected packages' tests pass
 
 ### Phase 6 — CLI / orchestrator / observability / renderers / models / scripts
+
 - [ ] `runChatCommand` and `createProviderClient` complexity ≤ 8
 - [ ] `engine.test.ts` and `registry.test.ts` fixture builders refactored
 - [ ] `logger.ts` `log` split; complexity ≤ 8
@@ -1454,6 +1589,7 @@ For each finding, the file:line, current complexity (where applicable), and the 
 - [ ] All affected packages' tests pass
 
 ### Phase 8 — Documentation and lockfile
+
 - [ ] `AGENTS.md` line 209 has a concrete commitment
 - [ ] `AGENTS.md` line 211 has a concrete commitment
 - [ ] Root `IMPLEMENTATION-PLAN.md` exists (or AGENTS.md is updated to reference per-package files explicitly)
@@ -1462,6 +1598,7 @@ For each finding, the file:line, current complexity (where applicable), and the 
 - [ ] `sonar-project.properties` excludes lockfiles
 
 ### Phase 9a — Code smells (quick fixes)
+
 - [ ] `packages/cli/src/cli.ts` uses top-level await (no `async function main()` wrapper)
 - [ ] `packages/memory/src/retrieval/rag/sanitization.ts` regex complexity ≤ 20 (or suppressed with justification)
 - [ ] `packages/renderers/src/ink/components/chat/transcript.tsx` has no nested ternary in conditional spreads (extracted helper or unconditional prop passing)
@@ -1469,6 +1606,7 @@ For each finding, the file:line, current complexity (where applicable), and the 
 - [ ] `packages/runtime/src/index.test.ts` uses `toThrow(/regex/)` or `toThrow(ErrorSubclass)` instead of `toThrow('string')`
 
 ### Phase 9b — Cognitive complexity
+
 - [ ] `applyDecayMoves` in `packages/memory/src/cognitive/awaken.ts` has cognitive complexity ≤ 15 (target ≤ 8 via dispatch table)
 - [ ] `detectContradictionsInternal` in `packages/memory/src/cognitive/learning/dialectic-resolver.ts` has cognitive complexity ≤ 15
 - [ ] `waitForWorkflow` in `packages/scripts/src/release-shared.ts` has cognitive complexity ≤ 15
@@ -1476,6 +1614,7 @@ For each finding, the file:line, current complexity (where applicable), and the 
 - [ ] All affected packages' tests pass: `pnpm --filter @agentsy/memory test`, `pnpm --filter @agentsy/scripts test`
 
 ### Phase 9c — Insecure randomness former-hotspots
+
 - [ ] `packages/gateway/src/strategies/strategies.ts` `Math.random()` suppressed with justification OR replaced
 - [ ] `packages/memory/src/agentfs/tier-adapter.test.ts` `Math.random()` suppressed or replaced with deterministic counter
 - [ ] `packages/memory/src/cognitive/awaken.test.ts` `Math.random()` suppressed or seeded
@@ -1486,6 +1625,7 @@ For each finding, the file:line, current complexity (where applicable), and the 
 - [ ] Cross-cutting audit: `rg -n "Math\.random\(\)" packages/ --glob '!*.test.ts'` returns no hits in security-sensitive code paths
 
 ### Phase 9d — Dynamic code execution safety
+
 - [ ] `packages/runtime/src/sandbox/virtual/sandbox-worker.ts` has documented threat model in `README.md`
 - [ ] `sandbox-worker.ts` context excludes `Buffer` (or has documented justification for inclusion)
 - [ ] `sandbox-worker.ts` uses `microtaskMode: 'afterEvaluate'`
@@ -1497,6 +1637,7 @@ For each finding, the file:line, current complexity (where applicable), and the 
 - [ ] Documented plan to migrate to `isolated-vm` for truly untrusted code (long-term)
 
 ### Phase 9e — PATH variable hardening
+
 - [ ] `safePathEnv()` utility exists in `packages/shared/src/safe-path.ts` (or `packages/scripts/src/safe-path.ts`)
 - [ ] `safePathEnv()` handles Windows (`C:\Windows\System32`, etc.) not just Unix
 - [ ] `scripts/postinstall-aft.mjs` uses `safePathEnv()` instead of `process.env`
@@ -1505,12 +1646,14 @@ For each finding, the file:line, current complexity (where applicable), and the 
 - [ ] Cross-cutting audit: `rg -n "spawnSync\(|execSync\(|spawn\(" packages/ scripts/ --glob '!*.test.ts'` — all hits use `safePathEnv()` or have documented justification
 
 ### Phase 9f — Public writable directory test findings
+
 - [ ] `packages/cli/src/commands/guardrails.test.ts` uses `os.tmpdir()` or clearly-fake paths instead of `/tmp/...` literals
 - [ ] `packages/runtime/src/hooks/guardrail-hooks.test.ts` uses `os.tmpdir()` or clearly-fake paths
 - [ ] Cross-cutting audit: `rg -n '"/tmp/' packages/ --glob '*.test.ts'` returns no unjustified hits
 - [ ] All affected packages' tests pass: `pnpm --filter @agentsy/cli test`, `pnpm --filter @agentsy/runtime test`
 
 ### Phase 10 — Scanner configuration (execute first)
+
 - [ ] `.fallowrc.jsonc` has top-level `ignorePatterns` array including `.agents/**` (and standard build artifacts: `plan/**`, `docs/**`, `.github/**`, `coverage/**`, `**/dist/**`, `**/node_modules/**`, `**/*.md`, `**/pnpm-lock.yaml`)
 - [ ] `pnpm fallow` reports 0 findings for `.agents/**`
 - [ ] Fallow finding count dropped significantly (~40 `.agents/` findings eliminated)
@@ -1521,6 +1664,7 @@ For each finding, the file:line, current complexity (where applicable), and the 
 - [ ] No phases in this plan reference any file under `.agents/`
 
 ### Phase 11 — Dead code, duplication, remaining complexity (later phase)
+
 - [ ] 5 stale `fallow-ignore` suppression comments removed; `pnpm fallow` reports 0 stale suppressions
 - [ ] 4 unresolved imports fixed (`../specs/types.js` paths corrected, cross-package relative import replaced with workspace import)
 - [ ] 3 unlisted dependencies (`@octokit/rest`, `ora`, `zx`) added to the correct `package.json`
@@ -1539,6 +1683,7 @@ For each finding, the file:line, current complexity (where applicable), and the 
 - [ ] All affected packages' tests pass after each sub-step
 
 ### Cross-cutting
+
 - [ ] `pnpm lint` passes (no complexity findings)
 - [ ] `pnpm check-types` passes
 - [ ] `pnpm test` passes
