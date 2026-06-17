@@ -350,8 +350,7 @@ describe('Scheduler', () => {
 
       // Schedule all jobs
       for (const { id, fn } of jobs) {
-        // nosemgrep: insecure-randomness-test-jitter
-        // Math.random() is used only for scheduling jitter in unit tests;
+        // nosemgrep: insecure-randomness -- Math.random() is used only for scheduling jitter in unit tests;
         // no security-sensitive operation depends on this value.
         scheduler.schedule(id, 100 + Math.random() * 50, fn);
       }

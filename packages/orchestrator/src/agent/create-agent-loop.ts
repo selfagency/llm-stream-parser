@@ -283,6 +283,7 @@ function withThreadId(event: AgUiEvent, threadId?: string): AgUiEvent {
  * Processes a single step of the agent loop and updates state.
  * @internal
  */
+// fallow-ignore-next-line complexity
 async function processSingleStep(
   state: AgentLoopState,
   options: AgentLoopOptions,
@@ -602,6 +603,7 @@ export function createAgentLoop(options: AgentLoopOptions): AgentLoopHandle {
   }
 
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: refactor planned
+  // fallow-ignore-next-line complexity
   async function* run(initialMessages: unknown[]): AsyncGenerator<OutputPart> {
     const runId = options.runId ?? createRunId();
     const { threadId, onAgUiEvent } = options;

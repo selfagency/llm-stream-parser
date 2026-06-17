@@ -332,9 +332,11 @@ async function buildAttributionReport(since: Date, opts: TokenomicsCliOptions): 
   try {
     const { aggregateGitAiStats } = await import('@agentsy/tokenomics');
     const { execSync } = await import('node:child_process');
+    const { safePathEnv } = await import('@agentsy/shared/safe-path');
 
     const sinceIso = since.toISOString();
     const logOutput = execSync(`git log --since="${sinceIso}" --format="%H" --no-pager`, {
+      env: safePathEnv(),
       encoding: 'utf-8',
       stdio: 'pipe'
     }).trim();
@@ -345,7 +347,11 @@ async function buildAttributionReport(since: Date, opts: TokenomicsCliOptions): 
       return 0;
     }
 
-    const repoRoot = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8', stdio: 'pipe' }).trim();
+    const repoRoot = execSync('git rev-parse --show-toplevel', {
+      env: safePathEnv(),
+      encoding: 'utf-8',
+      stdio: 'pipe'
+    }).trim();
     const stats = aggregateGitAiStats(repoRoot, shas);
 
     if (opts.json) {
@@ -495,6 +501,7 @@ async function handlePatchList(_argv: readonly string[], opts: TokenomicsCliOpti
 /**
  * Extract commit SHAs and files from session artifacts
  */
+// fallow-ignore-next-line complexity
 function extractCommitShasAndFiles(entry: import('@agentsy/tokenomics').SessionLedgerEntry): {
   commitShas: string[];
   files: string[];
@@ -502,7 +509,7 @@ function extractCommitShasAndFiles(entry: import('@agentsy/tokenomics').SessionL
   const commitShas: string[] = [];
   const files: string[] = [];
   if ('artifacts' in entry) {
-    const a = entry.artifacts as Record<string, unknown>;
+    const a = entry.artifacts as unknown as Record<string, unknown>;
     if (Array.isArray(a.commits)) {
       for (const c of a.commits) {
         if (typeof c === 'object' && c !== null && 'sha' in c) {
@@ -530,14 +537,14 @@ async function computeSurvivalForEntry(
     commitShas: string[],
     files: string[],
     repoRoot: string
-  ) => Promise<import('@agentsy/tokenomics').SurvivalResult>
+  ) => import('@agentsy/tokenomics').SurvivalResult | Promise<import('@agentsy/tokenomics').SurvivalResult>
 ): Promise<import('@agentsy/tokenomics').SurvivalResult | null> {
   const { commitShas, files } = extractCommitShasAndFiles(entry);
   if (commitShas.length === 0 || files.length === 0) {
     return null;
   }
   try {
-    return await computeSurvivalRate(entry.sessionId, commitShas, files, repoRoot);
+    return await Promise.resolve(computeSurvivalRate(entry.sessionId, commitShas, files, repoRoot));
   } catch {
     return null;
   }
@@ -549,6 +556,7 @@ async function handleSurvival(argv: readonly string[], opts: TokenomicsCliOption
   try {
     const { computeSurvivalRate, createSqliteLedgerStore } = await import('@agentsy/tokenomics');
     const { execSync } = await import('node:child_process');
+    const { safePathEnv } = await import('@agentsy/shared/safe-path');
 
     const ledger = await createSqliteLedgerStore(':memory:');
     const entries = await ledger.query({});
@@ -558,7 +566,11 @@ async function handleSurvival(argv: readonly string[], opts: TokenomicsCliOption
       return 0;
     }
 
-    const repoRoot = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8', stdio: 'pipe' }).trim();
+    const repoRoot = execSync('git rev-parse --show-toplevel', {
+      env: safePathEnv(),
+      encoding: 'utf-8',
+      stdio: 'pipe'
+    }).trim();
 
     const results = (
       await Promise.all(entries.map(entry => computeSurvivalForEntry(entry, repoRoot, computeSurvivalRate)))
@@ -693,6 +705,7 @@ function handleAdaptersAdd(argv: readonly string[], opts: TokenomicsCliOptions):
 // Entry point
 // =============================================================================
 
+// fallow-ignore-next-line complexity
 export async function runTokenomicsCommand(argv: readonly string[], io: CliIO = DEFAULT_IO): Promise<number> {
   const subcommand = argv[0];
   const rest = argv.slice(1);

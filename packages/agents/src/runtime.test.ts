@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { AgentSpec } from '../specs/types.js';
+import type { AgentSpec } from './specs/types.js';
 import { executeAgent, initializeAgent } from './runtime/index.js';
 
 describe('Agent Runtime', () => {
@@ -51,8 +51,6 @@ describe('Agent Runtime', () => {
       results: new Map(),
       spec,
       state: {
-        currentLayer: undefined,
-        currentStep: undefined,
         completedSteps: [],
         failedSteps: [],
         errors: []
@@ -85,8 +83,6 @@ describe('Agent Runtime', () => {
       results: new Map(),
       spec,
       state: {
-        currentLayer: undefined,
-        currentStep: undefined,
         completedSteps: [],
         failedSteps: [],
         errors: []
@@ -121,8 +117,6 @@ describe('Agent Runtime', () => {
       results: new Map(),
       spec,
       state: {
-        currentLayer: undefined,
-        currentStep: undefined,
         completedSteps: [],
         failedSteps: [],
         errors: []

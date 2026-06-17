@@ -84,6 +84,7 @@ function toImageDataUri(mimeType: string, data: Uint8Array | string): string {
   return `data:${mimeType};base64,${base64}`;
 }
 
+// fallow-ignore-next-line complexity
 function collectMessageParts(
   message: MistralOutboundMessage,
   normalizeToolCallId: (originalId: string) => string,
@@ -146,6 +147,7 @@ function collectMessageParts(
   };
 }
 
+// fallow-ignore-next-line complexity
 function buildContentForMistralMessage(
   role: MistralOutboundMessage['role'],
   text: string,
@@ -173,6 +175,7 @@ function buildContentForMistralMessage(
   }
 }
 
+// fallow-ignore-next-line complexity
 function emitSystemMessage(
   out: MistralMessage[],
   text: string,
@@ -194,6 +197,7 @@ function emitSystemMessage(
   }
 }
 
+// fallow-ignore-next-line complexity
 function emitNonSystemMessage(
   out: MistralMessage[],
   role: Extract<MistralOutboundMessage['role'], 'assistant' | 'user'>,

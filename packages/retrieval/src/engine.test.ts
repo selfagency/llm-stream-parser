@@ -41,7 +41,7 @@ describe('RagEngine', () => {
 
   it('query uses custom reranker strategy when specified', async () => {
     const engine = new RagEngine();
-    const result = await engine.query('test query', { reranker: 'cross-encoder' });
+    const result = await engine.query('test query', { reranker: 'bge' });
     expect(result.results).toBeDefined();
   });
 

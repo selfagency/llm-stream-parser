@@ -148,9 +148,9 @@ describe('createToolInputGuardrailHook', () => {
   it('calls evaluate with stringified args when args is an object', async () => {
     const pipeline = createMockPipeline({ status: 'pass', phase: 'tool-input' });
     const hook = createToolInputGuardrailHook(pipeline);
-    await hook.handler(preToolCallEvent('write_file', { path: '/tmp/test' }));
+    await hook.handler(preToolCallEvent('write_file', { path: '/nonexistent-test-path/test' }));
     expect(pipeline.evaluate).toHaveBeenCalledWith(
-      JSON.stringify({ path: '/tmp/test' }),
+      JSON.stringify({ path: '/nonexistent-test-path/test' }),
       'tool-input',
       expect.objectContaining({ toolName: 'write_file' })
     );

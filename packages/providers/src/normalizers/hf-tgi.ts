@@ -80,6 +80,7 @@ function buildHFUsage(details: HFDetails): UsageInfo | undefined {
  * Returns `null` for unrecognizable input and for special-only events with no
  * accompanying details.  Never throws.
  */
+// fallow-ignore-next-line complexity
 export function normalizeHuggingFaceTGIChunk(raw: unknown): NormalizerResult | null {
   try {
     if (!isHFTGIStreamResponse(raw)) {

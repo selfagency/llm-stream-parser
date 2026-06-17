@@ -17,6 +17,7 @@
  */
 
 import type { LedgerQueryFilter, LedgerStore } from '../ledger/store.js';
+import { computeAverageSurvivalRate } from './utils.js';
 
 // =============================================================================
 // Tool response types
@@ -161,9 +162,7 @@ export function getCostPerUnit(store: LedgerStore, since?: string): CostPerUnitS
   const commits = entries.reduce((sum, e) => sum + (e.artifacts?.generated ?? 0), 0);
   const linesAdded = entries.reduce((sum, e) => sum + (e.artifacts?.generated ?? 0) * 25, 0);
 
-  const survivalRates = entries.map(e => e.survivalRate30d).filter((r): r is number => r !== null);
-  const avgSurvivalRate =
-    survivalRates.length > 0 ? survivalRates.reduce((sum, r) => sum + r, 0) / survivalRates.length : 0;
+  const avgSurvivalRate = computeAverageSurvivalRate(entries);
 
   const survivingLines = linesAdded * avgSurvivalRate;
 
@@ -223,14 +222,11 @@ export function getCodeSurvival(store: LedgerStore, since?: string): CodeSurviva
   const filter = defaultFilter(since);
   const entries = store.query(filter);
 
-  const survivalRates = entries.map(e => e.survivalRate30d).filter((r): r is number => r !== null);
-
-  const avgSurvivalRate30d =
-    survivalRates.length > 0 ? survivalRates.reduce((s, r) => s + r, 0) / survivalRates.length : null;
+  const avgSurvivalRate30d = computeAverageSurvivalRate(entries) || null;
 
   return {
     avgSurvivalRate30d,
-    entriesWithSurvivalData: survivalRates.length,
+    entriesWithSurvivalData: entries.filter(e => e.survivalRate30d !== null).length,
     totalEntries: entries.length,
     period: periodFromFilter(filter)
   };

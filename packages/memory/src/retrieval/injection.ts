@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 export interface MemoryContextCandidate {
   content: string;
   id: string;
@@ -75,7 +77,7 @@ function dedupeXmlContextBlocksByTag(blocks: string[]): string[] {
 
   for (const block of blocks) {
     const tagMatch = /^<([a-z_][a-z0-9_.-]{0,63})\b/iu.exec(block);
-    const tag = tagMatch?.[1] ?? `__raw__:${Math.random().toString(36).slice(2)}`;
+    const tag = tagMatch?.[1] ?? `__raw__:${createHash('sha1').update(block).digest('hex').slice(0, 8)}`;
     latestByTag.set(tag, block.trim());
   }
 

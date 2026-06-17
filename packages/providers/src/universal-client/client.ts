@@ -178,8 +178,47 @@ function toProviderRequest(request: CompletionRequest, provider: NormalizerProvi
   }
 }
 
+/**
+ * Context object passed to header builder functions.
+ */
+interface HeaderContext {
+  headers: Record<string, string>;
+  apiKey: string;
+  organizationId?: string;
+  stream?: boolean;
+}
+
+/**
+ * Dispatch table for provider-specific header construction.
+ * Each provider's handler sets its required headers on the context object.
+ */
+const HEADER_BUILDERS: Partial<Record<NormalizerProvider, (ctx: HeaderContext) => void>> & {
+  default: (ctx: HeaderContext) => void;
+} = {
+  openai: ({ headers, apiKey, organizationId }) => {
+    headers.Authorization = `Bearer ${apiKey}`;
+    if (organizationId) {
+      headers['OpenAI-Organization'] = organizationId;
+    }
+  },
+  anthropic: ({ headers, apiKey, stream }) => {
+    headers['x-api-key'] = apiKey;
+    headers['anthropic-version'] = '2023-06-01';
+    if (stream) {
+      headers.accept = 'text/event-stream';
+    }
+  },
+  gemini: ({ headers, apiKey }) => {
+    headers.Authorization = `Bearer ${apiKey}`;
+  },
+  // Default handler for providers without special requirements
+  default: ({ headers, apiKey }) => {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+};
+
 function buildHeaders(
-  _provider: NormalizerProvider,
+  provider: NormalizerProvider,
   apiKey?: string,
   organizationId?: string,
   stream?: boolean
@@ -189,30 +228,15 @@ function buildHeaders(
   };
 
   if (apiKey) {
-    switch (_provider) {
-      case 'openai': {
-        headers.Authorization = `Bearer ${apiKey}`;
-        if (organizationId) {
-          headers['OpenAI-Organization'] = organizationId;
-        }
-        break;
-      }
-      case 'anthropic': {
-        headers['x-api-key'] = apiKey;
-        headers['anthropic-version'] = '2023-06-01';
-        if (stream) {
-          headers.accept = 'text/event-stream';
-        }
-        break;
-      }
-      case 'gemini': {
-        headers.Authorization = `Bearer ${apiKey}`;
-        break;
-      }
-      default: {
-        headers.Authorization = `Bearer ${apiKey}`;
-      }
+    const ctx: HeaderContext = { headers, apiKey };
+    if (organizationId) {
+      ctx.organizationId = organizationId;
     }
+    if (stream) {
+      ctx.stream = stream;
+    }
+    const builder = HEADER_BUILDERS[provider] ?? HEADER_BUILDERS.default;
+    builder(ctx);
   }
 
   return headers;

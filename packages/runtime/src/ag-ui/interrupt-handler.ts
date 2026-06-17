@@ -7,6 +7,7 @@
 
 import type { RunInterruptedEvent } from '@agentsy/shared';
 import { EventType } from '@agentsy/shared';
+import { randomUUID } from 'node:crypto';
 
 /**
  * Interrupt reason codes.
@@ -108,7 +109,7 @@ export function createInterruptEvent(
     reason: string;
     options?: { message: string };
   } = {
-    id: `interrupt_${Math.random().toString(36).slice(2, 11)}`,
+    id: `interrupt_${randomUUID()}`,
     reason: String(reason)
   };
   if (message !== undefined) {

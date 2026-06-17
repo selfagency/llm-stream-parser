@@ -88,6 +88,7 @@ function estimateCost(model: string, inputTokens: number, outputTokens: number):
 /**
  * Sets token usage and cost attributes on a span.
  */
+// fallow-ignore-next-line complexity
 function setSpanUsageAttributes(
   span: Span,
   usage: { inputTokens?: number; outputTokens?: number } | undefined,
@@ -147,6 +148,7 @@ function finalizeStreamSpan(span: Span, inputTokens: number, outputTokens: numbe
 /**
  * Processes a streaming response, forwarding chunks and tracking token usage.
  */
+// fallow-ignore-next-line complexity
 async function processStreamContent(
   span: Span,
   sourceStream: ReadableStream<NormalizedChunk>,

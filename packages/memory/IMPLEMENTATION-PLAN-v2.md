@@ -1,5 +1,4 @@
 
-
 # @agentsy/memory — Implementation Plan v2
 
 > Supersedes `UPDATED-IMPLEMENTATION-PLAN.md`. Accounts for the ~5,500 lines of implementation code that now exist and focuses only on remaining gaps.

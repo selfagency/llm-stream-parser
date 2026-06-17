@@ -199,7 +199,6 @@ function buildRenderOptions(options: InkStreamRendererProps['options']): RenderO
   };
 }
 
-// fallow-ignore-next-line unused-export
 export default function InkStreamRenderer({
   stateRef,
   forceUpdateRef: _forceUpdateRef,

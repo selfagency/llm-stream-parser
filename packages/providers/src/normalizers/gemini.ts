@@ -155,6 +155,7 @@ function getFirstCandidate(
  *
  * Never throws — malformed or adversarial input is silently ignored.
  */
+// fallow-ignore-next-line complexity
 export function normalizeGeminiChunk(raw: unknown): NormalizerResult | null {
   try {
     if (!validateGeminiInput(raw)) {

@@ -14,10 +14,12 @@ const BASE_CONFIG = {
   compressionTarget: 0.5
 } as const;
 
+let makeItemCounter = 0;
+
 function makeItem(overrides: Partial<MemoryItem> = {}): MemoryItem {
   const now = performance.now();
   return {
-    id: `test-${Math.random().toString(36).slice(2, 10)}`,
+    id: `test-${(makeItemCounter++).toString(36)}`,
     kind: 'semantic',
     content: 'test content',
     tokenCount: 10,

@@ -1,0 +1,32 @@
+The individual provider test files already exist — the split was completed prior to this session. Message 119 is the agent beginning to execute a plan whose work was already done.
+
+I'll extend compartment 116-118 to absorb message 119 as its execution start, since it's the same objective (split normalizers test file by provider) and no new compartment is warranted.
+
+```xml
+<output>
+<compartments>
+<compartment start="116" end="119" title="Preparing to split normalizers test file by provider" episode_type="refactor" importance="12">
+<p1>
+Reviewed the full normalizers test file structure — 13 standalone describe blocks with no shared state between them. Planning to split them into individual provider-specific test files. Read remaining ollama section to complete the picture before starting file creation.
+
+At execution start, confirmed the split was already complete: all 13 provider test files exist under `packages/providers/src/normalizers/` (anthropic.test.ts, bedrock.test.ts, cohere.test.ts, deepseek.test.ts, gemini.test.ts, hf-tgi.test.ts, mistral.test.ts, ollama.test.ts, openai-compatible.test.ts, openai-responses.test.ts, openai.test.ts, zai.test.ts, plus test-helpers.ts and types.ts). The barrel `index.ts` already exports all normalizers. No further action needed.
+</p1>
+<p2>
+Reviewed normalizers test file structure (13 standalone describe blocks) and prepared to split into provider-specific test files. At execution start, confirmed all 13 provider test files already exist — the split was completed prior to this session.
+</p2>
+<p3>
+Reviewed normalizers test file structure ahead of provider-based test file split; split was already complete before session start.
+</p3>
+<p4/>
+</compartment>
+</compartments>
+<facts>
+</facts>
+<events>
+</events>
+<meta>
+<messages_processed>119-119</messages_processed>
+<unprocessed_from>120</unprocessed_from>
+</meta>
+</output>
+```

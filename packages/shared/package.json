@@ -12,6 +12,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./safe-path": {
+      "types": "./dist/safe-path.d.ts",
+      "import": "./dist/safe-path.js",
+      "require": "./dist/safe-path.cjs"
+    },
     "./cortexkit": {
       "types": "./dist/cortexkit/index.d.ts",
       "import": "./dist/cortexkit/index.js",

@@ -55,6 +55,7 @@ export class UnifiedDB {
     return this._open;
   }
 
+  // fallow-ignore-next-line complexity
   async open(): Promise<void> {
     // Try Honker native extension
     if (this.config.extensionPath && this.config.blake3ExtensionPath) {

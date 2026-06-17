@@ -17,6 +17,7 @@
     "format": "biome format src"
   },
   "dependencies": {
+    "@agentsy/shared": "workspace:*",
     "@octokit/rest": "22.0.1",
     "@types/node": "^25.9.0",
     "ora": "^9.4.0",

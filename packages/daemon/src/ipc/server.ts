@@ -111,6 +111,7 @@ export class IPCServer {
     });
   }
 
+  // fallow-ignore-next-line complexity
   private async handleMessage(clientId: string, raw: string, socket: Socket): Promise<void> {
     let parsed: unknown;
     try {

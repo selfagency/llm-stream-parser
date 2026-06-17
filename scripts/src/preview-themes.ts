@@ -7,10 +7,6 @@
  * Usage: node scripts/preview-themes.js
  */
 
-// Attempt to load built output first (when running from installed package),
-// otherwise fall back to local workspace source so this script works during dev
-// without requiring a build step. This reduces duplicate source files and
-// allows CI and local tooling to run the preview command in either state.
 interface ThemeConfig {
   border?: { style?: string };
   thinking?: { textColor?: string; spinnerColor?: string };
@@ -22,18 +18,9 @@ interface ThemeConfig {
   };
 }
 
-let themesModule: Record<string, unknown>;
-try {
-  const distThemesPath = '../dist/renderers/ink/themes/index.js';
-  // nosemgrep: typescript-unnecessary-assertion
-  // Dynamic import returns `unknown`; cast is required for type safety.
-  themesModule = (await import(distThemesPath)) as Record<string, unknown>;
-} catch {
-  // Fallback to local source so contributors can run the script before building
-  // nosemgrep: typescript-unnecessary-assertion
-  // Dynamic import returns `unknown`; cast is required for type safety.
-  themesModule = (await import('../../renderers/src/ink/themes/index.ts')) as Record<string, unknown>;
-}
+// nosemgrep: typescript-unnecessary-assertion
+// Dynamic import returns `unknown`; cast is required for type safety.
+const themesModule = (await import('@agentsy/ui/ink/themes')) as Record<string, unknown>;
 
 const entries = Object.entries(themesModule).map(([name, value]) => ({
   name,
