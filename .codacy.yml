@@ -8,18 +8,18 @@ engines:
     ignoreAnnotations: false
     ignoreUsings: false
 exclude_paths:
-  - config/**
-  - .agents/**
-  - .agentsy/**
-  - .fallow/**
-  - .vscode/**
-  - .gh-pages/**
-  - .rumdl_cache/**
-  - .turbo/**
-  - coverage/**
-  - dist/**
-  - node_modules/**
-  - plan/**
-  - **/*.md
+  - "config/**"
+  - ".agents/**"
+  - ".agentsy/**"
+  - ".fallow/**"
+  - ".vscode/**"
+  - ".gh-pages/**"
+  - ".rumdl_cache/**"
+  - ".turbo/**"
+  - "coverage/**"
+  - "dist/**"
+  - "node_modules/**"
+  - "plan/**"
+  - "**.md"
 include_paths:
-  - packages/**
+  - "packages/**"
