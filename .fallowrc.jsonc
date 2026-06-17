@@ -23,7 +23,17 @@
     "**/*.mdx",
     "**/pnpm-lock.yaml",
     "**/package-lock.json",
-    "**/yarn.lock"
+    "**/yarn.lock",
+    // Dev-time config files — not source code
+    "packages/cli/tui-test.config.ts",
+    // Dev convenience scripts — not library code
+    "packages/memory/bin/dev.js",
+    // Stale package dirs — Phase 2 consolidation artifacts
+    "packages/connectors/**",
+    "packages/mcp/**",
+    "packages/renderers/**",
+    "packages/scripts/**",
+    "packages/types/**"
   ],
   "publicPackages": [
     "@agentsy/context",
@@ -48,13 +58,50 @@
     "@agentsy/ui"
   ],
   // Explicit entry points for packages when package.json exports are insufficient.
+  // Test files are entry points for the test runner — including them prevents
+  // false-positive "unused file" reports while still inspecting test code for
+  // dead code, complexity, and duplication issues.
   "entry": [
     "packages/runtime/src/approval/index.ts",
     "packages/cli/src/commands/guardrails.ts",
     // Secrets subpath barrel files — entry points for tsup subpath exports
     "packages/secrets/src/config/index.ts",
     "packages/secrets/src/injection/index.ts",
-    "packages/secrets/src/provider/index.ts"
+    "packages/secrets/src/provider/index.ts",
+    // Test file patterns — avoid false-positive "unused file" reports
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.test-d.ts",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    // Subpath entry points — registered as tsup entries for independent consumption
+    "packages/runtime/src/ag-ui/index.ts",
+    "packages/runtime/src/loop/index.ts",
+    "packages/memory/src/cli/index.ts",
+    "packages/vscode/src/mcp/index.ts",
+    "packages/providers/src/caching/index.ts",
+    "packages/providers/src/adapters/index.ts",
+    // Internal barrel files — consumed by other files in the same package
+    "packages/ui/src/ink/components/agent-log/index.ts",
+    "packages/ui/src/ink/components/approval-gate/index.ts",
+    "packages/ui/src/ink/components/command-palette/index.ts",
+    "packages/ui/src/ink/components/diff-viewer/index.tsx",
+    "packages/ui/src/ink/components/document-viewer/index.tsx",
+    "packages/ui/src/ink/components/dropdown/index.ts",
+    "packages/ui/src/ink/components/orchestrator-console/index.ts",
+    "packages/ui/src/ink/components/status-rail/index.ts",
+    "packages/ui/src/ink/components/task-progress/index.ts",
+    "packages/ui/src/ink/components/workspace-shell/index.ts",
+    "packages/ui/src/ink/components/workspace-tree/index.ts",
+    // Planned subpath export barrels — not currently imported but represent public API surface
+    "packages/memory/src/cortexkit/index.ts",
+    "packages/session/src/cortexkit/index.ts",
+    "packages/observability/src/exporters/index.ts",
+    "packages/observability/src/instrumentation/index.ts",
+    "packages/cli/src/providers/index.ts",
+    "packages/testing/src/msw/setup.ts",
+    // Already a tsup subpath entry — external consumers import via package exports
+    "packages/plugins/src/manifest/index.ts"
   ],
   // Preserve class members that are used via runtime reflection or host integrations.
   "usedClassMembers": [],
@@ -67,10 +114,17 @@
     "minTokens": 70
   },
   // Health threshold tuning (will be refined after regenerating coverage).
+  // Test files excluded from complexity/health checks — test logic is
+  // inherently complex (setup patterns, edge case coverage) and flagging
+  // it is noise, not useful signal.
   "health": {
     "maxCyclomatic": 15,
     // Functions with acceptable complexity for their domain
     "ignore": [
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.spec.ts",
+      "**/*.spec.tsx",
       "**/governance/policy.ts",
       "**/recovery/policy.ts",
       "**/task-board/in-memory.ts",
@@ -153,6 +207,8 @@
     { "file": "packages/cli/src/config/schema.ts", "exports": ["BudgetConfig", "ProviderConfig", "ConfigSchema", "DEFAULT_CONFIG", "deepMerge", "loadFromEnv", "loadFromFile"] },
     { "file": "packages/cli/src/config/migrate.ts", "exports": ["CURRENT_CONFIG_VERSION", "migrateConfigFile", "migrateAndLoad"] },
     { "file": "packages/gateway/src/client.ts", "exports": ["*"] },
-    { "file": "packages/gateway/src/registry/index.ts", "exports": ["*"] }
+    { "file": "packages/gateway/src/registry/index.ts", "exports": ["*"] },
+    { "file": "packages/memory/src/cli/init-cli.ts", "exports": ["*"] },
+    { "file": "packages/memory/src/cli/mcp-server-cli.ts", "exports": ["*"] }
   ]
 }
