@@ -175,28 +175,28 @@ export interface PipelineConfig {
  * post-incident review, compliance reporting, and debugging.
  */
 export interface GuardrailDecisionReceipt {
-  /** Policy identifier, e.g. 'ethics:anti-sycophancy:1.0' */
-  readonly policyId: string;
-  /** The decision outcome */
-  readonly decision: GuardrailResult['status'];
-  /** Controlled vocabulary reason code, e.g. 'SYCOPHANCY_DETECTED' */
-  readonly reasonCode: string;
-  /** Risk tier of the decision */
-  readonly riskTier: 'low' | 'moderate' | 'high' | 'prohibited';
-  /** Which surface was being evaluated */
-  readonly surface: 'input' | 'retrieval' | 'memory' | 'tool' | 'action' | 'output' | 'egress';
-  /** Which guardrail phase was active */
-  readonly phase: GuardrailPhase;
-  /** ISO 8601 timestamp of the evaluation */
-  readonly timestamp: string;
   /** Correlation ID combining session + turn + scanner-run */
   readonly correlationId: string;
-  /** Session identifier */
-  readonly sessionId: string;
+  /** The decision outcome */
+  readonly decision: GuardrailResult['status'];
   /** Detections that triggered this decision */
   readonly detections: readonly Detection[];
-  /** Sanitized output, if the decision was a transform */
-  readonly sanitized?: string;
+  /** Which guardrail phase was active */
+  readonly phase: GuardrailPhase;
+  /** Policy identifier, e.g. 'ethics:anti-sycophancy:1.0' */
+  readonly policyId: string;
+  /** Controlled vocabulary reason code, e.g. 'SYCOPHANCY_DETECTED' */
+  readonly reasonCode: string;
   /** Fields that were redacted, if applicable */
   readonly redactedFields?: readonly string[];
+  /** Risk tier of the decision */
+  readonly riskTier: 'low' | 'moderate' | 'high' | 'prohibited';
+  /** Sanitized output, if the decision was a transform */
+  readonly sanitized?: string;
+  /** Session identifier */
+  readonly sessionId: string;
+  /** Which surface was being evaluated */
+  readonly surface: 'input' | 'retrieval' | 'memory' | 'tool' | 'action' | 'output' | 'egress';
+  /** ISO 8601 timestamp of the evaluation */
+  readonly timestamp: string;
 }

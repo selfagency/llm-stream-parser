@@ -15,46 +15,20 @@
  * memory policy, approval requirements, trust hierarchy, and more.
  */
 export interface GuardrailsConfig {
-  /** List of enabled guardrail provider IDs. */
-  providers: string[];
-
   /** Topics that are always allowed. */
   allowedTopics?: string[];
+
+  /** Tool IDs that require human approval. */
+  approvalRequiredFor?: string[];
 
   /** Topics that are always blocked. */
   blockedTopics?: string[];
 
-  /** Default risk tier for unclassified content. */
-  riskTier?: 'low' | 'moderate' | 'high' | 'prohibited';
-
-  /** PII redaction configuration. */
-  piiRedaction?: {
-    enabled: boolean;
-    types: string[];
-    placeholder?: string;
-  };
-
-  /** Secret redaction configuration. */
-  secretRedaction?: {
-    enabled: boolean;
-    placeholder?: string;
-  };
-
-  /** Token quota limits. */
-  tokenQuota?: {
-    perMinute: number;
-    perHour: number;
-    perDay: number;
-  };
-
-  /** Allowed domains for retrieval. */
-  retrievalDomains?: string[];
-
-  /** Tools that are always allowed. */
-  toolAllowList?: string[];
-
   /** Allowed egress destinations. */
   egressAllowList?: string[];
+
+  /** Only allow local processing. */
+  localOnly?: boolean;
 
   /** Memory policy configuration. */
   memoryPolicy?: {
@@ -63,15 +37,40 @@ export interface GuardrailsConfig {
     sensitiveContextRetentionDays: number;
   };
 
-  /** Tool IDs that require human approval. */
-  approvalRequiredFor?: string[];
+  /** PII redaction configuration. */
+  piiRedaction?: {
+    enabled: boolean;
+    types: string[];
+    placeholder?: string;
+  };
+  /** List of enabled guardrail provider IDs. */
+  providers: string[];
 
-  /** Trust hierarchy for context sources. */
-  trustHierarchy?: Record<string, string[]>;
+  /** Allowed domains for retrieval. */
+  retrievalDomains?: string[];
+
+  /** Default risk tier for unclassified content. */
+  riskTier?: 'low' | 'moderate' | 'high' | 'prohibited';
+
+  /** Secret redaction configuration. */
+  secretRedaction?: {
+    enabled: boolean;
+    placeholder?: string;
+  };
 
   /** Strip untrusted context from inputs. */
   stripUntrustedContext?: boolean;
 
-  /** Only allow local processing. */
-  localOnly?: boolean;
+  /** Token quota limits. */
+  tokenQuota?: {
+    perMinute: number;
+    perHour: number;
+    perDay: number;
+  };
+
+  /** Tools that are always allowed. */
+  toolAllowList?: string[];
+
+  /** Trust hierarchy for context sources. */
+  trustHierarchy?: Record<string, string[]>;
 }

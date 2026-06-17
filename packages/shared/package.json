@@ -30,6 +30,7 @@
     "coverage": "vitest --run --coverage"
   },
   "dependencies": {
+    "@agentsy/guardrails": "workspace:*",
     "@cortexkit/aft-bridge": "^0.37.1",
     "better-sqlite3": "^12.1.0",
     "type-fest": "5.7.0"

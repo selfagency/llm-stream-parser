@@ -5,16 +5,18 @@
 **Repository**: `selfagency/agentsy`
 **Branch reviewed**: `develop`
 **Status**: ACTIVE — Phases 0, 1, 2, 3, 4 complete; Phase 5 onward is the active scope
-**Code reference**: https://github.com/selfagency/agentsy (develop branch)
+**Code reference**: <https://github.com/selfagency/agentsy> (develop branch)
 
 > **Update from v1.0**: Phases 0 (Critical Bug Fixes), 1 (Daemon Foundation), and 2 (Package Consolidation) from the v2.3 source plan are now COMPLETE on `develop`. Their deliverables (UnifiedDB, daemon IPC, Piscina pool, Honker queues, Bree scheduler, SubprocessManager, 25-package layout) are treated as existing infrastructure in all downstream phases. The active scope of this plan is Phases 3–18: ~100 story points over ~11 sprints.
 
 **Source documents synthesized**:
+
 1. `agentsy-guardrails-gap-analysis.md` — 43 findings (E-1 to E-43), 8-phase guardrails remediation, 812 lines
 2. `agentsy-remediation-plan-v2 (8).md` — v2.3, 9 critical bugs + 10 architectural phases, ~435h, 6650 lines
 3. `agentsy-competitive-comparison.md` — 12 competitors analyzed across 12 dimensions, P0–P3 gap matrix, Top 15 actions, 751 lines
 
 **Merge rules**:
+
 - **Guardrails findings** (E-1 to E-43) are reproduced **inline** in the phase that closes them, preserving severity, files, policy requirement, and recommended fix.
 - **Competitor analysis** is condensed into **Appendix A — 12-Competitor Pattern Atlas** (one section per competitor with top 3 patterns to borrow and target phase). Actionable competitive gaps are threaded inline into the relevant phase as "Port X from Y" notes.
 - **Effort** is expressed in **story points** (1 SP ≈ 8 hours of focused engineering work) and allocated across **2-week sprints**. Sprint capacity assumes a 3-person team at ~60 SP/sprint after overhead.
@@ -35,6 +37,7 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 **Scope of this plan**: 29 phases total (Phases 0–28). **Phases 0, 1, and 2 are COMPLETE** on `develop`. The **active scope is Phases 3–23**: ~151.5 story points over ~11–12 sprints (~22–24 weeks) for a 3-person team. Each phase is independently shippable; each closes a defined set of guardrails findings, competitive gaps, infrastructure gaps, or ethical commitments. Phase 10 includes a §15.7 extension that adds ingress (response-body) scanning for MCP servers and `http_fetch`. Phase 13 includes a §18.7 extension integrating [langeval](https://github.com/solana8800/langeval) as the external eval platform — persona simulation, red-teaming, Battle Arena, DeepEval metrics, and shared Langfuse trace debugging (complementary to Phase 19). Phase 14 includes a §19.10 extension adding ACP event ledger and translators (from openclaw). Phase 19 (Langfuse) and Phase 22 (Web Fetcher Markdown) are independent quick wins; Phase 20 (Ethical Provider & Content Policy) is a P0 ethical commitment that must land before any first-party agent ships; Phase 23 closes the AFT/Magic Context/todo/task-delegation integration gaps documented in §25. **Phases 24–28 are DEFERRED** — designs complete (~93 SP combined, ~8 sprints) but implementation does not start until v1 local mode ships and stabilizes. The deferred batch covers: Teams & Remote Deployment (§38, Phase 24), MITM Egress Proxy (§39, Phase 25), A2A Protocol (§41, Phase 26 — from gemini-cli), Self-Improvement & Skill Curation (§42, Phase 27 — from hermes-agent), and Supply-Chain Security & Policy Attestation (§43, Phase 28 — from openclaw/hermes-agent/gemini-cli). See §44 for activation criteria. The competitive comparison was expanded from 12 to 15 competitors (§32 Appendix A) — the 3 new competitors (openclaw, hermes-agent, gemini-cli) surfaced 32 new findings that drove Phases 26–28 and extensions to Phases 13 and 14. Buffer is now 0 SP after the extensions — recommend extending to Sprint 12 or descoping P3 items. See the standalone Langfuse plan at `/home/z/my-project/download/agentsy-langfuse-integration-plan.md` for full detail.
 
 **Three non-negotiable gates** (all in force):
+
 1. **BLOCK** the `@agentsy/guardrails` package from being described as the project's safety enforcement layer until **Phase 4** (Guardrails Honest Foundation) is complete. The current state — policy documents claiming enforceable commitments while the package implements a subset — is the worst of both worlds.
 2. **BLOCK** any first-party agent template from shipping until **Phase 12** (Guardrails Daemon Integration) is complete and the **Phase 13** release-gate script passes in CI.
 3. **BLOCK** any first-party agent template from shipping until **Phase 20** (Ethical Provider & Content Policy) is complete — agentsy will not route to xAI/Grok, will not ship a Telegram connector, and will block style-mimicry prompts. These are hard ethical commitments, not configurable preferences.
@@ -50,6 +53,7 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 | 3 | `agentsy-competitive-comparison.md` | 751 | 12 competitor repos cloned and source-read (not just READMEs). Three parallel research agents produced reports synthesized here. | Architecture comparison matrix, 12 pattern deep dives, P0/P1/P2/P3 gap tables, Top 15 prioritized actions, "what agentsy does better" list. Actionable gaps threaded inline; condensed atlas in Appendix A. |
 
 **Synthesis decisions**:
+
 - The guardrails gap analysis Phases 1–8 are distributed across the unified ladder (Phases 4, 9, 10, 11, 12, 13, 16) rather than kept as a contiguous block, because several guardrails phases have hard dependencies on the daemon (Phase 1), hook redesign (Phase 3), and streaming (Phase 6).
 - The v2.3 phases keep their relative ordering and dependencies, with the guardrails phases inserted at the earliest point they can ship without blocking architectural work.
 - Competitive items are absorbed into the phase that naturally owns them (e.g. Claude-Code hook schema → Phase 3, HeadTailBuffer → Phase 17) rather than batched into a single "competitive" phase. Phase 17 closes the remaining competitive gaps that don't have a natural architectural home.
@@ -97,6 +101,7 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 **Critical path (active)**: Phase 3 → Phase 4 → Phase 9 → Phase 13 (guardrails enforcement closure, ~7 sprints end-to-end). Secondary critical path: Phase 5 → Phase 6 → Phase 14 → Phase 18 (architecture completion, ~7 sprints end-to-end). Phase 19 (Langfuse) is off both critical paths — it's a 6 SP independent track that can start in Sprint 1 and finish by Sprint 2.
 
 **Parallelism opportunities** (now unlocked by Phases 0–2 being done):
+
 - Phase 3 (hooks), Phase 5 (gateway migration), Phase 7 (RAG), and **Phase 19 (Langfuse)** can all start in parallel in Sprint 1 — they have no interdependencies.
 - Phase 4 (guardrails foundation) starts as soon as Phase 3 lands the hook composition model.
 - Phase 8 (learning loop) can run in parallel with Phase 9 (detectors) once Phase 7 is done.
@@ -104,6 +109,7 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 - Phase 15 (bootstrap) can run in parallel with Phases 16 and 17.
 
 **Deliverables from completed phases** (referenced by downstream work):
+
 - **Phase 0**: 9 bug fixes landed (`UniversalClient` true streaming, tool-call history preservation, hook short-circuit patch, gateway cost units, retry quota map, daemon restart, tool-call ID dedup, retry jitter, error classification).
 - **Phase 1**: `@agentsy/daemon` package with `UnifiedDB` (~/.agentsy/agentsy.db via Honker), Piscina `AgentPool`, Honker durable queues, Bree scheduler, sqlite-worker, `SubprocessManager` (Pup pattern, stall detection), REST control API, JSON-RPC 2.0 over Unix sockets IPC server, ACP server stub, `TerminalBridge`, `ServiceHost` with sleep/wake, `AgentHost`, `ScopeManager` (folder-based), `Supervisor`, `DaemonConfig` schema, CLI integration.
 - **Phase 2**: 25-package layout (workflows→orchestrator, types→shared, renderers→ui, scripts→root, mcp→daemon, connectors→daemon; vscode preserved). `pnpm install && pnpm build && pnpm test` green.
@@ -115,43 +121,54 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 These twelve architectural decisions, inherited from v2.3 §2, govern the entire plan. Each phase must respect them.
 
 ### AD-1: Daemon as the Central Process
+
 The daemon (`@agentsy/daemon`) is the single long-lived process that owns all stateful subsystems. CLI and TUI are thin IPC clients over Unix domain sockets. Editors connect via ACP. Currently every CLI invocation spins up its own runtime, memory engine, gateway, and provider connections — wasteful, prevents cross-session memory, and makes background jobs impossible. A persistent daemon solves all three. The daemon must be crash-resilient (supervisor pattern), support sleep/wake lifecycle for all subsystems, and expose both an internal IPC interface and an external ACP interface.
 
 ### AD-2: Hook Transform Composition
+
 Hook transforms compose left-to-right like Koa/Express middleware. Each hook receives the output of the previous transform. Priority determines execution order. The current short-circuit design (return on first transform) silently drops transformations when both a guardrail hook and a memory hook transform the same event. This is the subject of Phase 0.3 (minimal patch) and Phase 3 (full redesign).
 
 ### AD-3: Daemon-Centric Streaming
+
 The daemon owns all LLM provider connections. Clients request streams via IPC; the daemon pipes events back as JSON-RPC notifications. For ACP clients, the same events map to ACP `session/update` notifications. Centralizing streaming enables daemon-level prompt caching, cost tracking, retry orchestration, and circuit breaking. It also eliminates the fake-streaming bug (Phase 0.1) by removing per-CLI provider connections.
 
 ### AD-4: Merge Small Packages, Keep Big Separate
+
 Packages with <20 source files and no independent deployment boundary merge into a related package. Packages with substantial code stay separate. Everything currently stubbed gets implemented. This drives Phase 2: 27 → 25 packages.
 
 ### AD-5: Gateway Into Daemon
+
 Gateway routing, health, quota, and circuit breaking move into the daemon. The `@agentsy/gateway` package becomes a thin IPC client. With daemon-centric streaming, the daemon must own routing decisions; duplicating routing logic in the gateway package would be a maintenance burden.
 
 ### AD-6: Daemon-Internal RAG
+
 RAG becomes a daemon-internal service. The daemon runs background indexing, maintains the vector store, and serves retrieval requests via MCP. RAG requires persistent state (vector indices, embedding caches). Running it in the daemon enables background indexing without CLI startup, cross-session index reuse, and the wiki invariant (index synthesized pages, not raw events).
 
 ### AD-7: Background + Event-Driven Learning
+
 The learning loop runs as a daemon background job on a configurable schedule AND is triggered by specific events (canary detection, observation threshold). Pure timer-based learning wastes resources when there's nothing to learn. Pure event-driven learning misses patterns that emerge over time. Combining both gives the best of both worlds.
 
 ### AD-8: Multi-Agent with Isolated Scopes → Server Mode
+
 The daemon starts as a local multi-agent system with memory scope isolation. It evolves to support server deployment with authentication, rate limiting, and multi-tenancy. Multi-agent is needed immediately (coder + researcher + planner running simultaneously). Server deployment is a future goal that should inform architectural decisions but not block v1.
 
 ### AD-9: JSON-RPC 2.0 over Unix Sockets (NOT gRPC)
+
 Internal daemon IPC uses JSON-RPC 2.0 over Unix domain sockets with newline-delimited JSON. gRPC with protobuf was evaluated and explicitly rejected. Both processes are local Node.js (no cross-language interop requirement), JSON-RPC is human-readable and debuggable with `socat`, requires no build step, supports streaming via notifications, gets type safety via Zod (runtime + compile-time, superior to protobuf's compile-time-only), aligns with ACP (same wire format internally and externally), and supports future remote access by serving the same method signatures over HTTP/WebSocket.
 
 ### AD-10: ACP (Agent Client Protocol) Agent
+
 The Agentsy daemon becomes an ACP Agent. This replaces the planned custom VS Code extension. ACP is the emerging standard for editor-agent communication — Zed has native support, VS Code has the ACP Client extension, JetBrains is adding support. The daemon already speaks JSON-RPC; ACP is just another transport. The `@agentclientprotocol/sdk` `AgentSideConnection` class is ~500 lines versus ~5000 lines of custom extension code. Note: `@agentsy/vscode` is preserved as a published npm library consumed by third-party VS Code extensions that integrate language model providers with GitHub Copilot Chat — ACP and `@agentsy/vscode` are complementary, not overlapping.
 
 ### AD-11: Subprocess Management with Stall Detection
+
 The daemon manages child processes (tool executors, MCP servers, build runners) and forcefully terminates them when they stall or exceed resource limits. Stalled processes are a real operational problem — a hung MCP server blocks the agent indefinitely with no recovery path. MCP servers are long-lived children that need restart-on-stall. Tool execution needs resource limits. ACP terminal integration maps directly to subprocess management.
 
 ### AD-12: Folder-Based Scoping
+
 Session scope is determined by the folder (working directory), not agent-specified. This aligns with ACP's `session/new` `cwd` parameter and the user's mental model of "I'm working in this project folder." Scope key format: `folder:[sha256-hash-of-absolute-path]`. ACP `additionalDirectories` supports multi-root workspaces. This drives Phase 10's multi-root workspace design and Phase 15's project auto-detection.
 
 ---
-
 
 ---
 
@@ -203,6 +220,7 @@ Session scope is determined by the folder (working directory), not agent-specifi
 **Dependencies added**: `piscina@^4`, `bree@^9`, `@russellthehippo/honker-node@^0.x`, `better-sqlite3@^11`.
 
 **Downstream consumers**:
+
 - Phase 5 moves gateway routing into the daemon's `RoutingService`.
 - Phase 6 owns all provider connections in the daemon's `StreamManager`.
 - Phase 7 runs RAG as a daemon service on `UnifiedDB`.
@@ -230,7 +248,8 @@ Session scope is determined by the folder (working directory), not agent-specifi
 **Preserved**: `@agentsy/vscode` (75 files) — published npm library consumed by third-party VS Code extensions that integrate language model providers with GitHub Copilot Chat. ACP (agent–editor communication) and `@agentsy/vscode` (provider↔Copilot Chat integration) are complementary, not overlapping.
 
 **Post-consolidation layout** (25 packages + root scripts):
-```
+
+```text
 packages/
 ├── daemon/        ← Central process (absorbs mcp, connectors)
 ├── core/          ← Stream processing, SSE, tool calls, retry
@@ -279,6 +298,7 @@ packages/
 **Tests**: 35 passing (existing + new middleware chain tests + stream-error test coverage for `failUnsettledTools`).
 
 **Downstream consumers**:
+
 - Phase 4 threads `GuardrailDecisionReceipt`s through the new composition model.
 - Phase 14 uses hook-driven tool interception for ACP agents.
 - Phase 17 competitive items build on the Claude-Code hook schema.
@@ -401,6 +421,7 @@ export function createGuardrailHook(deps: GuardrailHookDeps): HookHandler {
 ```
 
 **Execution order** for `UserPromptSubmit`:
+
 1. Guardrail (priority 10) checks and potentially sanitizes the prompt.
 2. Memory pre-turn (priority 20) appends memory context to the (possibly sanitized) prompt.
 3. Both transforms compose — the model sees a sanitized prompt with memory context.
@@ -476,7 +497,6 @@ Wire this into the stream error handler in `packages/runtime/src/loop/simple-tur
 
 ---
 
-
 ## 9. Phase 4 — Guardrails Honest Foundation (Ethics, Receipts, Audit) ✅ COMPLETE
 
 **Status**: Landed on `develop` (branch `feat/guardrails-honest-foundation` merged).
@@ -499,6 +519,7 @@ Wire this into the stream error handler in `packages/runtime/src/loop/simple-tur
 **Tests**: 21 test files passing (existing + new ethics-registry, audit-logger tests).
 
 **Downstream consumers**:
+
 - Phase 9 adds behavioral scanners that populate `implementedBy` in the EthicsRegistry.
 - Phase 10 adds missing surfaces (retrieval, memory, egress) and ingress scanning.
 - Phase 12 wires the audit logger to `UnifiedDB.guardrail_decisions` in the daemon.
@@ -786,7 +807,7 @@ The `@agentsy/gateway` package is **not** gutted into a thin IPC client. It rema
 
 ### 10.2 Current Architecture
 
-```
+```text
 CLI → Runtime → Gateway → Providers → LLM APIs
                   ↑
            (routing, health,
@@ -797,7 +818,7 @@ Every CLI invocation instantiates its own gateway. Health probes run per-process
 
 ### 10.3 Target Architecture
 
-```
+```text
 ┌───────────────────────────────────────────────────────┐
 │ @agentsy/gateway (independent reusable package)       │
 │                                                       │
@@ -1119,6 +1140,7 @@ The Phase 0.5 fix added `quotaRegistry` to `RetryContext`. This phase makes `Quo
 ### 10.9 Gateway package README and npm publication
 
 The gateway package gets a proper README documenting:
+
 1. **Quick start** for external consumers (the example in §10.7)
 2. **PersistenceAdapter interface** for custom persistence
 3. **ProviderEthicsPolicyHook** for custom ethics filtering
@@ -1171,7 +1193,7 @@ The package is published to npm as `@agentsy/gateway` with stable semver. Breaki
 
 The daemon owns all LLM provider connections. Clients request streams via IPC; the daemon pipes events back as JSON-RPC notifications. For ACP clients, the same events map to ACP `session/update` notifications.
 
-```
+```text
 Client (CLI/TUI/ACP) ──stream.start──▶ Daemon.StreamManager
                                             ↓
                                        Provider → LLM API
@@ -1371,12 +1393,14 @@ The `@agentsy/retrieval` package exists with chunking, embedding, and vector sto
 Two sub-phases:
 
 **7.1 Fix existing retrieval**:
+
 - Verify chunking strategy (recursive character splitter with overlap).
 - Verify embedding generation (default to OpenAI `text-embedding-3-small`).
 - Verify vector store (`UnifiedDB.rag_vectors` table, using sqlite-vec extension or Honker's vector ops).
 - Wire `RetrievalFirewallScanner` (Phase 10) to re-scan retrieved content for prompt injection.
 
 **7.2 RAG as daemon service**:
+
 - `RetrievalService` runs as a `Service` in the daemon.
 - Background indexing job (Bree-scheduled) runs every N minutes to index new content.
 - Cross-session index reuse — the same `~/.agentsy/agentsy.db` serves all sessions in a folder scope.
@@ -1480,11 +1504,13 @@ The learning loop runs as a foreground job that blocks the CLI. There's no backg
 The learning loop runs as a daemon background job on a configurable schedule AND is triggered by specific events (canary detection, observation threshold).
 
 **Triggers**:
+
 - **Timer-based**: Bree-scheduled job, default every 1 hour.
 - **Canary detection**: when a memory item is flagged as a "canary" (anomalous pattern), trigger learning immediately.
 - **Observation threshold**: when the count of unprocessed `kind: 'event'` memory items exceeds a threshold (default 100), trigger learning.
 
 **Learning job**:
+
 1. Read unprocessed `kind: 'event'` memory items.
 2. Run the consolidation LLM call (summarize events into `kind: 'semantic'` items).
 3. Index the new semantic items via `RetrievalService.indexNewContent` (Phase 7).
@@ -1594,7 +1620,6 @@ export class LearningJob {
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-
 
 ## 14. Phase 9 — Guardrails Behavioral Detectors (9 of 9 required)
 
@@ -1959,6 +1984,7 @@ const IDENTITY_ASSUMPTIONS = [
 ### 14.10 Implementation Order
 
 Per `IMPLEMENTATION-PLAN-REVISIONS.md`, priority order:
+
 1. **E-6 SycophancyScanner** — highest priority (Science paper citation).
 2. **E-7 AnthropomorphismScanner** — second priority.
 3. **E-9 HighRiskDomainScanner** — highest stakes (self-harm, medical, legal advice).
@@ -2023,6 +2049,7 @@ export type GuardrailPhase =
 Implement 4 new scanners:
 
 **RetrievalFirewallScanner** (`packages/guardrails/src/scanners/retrieval-firewall.ts`):
+
 - Phase: `retrieval`
 - Domain allowlist (from `GuardrailsConfig.retrievalDomains`)
 - Trust scoring for retrieved content (lower trust = stricter scanning)
@@ -2072,17 +2099,20 @@ export class RetrievalFirewallScanner implements GuardrailScanner {
 ```
 
 **MemoryPoisoningScanner** (`packages/guardrails/src/scanners/memory-poisoning.ts`):
+
 - Phase: `memory`
 - Scans persisted instructions/notes for injection attempts
 - Schema-validates memory entries
 - Flags suspicious updates (rapid changes to high-trust items)
 
 **ActionScanner** (`packages/guardrails/src/scanners/action.ts`):
+
 - Phase: `action`
 - Schema-validates action parameters
 - Enforces irreversible-action approval gates (e.g. `send_email`, `delete_file`, `transfer_funds`)
 
 **EgressScanner** (`packages/guardrails/src/scanners/egress.ts`):
+
 - Phase: `egress`
 - URL allowlist (from `GuardrailsConfig.egressAllowList`)
 - Request-size limits
@@ -2126,18 +2156,21 @@ export interface GuardrailContext {
 Implement 3 new scanners that read `SessionState`:
 
 **InteractionSafeguardsScanner** (`packages/guardrails/src/scanners/interaction-safeguards.ts`):
+
 - Phase: `input`
 - Tracks `reassuranceSeekingCount` and `emotionalIntensityScore` over turns
 - Soft session limit: if `turnCount > 50` and `emotionalIntensityScore > 0.7` for 5+ consecutive turns, returns `escalate` with a pause-nudge message
 - Memory retention limit: if `sensitiveContextActive` is true, marks memory items for shorter retention
 
 **CrisisEscalationScanner** (`packages/guardrails/src/scanners/crisis-escalation.ts`):
+
 - Phase: `input`
 - Detects crisis language in the user's message
 - Returns `escalate` with `crisisResources: string[]` in the receipt (hotline numbers, crisis text lines)
 - Sets `sessionState.crisisMode = true`
 
 **ScopeDriftScanner** (`packages/guardrails/src/scanners/scope-drift.ts`):
+
 - Phase: `input`
 - Compares the current request against `agentScopeDeclaration.inScope` (added in Phase 11)
 - Tracks the proportion of in-scope vs out-of-scope requests over a session
@@ -3065,6 +3098,7 @@ Wire into CI: every PR that adds or modifies a first-party agent template must r
 Rather than running langeval as a separate platform, agentsy integrates it at two levels:
 
 **Level 1 — CLI integration (Phase 13, +1 SP)**:
+
 - `agentsy eval run` — invokes langeval's orchestrator API (`POST /orchestrator/campaigns`) with a scenario ID and an agent ID
 - `agentsy eval scenarios` — lists available langeval scenarios (synced from the langeval resource service)
 - `agentsy eval red-team` — launches a red-teaming campaign against the current agent
@@ -3072,11 +3106,13 @@ Rather than running langeval as a separate platform, agentsy integrates it at tw
 - Results are fetched from langeval's orchestrator and persisted to `UnifiedDB.eval_results` for trend tracking
 
 **Level 2 — CI integration (Phase 13, +1 SP)**:
+
 - A GitHub Actions workflow runs `agentsy eval run --scenario-suite safety --policy always-passes` on every PR touching `packages/guardrails/` or agent templates
 - The release-gate script (§18.3) calls langeval's API to verify the 12 SAFETY.md benchmark scenarios pass before allowing a release
 - Failures post a comment on the PR with a link to the langeval Trace Debugger (Langfuse UI)
 
 **Level 3 — Langfuse cross-reference (Phase 19, +0 SP — already planned)**:
+
 - langeval's Trace Debugger uses Langfuse under the hood
 - Phase 19 (Langfuse observability) already wires Langfuse into the daemon
 - The same Langfuse instance serves both agentsy's runtime tracing and langeval's evaluation tracing — agents can see their own traces alongside the eval results that judged them
@@ -3086,12 +3122,14 @@ Rather than running langeval as a separate platform, agentsy integrates it at tw
 langeval runs as a Docker Compose stack (it already ships one). Two options:
 
 **Option A — agentsy-managed (recommended for v1)**:
+
 - langeval runs as additional services in agentsy's Docker Compose (extends Phase 21's Docker tooling)
 - `agentsy eval start` / `agentsy eval stop` manage the langeval stack
 - Shared Langfuse instance (Phase 19) — langeval's `LANGFUSE_URL` points to agentsy's Langfuse
 - Shared PostgreSQL (agentsy's `UnifiedDB` or a separate langeval DB)
 
 **Option B — external (for teams with existing langeval)**:
+
 - `DaemonConfig.eval.langevalUrl` points to an external langeval instance
 - agentsy just calls the API; no local langeval services
 - Useful for organizations running a shared langeval across multiple agent projects
@@ -3165,7 +3203,6 @@ This replaces the original §18.7 (+3 SP for custom behavioral evals). Net chang
 **Total Phase 13 with langeval integration: 11.5 SP** (was 11 SP with custom evals, but delivers far more capability).
 
 ---
-
 
 ## 19. Phase 14 — ACP Agent & Multi-Agent Deployment
 
@@ -3430,7 +3467,6 @@ The daemon starts as a local multi-agent system (AD-8). Server deployment with a
 
 ---
 
-
 ## 20. Phase 15 — Project Auto-Detection & Bootstrap
 
 **Priority**: P2 — Sprints 8–9
@@ -3555,7 +3591,7 @@ Four adapters, each fetching from its authoritative source:
 
 ### 20.5 Skills Spec Compliance
 
-All installed skills (regardless of source) normalize to the AgentSkills spec at https://agentskills.io/specification. Canonical `SKILL.md` format with YAML frontmatter (`name`, `description` required; `license`, `compatibility`, `metadata`, `allowed-tools` optional) + Markdown body + optional `scripts/`, `references/`, `assets/` subdirectories. Three-tier progressive disclosure (~100 / <5000 / on-demand tokens).
+All installed skills (regardless of source) normalize to the AgentSkills spec at <https://agentskills.io/specification>. Canonical `SKILL.md` format with YAML frontmatter (`name`, `description` required; `license`, `compatibility`, `metadata`, `allowed-tools` optional) + Markdown body + optional `scripts/`, `references/`, `assets/` subdirectories. Three-tier progressive disclosure (~100 / <5000 / on-demand tokens).
 
 ### 20.6 Recommendation Engine
 
@@ -3646,6 +3682,7 @@ Generate `.agentsy/aft.{md,json}` — a structured file-tree map. Markdown for h
 ### 20.10 Magic Context Bootstrap
 
 Seed Magic Context compartments in `UnifiedDB.context_*`:
+
 - `project_memories` — high-level project facts (name, purpose, stack).
 - `compartments` — fine-grained context buckets (e.g. "api-routes", "database-schema", "ui-components").
 - `session_meta` — session-level context (current task, recent files).
@@ -3656,6 +3693,7 @@ Loaded into every session scoped to this project.
 ### 20.11 Bootstrap Daemon Service
 
 `BootstrapService` runs as a `Service` in the daemon. On session open (ACP `session/new` or CLI invocation), it:
+
 1. Checks if `.agentsy/config.yml` exists. If not, runs `scanProject` and writes it.
 2. Loads the `ProjectProfile` and Magic Context compartments into the session.
 3. Returns the profile + recommendations to the agent.
@@ -3676,7 +3714,7 @@ Add a `SessionStart` hook (Phase 3 hook schema) that triggers `BootstrapService.
 
 New `@agentsy/bootstrap` package (26th package):
 
-```
+```text
 packages/bootstrap/
 ├── src/
 │   ├── scanner.ts              # ProjectProfile detection
@@ -3799,6 +3837,7 @@ Wire into CI for first-party packages.
 **E-32 (MEDIUM)** — `ToxicityScanner` `nazi` pattern matches the bare word in any context, including historical/educational text. Severity `high` triggers `block`. **Fix**: Either (a) require a destructive context ("I am a nazi", "heil nazi") or (b) lower severity to `medium` (escalate for human review). Pair with an LLM-based classifier for higher accuracy.
 
 **E-33 (MEDIUM)** — `SecretDetectionScanner` has overly broad patterns:
+
 - Line 105: Vercel pattern `/\b[A-Za-z0-9]{24}\b/g` matches any 24-character alphanumeric string.
 - Line 183: Postmark pattern matches any UUID.
 - Line 244: Snyk pattern matches any UUID.
@@ -3871,6 +3910,7 @@ export class RepoMap {
 
 **Edit-format DSLs (SEARCH/REPLACE with RelativeIndenter, udiff, whole-file)** — ~4 SP
 Open-model support. Many open models (DeepSeek, Qwen, Llama) struggle with structured tool calls but excel at edit-format DSLs. Implement 3 formats:
+
 - **SEARCH/REPLACE** with `RelativeIndenter` (indentation-agnostic matching)
 - **udiff** (unified diff format)
 - **whole-file** (replace entire file content)
@@ -4312,7 +4352,7 @@ export class DiagnosticsService implements Service {
 
 ### 24.1 Goal
 
-When a user sets `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` in their shell or `.env` file, the agentsy daemon should automatically wire a Langfuse exporter into the observability engine at startup — no code changes, no CLI flags. When the vars are absent, the daemon continues as before with observability disabled. The integration follows the official Langfuse OTLP quickstart at https://langfuse.com/docs/observability/get-started.
+When a user sets `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` in their shell or `.env` file, the agentsy daemon should automatically wire a Langfuse exporter into the observability engine at startup — no code changes, no CLI flags. When the vars are absent, the daemon continues as before with observability disabled. The integration follows the official Langfuse OTLP quickstart at <https://langfuse.com/docs/observability/get-started>.
 
 ### 24.2 Current State
 
@@ -4336,6 +4376,7 @@ A `LangfuseExporter` class already exists in `packages/observability/src/exporte
 **`.env` loading**: Node 22 native `process.loadEnvFile()` — no `dotenv` dependency. Files loaded in priority order: `.env.local` (highest), then `.env`. Existing `process.env` values are never overridden. Missing files are silent.
 
 **Three-layer API in `@agentsy/observability`**:
+
 1. `detectLangfuseFromEnv(env?)` — pure detection, returns `{ enabled, endpoint, reason }`
 2. `createLangfuseExporterFromEnv(options?)` — constructs exporter or returns `null`
 3. `createObservabilityFromEnv(options)` — builds engine, attaches sinks, returns `{ engine, sinks }`
@@ -4366,6 +4407,7 @@ observability: z.object({
 ### 24.4 File-by-File Change List
 
 **Modified** (7 files):
+
 - `packages/observability/src/exporters/langfuse.ts` — add `LANGFUSE_ENV_VARS`, `detectLangfuseFromEnv()`, `createLangfuseExporterFromEnv()`
 - `packages/observability/src/exporters/index.ts` — re-export new symbols
 - `packages/observability/src/index.ts` — re-export from root entry
@@ -4375,10 +4417,12 @@ observability: z.object({
 - `packages/daemon/package.json` — add `"@agentsy/observability": "workspace:*"` to dependencies
 
 **New** (2 files):
+
 - `packages/observability/src/auto-init.ts` — `createObservabilityFromEnv()` and supporting types
 - `packages/daemon/src/env.ts` — `loadDotenv()` helper using Node 22 native `process.loadEnvFile()`
 
 **New tests** (3 files):
+
 - `packages/observability/src/exporters/langfuse.test.ts` — ~12 cases for detection and construction
 - `packages/observability/src/auto-init.test.ts` — ~5 cases for the top-level helper
 - `packages/daemon/src/env.test.ts` — ~12 cases for `.env` loading (uses `mkdtempSync` for isolation)
@@ -4392,17 +4436,20 @@ observability: z.object({
 ### 24.6 Expected Startup Logs
 
 **Langfuse enabled**:
-```
+
+```text
 [daemon] observability: langfuse enabled — Loaded from LANGFUSE_PUBLIC_KEY + LANGFUSE_SECRET_KEY; endpoint=https://cloud.langfuse.com/api/public/otlp/v1/traces
 ```
 
 **Langfuse disabled (missing vars)**:
-```
+
+```text
 [daemon] observability: langfuse disabled — Missing LANGFUSE_PUBLIC_KEY and/or LANGFUSE_SECRET_KEY env vars
 ```
 
 **Langfuse disabled by config**:
-```
+
+```text
 [daemon] observability: langfuse disabled — Disabled by config (langfuseEnabled = false)
 ```
 
@@ -4421,6 +4468,7 @@ observability: z.object({
 **Branch**: `feat/langfuse-observability` from `develop`.
 
 **Commit sequence** (7 commits, each leaves build green):
+
 1. `feat(observability): add detectLangfuseFromEnv + createLangfuseExporterFromEnv`
 2. `feat(observability): add createObservabilityFromEnv auto-init helper`
 3. `feat(observability): rewrite README with Langfuse integration docs`
@@ -4430,6 +4478,7 @@ observability: z.object({
 7. `docs: add Langfuse quick start to observability README`
 
 **Verification gates**:
+
 - `pnpm check-types && pnpm lint && pnpm test` green across both packages
 - Manual smoke: env vars set → daemon logs "langfuse enabled" → trace appears in Langfuse dashboard
 - Manual smoke: env vars absent → daemon logs "langfuse disabled" → daemon works normally
@@ -4491,6 +4540,7 @@ After reading the source, I identified five gaps:
 **Gap 2 — AFT availability is checked but not gracefully degraded.** `isAftAvailable()` returns a boolean, but callers that invoke `getAftBridge()` get a hard throw (`'AFT binary not found. Run npx @cortexkit/aft setup...'`) when the binary is missing. There is no fallback path for "AFT not installed — degrade to no code intelligence." The postinstall script attempts to discover the binary, but if it fails, every code-intelligence-dependent tool call throws. This should be a warning + degraded mode, not a hard failure.
 
 **Gap 3 — AFT and Magic Context are NOT wired into the daemon.** The daemon (`packages/daemon/src/daemon.ts`) does not import `@agentsy/shared/src/cortexkit/aft-manager` or the MC bridge. The MC integration lives in `@agentsy/memory`, `@agentsy/session`, and `@agentsy/tokenomics` — but the daemon (the central process owning all agent execution per AD-1) has no lifecycle hook for AFT's `BridgePool` or MC's database. This means:
+
 - AFT processes are not started/stopped with the daemon.
 - MC's database is not opened/closed by the daemon (it's opened lazily by each consumer).
 - The `UnifiedDB` consolidation (Phase 1) did NOT absorb MC's `context.db` — it's still a separate file at `~/.local/share/cortexkit/magic-context/context.db`. This is a deliberate exception (MC owns that schema), but it means the daemon's `shutdown()` cannot flush MC state.
@@ -4542,6 +4592,7 @@ Implement four ethical restrictions as enforceable policy:
 **xAI / Grok — hard block.** Cited reporting documents: antisemitic posts generated by Grok ([NBC News](https://www.nbcnews.com/tech/internet/elon-musk-grok-antisemitic-posts-x-rcna217634)); Grok generating Hitler-praising content ([Politico](https://www.politico.com/news/magazine/2025/07/10/musk-grok-hitler-ai-00447055)); EU investigation after Grok generated 23,000 CSAM images in 11 days ([9to5Mac](https://9to5mac.com/2026/02/17/eu-also-investigating-as-grok-generated-23000-csam-images-in-11-days/)); the Grok sexual deepfake scandal ([Wikipedia](https://en.wikipedia.org/wiki/Grok_sexual_deepfake_scandal)); Grok still hosting sexualized deepfakes of famous women ([Wired](https://www.wired.com/story/grok-is-still-hosting-sexualized-deepfakes-of-famous-women/)). The pattern is repeated, severe, and unmitigated by the provider. Agentsy will not route to xAI models.
 
 **OpenAI, Microsoft, Google, Amazon — warn-and-acknowledge.** Cited reporting documents:
+
 - *OpenAI*: ChatGPT user risks ([NYT](https://www.nytimes.com/2025/11/23/technology/openai-chatgpt-users-risks.html)); OpenAI distancing itself from safety ([Annielytics](https://www.annielytics.com/blog/ai/is-openai-intentionally-distorting-itself-from-safety/)); ChatGPT creators knew product would cause harm, Florida argues in lawsuit ([Florida Phoenix](https://floridaphoenix.com/2026/06/01/chatgpt-creators-knew-product-would-cause-harm-florida-argues-in-lawsuit/)).
 - *Microsoft*: ICE technology in immigration crackdown ([Guardian](https://www.theguardian.com/us-news/2026/feb/17/ice-microsoft-technology-immigration-crackdown), [DHS AI use-case inventory](https://www.dhs.gov/ai/use-case-inventory/ice), [Computerworld](https://www.computerworld.com/article/4136052/microsoft-undercuts-its-kinder-gentler-image-with-big-ice-contract.html), [Wired](https://www.wired.com/story/how-big-tech-is-powering-trumps-immigration-crackdown/)).
 - *Google*: AI for Israeli military ([WaPo 2026](https://www.washingtonpost.com/technology/2026/02/01/google-ai-israel-military/), [WaPo 2025](https://www.washingtonpost.com/technology/2025/01/21/google-ai-israel-war-hamas-attack-gaza/)); "No Tech for Apartheid" — Project Nimbus $1.2B contract with Israel ([Time](https://time.com/6964364/exclusive-no-tech-for-apartheid-google-workers-protest-project-nimbus-1-2-billion-contract-with-israel/), [The Intercept](https://theintercept.com/2025/05/12/google-nimbus-israel-military-ai-human-rights/)).
@@ -4708,6 +4759,7 @@ export class StyleMimicryScanner implements GuardrailScanner {
 #### 26.3.4 Telegram removal
 
 Delete:
+
 - `packages/daemon/src/connectors/telegram.ts`
 - Remove `telegram` from `packages/daemon/src/connectors/index.ts` exports
 - Remove `telegram` from `ConnectorHostDeps.config` in `packages/daemon/src/connectors/connector-host.ts`
@@ -4716,7 +4768,8 @@ Delete:
 - Remove `grammy` from any optional-dependencies documentation
 
 Add to `safety-changelog.md`:
-```
+
+```text
 ## 2026-06-17 — Telegram connector removed
 Removed the Telegram connector on ethical grounds. Telegram is documented as a
 platform for extremist organizing ("Terrorgram") and CSAM distribution. Sources:
@@ -4728,6 +4781,7 @@ platform for extremist organizing ("Terrorgram") and CSAM distribution. Sources:
 #### 26.3.5 ETHICS.md amendments
 
 Add new clauses to `ETHICS.md` and register them in the `EthicsRegistry` (Phase 4):
+
 - §12: "The framework must not route to providers documented as generating CSAM, antisemitic content, or non-consensual sexual deepfakes. xAI/Grok is blocked."
 - §13: "The framework must warn users before routing to providers documented as complicit in human-rights violations (immigration enforcement, military AI). OpenAI, Microsoft, Google, and Amazon require per-session acknowledgement."
 - §14: "The framework must block prompts requesting creation of work in the style of a specific named living creator. Style mimicry profits from theft of creators' work."
@@ -4738,12 +4792,14 @@ Each clause's `implementedBy` field points to the corresponding scanner or polic
 ### 26.4 File-by-File Change List
 
 **New** (4 files):
+
 - `packages/guardrails/src/ethics/provider-policy.ts` — `PROVIDER_ETHICS_POLICY`, `getProviderEthicsPolicy()`, `isProviderBlocked()`, `requiresAcknowledgement()`
 - `packages/guardrails/src/scanners/style-mimicry.ts` — `StyleMimicryScanner`
 - `packages/guardrails/src/scanners/style-mimicry.test.ts` — 20+ fixtures (writing, imagery, audio, historical-figure exemption, edge cases)
 - `packages/guardrails/src/ethics/provider-policy.test.ts` — policy lookup, block check, ack check
 
 **Modified** (8 files):
+
 - `packages/gateway/src/services/routing-service.ts` (Phase 5) — apply `PROVIDER_ETHICS_POLICY` in `selectModel()`
 - `packages/daemon/src/daemon.ts` — handle `requiresAcknowledgement` flag in IPC `stream.start` handler; add `agentsy acknowledge-provider` CLI
 - `packages/daemon/src/config.ts` — remove `telegram` from `connectors` schema
@@ -4754,6 +4810,7 @@ Each clause's `implementedBy` field points to the corresponding scanner or polic
 - `safety-changelog.md` — Telegram removal entry
 
 **Deleted** (1 file):
+
 - `packages/daemon/src/connectors/telegram.ts`
 
 ### 26.5 Edge Cases
@@ -4964,6 +5021,7 @@ docker: z.object({
 #### 27.2.5 Resource-availability contract
 
 Both tools check three conditions before invoking:
+
 1. **Docker available** — `docker --version` and `docker info` succeed.
 2. **Image present** — `docker image inspect` succeeds; if not, offer to pull (interactive) or auto-pull (configurable).
 3. **Resources sufficient** — host has enough free memory (super-linter: ≥2GB, presidio: ≥512MB) and CPU (≥1 core available).
@@ -4973,6 +5031,7 @@ If any condition fails, the tool returns a graceful degradation result (super-li
 ### 27.3 File-by-File Change List
 
 **New** (5 files):
+
 - `packages/daemon/src/services/docker-availability.ts` — `DockerAvailabilityChecker`
 - `packages/daemon/src/services/docker-availability.test.ts`
 - `packages/tools/src/tools/super-linter/index.ts` — `SuperLinterTool`
@@ -4980,6 +5039,7 @@ If any condition fails, the tool returns a graceful degradation result (super-li
 - `packages/guardrails/src/scanners/presidio.ts` — `PresidioScanner`
 
 **Modified** (3 files):
+
 - `packages/daemon/src/config.ts` — add `docker` section
 - `packages/daemon/src/daemon.ts` — instantiate `DockerAvailabilityChecker`, pass to tools + guardrails
 - `packages/guardrails/src/index.ts` — export `PresidioScanner`
@@ -5060,10 +5120,12 @@ async function handleHttpFetch(input: Record<string, unknown>): Promise<ToolResu
 ### 28.3 File-by-File Change List
 
 **Modified** (2 files):
+
 - `packages/tools/src/tools/http/index.ts` — add turndown conversion
 - `packages/tools/package.json` — add `turndown` dependency
 
 **New** (1 file):
+
 - `packages/tools/src/tools/http/index.test.ts` — test HTML→Markdown conversion, non-HTML passthrough, conversion failure fallback
 
 ### 28.4 Verification
@@ -5091,6 +5153,7 @@ async function handleHttpFetch(input: Record<string, unknown>): Promise<ToolResu
 **Current**: `dreamer-consumer.ts` polls `project_state.project_memory_epoch` and one-directionally upserts MC memories into the agentsy wiki. No write-back path.
 
 **Fix**:
+
 - Add `writeBackToMagicContext: boolean` option to `WikiManager.upsertPage()`. When true, the upsert also writes to MC's `project_memories` table (mapping wiki entity kinds back to MC categories).
 - Replace the poll-based `dreamer-consumer` with an event-driven model: MC bumps `project_memory_epoch` on write; agentsy subscribes via a SQLite trigger + Honker NOTIFY (Phase 1's event bus). Epoch change → immediate sync, not poll.
 - Document the bidirectional sync in `docs/developers/cortexkit-integration.md`.
@@ -5100,6 +5163,7 @@ async function handleHttpFetch(input: Record<string, unknown>): Promise<ToolResu
 **Current**: `getAftBridge()` throws `'AFT binary not found'` when the binary is missing. No fallback.
 
 **Fix**:
+
 - Add `getAftBridgeOrNull(): Promise<BridgePool | null>` — returns `null` instead of throwing.
 - Update all callers to check for `null` and fall back to no-code-intelligence mode with a one-time `logger.warn('AFT not available — code intelligence disabled. Run npx @cortexkit/aft setup.')`.
 - Keep the existing `getAftBridge()` as a thin wrapper that throws for backward compatibility, but mark it `@deprecated` in favor of `getAftBridgeOrNull()`.
@@ -5109,6 +5173,7 @@ async function handleHttpFetch(input: Record<string, unknown>): Promise<ToolResu
 **Current**: AFT `BridgePool` and MC database are not started/stopped by the daemon. MC's `context.db` is a separate file not absorbed by `UnifiedDB`.
 
 **Fix**:
+
 - Add `aftPool` and `magicContextDb` fields to the `Daemon` class.
 - In `Daemon.start()`: call `aftPool.start()` (if AFT available) and open MC database.
 - In `Daemon.stop()`: call `aftPool.shutdown()` and close MC database (before `UnifiedDB.close()`, since the dreamer consumer may flush).
@@ -5124,6 +5189,7 @@ async function handleHttpFetch(input: Record<string, unknown>): Promise<ToolResu
 #### 29.4.1 Todo-list tool and store
 
 Add a `todos` table to `UnifiedDB`:
+
 ```sql
 CREATE TABLE todos (
   id TEXT PRIMARY KEY,
@@ -5142,6 +5208,7 @@ CREATE INDEX idx_todos_session ON todos(session_id);
 ```
 
 Add three agent-callable tools in `packages/tools/src/tools/todo/`:
+
 - `todo_write` — create/update a todo item
 - `todo_read` — list todos for the current session/agent (with status filter)
 - `todo_update` — mark todo status (in_progress, completed, cancelled)
@@ -5149,6 +5216,7 @@ Add three agent-callable tools in `packages/tools/src/tools/todo/`:
 #### 29.4.2 SQLite-backed TaskBoard
 
 Add `packages/orchestrator/src/task-board/sqlite.ts`:
+
 ```typescript
 export class SqliteTaskBoard implements TaskBoard {
   constructor(private db: UnifiedDB) {}
@@ -5164,6 +5232,7 @@ The daemon uses `SqliteTaskBoard` (not `InMemoryTaskBoard`) so tasks survive res
 #### 29.4.3 Agent-callable task-delegation tools
 
 Add three agent-callable tools in `packages/tools/src/tools/task/`:
+
 - `task_list` — list tasks for the current plan (with status filter)
 - `task_claim` — claim a `ready` task for execution (sets status to `running`, creates a `TaskAttempt`)
 - `task_complete` — mark a task completed/failed (records output in `TaskAttempt`)
@@ -5177,6 +5246,7 @@ These let an agent delegate sub-tasks to other agents (via the `AgentHost.spawn`
 **Fix**:
 
 Add `forkWithCacheSharing(parentAgentId): AgentId` to `AgentHost`:
+
 ```typescript
 async forkWithCacheSharing(parentAgentId: string): Promise<string> {
   const parent = this.getAgent(parentAgentId);
@@ -5200,6 +5270,7 @@ This implements the Claude-Code `CacheSafeParams` + `buildForkedMessages` patter
 ### 29.6 File-by-File Change List
 
 **New** (8 files):
+
 - `packages/tools/src/tools/todo/index.ts` — `todo_write`, `todo_read`, `todo_update` tools
 - `packages/tools/src/tools/todo/index.test.ts`
 - `packages/tools/src/tools/task/index.ts` — `task_list`, `task_claim`, `task_complete` tools
@@ -5210,6 +5281,7 @@ This implements the Claude-Code `CacheSafeParams` + `buildForkedMessages` patter
 - `packages/memory/src/cortexkit/bidirectional-sync.ts` — bidirectional MC ↔ wiki sync
 
 **Modified** (8 files):
+
 - `packages/shared/src/cortexkit/aft-manager.ts` — add `getAftBridgeOrNull()`, deprecate `getAftBridge()`
 - `packages/memory/src/cortexkit/wiki-manager.ts` — add `writeBackToMagicContext` option
 - `packages/memory/src/cortexkit/dreamer-consumer.ts` — replace polling with Honker NOTIFY subscription
@@ -5241,7 +5313,7 @@ This implements the Claude-Code `CacheSafeParams` + `buildForkedMessages` patter
 
 ### 30.1 Sprint-by-Sprint Timeline
 
-```
+```text
 Sprint 1 (Week 1-2):   Phase 3 (Hook Pipeline Redesign) ─────────┐
                        Phase 5 (Gateway → Daemon) ────────────────┤
                        Phase 7 (RAG as Daemon Service) ───────────┤
@@ -5264,7 +5336,7 @@ Sprint 4 (Week 7-8):   Phase 9 (Guardrails Behavioral Detectors) ─┤
 Sprint 5 (Week 9-10):  Phase 9 finish ─────────────────────────────┤
                        Phase 10 (Guardrails Missing Surfaces) ─────┤
                        Phase 21 finish ────────────────────────────┘
-                                                                   
+
 Sprint 6 (Week 11-12): Phase 11 (Scope Accountability) ───────────┐
                        Phase 12 (Guardrails Daemon Integration) ──┤
                                                                     ├──▶ Both need Phase 10
@@ -5288,7 +5360,7 @@ Sprint 11 (Week 21-22): Phase 18 finish ─────────────�
 
 ### 30.2 Dependencies Graph (Active Scope)
 
-```
+```text
 Phase 3 (Hooks) ─────────┬──▶ Phase 4 (Guardrails Foundation) ──┬──▶ Phase 9 (Detectors) ──┐
                           │                                       │                          ├──▶ Phase 13 (Metrics)
 Phase 5 (Gateway) ────────┼──▶ Phase 6 (Streaming) ──┬──▶ Phase 14 (ACP) ──┬──▶ Phase 18 (Missing)
@@ -5364,6 +5436,7 @@ Active total: ~151.5 SP (Phases 3–23, including Phase 10 §15.7 ingress extens
 This checklist combines the guardrails gap analysis verification items (43 findings), the v2.3 success criteria, and the competitive P0 closures. Organized by phase.
 
 ### Phase 0 — Critical Bug Fixes ✅
+
 - [x] All 9 bug fixes landed on `develop`
 - [x] `UniversalClient` true streaming
 - [x] Tool calls preserved in conversation history
@@ -5376,6 +5449,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [x] Provider error classification uses HTTP status + specific regexes
 
 ### Phase 1 — Daemon Foundation ✅
+
 - [x] `@agentsy/daemon` package exists
 - [x] `UnifiedDB` consolidates memory.db + context.db + tokenomics.db into `~/.agentsy/agentsy.db`
 - [x] `AgentPool` (Piscina) wired
@@ -5390,6 +5464,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [x] CLI integration (`agentsy daemon start|stop|status|logs`)
 
 ### Phase 2 — Package Consolidation ✅
+
 - [x] 27 → 25 packages
 - [x] `workflows` → `orchestrator`
 - [x] `types` → `shared`
@@ -5401,6 +5476,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [x] `pnpm install && pnpm build && pnpm test` green
 
 ### Phase 3 — Hook Pipeline Redesign + Claude-Code Hook Schema
+
 - [ ] `RuntimeHookRegistry.fire()` composes transforms left-to-right
 - [ ] `stop` short-circuits the pipeline and returns `stoppedBy`
 - [ ] Claude-Code hook schema parser handles command/prompt/http/agent types
@@ -5409,6 +5485,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] All existing tests pass (no regressions)
 
 ### Phase 4 — Guardrails Honest Foundation
+
 - [ ] `EthicsRegistry` exists; every clause has `implementedBy` or is marked as a known gap
 - [ ] `GuardrailDecisionReceipt` type exists with all 7 fields (`policyId`, `decision`, `reasonCode`, `riskTier`, `surface`, `timestamp`, `correlationId`)
 - [ ] `quarantine` and `allow-with-approval` are distinct states in `GuardrailResult`
@@ -5422,12 +5499,14 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] PR template includes ethics review checklist
 
 ### Phase 5 — Gateway → Daemon Migration
+
 - [ ] `RoutingService` runs as a `Service` in the daemon
 - [ ] `@agentsy/gateway` package is a thin IPC client (no routing logic)
 - [ ] Per-provider `QuotaRegistry` persists to `UnifiedDB`
 - [ ] Routing decisions logged for audit
 
 ### Phase 6 — Streaming Architecture
+
 - [ ] `StreamManager` runs as a `Service` in the daemon
 - [ ] `wrapSSE` aborts on idle
 - [ ] `StreamingSecretsFilter` masks secrets across chunk boundaries
@@ -5435,17 +5514,20 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] ACP `session/update` notifications emitted for all event types
 
 ### Phase 7 — RAG as Daemon Service
+
 - [ ] `RetrievalService` runs as a `Service` in the daemon
 - [ ] Background indexing job scheduled and runs
 - [ ] Vector index persists in `UnifiedDB.rag_vectors`
 - [ ] Wiki invariant enforced (only `kind: 'semantic'` items indexed)
 
 ### Phase 8 — Learning Loop & Background Jobs
+
 - [ ] `LearningJob` runs as a Bree-scheduled job
 - [ ] Event bus uses Honker NOTIFY/LISTEN for cross-process wake
 - [ ] Canary and observation events trigger learning immediately
 
 ### Phase 9 — Guardrails Behavioral Detectors
+
 - [ ] `SycophancyScanner` exists with 20+ fixtures
 - [ ] `AnthropomorphismScanner` exists with 20+ fixtures
 - [ ] `DependencyScanner` exists with multi-turn fixtures (requires `SessionState`)
@@ -5459,6 +5541,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] `EthicsRegistry.implementedBy` fields updated for all 9 clauses
 
 ### Phase 10 — Guardrails Missing Surfaces & Interaction Safeguards (+ §15.7 Ingress Extension)
+
 - [ ] `GuardrailPhase` includes `retrieval`, `memory`, `action`, `egress`
 - [ ] `RetrievalFirewallScanner` exists (runs `PromptInjectionScanner` on retrieved content — closes E-35)
 - [ ] `MemoryPoisoningScanner` exists
@@ -5478,6 +5561,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] **§15.7: `HTTP_PROXY` / `HTTPS_PROXY` / `NODE_EXTRA_CA_CERTS` / `SSL_CERT_FILE` / `REQUESTS_CA_BUNDLE` / `GIT_SSL_CAINFO` injected into subprocess env when `proxy-inspect` is set (plumbing for Phase 25)**
 
 ### Phase 11 — Scope Accountability, Request Classification & High-Risk Domains
+
 - [ ] `ScopeDeclaration` type exists
 - [ ] `ScopeDeclarationScanner` enforces it; agent YAML specs consumed
 - [ ] `ScopeDriftScanner` (from Phase 10) consumes `agentScopeDeclaration`
@@ -5487,6 +5571,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] CLI `agentsy agent show <name> --scope` works
 
 ### Phase 12 — Guardrails Daemon Integration
+
 - [ ] `@agentsy/daemon` depends on `@agentsy/guardrails` and `@agentsy/runtime`
 - [ ] `GuardrailPipeline` and `HookRegistry` instantiated in `Daemon.start()`
 - [ ] All 18 scanners wired (7 security + 9 behavioral + 4 surface + 3 interaction + 2 scope/classification)
@@ -5496,6 +5581,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Integration test: malicious IPC blocked
 
 ### Phase 13 — Guardrails Metrics, Benchmark Suite, Release Gate + langeval Integration
+
 - [ ] All 12 required safety metrics tracked and exported (via OpenTelemetry or local JSON)
 - [ ] Benchmark suite exists with all 12 required scenarios (20–50 cases each)
 - [ ] `agentsy guardrails benchmark` CLI command runs the suite and produces a report
@@ -5515,6 +5601,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] **§18.7: Memory + perf regression baselines (`MemoryTestHarness`, `PerfTestHarness`)**
 
 ### Phase 14 — ACP Agent & Multi-Agent Deployment
+
 - [ ] ACP server handles all 20 methods in the compatibility matrix
 - [ ] Folder-based scope isolation works across concurrent sessions
 - [ ] Steering + follow-up queues work (`QueueMode: "all" | "one-at-a-time"`)
@@ -5524,6 +5611,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Default agents (coder, researcher, planner) loadable from YAML
 
 ### Phase 15 — Project Auto-Detection & Bootstrap
+
 - [ ] `@agentsy/bootstrap` package exists (26th package)
 - [ ] Scanner detects languages, frameworks, package managers, build systems, linters, test runners
 - [ ] `.agentsy/config.yml` schema is stable (`schemaVersion: 1`)
@@ -5535,6 +5623,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Multi-root workspaces supported via `/add-project-folder`
 
 ### Phase 16 — Guardrails CLI, Hub & Polish
+
 - [ ] `agentsy guardrails install` writes to persistent `.agentsy/guardrails.yaml`
 - [ ] `agentsy guardrails policy <path>` validates and test-evaluates
 - [ ] `agentsy guardrails test <policy-path> <input>` prints decision receipts
@@ -5550,6 +5639,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] `docs/safety-exceptions.md` exists (states "none" if none)
 
 ### Phase 17 — Competitive Gap-Closing Sprint
+
 - [ ] `RepoMap` (aider) builds and ranks symbols via PageRank
 - [ ] 3 edit-format DSLs (aider): SEARCH/REPLACE with RelativeIndenter, udiff, whole-file
 - [ ] `DirtyJson` tolerant parser (agent-zero) handles malformed LLM JSON
@@ -5569,6 +5659,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] `pi-ast` structural summaries (oh-my-pi)
 
 ### Phase 18 — Missing Capabilities
+
 - [ ] `OutputValidator` validates and auto-repairs structured output
 - [ ] `CheckpointManager` creates and restores checkpoints
 - [ ] `SandboxService` sandboxes tool execution
@@ -5579,6 +5670,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] ACP session persistence works across daemon restarts
 
 ### Phase 19 — Langfuse Observability Integration
+
 - [ ] `detectLangfuseFromEnv` handles all env-var combinations (missing, partial, both, whitespace, empty, `LANGFUSE_HOST` path variants)
 - [ ] `createLangfuseExporterFromEnv` returns `null` on missing vars, returns exporter on present vars, honors optional vars, validates integers, overrides take precedence
 - [ ] `createObservabilityFromEnv` returns engine with disabled sink on empty env, enabled sink on present env, respects `langfuseEnabled: false`
@@ -5596,6 +5688,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] `@agentsy/observability` added as dependency of `@agentsy/daemon`
 
 ### Phase 20 — Ethical Provider & Content Policy
+
 - [ ] `PROVIDER_ETHICS_POLICY` contains 5 entries (xai block; openai/microsoft/google/amazon warn)
 - [ ] `isProviderBlocked('xai')` returns `true`; all others return `false`
 - [ ] `requiresAcknowledgement('openai')` returns `true`; `requiresAcknowledgement('anthropic')` returns `false`
@@ -5612,6 +5705,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] `ETHICS.md` §12–§15 added; `EthicsRegistry` updated with `implementedBy` fields
 
 ### Phase 21 — Docker-Based Optional Tooling
+
 - [ ] `DockerAvailabilityChecker` correctly detects Docker presence, daemon state, and resources
 - [ ] `SuperLinterTool` returns graceful degradation when Docker is absent
 - [ ] `SuperLinterTool` invokes `docker run` with correct args and parses output
@@ -5622,12 +5716,14 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Resource checks prevent invocation when memory/CPU insufficient
 
 ### Phase 22 — Web Fetcher HTML-to-Markdown
+
 - [ ] `http_fetch` returns Markdown when content-type is `text/html`
 - [ ] `http_fetch` returns raw body when content-type is not HTML
 - [ ] `http_fetch` returns raw HTML when turndown conversion throws (graceful fallback)
 - [ ] `bodyFormat` field correctly reports `markdown` | `html` | `<content-type>`
 
 ### Phase 23 — AFT, Magic Context & Task Board Integration Hardening
+
 - [ ] `WikiManager.upsertPage({ writeBackToMagicContext: true })` writes to both wiki and MC `project_memories`
 - [ ] Dreamer consumer syncs within 1s of MC epoch change (event-driven, not poll)
 - [ ] `getAftBridgeOrNull()` returns `null` when AFT binary missing (no throw)
@@ -5642,6 +5738,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] `docs/developers/cortexkit-integration.md` updated
 
 ### Phase 24 — Teams & Remote Daemon Deployment (DEFERRED — verify when activated)
+
 - [ ] `agentsy deploy init --topology local-docker` generates a working `docker-compose.local.yml`
 - [ ] `agentsy deploy init --topology teams` generates `docker-compose.teams.yml` + `Caddyfile` + `.env.example`
 - [ ] `docker compose up` starts the daemon in a container with a volume-mounted SQLite DB
@@ -5657,6 +5754,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] xAI block and style-mimicry block enforced in server mode (Phase 20 policy applies)
 
 ### Phase 25 — MITM Egress Proxy (DEFERRED — verify when activated)
+
 - [ ] `agentsy proxy status` shows proxy running, CA present, port listening
 - [ ] Subprocess with `proxy-inspect` policy routes HTTP through the proxy
 - [ ] Subprocess with `proxy-inspect` policy routes HTTPS through the proxy (TLS interception works)
@@ -5675,6 +5773,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] `DaemonConfig.proxy` schema accepts all fields with correct defaults
 
 ### Phase 26 — A2A Protocol Support (DEFERRED — verify when activated)
+
 - [ ] A2A server endpoint accepts task creation, streaming, cancellation
 - [ ] External A2A client (gemini-cli) can invoke an agentsy agent and receive streamed results
 - [ ] `a2a_delegate` tool delegates to a remote A2A agent and returns the result
@@ -5683,6 +5782,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] First call to a new A2A agent URL requires approval; subsequent calls auto-approved
 
 ### Phase 27 — Self-Improvement & Skill Curation (DEFERRED — verify when activated)
+
 - [ ] Skill curator runs when daemon idle >2h and last run >7d
 - [ ] Curator marks skills stale after 30 days, archives after 90 days, never deletes
 - [ ] Post-turn review fires after every turn with inherited prefix cache
@@ -5692,6 +5792,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Skill AST audit escalates skills with non-critical findings for review
 
 ### Phase 28 — Supply-Chain Security & Policy Attestation (DEFERRED — verify when activated)
+
 - [ ] OSV malware scanner blocks `MAL-*` advisories on MCP/skill install
 - [ ] OSV scanner fails open on timeout (10s)
 - [ ] Policy attestation generates cryptographic hashes (policy, workspace, findings, attestation)
@@ -5703,6 +5804,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] JSON Schema for `DaemonConfig` and agent specs auto-generated and published
 
 ### Cross-Cutting
+
 - [ ] `pnpm check-types` passes on all phases
 - [ ] `pnpm lint` passes on all phases
 - [ ] `pnpm test` passes on all phases (new tests added in each phase)
@@ -5945,7 +6047,7 @@ Quick-reference: finding ID → severity → title → phase that closes it → 
 
 ### Before (27 packages — pre-Phase 2)
 
-```
+```text
 agents/          (39)   ← Keep
 cli/             (71)   ← Keep (becomes thin daemon client)
 connectors/      (13)   ← Merge into daemon
@@ -5978,7 +6080,7 @@ workflows/       (1)    ← Merge into orchestrator
 
 ### After (25 packages + root scripts — post-Phase 2)
 
-```
+```text
 agents/          ← Keep
 cli/             ← Keep (thin daemon client)
 core/            ← Keep
@@ -6007,7 +6109,7 @@ scripts/         ← Root-level tooling (not a package)
 
 ### Future (Phase 15 adds bootstrap)
 
-```
+```text
 bootstrap/       ← NEW (Phase 15) — project scanner, registry adapters, install flow, AGENTS.md / AFT generators
 ```
 
@@ -6031,14 +6133,14 @@ bootstrap/       ← NEW (Phase 15) — project scanner, registry adapters, inst
 
 Newline-delimited JSON-RPC 2.0:
 
-```
+```text
 Client:  {"jsonrpc":"2.0","id":"1","method":"agent.list","params":{}}\n
 Server:  {"jsonrpc":"2.0","id":"1","result":[{"id":"coder-1","role":"coder","state":"idle"}]}\n
 ```
 
 ### Streaming Protocol
 
-```
+```text
 Client:  {"jsonrpc":"2.0","id":"2","method":"stream.start","params":{"agentId":"coder-1","messages":[...]}}
 Server:  {"jsonrpc":"2.0","id":"2","result":{"streamId":"s-abc123"}}
 Server:  {"jsonrpc":"2.0","method":"stream.chunk","params":{"streamId":"s-abc123","chunk":{"type":"content","text":"Hello"},"index":0}}
@@ -6277,17 +6379,20 @@ Transform agentsy from a single-user local daemon into a multi-user remote-deplo
 
 Phase 24 supports three deployment topologies. All three run the same daemon code; the difference is configuration.
 
-**Topology A — Local background process (current v1 default)**
-```
+## Topology A — Local background process (current v1 default)
+
+```text
 User's laptop
 └── agentsy daemon (Node.js background process)
     └── ~/.agentsy/agentsy.db (SQLite, local file)
     └── ~/.agentsy/daemon.sock (Unix socket, local)
 ```
+
 No auth (Unix socket permissions). Single user. This is what Phases 0–23 build. Phase 24 does not change it.
 
-**Topology B — Local Docker container (new in Phase 24)**
-```
+## Topology B — Local Docker container (new in Phase 24)
+
+```text
 User's laptop
 └── docker compose up
     ├── agentsy-daemon container (Node.js)
@@ -6295,10 +6400,12 @@ User's laptop
     └── (optional) turso container (libSQL)
         └── /data/turso.db (volume mount)
 ```
+
 Auth: still single-user (no OAuth needed) — the Docker container exposes a localhost port or Unix socket. The benefit is isolation (the daemon doesn't run as the user's PID) and reproducibility (compose file pins versions). Turso is optional here but useful if the user wants cross-device sync.
 
-**Topology C — Remote server, multi-user (the Teams feature)**
-```
+## Topology C — Remote server, multi-user (the Teams feature)
+
+```text
 Remote server (or cloud VM)
 └── docker compose up
     ├── agentsy-daemon container (Node.js)
@@ -6312,7 +6419,7 @@ Clients (CLI, TUI, ACP editors) connect over WSS (wss://agentsy.example.com/acp)
 and authenticate via OAuth/OIDC.
 ```
 
-#### 38.2.2 OAuth/OIDC authentication
+### 38.2.2 OAuth/OIDC authentication
 
 The daemon's IPC layer (Phase 1, §6) is transport-agnostic. Phase 24 adds a `WebSocketTransport` (already stubbed in AD-9) and an `OAuthAuthenticator` that validates OIDC ID tokens.
 
@@ -6352,6 +6459,7 @@ interface SessionJWT {
 ```
 
 **Authorization model**:
+
 - **Agents** are owned by a user. Other users can't see or interact with them unless explicitly shared.
 - **Memory scopes** are either `user:<userId>` (private) or `team:<teamId>` (shared). The scope key format from AD-12 (`folder:[hash]`) is extended to `user:<userId>:folder:[hash]` and `team:<teamId>:folder:[hash]`.
 - **Tool execution** requires the user to have the tool in their `scope` claim. Destructive tools require per-action approval (the `ApprovalManager` from Phase 4).
@@ -6436,6 +6544,7 @@ CREATE INDEX idx_audit_action ON audit_log(action, timestamp);
 ```
 
 **Audit events**:
+
 - Every prompt submitted (`action: 'prompt'`)
 - Every tool call (`action: 'tool_call'`, `tool_name`, `details_json: { args, result_summary }`)
 - Every guardrail decision (`action: 'guardrail_decision'`, `details_json: { receipt }`)
@@ -6461,6 +6570,7 @@ type ScopeKey =
 ```
 
 **Shared memory semantics**:
+
 - **Team wiki**: a team's `WikiManager` (Phase 23) writes to `team:<teamId>:folder:<hash>`. All team members read from it. Writes are attributed to the user in the wiki page metadata.
 - **Team RAG index**: the `RetrievalService` (Phase 7) indexes team-shared memories into a shared vector index. Personal memories are indexed separately and only retrieved for the owning user.
 - **Personal memories**: `user:<userId>:personal` is private. Other users (including admins) cannot read it. This is enforced at the `MemoryEngine.recall()` layer, not just at the API layer.
@@ -6471,6 +6581,7 @@ type ScopeKey =
 #### 38.2.6 Docker daemon deployment
 
 **Dockerfile** (`docker/daemon.Dockerfile`):
+
 ```dockerfile
 FROM node:22-slim
 WORKDIR /app
@@ -6486,6 +6597,7 @@ CMD ["node", "packages/daemon/dist/cli.js", "start"]
 ```
 
 **Docker Compose — Topology B (local Docker)** (`docker-compose.local.yml`):
+
 ```yaml
 services:
   agentsy:
@@ -6516,6 +6628,7 @@ volumes:
 ```
 
 **Docker Compose — Topology C (remote server, Teams)** (`docker-compose.teams.yml`):
+
 ```yaml
 services:
   agentsy:
@@ -6594,7 +6707,8 @@ volumes:
 ```
 
 **Caddyfile** (TLS termination + OAuth proxy):
-```
+
+```text
 agentsy.example.com {
     reverse_proxy agentsy:9380
     # Optional: Caddy can also handle OAuth at the proxy layer
@@ -6773,6 +6887,7 @@ Run a guardrail-aware MITM (man-in-the-middle) HTTP/HTTPS proxy as a daemon serv
 Rather than building a custom Node.js proxy (which would need to handle CONNECT tunneling, HTTPS decryption, WebSocket interception, and certificate generation — easily 2000+ lines), Phase 25 uses [`mitmproxy`](https://mitmproxy.org/) running in a Docker container with an agentsy addon script.
 
 **Why mitmproxy**:
+
 - Mature, battle-tested, handles HTTPS/WebSocket/SOCKS5 out of the box
 - Scriptable via Python addons — the agentsy addon calls the daemon's guardrail pipeline over a local IPC channel
 - Runs in Docker (reuses Phase 21's `DockerAvailabilityChecker` and resource-awareness patterns)
@@ -6780,6 +6895,7 @@ Rather than building a custom Node.js proxy (which would need to handle CONNECT 
 - Handles the tricky parts (CA generation, certificate per-domain signing, CONNECT tunneling) for free
 
 **Why not a custom Node.js proxy**:
+
 - HTTPS interception requires a per-connection TLS context with a dynamically-signed certificate — Node.js can do this but it's ~500 lines of fiddly `tls.createSecureContext` code
 - WebSocket interception requires upgrading the connection and parsing frames bidirectionally — another ~300 lines
 - CA management (generation, trust-store installation, rotation) is another ~200 lines
@@ -7033,6 +7149,7 @@ The daemon's guardrail endpoint supports both: it first checks for the header, t
 ### 39.3 What Phase 25 covers (and doesn't)
 
 **Covers**:
+
 - All HTTP/HTTPS requests from subprocesses that respect `HTTP_PROXY`/`HTTPS_PROXY` env vars (curl, wget, npm, pip, requests, axios, fetch, httpx, etc.)
 - WebSocket and SSE traffic (mitmproxy handles these)
 - Per-subprocess policy enforcement (allowlist, blocklist, inspect, disk-spill)
@@ -7041,6 +7158,7 @@ The daemon's guardrail endpoint supports both: it first checks for the header, t
 - Audit receipts for every blocked/transformed request
 
 **Does NOT cover** (documented limitations):
+
 - **Raw TCP sockets** — apps that open direct TCP connections (not via HTTP) bypass the proxy. Mitigation: Phase 25 logs a warning when a subprocess with `proxy-inspect` policy opens a non-HTTP connection (via OS-level socket monitoring, if available). Full coverage requires Layer 3 (network namespace) isolation, which is out of scope.
 - **Certificate-pinning apps** — apps that hardcode their trusted CAs and ignore env vars (notably some mobile-app backends, some enterprise tools) will reject the MITM CA. No fix short of patching the app.
 - **Apps that explicitly disable proxy** — some apps (e.g. `curl --noproxy '*'`) bypass the proxy. The `SubprocessManager` can strip `--noproxy` from args for `proxy-inspect` subprocesses, but this is fragile.
@@ -7119,6 +7237,7 @@ oh-my-pi's `pi-iso` (Phase 17 §22.7) provides filesystem isolation (8 backends)
 ### 41.1 Goal
 
 Implement the [A2A (Agent-to-Agent) protocol](https://github.com/a2a-io/a2a-js) so agentsy agents can:
+
 1. **Act as an A2A server** — expose agentsy agents as A2A-callable services that other A2A-compatible clients (gemini-cli, other agentsy instances, third-party A2A agents) can invoke.
 2. **Invoke remote A2A agents as subagents** — an agentsy agent can delegate a sub-task to a remote A2A agent (e.g. a specialized research agent running on another server) and receive the result.
 3. **Federate across daemons** — multiple agentsy daemons (e.g. one per team, one per region) can delegate to each other, enabling distributed agent topologies.
@@ -7532,6 +7651,7 @@ Update all `package.json` files to use exact versions (`1.2.3` not `^1.2.3`). Ad
 ```
 
 Add CVE comments to dependencies with known issues:
+
 ```json
 {
   "dependencies": {
@@ -7611,7 +7731,7 @@ writeFileSync('schemas/agent-spec.json', JSON.stringify(zodToJsonSchema(AgentSpe
 
 Phases 24–28 do not appear in the Sprint 1–11 timeline. They are activated after v1 ships:
 
-```
+```text
 v1 (Sprints 1–11): Phases 3–23 ship. Local mode (Topology A) is the product.
                       ↓
 v1.1 (Sprint 12):   One maintenance sprint. Bug fixes, dogfooding feedback, docs.
@@ -7626,6 +7746,7 @@ v1.3 (Sprints 17–20): Phase 26 (A2A Protocol) — ~2 sprints.
 ```
 
 **Activation criteria** (for Phases 26–28, in addition to Phase 24's criteria):
+
 - [ ] Phase 14 (ACP agent) shipped — A2A (Phase 26) builds on the same transport
 - [ ] Phase 15 (Bootstrap) shipped — skill installation (Phase 27) and OSV checks (Phase 28) depend on it
 - [ ] Phase 23 (Task board, forkWithCacheSharing) shipped — curator and post-turn review (Phase 27) use it
@@ -7634,4 +7755,4 @@ v1.3 (Sprints 17–20): Phase 26 (A2A Protocol) — ~2 sprints.
 
 ---
 
-*End of Agentsy Unified Remediation & Implementation Plan v1.2*
+## End of Agentsy Unified Remediation & Implementation Plan v1.2

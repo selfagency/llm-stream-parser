@@ -16,8 +16,8 @@ describe('extractXmlToolCalls', () => {
   it('parses bare XML tool call', () => {
     const result = extractXmlToolCalls('<search><query>hello</query></search>', tools);
     expect(result).toHaveLength(1);
-    expect(result[0]!.name).toBe('search');
-    expect(result[0]!.format).toBe('bare-xml');
+    expect(result[0]?.name).toBe('search');
+    expect(result[0]?.format).toBe('bare-xml');
   });
 
   it('parses JSON-wrapped tool call', () => {
@@ -26,20 +26,20 @@ describe('extractXmlToolCalls', () => {
       tools
     );
     expect(result).toHaveLength(1);
-    expect(result[0]!.name).toBe('search');
-    expect(result[0]!.format).toBe('json-wrapped');
+    expect(result[0]?.name).toBe('search');
+    expect(result[0]?.format).toBe('json-wrapped');
   });
 
   it('skips think blocks', () => {
     const result = extractXmlToolCalls('<think>reasoning</think><search>q</search>', tools);
     expect(result).toHaveLength(1);
-    expect(result[0]!.name).toBe('search');
+    expect(result[0]?.name).toBe('search');
   });
 
   it('falls back to bare JSON when no XML tool calls found', () => {
     const result = extractXmlToolCalls('{"name": "search", "arguments": {"query": "test"}}', tools);
     expect(result).toHaveLength(1);
-    expect(result[0]!.name).toBe('search');
+    expect(result[0]?.name).toBe('search');
   });
 
   it('handles bare JSON array format', () => {
@@ -48,8 +48,8 @@ describe('extractXmlToolCalls', () => {
       tools
     );
     expect(result).toHaveLength(2);
-    expect(result[0]!.name).toBe('search');
-    expect(result[1]!.name).toBe('calculate');
+    expect(result[0]?.name).toBe('search');
+    expect(result[1]?.name).toBe('calculate');
   });
 
   it('filters out unknown tools', () => {
@@ -60,7 +60,7 @@ describe('extractXmlToolCalls', () => {
   it('handles markdown code fences', () => {
     const result = extractXmlToolCalls('```json\n{"name": "search", "arguments": {"query": "test"}}\n```', tools);
     expect(result).toHaveLength(1);
-    expect(result[0]!.name).toBe('search');
+    expect(result[0]?.name).toBe('search');
   });
 
   it('handles null/undefined candidate gracefully', () => {
@@ -72,7 +72,7 @@ describe('extractXmlToolCalls', () => {
   it('handles tool call with parameters field', () => {
     const result = extractXmlToolCalls('{"name": "calculate", "parameters": {"expr": "2+2"}}', tools);
     expect(result).toHaveLength(1);
-    expect(result[0]!.parameters).toEqual({ expr: '2+2' });
+    expect(result[0]?.parameters).toEqual({ expr: '2+2' });
   });
 
   it('handles tool call without arguments both names', () => {

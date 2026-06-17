@@ -121,6 +121,7 @@ export function createRuntimeHookRegistry(): HookRegistry {
     }
   }
 
+  // biome-ignore lint/suspicious/useAwait: async required by HookRegistry interface
   async function fire(event: RuntimeHookEvent): Promise<HookResult> {
     const handlers = handlersByEvent.get(event.type);
     if (!handlers || handlers.size === 0) {
@@ -137,7 +138,9 @@ export function createRuntimeHookRegistry(): HookRegistry {
 
     for (const entry of sorted) {
       const result = await callHandler(entry, event);
-      if (!result) continue;
+      if (!result) {
+        continue;
+      }
 
       if ('transform' in result) {
         currentPayload = mergePayload(result.transform, currentPayload, event, hasTransform);

@@ -97,6 +97,7 @@ export function createAgentSession(options: AgentSessionOptions): AgentSessionHa
       return context;
     },
 
+    // biome-ignore lint/suspicious/useAwait: async required by interface contract
     async start(): Promise<ExecutionResult> {
       if (!stateMachine.canTransition(AgentSessionState.RUNNING)) {
         throw new Error(`Cannot start session from state ${stateMachine.state}. Expected READY state.`);
@@ -113,6 +114,7 @@ export function createAgentSession(options: AgentSessionOptions): AgentSessionHa
       stateMachine.transition(AgentSessionState.PAUSED);
     },
 
+    // biome-ignore lint/suspicious/useAwait: async required by interface contract
     async resume(): Promise<ExecutionResult> {
       if (!stateMachine.canTransition(AgentSessionState.RUNNING)) {
         throw new Error(`Cannot resume session from state ${stateMachine.state}`);

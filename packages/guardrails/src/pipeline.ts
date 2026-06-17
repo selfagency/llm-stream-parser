@@ -216,11 +216,18 @@ export class GuardrailPipeline {
     const sessionId = (context?.sessionId as string) ?? 'unknown';
     const correlationId = (context?.correlationId as string) ?? `${sessionId}:${Date.now()}`;
 
+    let riskTier: GuardrailDecisionReceipt['riskTier'] = 'moderate';
+    if (result.status === 'block') {
+      riskTier = 'prohibited';
+    } else if (result.status === 'quarantine') {
+      riskTier = 'high';
+    }
+
     const receipt: GuardrailDecisionReceipt = {
       policyId: 'guardrails:pipeline',
       decision: result.status,
       reasonCode: result.status === 'pass' ? 'NO_ISSUES' : result.status.toUpperCase(),
-      riskTier: result.status === 'block' ? 'prohibited' : result.status === 'quarantine' ? 'high' : 'moderate',
+      riskTier,
       surface: 'input',
       phase: result.phase,
       timestamp: new Date().toISOString(),

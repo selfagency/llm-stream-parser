@@ -11,6 +11,7 @@ audit logger, and canonical GuardrailsConfig. This is the first phase that
 makes the policy documents machine-enforceable rather than advisory references.
 
 **Changes**:
+
 - Created `EthicsRegistry` with 50+ clauses extracted from all four policy
   documents. Each clause has an `implementedBy` field — most are `null`
   (known gaps to be closed in Phases 9–11).

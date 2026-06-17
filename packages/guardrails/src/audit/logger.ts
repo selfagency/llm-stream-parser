@@ -20,13 +20,13 @@ import type { Detection, GuardrailDecisionReceipt, GuardrailPhase, GuardrailResu
 
 /** Filter for querying receipts. */
 export interface ReceiptQuery {
-  sessionId?: string;
   correlationId?: string;
   decision?: GuardrailResult['status'];
+  limit?: number;
   phase?: GuardrailPhase;
+  sessionId?: string;
   since?: string; // ISO 8601
   until?: string; // ISO 8601
-  limit?: number;
 }
 
 /** Audit logger interface. */
@@ -59,6 +59,7 @@ export class JsonlAuditLogger implements AuditLogger {
     }
   }
 
+  // biome-ignore lint/suspicious/useAwait: async required by AuditLogger interface
   async log(receipt: GuardrailDecisionReceipt): Promise<void> {
     if (!this.#stream) {
       this.#stream = createWriteStream(this.#filePath, { flags: 'a' });
@@ -73,7 +74,9 @@ export class JsonlAuditLogger implements AuditLogger {
     const limit = filter.limit ?? 100;
 
     for (const line of lines) {
-      if (count >= limit) break;
+      if (count >= limit) {
+        break;
+      }
       const receipt = JSON.parse(line) as GuardrailDecisionReceipt;
       if (this.#matchesFilter(receipt, filter)) {
         yield receipt;
@@ -83,12 +86,24 @@ export class JsonlAuditLogger implements AuditLogger {
   }
 
   #matchesFilter(receipt: GuardrailDecisionReceipt, filter: ReceiptQuery): boolean {
-    if (filter.sessionId && receipt.sessionId !== filter.sessionId) return false;
-    if (filter.correlationId && receipt.correlationId !== filter.correlationId) return false;
-    if (filter.decision && receipt.decision !== filter.decision) return false;
-    if (filter.phase && receipt.phase !== filter.phase) return false;
-    if (filter.since && receipt.timestamp < filter.since) return false;
-    if (filter.until && receipt.timestamp > filter.until) return false;
+    if (filter.sessionId && receipt.sessionId !== filter.sessionId) {
+      return false;
+    }
+    if (filter.correlationId && receipt.correlationId !== filter.correlationId) {
+      return false;
+    }
+    if (filter.decision && receipt.decision !== filter.decision) {
+      return false;
+    }
+    if (filter.phase && receipt.phase !== filter.phase) {
+      return false;
+    }
+    if (filter.since && receipt.timestamp < filter.since) {
+      return false;
+    }
+    if (filter.until && receipt.timestamp > filter.until) {
+      return false;
+    }
     return true;
   }
 
@@ -102,10 +117,11 @@ export class JsonlAuditLogger implements AuditLogger {
    * Flush pending writes and close. Returns a promise that resolves
    * when the stream has finished writing.
    */
+  // biome-ignore lint/suspicious/useAwait: returns promise directly, no await needed
   async flush(): Promise<void> {
     if (this.#stream) {
       return new Promise(resolve => {
-        this.#stream!.end(resolve);
+        this.#stream?.end(resolve);
         this.#stream = null;
       });
     }
@@ -132,12 +148,24 @@ export function redactReceipt(
       severity: d.severity,
       description: redactField(d.description)
     };
-    if (d.snippet) mutable.snippet = redactField(d.snippet);
-    if (d.category) mutable.category = d.category;
-    if (d.confidence !== undefined) mutable.confidence = d.confidence;
-    if (d.end !== undefined) mutable.end = d.end;
-    if (d.location) mutable.location = d.location;
-    if (d.start !== undefined) mutable.start = d.start;
+    if (d.snippet) {
+      mutable.snippet = redactField(d.snippet);
+    }
+    if (d.category) {
+      mutable.category = d.category;
+    }
+    if (d.confidence !== undefined) {
+      mutable.confidence = d.confidence;
+    }
+    if (d.end !== undefined) {
+      mutable.end = d.end;
+    }
+    if (d.location) {
+      mutable.location = d.location;
+    }
+    if (d.start !== undefined) {
+      mutable.start = d.start;
+    }
     return mutable as unknown as Detection;
   });
 
@@ -164,6 +192,7 @@ export function redactReceipt(
 /**
  * Export machine-readable receipts for compliance and debugging.
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: grouping static export methods
 export class ReceiptExporter {
   /**
    * Export receipts as a JSON array string.

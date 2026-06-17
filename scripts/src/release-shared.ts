@@ -343,15 +343,16 @@ export function ensureLocalTagAvailability(tag: string, isRetag?: boolean): void
   process.exit(1);
 }
 
-type PollState = {
+interface PollState {
   autoDispatch: boolean;
   cancelledRunIds: Set<number>;
   inputs: Record<string, string> | undefined;
   name: string;
   spinner: WorkflowSpinner;
   triggered: boolean;
-};
+}
 
+// biome-ignore lint/suspicious/useAwait: async required by caller contract
 async function processWorkflowPollResult(run: GitHubWorkflowRun, state: PollState): Promise<'continue' | 'success'> {
   const { name, spinner } = state;
 

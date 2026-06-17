@@ -69,6 +69,7 @@ export class UsageStatusBar {
     const warning = this.config.warningThreshold ?? DEFAULT_WARNING_THRESHOLD;
     const error = this.config.errorThreshold ?? DEFAULT_ERROR_THRESHOLD;
     const status = getQuotaStatus(percentUsed, warning, error);
+    // biome-ignore lint/style/useDefaultSwitchClause: exhaustive over known status values
     switch (status) {
       case 'error':
         item.color = colorScheme.error;

@@ -24,23 +24,23 @@ export type EnforceableAs = 'scanner' | 'policy-rule' | 'prompt-module' | 'relea
  * A single ethical clause extracted from a policy document.
  */
 export interface EthicalClause {
-  /** Stable identifier, e.g. 'ethics:anti-sycophancy' */
-  readonly id: string;
-  /** Source document */
-  readonly source: PolicySource;
-  /** Section reference, e.g. '§3' */
-  readonly section: string;
-  /** The clause text, verbatim from the source document */
-  readonly text: string;
   /** How this clause is intended to be enforced */
   readonly enforceableAs: EnforceableAs;
+  /** References to docs/safety-exceptions.md entries, if any */
+  readonly exceptions?: readonly string[];
+  /** Stable identifier, e.g. 'ethics:anti-sycophancy' */
+  readonly id: string;
   /**
    * Scanner ID that enforces this clause, or `null` for a known gap.
    * Populated as scanners are implemented in Phases 9–11.
    */
   readonly implementedBy: string | null;
-  /** References to docs/safety-exceptions.md entries, if any */
-  readonly exceptions?: readonly string[];
+  /** Section reference, e.g. '§3' */
+  readonly section: string;
+  /** Source document */
+  readonly source: PolicySource;
+  /** The clause text, verbatim from the source document */
+  readonly text: string;
 }
 
 /**
