@@ -58,8 +58,8 @@ describe('Skill Selector', () => {
     const skills = selectSkills(context, skillRegistry, agent.budget);
 
     expect(skills).toHaveLength(2);
-    expect(skills![0]!.name).toBe('coding');
-    expect(skills![1]!.name).toBe('research');
+    expect(skills![0].name).toBe('coding');
+    expect(skills![1].name).toBe('research');
   });
 
   it('should respect budget constraints', () => {
@@ -117,7 +117,7 @@ describe('Skill Selector', () => {
     const skills = selectSkills(context, skillRegistry, agent.budget);
 
     expect(skills).toHaveLength(1);
-    expect(skills![0]!.name).toBe('cheap');
+    expect(skills![0].name).toBe('cheap');
   });
 
   it('should return empty array when no applicable skills', () => {

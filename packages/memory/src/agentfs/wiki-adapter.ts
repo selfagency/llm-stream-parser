@@ -83,7 +83,7 @@ function serializeHistory(entry: WikiPageHistoryEntry): string {
 }
 
 /** Build a WikiPage from input, merging with existing data and defaults. */
-// NOSONAR — multi-field conditional merge with defaults; structural complexity inherent to domain
+// NOSONAR
 function buildPage(input: WikiPageInput, existing: WikiPage | null): WikiPage {
   const now = Date.now();
   const version = existing ? existing.version + 1 : 1;

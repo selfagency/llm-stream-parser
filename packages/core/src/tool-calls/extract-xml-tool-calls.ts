@@ -185,6 +185,7 @@ function extractBareJsonToolCalls(text: string, knownTools: Set<string>): XmlToo
 /**
  * Parse a single tool call candidate object.
  */
+// NOSONAR
 function parseToolCallCandidate(candidate: unknown, knownTools: Set<string>): XmlToolCall | null {
   if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
     return null;

@@ -76,7 +76,7 @@ describe('createAgentSession', () => {
     });
 
     expect(session.agent.skillRegistry).toHaveLength(2);
-    expect(session.agent.skillRegistry![0]!.name).toBe('skill1');
+    expect(session.agent.skillRegistry![0].name).toBe('skill1');
   });
 
   it('returns null result before execution', () => {
