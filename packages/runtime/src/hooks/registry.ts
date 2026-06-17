@@ -134,24 +134,29 @@ export function createRuntimeHookRegistry(): HookRegistry {
     let hasTransform = false;
 
     for (const entry of sorted) {
-      const result = await entry.handler(event);
+      try {
+        const result = await entry.handler(event);
 
-      // If result is a transform, compose it
-      if ('transform' in result) {
-        const transform = result.transform as Record<string, unknown>;
-        if (hasTransform) {
-          // Multiple transforms: compose by merging into accumulated payload
-          currentPayload = { ...(currentPayload as Record<string, unknown>), ...transform };
-        } else {
-          currentPayload = { ...event, ...transform };
-          hasTransform = true;
+        // If result is a transform, compose it
+        if ('transform' in result) {
+          const transform = result.transform as Record<string, unknown>;
+          if (hasTransform) {
+            // Multiple transforms: compose by merging into accumulated payload
+            currentPayload = { ...(currentPayload as Record<string, unknown>), ...transform };
+          } else {
+            currentPayload = { ...event, ...transform };
+            hasTransform = true;
+          }
+          continue;
         }
-        continue;
-      }
 
-      // If result blocks, stop the chain immediately
-      if (!result.continue) {
-        return result;
+        // If result blocks, stop the chain immediately
+        if (!result.continue) {
+          return result;
+        }
+      } catch {
+        // If a handler throws, we continue to the next handler.
+        // This ensures that thrown handlers don't break the chain.
       }
     }
 
