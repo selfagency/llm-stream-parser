@@ -1,5 +1,4 @@
 import { parse as yamlParse } from 'yaml';
-import * as yaml from 'yaml';
 import { AgentSpecSchema } from '../specs/schema.js';
 import type { AgentSpec, LoadedAgent, TokenBudget } from '../specs/types.js';
 

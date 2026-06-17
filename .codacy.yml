@@ -10,6 +10,7 @@ engines:
 exclude_paths:
   - config/**
   - .agents/**
+  - .agentsy/**
   - .fallow/**
   - .vscode/**
   - .gh-pages/**

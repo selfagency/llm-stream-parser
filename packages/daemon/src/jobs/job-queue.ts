@@ -1,7 +1,5 @@
 import { randomUUID } from 'node:crypto';
 
-import type { Logger } from '../types.js';
-
 export class JobQueue {
   private queue: { id: string; payload: unknown; enqueuedAt: number }[] = [];
 

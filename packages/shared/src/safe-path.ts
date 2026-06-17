@@ -4,8 +4,8 @@
  */
 const SAFE_PATH_UNIX = ['/usr/bin', '/bin', '/usr/sbin', '/sbin'].join(':');
 const SAFE_PATH_WIN = [
-  `${process.env.SystemDrive || 'C:'}\\Windows\\System32`,
-  `${process.env.SystemDrive || 'C:'}\\Windows`
+  String.raw`${process.env.SystemDrive || 'C:'}\Windows\System32`,
+  String.raw`${process.env.SystemDrive || 'C:'}\Windows`
 ].join(';');
 
 export function safePathEnv(): NodeJS.ProcessEnv {

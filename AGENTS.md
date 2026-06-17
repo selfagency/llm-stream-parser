@@ -321,7 +321,7 @@ For test inputs that intentionally include mixed HTML/XML or other exceptions, u
 ### `@agentsy/memory`
 
 - Durable knowledge layer, not a hidden orchestration dependency
-- Memory backend must be substitutable via the `MemoryProvider` interface (defined in `packages/memory/src/types.ts`). At least one alternative backend (e.g. Turso, libsql) must be published before v1.0.
+- Memory backend SHOULD be substitutable via the `MemoryProvider` interface (defined in `packages/memory/src/types.ts`); backends that don't implement this interface are acceptable only with explicit opt-out. At least one alternative backend (e.g. Turso, libsql) SHOULD be published before v1.0.
 - Prefer abstract interfaces for memory providers, retrievers, and lifecycle hooks
 - The memory package must expose both an Agentsy-native API (default export) and an MCP server entry point (`packages/memory/src/mcp/server.ts`) by v0.4.0.
 

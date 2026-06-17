@@ -10,7 +10,7 @@ import { execSync } from 'node:child_process';
 function safePathEnv() {
   const safePath =
     process.platform === 'win32'
-      ? `${process.env.SystemDrive || 'C:'}\\Windows\\System32;${process.env.SystemDrive || 'C:'}\\Windows`
+      ? String.raw`${process.env.SystemDrive || 'C:'}\Windows\System32;${process.env.SystemDrive || 'C:'}\Windows`
       : '/usr/bin:/bin:/usr/sbin:/sbin';
   return { ...process.env, PATH: safePath };
 }

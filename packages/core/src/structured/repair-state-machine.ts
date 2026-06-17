@@ -48,7 +48,8 @@ export function createRepairState(): RepairState {
 export function feedCharToStateMachine(char: string, state: RepairState): string {
   // If inside a string, handle string-specific logic
   if (state.inString) {
-    return handleStringChar(char, state);
+    handleStringChar(char, state);
+    return char;
   }
 
   // Outside string: handle structural characters
@@ -58,30 +59,29 @@ export function feedCharToStateMachine(char: string, state: RepairState): string
 /**
  * Handle a character while inside a string literal.
  */
-function handleStringChar(char: string, state: RepairState): string {
+function handleStringChar(char: string, state: RepairState): void {
   // Handle escape sequences within strings
   if (state.escaped) {
     state.escaped = false;
     state.buffer += char;
-    return char;
+    return;
   }
 
   if (char === '\\') {
     state.escaped = true;
     state.buffer += char;
-    return char;
+    return;
   }
 
   // Toggle string state on unescaped quotes
   if (char === '"') {
     state.inString = !state.inString;
     state.buffer += char;
-    return char;
+    return;
   }
 
   // All other string characters just accumulate
   state.buffer += char;
-  return char;
 }
 
 /**

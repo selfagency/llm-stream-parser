@@ -82,6 +82,23 @@ function serializeHistory(entry: WikiPageHistoryEntry): string {
   });
 }
 
+/** Build a WikiPage from input, merging with existing data and defaults. */
+// NOSONAR — multi-field conditional merge with defaults; structural complexity inherent to domain
+function buildPage(input: WikiPageInput, existing: WikiPage | null): WikiPage {
+  const now = Date.now();
+  const version = existing ? existing.version + 1 : 1;
+  return {
+    pageId: input.pageId,
+    title: input.title ?? existing?.title ?? input.pageId,
+    body: input.body ?? existing?.body ?? '',
+    tags: input.tags ?? existing?.tags ?? [],
+    format: input.format ?? existing?.format ?? 'markdown',
+    writerIds: input.writerIds ?? existing?.writerIds ?? [],
+    version,
+    updatedAt: new Date(now)
+  };
+}
+
 // biome-ignore lint/suspicious/useAwait: Implements WikiManager interface requiring Promise return
 async function captureRaw(input: RawCaptureInput): Promise<RawCapture> {
   return {
@@ -122,23 +139,6 @@ export function createWikiFsAdapter(options: WikiFsAdapterOptions): WikiManager 
     } catch {
       return null;
     }
-  }
-
-  /** Build a WikiPage from input, merging with existing data and defaults. */
-  // fallow-ignore-next-line complexity — multi-field conditional merge with defaults
-  function buildPage(input: WikiPageInput, existing: WikiPage | null): WikiPage {
-    const now = Date.now();
-    const version = existing ? existing.version + 1 : 1;
-    return {
-      pageId: input.pageId,
-      title: input.title ?? existing?.title ?? input.pageId,
-      body: input.body ?? existing?.body ?? '',
-      tags: input.tags ?? existing?.tags ?? [],
-      format: input.format ?? existing?.format ?? 'markdown',
-      writerIds: input.writerIds ?? existing?.writerIds ?? [],
-      version,
-      updatedAt: new Date(now)
-    };
   }
 
   /** Write page meta to kv_store (upsert). */

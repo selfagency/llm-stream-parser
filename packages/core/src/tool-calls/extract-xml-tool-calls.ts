@@ -191,7 +191,7 @@ function parseToolCallCandidate(candidate: unknown, knownTools: Set<string>): Xm
   }
   const obj: Record<string, unknown> = candidate as Record<string, unknown>;
   const name = typeof obj.name === 'string' ? obj.name : null;
-  if (!(name && knownTools.has(name))) {
+  if (!name || !knownTools.has(name)) {
     return null;
   }
   const args = obj.arguments ?? obj.parameters ?? {};
