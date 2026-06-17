@@ -1,3 +1,4 @@
+import type { HookResult } from './types.js';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createRuntimeHookRegistry } from './registry.js';
@@ -246,5 +247,139 @@ describe('createRuntimeHookRegistry', () => {
 
     // Block should take precedence over transform
     expect(result).toEqual({ continue: false, reason: 'blocked after transform' });
+  });
+
+  it('composes transforms in priority order (left-to-right)', async () => {
+    const registry = createRuntimeHookRegistry();
+    const executionOrder: string[] = [];
+
+    registry.register(
+      'UserPromptSubmit',
+      async () => {
+        executionOrder.push('first');
+        return { continue: true, transform: { step1: 'done' } } as HookResult;
+      },
+      { priority: 10 }
+    );
+
+    registry.register(
+      'UserPromptSubmit',
+      async () => {
+        executionOrder.push('second');
+        return { continue: true, transform: { step2: 'done' } } as HookResult;
+      },
+      { priority: 5 }
+    );
+
+    registry.register(
+      'UserPromptSubmit',
+      async () => {
+        executionOrder.push('third');
+        return { continue: true, transform: { step3: 'done' } } as HookResult;
+      },
+      { priority: 0 }
+    );
+
+    const result = await registry.fire({
+      type: 'UserPromptSubmit',
+      input: 'test',
+      sessionId: 'sess_1'
+    });
+
+    expect(executionOrder).toEqual(['first', 'second', 'third']);
+    expect(result).toHaveProperty('transform');
+    expect((result as { transform: Record<string, unknown> }).transform).toMatchObject({
+      step1: 'done',
+      step2: 'done',
+      step3: 'done'
+    });
+  });
+
+  it('short-circuits pipeline with stop and returns stoppedBy', async () => {
+    const registry = createRuntimeHookRegistry();
+    const executionOrder: string[] = [];
+
+    registry.register(
+      'UserPromptSubmit',
+      async () => {
+        executionOrder.push('first');
+        return { continue: true } as HookResult;
+      },
+      { priority: 10 }
+    );
+
+    registry.register(
+      'UserPromptSubmit',
+      async () => {
+        executionOrder.push('second');
+        return { continue: false, reason: 'blocked-by-middleware' } as HookResult;
+      },
+      { priority: 5 }
+    );
+
+    registry.register(
+      'UserPromptSubmit',
+      async () => {
+        executionOrder.push('third');
+        return { continue: true } as HookResult;
+      },
+      { priority: 0 }
+    );
+
+    const result = await registry.fire({
+      type: 'UserPromptSubmit',
+      input: 'test',
+      sessionId: 'sess_1'
+    });
+
+    expect(executionOrder).toEqual(['first', 'second']);
+    expect(result).toEqual({ continue: false, reason: 'blocked-by-middleware' });
+  });
+
+  it('continues pipeline after thrown handler (logs but does not break chain)', async () => {
+    const registry = createRuntimeHookRegistry();
+    const executionOrder: string[] = [];
+
+    registry.register(
+      'UserPromptSubmit',
+      async () => {
+        executionOrder.push('first');
+        return { continue: true, transform: { step1: 'done' } } as HookResult;
+      },
+      { priority: 10 }
+    );
+
+    registry.register(
+      'UserPromptSubmit',
+      async () => {
+        executionOrder.push('second');
+        throw new Error('Handler failed');
+      },
+      { priority: 5 }
+    );
+
+    registry.register(
+      'UserPromptSubmit',
+      async () => {
+        executionOrder.push('third');
+        return { continue: true, transform: { step3: 'done' } } as HookResult;
+      },
+      { priority: 0 }
+    );
+
+    // Current implementation catches thrown handlers and continues pipeline
+    const result = await registry.fire({
+      type: 'UserPromptSubmit',
+      input: 'test',
+      sessionId: 'sess_1'
+    });
+
+    // The pipeline should continue despite the thrown handler
+    expect(executionOrder).toEqual(['first', 'second', 'third']);
+    expect(result).toHaveProperty('transform');
+    expect((result as { transform: Record<string, unknown> }).transform).toMatchObject({
+      step1: 'done',
+      step3: 'done'
+    });
   });
 });

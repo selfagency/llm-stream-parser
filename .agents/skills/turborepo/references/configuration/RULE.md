@@ -1,12 +1,12 @@
 # turbo.json Configuration Overview
 
-Configuration reference for Turborepo. Full docs: <https://turborepo.dev/docs/reference/configuration>
+Configuration reference for Turborepo. Full docs: https://turborepo.dev/docs/reference/configuration
 
 ## File Location
 
 Root `turbo.json` lives at repo root, sibling to root `package.json`:
 
-```text
+```
 my-monorepo/
 ├── turbo.json        # Root configuration
 ├── package.json
@@ -73,7 +73,7 @@ When you run `turbo run lint`, Turborepo finds all packages with a `lint` script
 
 ```json
 {
-  "$schema": "https://v2-9-15-canary-2.turborepo.dev/schema.json",
+  "$schema": "https://v2-9-17-canary-1.turborepo.dev/schema.json",
   "globalEnv": ["CI"],
   "globalDependencies": ["tsconfig.json"],
   "tasks": {
@@ -97,7 +97,7 @@ When the `globalConfiguration` future flag is enabled, global options move under
 
 ```json
 {
-  "$schema": "https://v2-9-15-canary-2.turborepo.dev/schema.json",
+  "$schema": "https://v2-9-17-canary-1.turborepo.dev/schema.json",
   "futureFlags": { "globalConfiguration": true },
   "global": {
     "inputs": ["tsconfig.json"],
