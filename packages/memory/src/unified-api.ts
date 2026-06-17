@@ -8,6 +8,7 @@
 
 import type { MemoryEngine } from './cognitive/memory-engine.js';
 import type { WikiUpserter } from './cortexkit/dreamer-consumer.js';
+import { entryImportance } from './entries/index.js';
 import type { EntrySource, MemoryEntry } from './entries/index.js';
 import type { FactExtractor } from './extraction/index.js';
 import { routeQuery, type SearchStrategy } from './recall-router.js';
@@ -242,23 +243,6 @@ function deduplicateAndSort(results: RecallOutput[], limit: number): RecallOutpu
       return true;
     })
     .slice(0, limit);
-}
-
-function entryImportance(entry: MemoryEntry): number {
-  switch (entry.type) {
-    case 'feedback':
-      return Math.min(1, Math.abs(entry.feedbackScore) / 10);
-    case 'qa':
-      return entry.feedbackScore === undefined ? 0.7 : Math.min(1, entry.feedbackScore / 10);
-    case 'trace':
-      return entry.status === 'error' ? 0.9 : 0.5;
-    case 'fact':
-      return entry.confidence;
-    case 'skill_run':
-      return entry.successScore;
-    default:
-      return 0.5;
-  }
 }
 
 function serialiseEntry(entry: MemoryEntry): string {

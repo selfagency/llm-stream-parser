@@ -162,7 +162,25 @@
   "duplicates": {
     "threshold": 8,
     "ignoreDefaults": false,
-    "ignore": ["**/*.test.ts", "**/*.test.tsx", "**/*.test.jsx", "**/*.test.js", "**/*.spec.ts", "**/*.spec.tsx"],
+    "ignore": [
+      "**/*.test.ts", "**/*.test.tsx", "**/*.test.jsx", "**/*.test.js", "**/*.spec.ts", "**/*.spec.tsx",
+      // Secrets providers implement the same CredentialProvider interface; structural similarity is inherent.
+      "packages/secrets/src/provider/**/*.ts",
+      // Same-file/same-factory: in-memory+SQLite storage pipelines share scoring/sort/create patterns.
+      "packages/memory/src/retrieval/rag/hybrid-retriever.ts",
+      "packages/memory/src/wiki/wiki-manager.ts",
+      // Test utility MSW handlers mock the same search API in different test support packages.
+      "packages/memory/src/retrieval/rag/test-msw.ts",
+      "packages/testing/src/msw/handlers/memory.ts",
+      // Two different renderers sharing a common stream-end/error-handling pattern.
+      "packages/ui/src/cli/create-cli-renderer.ts",
+      "packages/ui/src/streaming-md/create-streaming-markdown-renderer.ts",
+      // CLI entry point boilerplate — standard subcommand/json/stdout/stderr/opts pattern
+      "packages/cli/src/commands/secrets.ts",
+      "packages/cli/src/commands/tokenomics.ts",
+      // Turso config spreading — same optional fields repeated in createClient vs syncClient
+      "packages/memory/src/sync/turso-client.ts"
+    ],
     "minLines": 8,
     "minTokens": 70
   },

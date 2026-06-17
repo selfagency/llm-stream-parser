@@ -46,6 +46,11 @@
       "types": "./dist/ui/index.d.ts",
       "import": "./dist/ui/index.js",
       "require": "./dist/ui/index.cjs"
+    },
+    "./ink/themes": {
+      "types": "./dist/ink/themes.d.ts",
+      "import": "./dist/ink/themes.js",
+      "require": "./dist/ink/themes.cjs"
     }
   },
   "publishConfig": {

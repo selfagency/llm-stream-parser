@@ -59,6 +59,31 @@ export function createAgentSession(options: AgentSessionOptions): AgentSessionHa
     }
   };
 
+  async function runAndTransition(
+    sm: AgentStateMachine,
+    ctx: AgentExecutionContext,
+    executeOptions: ExecuteOptions | undefined,
+    onBefore?: () => void
+  ): Promise<ExecutionResult> {
+    sm.transition(AgentSessionState.RUNNING);
+    onBefore?.();
+
+    try {
+      result = await executeAgent(ctx, executeOptions);
+      if (sm.state === AgentSessionState.RUNNING) {
+        sm.transition(AgentSessionState.DONE);
+      }
+    } catch (error) {
+      ctx.state.errors.push(error instanceof Error ? error : new Error(String(error)));
+      if (sm.state === AgentSessionState.RUNNING) {
+        sm.transition(AgentSessionState.ERROR);
+      }
+      throw error;
+    }
+
+    return result;
+  }
+
   return {
     get state(): AgentSessionState {
       return stateMachine.state;
@@ -76,23 +101,9 @@ export function createAgentSession(options: AgentSessionOptions): AgentSessionHa
       if (!stateMachine.canTransition(AgentSessionState.RUNNING)) {
         throw new Error(`Cannot start session from state ${stateMachine.state}. Expected READY state.`);
       }
-
-      stateMachine.transition(AgentSessionState.RUNNING);
-
-      try {
-        result = await executeAgent(context, options.options);
-        if (stateMachine.state === AgentSessionState.RUNNING) {
-          stateMachine.transition(AgentSessionState.DONE);
-        }
-      } catch (error) {
-        context.state.errors.push(error instanceof Error ? error : new Error(String(error)));
-        if (stateMachine.state === AgentSessionState.RUNNING) {
-          stateMachine.transition(AgentSessionState.ERROR);
-        }
-        throw error;
-      }
-
-      return result;
+      return runAndTransition(stateMachine, context, options.options, () => {
+        result = null;
+      });
     },
 
     pause(): void {
@@ -106,23 +117,9 @@ export function createAgentSession(options: AgentSessionOptions): AgentSessionHa
       if (!stateMachine.canTransition(AgentSessionState.RUNNING)) {
         throw new Error(`Cannot resume session from state ${stateMachine.state}`);
       }
-
-      stateMachine.transition(AgentSessionState.RUNNING);
-
-      try {
-        result = await executeAgent(context, options.options);
-        if (stateMachine.state === AgentSessionState.RUNNING) {
-          stateMachine.transition(AgentSessionState.DONE);
-        }
-      } catch (error) {
-        context.state.errors.push(error instanceof Error ? error : new Error(String(error)));
-        if (stateMachine.state === AgentSessionState.RUNNING) {
-          stateMachine.transition(AgentSessionState.ERROR);
-        }
-        throw error;
-      }
-
-      return result;
+      return runAndTransition(stateMachine, context, options.options, () => {
+        result = null;
+      });
     },
 
     getResult(): ExecutionResult | null {

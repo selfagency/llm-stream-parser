@@ -68,23 +68,9 @@ export class ToolCallAccumulator {
   public getCompletedCalls(): NativeToolCall[] {
     const result: NativeToolCall[] = [];
     for (const pending of this.calls.values()) {
-      if (!pending.name) {
-        continue;
-      }
-      try {
-        const parsed = JSON.parse(pending.argumentsBuffer) as JsonObject;
-        if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
-          const call: NativeToolCall = {
-            arguments: parsed,
-            name: pending.name
-          };
-          if (pending.id !== undefined) {
-            call.id = pending.id;
-          }
-          result.push(call);
-        }
-      } catch {
-        // Arguments not yet complete.
+      const call = this.#tryBuildNativeToolCall(pending);
+      if (call) {
+        result.push(call);
       }
     }
     return result;
@@ -102,26 +88,34 @@ export class ToolCallAccumulator {
   }[] {
     const result: { index: number; call: NativeToolCall }[] = [];
     for (const [index, pending] of this.calls.entries()) {
-      if (!pending.name) {
-        continue;
-      }
-      try {
-        const parsed = JSON.parse(pending.argumentsBuffer) as JsonObject;
-        if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
-          const call: NativeToolCall = {
-            arguments: parsed,
-            name: pending.name
-          };
-          if (pending.id !== undefined) {
-            call.id = pending.id;
-          }
-          result.push({ call, index });
-        }
-      } catch {
-        // Not yet complete.
+      const call = this.#tryBuildNativeToolCall(pending);
+      if (call) {
+        result.push({ call, index });
       }
     }
     return result;
+  }
+
+  #tryBuildNativeToolCall(pending: PendingCall): NativeToolCall | null {
+    if (!pending.name) {
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(pending.argumentsBuffer) as JsonObject;
+      if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const call: NativeToolCall = {
+          arguments: parsed,
+          name: pending.name
+        };
+        if (pending.id !== undefined) {
+          call.id = pending.id;
+        }
+        return call;
+      }
+    } catch {
+      // Not yet complete.
+    }
+    return null;
   }
 
   /**

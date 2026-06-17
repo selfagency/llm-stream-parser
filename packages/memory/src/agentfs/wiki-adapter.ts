@@ -2,6 +2,7 @@ import { eq, like } from 'drizzle-orm';
 import type { MemoryDatabase } from '../database/connection.js';
 import { kvStore } from '../database/schema.js';
 import { cosineSimilarity } from '../math-utils.js';
+import { getDiff } from '../wiki/wiki-manager.js';
 import type {
   ConceptRelation,
   PageDiff,
@@ -79,16 +80,6 @@ function serializeHistory(entry: WikiPageHistoryEntry): string {
     ...entry,
     editedAt: entry.editedAt.getTime()
   });
-}
-
-function getDiff(fromBody: string, toBody: string): PageDiff {
-  const fromLines = fromBody.split('\n');
-  const toLines = toBody.split('\n');
-  const fromSet = new Set(fromLines);
-  const toSet = new Set(toLines);
-  const addedLines = toLines.filter(line => !fromSet.has(line));
-  const removedLines = fromLines.filter(line => !toSet.has(line));
-  return { addedLines, removedLines };
 }
 
 // biome-ignore lint/suspicious/useAwait: Implements WikiManager interface requiring Promise return

@@ -159,7 +159,7 @@ function ensureCanWrite(page: WikiPage, actorId: string): void {
   throw new Error(`Actor ${actorId} does not have write access to ${page.pageId}`);
 }
 
-function getDiff(fromBody: string, toBody: string): PageDiff {
+export function getDiff(fromBody: string, toBody: string): PageDiff {
   const fromLines = fromBody.split('\n');
   const toLines = toBody.split('\n');
 
