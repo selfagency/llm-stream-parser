@@ -635,6 +635,9 @@ importers:
 
   packages/shared:
     dependencies:
+      '@agentsy/guardrails':
+        specifier: workspace:*
+        version: link:../guardrails
       '@cortexkit/aft-bridge':
         specifier: ^0.37.1
         version: 0.37.1
