@@ -103,7 +103,13 @@
     // Already a tsup subpath entry — external consumers import via package exports
     "packages/plugins/src/manifest/index.ts",
     // Council mode — optional orchestration pattern
-    "packages/orchestrator/src/council/index.ts"
+    "packages/orchestrator/src/council/index.ts",
+    // Memory CLI — oclif runtime filesystem discovery (no static import chain)
+    "packages/memory/src/commands/init.ts",
+    "packages/memory/src/commands/mcp.ts",
+    "packages/memory/src/commands/daemon/start.ts",
+    "packages/memory/src/commands/daemon/status.ts",
+    "packages/memory/src/commands/daemon/stop.ts"
   ],
   // Preserve class members that are used via runtime reflection or host integrations.
   "usedClassMembers": [],
