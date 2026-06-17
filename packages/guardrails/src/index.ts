@@ -43,6 +43,7 @@ export {
 } from './policy.js';
 export type {
   Detection,
+  GuardrailDecisionReceipt,
   GuardrailMetadata,
   GuardrailPhase,
   GuardrailResult,
@@ -50,6 +51,26 @@ export type {
   OWASPCategory,
   PipelineConfig
 } from './types.js';
+
+// ---------------------------------------------------------------------------
+// Ethics registry — maps policy document clauses to machine-enforceable rules
+// ---------------------------------------------------------------------------
+
+export type { EnforceableAs, EthicalClause, PolicySource } from './ethics/registry.js';
+export { DEFAULT_ETHICS_REGISTRY, EthicsRegistry } from './ethics/registry.js';
+
+// ---------------------------------------------------------------------------
+// Audit logger — decision receipt persistence and export
+// ---------------------------------------------------------------------------
+
+export type { AuditLogger, ReceiptQuery } from './audit/logger.js';
+export { JsonlAuditLogger, ReceiptExporter, redactReceipt } from './audit/logger.js';
+
+// ---------------------------------------------------------------------------
+// Canonical GuardrailsConfig
+// ---------------------------------------------------------------------------
+
+export type { GuardrailsConfig } from './config.js';
 
 // ---------------------------------------------------------------------------
 // Message scrubbing — LLM input / deep object scrubbing (Phase 5.2)

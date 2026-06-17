@@ -1,7 +1,6 @@
-import type { HookResult } from './types.js';
 import { describe, expect, it, vi } from 'vitest';
-
 import { createRuntimeHookRegistry } from './registry.js';
+import type { HookResult } from './types.js';
 
 describe('createRuntimeHookRegistry', () => {
   it('returns continue: true when no handlers registered', async () => {
@@ -255,6 +254,7 @@ describe('createRuntimeHookRegistry', () => {
 
     registry.register(
       'UserPromptSubmit',
+      // biome-ignore lint/suspicious/useAwait: async required by handler interface
       async () => {
         executionOrder.push('first');
         return { continue: true, transform: { step1: 'done' } } as HookResult;
@@ -264,6 +264,7 @@ describe('createRuntimeHookRegistry', () => {
 
     registry.register(
       'UserPromptSubmit',
+      // biome-ignore lint/suspicious/useAwait: async required by handler interface
       async () => {
         executionOrder.push('second');
         return { continue: true, transform: { step2: 'done' } } as HookResult;
@@ -273,6 +274,7 @@ describe('createRuntimeHookRegistry', () => {
 
     registry.register(
       'UserPromptSubmit',
+      // biome-ignore lint/suspicious/useAwait: async required by handler interface
       async () => {
         executionOrder.push('third');
         return { continue: true, transform: { step3: 'done' } } as HookResult;
@@ -301,6 +303,7 @@ describe('createRuntimeHookRegistry', () => {
 
     registry.register(
       'UserPromptSubmit',
+      // biome-ignore lint/suspicious/useAwait: async required by handler interface
       async () => {
         executionOrder.push('first');
         return { continue: true } as HookResult;
@@ -310,6 +313,7 @@ describe('createRuntimeHookRegistry', () => {
 
     registry.register(
       'UserPromptSubmit',
+      // biome-ignore lint/suspicious/useAwait: async required by handler interface
       async () => {
         executionOrder.push('second');
         return { continue: false, reason: 'blocked-by-middleware' } as HookResult;
@@ -319,6 +323,7 @@ describe('createRuntimeHookRegistry', () => {
 
     registry.register(
       'UserPromptSubmit',
+      // biome-ignore lint/suspicious/useAwait: async required by handler interface
       async () => {
         executionOrder.push('third');
         return { continue: true } as HookResult;
@@ -342,6 +347,7 @@ describe('createRuntimeHookRegistry', () => {
 
     registry.register(
       'UserPromptSubmit',
+      // biome-ignore lint/suspicious/useAwait: async required by handler interface
       async () => {
         executionOrder.push('first');
         return { continue: true, transform: { step1: 'done' } } as HookResult;
@@ -351,6 +357,7 @@ describe('createRuntimeHookRegistry', () => {
 
     registry.register(
       'UserPromptSubmit',
+      // biome-ignore lint/suspicious/useAwait: async required by handler interface
       async () => {
         executionOrder.push('second');
         throw new Error('Handler failed');
@@ -360,6 +367,7 @@ describe('createRuntimeHookRegistry', () => {
 
     registry.register(
       'UserPromptSubmit',
+      // biome-ignore lint/suspicious/useAwait: async required by handler interface
       async () => {
         executionOrder.push('third');
         return { continue: true, transform: { step3: 'done' } } as HookResult;

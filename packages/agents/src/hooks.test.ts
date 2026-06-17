@@ -101,7 +101,7 @@ describe('Approval Hooks', () => {
     await hook.handler(ctx);
     const audit = ctx.results.get('approvalAudit') as Array<{ step: string }>;
     expect(audit).toHaveLength(1);
-    expect(audit![0].step).toBe('read-file');
+    expect(audit?.[0].step).toBe('read-file');
   });
 });
 
@@ -154,8 +154,8 @@ describe('Hook Registry', () => {
   it('should resolve hook names to definitions', async () => {
     const hooks = await resolveAgentHooks(['memory-pre-turn', 'budget-check'], 'test');
     expect(hooks).toHaveLength(2);
-    expect(hooks![0].name).toBe('memory-pre-turn');
-    expect(hooks![1].name).toBe('budget-check');
+    expect(hooks?.[0].name).toBe('memory-pre-turn');
+    expect(hooks?.[1].name).toBe('budget-check');
   });
 
   it('should return empty for unknown hook names', async () => {

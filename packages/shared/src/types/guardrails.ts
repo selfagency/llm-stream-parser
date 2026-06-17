@@ -1,5 +1,9 @@
 /**
  * Guardrails and policy enforcement types.
+ *
+ * The canonical GuardrailsConfig is now defined in @agentsy/guardrails.
+ * This file retains its own GuardrailsConfig for backward compatibility
+ * with consumers that cannot depend on @agentsy/guardrails directly.
  */
 
 import type { ToolId } from './brands.js';
@@ -21,7 +25,10 @@ export interface GuardrailResult {
 }
 
 /**
- * Configuration for guardrails. */
+ * Configuration for guardrails.
+ *
+ * @deprecated Use the canonical GuardrailsConfig from @agentsy/guardrails instead.
+ */
 export interface GuardrailsConfig {
   /** Map of guardrail IDs to their configurations. */
   configs: Record<

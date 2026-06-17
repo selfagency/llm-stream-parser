@@ -333,6 +333,7 @@ export function createStreamEventAdapter(options: StreamEventAdapterOptions): {
 // ---------------------------------------------------------------------------
 
 function dispatchEvent(event: StreamRuntimeEvent, options: StreamEventAdapterOptions): void {
+  // biome-ignore lint/style/useDefaultSwitchClause: exhaustive over known event types
   switch (event.type) {
     case 'text-delta':
       options.onText?.(event.payload.delta);

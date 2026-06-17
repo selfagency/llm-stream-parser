@@ -15,7 +15,8 @@ describe('buildHeaders (via createUniversalClient)', () => {
     });
 
     let capturedHeaders: Record<string, string> | undefined;
-    const mockFetch = vi.fn<typeof fetch>().mockImplementation(async (url, init) => {
+    // biome-ignore lint/suspicious/useAwait: mock must return promise
+    const mockFetch = vi.fn<typeof fetch>().mockImplementation(async (_url, init) => {
       capturedHeaders = init?.headers as Record<string, string>;
       return new Response(JSON.stringify({ choices: [{ message: { content: 'ok' } }] }), { status: 200 });
     });
@@ -24,9 +25,9 @@ describe('buildHeaders (via createUniversalClient)', () => {
     try {
       await client.complete({ model: 'gpt-4', messages: [{ role: 'user', content: 'hi' }] });
       expect(capturedHeaders).toBeDefined();
-      expect(capturedHeaders!['Content-Type']).toBe('application/json');
-      expect(capturedHeaders!.Authorization).toBe('Bearer sk-test');
-      expect(capturedHeaders!['OpenAI-Organization']).toBe('org-123');
+      expect(capturedHeaders?.['Content-Type']).toBe('application/json');
+      expect(capturedHeaders?.Authorization).toBe('Bearer sk-test');
+      expect(capturedHeaders?.['OpenAI-Organization']).toBe('org-123');
     } finally {
       vi.unstubAllGlobals();
     }
@@ -36,7 +37,8 @@ describe('buildHeaders (via createUniversalClient)', () => {
     const client = createUniversalClient({ provider: 'anthropic', apiKey: 'sk-ant' });
 
     let capturedHeaders: Record<string, string> | undefined;
-    const mockFetch = vi.fn<typeof fetch>().mockImplementation(async (url, init) => {
+    // biome-ignore lint/suspicious/useAwait: mock must return promise
+    const mockFetch = vi.fn<typeof fetch>().mockImplementation(async (_url, init) => {
       capturedHeaders = init?.headers as Record<string, string>;
       return new Response(JSON.stringify({ content: 'ok' }), { status: 200 });
     });
@@ -44,8 +46,8 @@ describe('buildHeaders (via createUniversalClient)', () => {
 
     try {
       await client.complete({ model: 'claude-3', messages: [{ role: 'user', content: 'hi' }] });
-      expect(capturedHeaders!['x-api-key']).toBe('sk-ant');
-      expect(capturedHeaders!['anthropic-version']).toBe('2023-06-01');
+      expect(capturedHeaders?.['x-api-key']).toBe('sk-ant');
+      expect(capturedHeaders?.['anthropic-version']).toBe('2023-06-01');
     } finally {
       vi.unstubAllGlobals();
     }
@@ -55,7 +57,8 @@ describe('buildHeaders (via createUniversalClient)', () => {
     const client = createUniversalClient({ provider: 'ollama', apiKey: '' });
 
     let capturedHeaders: Record<string, string> | undefined;
-    const mockFetch = vi.fn<typeof fetch>().mockImplementation(async (url, init) => {
+    // biome-ignore lint/suspicious/useAwait: mock must return promise
+    const mockFetch = vi.fn<typeof fetch>().mockImplementation(async (_url, init) => {
       capturedHeaders = init?.headers as Record<string, string>;
       return new Response(JSON.stringify({ choices: [{ message: { content: 'ok' } }] }), { status: 200 });
     });
@@ -64,7 +67,7 @@ describe('buildHeaders (via createUniversalClient)', () => {
     try {
       await client.complete({ model: 'llama3', messages: [{ role: 'user', content: 'hi' }] });
       // No apiKey set, so buildHeaders skips the builder
-      expect(capturedHeaders!.Authorization).toBeUndefined();
+      expect(capturedHeaders?.Authorization).toBeUndefined();
     } finally {
       vi.unstubAllGlobals();
     }
@@ -74,7 +77,8 @@ describe('buildHeaders (via createUniversalClient)', () => {
     const client = createUniversalClient({ provider: 'gemini', apiKey: 'gk-test' });
 
     let capturedHeaders: Record<string, string> | undefined;
-    const mockFetch = vi.fn<typeof fetch>().mockImplementation(async (url, init) => {
+    // biome-ignore lint/suspicious/useAwait: mock must return promise
+    const mockFetch = vi.fn<typeof fetch>().mockImplementation(async (_url, init) => {
       capturedHeaders = init?.headers as Record<string, string>;
       return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: 'ok' }] } }] }), { status: 200 });
     });
@@ -82,7 +86,7 @@ describe('buildHeaders (via createUniversalClient)', () => {
 
     try {
       await client.complete({ model: 'gemini-pro', messages: [{ role: 'user', content: 'hi' }] });
-      expect(capturedHeaders!.Authorization).toBe('Bearer gk-test');
+      expect(capturedHeaders?.Authorization).toBe('Bearer gk-test');
     } finally {
       vi.unstubAllGlobals();
     }
@@ -92,7 +96,8 @@ describe('buildHeaders (via createUniversalClient)', () => {
     const client = createUniversalClient({ provider: 'anthropic', apiKey: 'sk-ant' });
 
     let capturedHeaders: Record<string, string> | undefined;
-    const mockFetch = vi.fn<typeof fetch>().mockImplementation(async (url, init) => {
+    // biome-ignore lint/suspicious/useAwait: mock must return promise
+    const mockFetch = vi.fn<typeof fetch>().mockImplementation(async (_url, init) => {
       capturedHeaders = init?.headers as Record<string, string>;
       return new Response(
         new ReadableStream({
@@ -110,7 +115,7 @@ describe('buildHeaders (via createUniversalClient)', () => {
 
     try {
       await client.stream({ model: 'claude-3', messages: [{ role: 'user', content: 'hi' }] });
-      expect(capturedHeaders!.accept).toBe('text/event-stream');
+      expect(capturedHeaders?.accept).toBe('text/event-stream');
     } finally {
       vi.unstubAllGlobals();
     }

@@ -76,7 +76,7 @@ describe('createAgentSession', () => {
     });
 
     expect(session.agent.skillRegistry).toHaveLength(2);
-    expect(session.agent.skillRegistry![0].name).toBe('skill1');
+    expect(session.agent.skillRegistry?.[0].name).toBe('skill1');
   });
 
   it('returns null result before execution', () => {
@@ -132,7 +132,7 @@ describe('createAgentSession', () => {
     await expect(session.start()).rejects.toThrow();
     expect(session.context.state.errors).toHaveLength(1);
     // The error object gets stringified, so we expect "[object Object]"
-    expect(session.context.state.errors[0]!.message).toBe('[object Object]');
+    expect(session.context.state.errors[0]?.message).toBe('[object Object]');
   });
 
   it('throws when starting from non-READY state', async () => {
@@ -240,7 +240,7 @@ describe('createAgentSession', () => {
     expect(session.state).toBe(AgentSessionState.PAUSED);
 
     // Resolve the start — it should complete without error since executeAgent succeeded
-    deferred.resolve!({
+    deferred.resolve?.({
       output: 'partial result',
       tokenUsage: { input: 50, output: 100 }
     });
@@ -327,7 +327,7 @@ describe('createAgentSession', () => {
     expect(listener).toHaveBeenCalledWith(AgentSessionState.RUNNING, AgentSessionState.PAUSED);
 
     // Complete the execution
-    resolveExecution!({
+    resolveExecution?.({
       output: 'result after pause',
       tokenUsage: { input: 1, output: 1 }
     });
@@ -361,7 +361,7 @@ describe('createAgentSession', () => {
     expect(listener).toHaveBeenCalledWith(AgentSessionState.RUNNING, AgentSessionState.PAUSED);
 
     // Complete first execution
-    resolveFirstExecution!({
+    resolveFirstExecution?.({
       output: 'result after pause',
       tokenUsage: { input: 1, output: 1 }
     });

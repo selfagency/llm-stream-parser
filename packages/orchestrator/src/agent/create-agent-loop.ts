@@ -602,8 +602,8 @@ export function createAgentLoop(options: AgentLoopOptions): AgentLoopHandle {
     throw error;
   }
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: refactor planned
   // fallow-ignore-next-line complexity
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: refactor planned
   async function* run(initialMessages: unknown[]): AsyncGenerator<OutputPart> {
     const runId = options.runId ?? createRunId();
     const { threadId, onAgUiEvent } = options;
