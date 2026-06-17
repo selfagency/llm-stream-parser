@@ -192,7 +192,9 @@ interface HeaderContext {
  * Dispatch table for provider-specific header construction.
  * Each provider's handler sets its required headers on the context object.
  */
-const HEADER_BUILDERS: Record<NormalizerProvider, (ctx: HeaderContext) => void> = {
+const HEADER_BUILDERS: Partial<Record<NormalizerProvider, (ctx: HeaderContext) => void>> & {
+  default: (ctx: HeaderContext) => void;
+} = {
   openai: ({ headers, apiKey, organizationId }) => {
     headers.Authorization = `Bearer ${apiKey}`;
     if (organizationId) {
@@ -226,8 +228,15 @@ function buildHeaders(
   };
 
   if (apiKey) {
+    const ctx: HeaderContext = { headers, apiKey };
+    if (organizationId) {
+      ctx.organizationId = organizationId;
+    }
+    if (stream) {
+      ctx.stream = stream;
+    }
     const builder = HEADER_BUILDERS[provider] ?? HEADER_BUILDERS.default;
-    builder({ headers, apiKey, organizationId, stream });
+    builder(ctx);
   }
 
   return headers;
