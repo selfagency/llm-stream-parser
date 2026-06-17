@@ -86,24 +86,19 @@ export class JsonlAuditLogger implements AuditLogger {
   }
 
   #matchesFilter(receipt: GuardrailDecisionReceipt, filter: ReceiptQuery): boolean {
-    if (filter.sessionId && receipt.sessionId !== filter.sessionId) {
-      return false;
+    const checks: Array<{ key: keyof ReceiptQuery; value: unknown }> = [
+      { key: 'sessionId', value: filter.sessionId },
+      { key: 'correlationId', value: filter.correlationId },
+      { key: 'decision', value: filter.decision },
+      { key: 'phase', value: filter.phase }
+    ];
+    for (const { key, value } of checks) {
+      if (value && receipt[key as keyof GuardrailDecisionReceipt] !== value) {
+        return false;
+      }
     }
-    if (filter.correlationId && receipt.correlationId !== filter.correlationId) {
-      return false;
-    }
-    if (filter.decision && receipt.decision !== filter.decision) {
-      return false;
-    }
-    if (filter.phase && receipt.phase !== filter.phase) {
-      return false;
-    }
-    if (filter.since && receipt.timestamp < filter.since) {
-      return false;
-    }
-    if (filter.until && receipt.timestamp > filter.until) {
-      return false;
-    }
+    if (filter.since && receipt.timestamp < filter.since) return false;
+    if (filter.until && receipt.timestamp > filter.until) return false;
     return true;
   }
 
