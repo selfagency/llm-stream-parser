@@ -27,7 +27,7 @@ export function createInputGuardrailHook(pipeline: GuardrailPipeline): {
         .evaluate(event.input, 'input' satisfies GuardrailPhase, {
           sessionId: event.sessionId
         })
-        .then(result => {
+        .then(({ result }) => {
           if (result.status === 'block') {
             return {
               continue: false,
@@ -42,9 +42,17 @@ export function createInputGuardrailHook(pipeline: GuardrailPipeline): {
           }
 
           if (result.status === 'escalate' && result.reason) {
+            // escalate is differentiated from block — pause for approval
             return {
               continue: false,
               reason: result.reason
+            } satisfies HookResult;
+          }
+
+          if (result.status === 'quarantine' && result.reason) {
+            return {
+              continue: false,
+              reason: `Quarantined: ${result.reason}`
             } satisfies HookResult;
           }
 
@@ -82,7 +90,7 @@ export function createToolInputGuardrailHook(pipeline: GuardrailPipeline): {
             toolName: event.toolName
           }
         )
-        .then(result => {
+        .then(({ result }) => {
           if (result.status === 'block') {
             return {
               continue: false,
@@ -100,6 +108,13 @@ export function createToolInputGuardrailHook(pipeline: GuardrailPipeline): {
             return {
               continue: false,
               reason: result.reason
+            } satisfies HookResult;
+          }
+
+          if (result.status === 'quarantine' && result.reason) {
+            return {
+              continue: false,
+              reason: `Quarantined: ${result.reason}`
             } satisfies HookResult;
           }
 
@@ -139,7 +154,7 @@ export function createToolOutputGuardrailHook(pipeline: GuardrailPipeline): {
             toolName: event.toolName
           }
         )
-        .then(result => {
+        .then(({ result }) => {
           if (result.status === 'block') {
             return {
               continue: false,
@@ -157,6 +172,13 @@ export function createToolOutputGuardrailHook(pipeline: GuardrailPipeline): {
             return {
               continue: false,
               reason: result.reason
+            } satisfies HookResult;
+          }
+
+          if (result.status === 'quarantine' && result.reason) {
+            return {
+              continue: false,
+              reason: `Quarantined: ${result.reason}`
             } satisfies HookResult;
           }
 
@@ -193,7 +215,7 @@ export function createOutputGuardrailHook(pipeline: GuardrailPipeline): {
             sessionId: event.sessionId
           }
         )
-        .then(result => {
+        .then(({ result }) => {
           if (result.status === 'block') {
             return {
               continue: false,
@@ -204,6 +226,13 @@ export function createOutputGuardrailHook(pipeline: GuardrailPipeline): {
           if (result.status === 'transform' && result.sanitized) {
             return {
               transform: { sanitized: result.sanitized }
+            } satisfies HookResult;
+          }
+
+          if (result.status === 'quarantine' && result.reason) {
+            return {
+              continue: false,
+              reason: `Quarantined: ${result.reason}`
             } satisfies HookResult;
           }
 

@@ -1,4 +1,11 @@
-import type { Detection, GuardrailPhase, GuardrailResult, GuardrailScanner, PipelineConfig } from './types.js';
+import type {
+  Detection,
+  GuardrailDecisionReceipt,
+  GuardrailPhase,
+  GuardrailResult,
+  GuardrailScanner,
+  PipelineConfig
+} from './types.js';
 
 /**
  * A sequential guardrail evaluation pipeline.
@@ -54,32 +61,59 @@ export class GuardrailPipeline {
   /**
    * Evaluate all registered scanners against the given input for a phase.
    *
-   * Returns the first `block` result (if shortCircuitOnBlock is true), or
-   * collects all detections and returns the most severe non-pass result.
+   * Returns `{ result, receipt }` — the most severe result and a full audit
+   * receipt. Short-circuits on the first `block` result if configured.
    */
-  async evaluate(input: string, phase: GuardrailPhase, context?: Record<string, unknown>): Promise<GuardrailResult> {
+  async evaluate(
+    input: string,
+    phase: GuardrailPhase,
+    context?: Record<string, unknown>
+  ): Promise<{ result: GuardrailResult; receipt: GuardrailDecisionReceipt }> {
     const detections: Detection[] = [];
     let currentInput = input;
     let blockResult: GuardrailResult | undefined;
     let transformResult: GuardrailResult | undefined;
     let escalateResult: GuardrailResult | undefined;
+    let quarantineResult: GuardrailResult | undefined;
+    let approvalResult: GuardrailResult | undefined;
 
     for (const scanner of this.#scanners) {
       const result = await scanner.evaluate(currentInput, context);
       this.#collectResult(result, detections);
 
-      const ps = this.#applyResult(result, blockResult, transformResult, escalateResult, currentInput);
+      const ps = this.#applyResult(
+        result,
+        blockResult,
+        transformResult,
+        escalateResult,
+        quarantineResult,
+        approvalResult,
+        currentInput
+      );
       blockResult = ps.blockResult;
       transformResult = ps.transformResult;
       escalateResult = ps.escalateResult;
+      quarantineResult = ps.quarantineResult;
+      approvalResult = ps.approvalResult;
       currentInput = ps.input;
 
       if (result.status === 'block' && (this.#config.shortCircuitOnBlock ?? true)) {
-        return result;
+        const receipt = this.#buildReceipt(result, detections, context);
+        return { result, receipt };
       }
     }
 
-    return this.#resolvePriority(blockResult, transformResult, escalateResult, detections, phase);
+    const result = this.#resolvePriority(
+      blockResult,
+      transformResult,
+      escalateResult,
+      quarantineResult,
+      approvalResult,
+      detections,
+      phase
+    );
+    const receipt = this.#buildReceipt(result, detections, context);
+    return { result, receipt };
   }
 
   /**
@@ -90,16 +124,22 @@ export class GuardrailPipeline {
     blockResult: GuardrailResult | undefined,
     transformResult: GuardrailResult | undefined,
     escalateResult: GuardrailResult | undefined,
+    quarantineResult: GuardrailResult | undefined,
+    approvalResult: GuardrailResult | undefined,
     currentInput: string
   ): {
     blockResult: GuardrailResult | undefined;
     transformResult: GuardrailResult | undefined;
     escalateResult: GuardrailResult | undefined;
+    quarantineResult: GuardrailResult | undefined;
+    approvalResult: GuardrailResult | undefined;
     input: string;
   } {
     let escalated = escalateResult;
     let transformed = transformResult;
     let blocked = blockResult;
+    let quarantined = quarantineResult;
+    let approved = approvalResult;
     let nextInput = currentInput;
 
     if (result.status === 'block') {
@@ -110,6 +150,12 @@ export class GuardrailPipeline {
       if (result.sanitized !== undefined) {
         nextInput = result.sanitized;
       }
+    }
+    if (result.status === 'quarantine') {
+      quarantined ??= result;
+    }
+    if (result.status === 'allow-with-approval') {
+      approved ??= result;
     }
     if (
       result.status === 'escalate' &&
@@ -122,23 +168,30 @@ export class GuardrailPipeline {
       blockResult: blocked,
       input: nextInput,
       transformResult: transformed,
-      escalateResult: escalated
+      escalateResult: escalated,
+      quarantineResult: quarantined,
+      approvalResult: approved
     };
   }
 
   /**
    * Resolve the most severe result across all scanners.
-   * Priority: block > transform > escalate > pass.
+   * Priority: block > quarantine > transform > escalate > allow-with-approval > pass.
    */
   #resolvePriority(
     blockResult: GuardrailResult | undefined,
     transformResult: GuardrailResult | undefined,
     escalateResult: GuardrailResult | undefined,
+    quarantineResult: GuardrailResult | undefined,
+    approvalResult: GuardrailResult | undefined,
     detections: Detection[],
     phase: GuardrailPhase
   ): GuardrailResult {
     if (blockResult) {
       return detections.length > 0 ? { ...blockResult, detections } : blockResult;
+    }
+    if (quarantineResult) {
+      return detections.length > 0 ? { ...quarantineResult, detections } : quarantineResult;
     }
     if (transformResult) {
       return detections.length > 0 ? { ...transformResult, detections } : transformResult;
@@ -146,7 +199,37 @@ export class GuardrailPipeline {
     if (escalateResult) {
       return detections.length > 0 ? { ...escalateResult, detections } : escalateResult;
     }
+    if (approvalResult) {
+      return detections.length > 0 ? { ...approvalResult, detections } : approvalResult;
+    }
     return { status: 'pass', phase };
+  }
+
+  /**
+   * Build a decision receipt from a result and detections.
+   */
+  #buildReceipt(
+    result: GuardrailResult,
+    detections: Detection[],
+    context?: Record<string, unknown>
+  ): GuardrailDecisionReceipt {
+    const sessionId = (context?.sessionId as string) ?? 'unknown';
+    const correlationId = (context?.correlationId as string) ?? `${sessionId}:${Date.now()}`;
+
+    const receipt: GuardrailDecisionReceipt = {
+      policyId: 'guardrails:pipeline',
+      decision: result.status,
+      reasonCode: result.status === 'pass' ? 'NO_ISSUES' : result.status.toUpperCase(),
+      riskTier: result.status === 'block' ? 'prohibited' : result.status === 'quarantine' ? 'high' : 'moderate',
+      surface: 'input',
+      phase: result.phase,
+      timestamp: new Date().toISOString(),
+      correlationId,
+      sessionId,
+      detections,
+      ...(result.status === 'transform' ? { sanitized: result.sanitized, redactedFields: [] as readonly string[] } : {})
+    };
+    return receipt;
   }
 
   /**
@@ -168,14 +251,20 @@ export class GuardrailPipeline {
   /**
    * Shortcut to evaluate only `input`-phase scanners.
    */
-  evaluateInput(input: string, context?: Record<string, unknown>): Promise<GuardrailResult> {
+  evaluateInput(
+    input: string,
+    context?: Record<string, unknown>
+  ): Promise<{ result: GuardrailResult; receipt: GuardrailDecisionReceipt }> {
     return this.evaluate(input, 'input', context);
   }
 
   /**
    * Shortcut to evaluate only `output`-phase scanners.
    */
-  evaluateOutput(input: string, context?: Record<string, unknown>): Promise<GuardrailResult> {
+  evaluateOutput(
+    input: string,
+    context?: Record<string, unknown>
+  ): Promise<{ result: GuardrailResult; receipt: GuardrailDecisionReceipt }> {
     return this.evaluate(input, 'output', context);
   }
 

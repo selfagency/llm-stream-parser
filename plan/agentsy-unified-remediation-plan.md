@@ -738,16 +738,28 @@ export interface GuardrailsConfig {
 
 ---
 
-## 10. Phase 5 — Gateway → Daemon Migration
+## 10. Phase 5 — Gateway Daemon Hosting & Independent Package
 
 **Priority**: P1 — Sprint 2
-**Story points**: 5
-**Branch**: `feat/gateway-daemon-migration`
+**Story points**: 6 (increased from 5 to account for the persistence-interface + public-API + IPC-shim work)
+**Branch**: `feat/gateway-daemon-hosting`
 **Depends on**: Phase 1 ✅ (daemon foundation; `ServiceHost` lifecycle, `UnifiedDB`)
-**Unblocks**: Phase 6 (streaming needs routing decisions in the daemon), Phase 14 (ACP agent needs routing)
+**Unblocks**: Phase 6 (streaming needs routing decisions in the daemon), Phase 14 (ACP agent needs routing), Phase 20 (provider-ethics policy hooks into the gateway's `RoutingRequest` filter chain)
 **Closes**: nothing from the guardrails gap analysis; structurally fixes the Phase 0.5 quota map bug permanently
 
-### 10.1 Current Architecture
+### 10.1 Design principle: gateway is a library, daemon is a host
+
+The `@agentsy/gateway` package is **not** gutted into a thin IPC client. It remains a standalone, reusable library that any agentic platform can consume directly. The daemon *hosts* the gateway — it instantiates the gateway's routing classes, manages their lifecycle, and adds `UnifiedDB`-backed persistence. External consumers can use the gateway without the daemon, with in-memory defaults.
+
+**Three consumer profiles**:
+
+| Consumer | How they use the gateway | Persistence | Ethics policy |
+|---|---|---|---|
+| **agentsy daemon** (internal) | Daemon's `RoutingService` instantiates gateway classes + plugs in `UnifiedDB` adapters | `UnifiedDB` (survives restarts) | agentsy's `PROVIDER_ETHICS_POLICY` (Phase 20) |
+| **agentsy CLI/TUI** (internal) | Optional `GatewayClient` IPC shim → calls daemon over Unix socket | Delegated to daemon | Delegated to daemon |
+| **External platform** (e.g. another agentic framework) | Imports `@agentsy/gateway` as a library; calls `createGateway()` programmatically | In-memory (default) or consumer-supplied adapter | Consumer-supplied or none |
+
+### 10.2 Current Architecture
 
 ```
 CLI → Runtime → Gateway → Providers → LLM APIs
@@ -758,85 +770,261 @@ CLI → Runtime → Gateway → Providers → LLM APIs
 
 Every CLI invocation instantiates its own gateway. Health probes run per-process. Quota tracking is per-process. There's no shared state across CLI invocations.
 
-### 10.2 Target Architecture
+### 10.3 Target Architecture
 
 ```
-CLI ─IPC─→ Daemon (owns routing, health, quota, circuit breaker)
-                ↓
-           Providers → LLM APIs
-
-Editors ─ACP─→ Daemon (same routing, health, quota)
-                    ↓
-               Providers → LLM APIs
+┌───────────────────────────────────────────────────────┐
+│ @agentsy/gateway (independent reusable package)       │
+│                                                       │
+│  createGateway(options) → Gateway                     │
+│  ├── ModelRegistry                                    │
+│  ├── ReplicaRegistry + ReplicaSelector                │
+│  ├── HealthRegistry                                   │
+│  ├── QuotaRegistry (per-provider trackers)            │
+│  ├── CircuitBreaker                                   │
+│  ├── SelectionStrategy (pluggable)                    │
+│  ├── ProviderEthicsPolicyHook (pluggable)             │
+│  └── PersistenceAdapter (pluggable; in-memory default)│
+│                                                       │
+│  Public API:                                          │
+│    gateway.selectModel(request) → RoutingDecision     │
+│    gateway.spillover(decision) → RoutingDecision|null │
+│    gateway.registerProvider(provider)                 │
+│    gateway.health.report() → HealthReport             │
+└────────────────────────┬──────────────────────────────┘
+                         │ used by
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+   ┌───────────┐  ┌──────────┐  ┌──────────────────┐
+   │ Daemon    │  │ CLI/TUI  │  │ External         │
+   │ Routing   │  │ Gateway  │  │ Consumer         │
+   │ Service   │  │ Client   │  │ (programmatic)   │
+   │ (hosts +  │  │ (IPC     │  │ (imports gateway │
+   │  UnifiedDB│  │  shim)   │  │  as library)     │
+   │  adapters)│  │          │  │                  │
+   └───────────┘  └──────────┘  └──────────────────┘
 ```
 
-The `@agentsy/gateway` package becomes a thin IPC client. Routing logic lives in the daemon's `RoutingService`.
+### 10.4 Gateway package — public API and persistence interface
 
-### 10.3 RoutingService
+The gateway package gains a clean `createGateway()` factory and a `PersistenceAdapter` interface. The routing classes themselves don't change — they gain constructor-injected persistence hooks.
 
 ```typescript
-// packages/daemon/src/services/routing-service.ts
+// packages/gateway/src/index.ts (PUBLIC API)
 
-export class RoutingService implements Service {
-  readonly name = 'routing';
-  private _state: ServiceState = 'stopped';
+export interface GatewayOptions {
+  /** Persistence adapter (default: InMemoryPersistenceAdapter). */
+  persistence?: PersistenceAdapter;
+  /** Selection strategy (default: ScoreBasedStrategy). */
+  strategy?: SelectionStrategy;
+  /** Provider ethics policy hook (default: none; agentsy daemon plugs in Phase 20). */
+  ethicsPolicy?: ProviderEthicsPolicyHook;
+  /** Initial model definitions. */
+  models?: ModelEntry[];
+  /** Logger. */
+  logger?: Logger;
+}
 
-  private modelRegistry: ModelRegistry;
-  private replicaRegistry: ReplicaRegistry;
-  private replicaSelector: ReplicaSelector;
-  private healthRegistry: HealthRegistry;
-  private quotaRegistry: QuotaRegistry;       // Per-provider (fixes E-0.5 structurally)
-  private strategy: SelectionStrategy;
+export interface PersistenceAdapter {
+  // Quota state — survives restarts when backed by UnifiedDB
+  saveQuotaState(providerId: string, state: QuotaSnapshot): Promise<void>;
+  loadQuotaState(providerId: string): Promise<QuotaSnapshot | null>;
+  // Health history — for trend analysis
+  saveHealthRecord(providerId: string, record: HealthRecord): Promise<void>;
+  loadHealthHistory(providerId: string, since: Date): Promise<HealthRecord[]>;
+  // Routing decisions — for audit
+  saveRoutingDecision(decision: RoutingDecision): Promise<void>;
+  // Circuit breaker state
+  saveCircuitBreakerState(providerId: string, state: CircuitBreakerState): Promise<void>;
+  loadCircuitBreakerState(providerId: string): Promise<CircuitBreakerState | null>;
+}
 
-  async start(): Promise<void> {
-    this._state = 'starting';
-    this.modelRegistry = new ModelRegistry();
-    this.replicaRegistry = new ReplicaRegistry();
-    this.healthRegistry = new HealthRegistry();
-    this.quotaRegistry = new QuotaRegistry();   // One tracker per provider
-    this.strategy = new ScoreBasedStrategy();
-    await this.loadModels();
-    this._state = 'active';
-  }
+export interface ProviderEthicsPolicyHook {
+  /** Called during selectModel after filtering but before selection.
+   *  Returns filtered candidates + any acknowledgement-required flags. */
+  filter(candidates: Replica[], request: RoutingRequest): {
+    candidates: Replica[];
+    blockedProviders: string[];
+    requiresAcknowledgement: string[];
+  };
+}
 
-  async sleep(): Promise<void> { this._state = 'sleeping'; }
-  async wakeup(): Promise<void> { this._state = 'active'; }
-  async stop(): Promise<void> { this._state = 'stopped'; }
+export function createGateway(options?: GatewayOptions): Gateway {
+  const persistence = options?.persistence ?? new InMemoryPersistenceAdapter();
+  const strategy = options?.strategy ?? new ScoreBasedStrategy();
+  const ethicsPolicy = options?.ethicsPolicy;
 
+  const modelRegistry = new ModelRegistry(persistence);
+  const replicaRegistry = new ReplicaRegistry(persistence);
+  const healthRegistry = new HealthRegistry(persistence);
+  const quotaRegistry = new QuotaRegistry(persistence);  // Per-provider
+  const circuitBreaker = new CircuitBreaker(persistence);
+
+  return new Gateway({
+    modelRegistry, replicaRegistry, healthRegistry,
+    quotaRegistry, circuitBreaker, strategy, ethicsPolicy, persistence,
+  });
+}
+
+export class Gateway {
   async selectModel(request: RoutingRequest): Promise<RoutingDecision> {
-    this.deps.serviceHost.touch('routing'); // Reset idle timer
-
-    // 1. Filter models by tier, capabilities, cost constraints (units now correct post-Phase-0.4)
-    const candidates = this.modelRegistry.filter({
+    // 1. Filter by tier, capabilities, cost (units now correct post-Phase-0.4)
+    let candidates = this.modelRegistry.filter({
       tier: request.tier,
       capabilities: request.capabilities,
-      maxCostPer1MInput: request.maxCostPer1KInput ? request.maxCostPer1KInput * 1000 : undefined,
+      maxCostPer1MInput: request.maxCostPer1KInput
+        ? request.maxCostPer1KInput * 1000 : undefined,
     });
 
-    // 2. Get healthy replicas with per-provider quota (fixes E-0.5 structurally)
+    // 2. Apply ethics policy (Phase 20 hook — pluggable, optional)
+    if (this.ethicsPolicy) {
+      const ethicsResult = this.ethicsPolicy.filter(candidates, request);
+      candidates = ethicsResult.candidates;
+      // Blocked providers removed; acknowledgement flags attached to decision
+    }
+
+    // 3. Get healthy replicas with per-provider quota (fixes E-0.5 structurally)
     const healthy = this.healthRegistry.healthy(candidates);
     const quotaOk = healthy.filter(r =>
       this.quotaRegistry.getTracker(r.providerId)?.canRequest() ?? true
     );
 
-    // 3. Score-based selection across replicas
-    return this.strategy.select(quotaOk, request);
+    // 4. Score-based selection
+    const decision = this.strategy.select(quotaOk, request);
+
+    // 5. Persist decision for audit
+    await this.persistence.saveRoutingDecision(decision);
+
+    return decision;
   }
 
   async spillover(routing: RoutingDecision): Promise<RoutingDecision | null> {
     // Same-tier spillover when the selected replica fails
   }
+
+  async registerProvider(provider: ProviderConfig): Promise<void> {
+    // Register a provider + its replicas
+  }
+
+  async healthReport(): Promise<HealthReport> {
+    // Aggregate health status for diagnostics
+  }
 }
 ```
 
-### 10.4 Gateway Package Becomes Thin Client
+### 10.5 Daemon's RoutingService — hosts the gateway + plugs in UnifiedDB
 
-`packages/gateway/src/index.ts` keeps the type exports (`ModelEntry`, `RoutingDecision`, `SelectionStrategy`, etc.) so consumers don't break. The runtime classes (`ModelRegistry`, `ReplicaSelector`, `HealthRegistry`, `QuotaTracker`, `CircuitBreaker`) move to `packages/daemon/src/services/routing/` and are re-exported from the daemon package. The gateway package's runtime classes become IPC-client shims that call daemon methods:
+The daemon's `RoutingService` is a thin host that instantiates `createGateway()` with `UnifiedDB`-backed persistence and agentsy's `PROVIDER_ETHICS_POLICY`. It does **not** reimplement routing logic.
 
 ```typescript
-// packages/gateway/src/client.ts (NEW — thin client)
+// packages/daemon/src/services/routing-service.ts
 
-export class GatewayClient {
+import { createGateway, type Gateway, type PersistenceAdapter } from '@agentsy/gateway';
+
+export class RoutingService implements Service {
+  readonly name = 'routing';
+  private _state: ServiceState = 'stopped';
+  private gateway: Gateway | null = null;
+
+  constructor(private deps: {
+    db: UnifiedDB;
+    serviceHost: ServiceHost;
+    ethicsPolicy?: ProviderEthicsPolicyHook;  // From Phase 20
+  }) {}
+
+  async start(): Promise<void> {
+    this._state = 'starting';
+
+    // Create UnifiedDB-backed persistence adapter
+    const persistence = new UnifiedDBPersistenceAdapter(this.deps.db);
+
+    // Instantiate the gateway library with daemon-backed persistence + ethics policy
+    this.gateway = createGateway({
+      persistence,
+      ethicsPolicy: this.deps.ethicsPolicy,  // Phase 20's PROVIDER_ETHICS_POLICY
+    });
+
+    // Load model definitions from config
+    await this.loadModels();
+
+    // Restore quota + circuit-breaker state from UnifiedDB
+    await this.restoreState();
+
+    this._state = 'active';
+  }
+
+  async selectModel(request: RoutingRequest): Promise<RoutingDecision> {
+    this.deps.serviceHost.touch('routing');
+    return this.gateway!.selectModel(request);
+  }
+
+  async spillover(routing: RoutingDecision): Promise<RoutingDecision | null> {
+    return this.gateway!.spillover(routing);
+  }
+
+  async sleep(): Promise<void> { this._state = 'sleeping'; }
+  async wakeup(): Promise<void> { this._state = 'active'; }
+
+  async stop(): Promise<void> {
+    // Flush state to UnifiedDB
+    await this.gateway?.flush();
+    this._state = 'stopped';
+  }
+
+  get gatewayInstance(): Gateway | null {
+    // Exposed for other daemon services that need direct gateway access
+    return this.gateway;
+  }
+}
+```
+
+```typescript
+// packages/daemon/src/services/unified-db-persistence-adapter.ts (NEW)
+
+import type { PersistenceAdapter } from '@agentsy/gateway';
+
+export class UnifiedDBPersistenceAdapter implements PersistenceAdapter {
+  constructor(private db: UnifiedDB) {}
+
+  async saveQuotaState(providerId: string, state: QuotaSnapshot): Promise<void> {
+    await this.db.execute(
+      `INSERT INTO daemon_quota_state (provider_id, state_json, updated_at)
+       VALUES (?, ?, ?)
+       ON CONFLICT(provider_id) DO UPDATE SET state_json = ?, updated_at = ?`,
+      [providerId, JSON.stringify(state), new Date().toISOString(),
+       JSON.stringify(state), new Date().toISOString()]
+    );
+  }
+
+  async loadQuotaState(providerId: string): Promise<QuotaSnapshot | null> {
+    const row = await this.db.querySingle<{ state_json: string }>(
+      'SELECT state_json FROM daemon_quota_state WHERE provider_id = ?', [providerId]
+    );
+    return row ? JSON.parse(row.state_json) : null;
+  }
+
+  async saveRoutingDecision(decision: RoutingDecision): Promise<void> {
+    await this.db.execute(
+      `INSERT INTO daemon_routing_decisions (id, decision_json, timestamp)
+       VALUES (?, ?, ?)`,
+      [decision.id, JSON.stringify(decision), new Date().toISOString()]
+    );
+  }
+
+  // ... other methods
+}
+```
+
+### 10.6 Optional GatewayClient IPC shim (for CLI/TUI)
+
+For agentsy's own CLI and TUI that connect to the daemon, an optional `GatewayClient` provides the same `Gateway` interface but delegates to the daemon over IPC. This is a convenience — external consumers don't use it.
+
+```typescript
+// packages/gateway/src/client.ts (NEW — optional IPC shim)
+
+import type { Gateway, RoutingRequest, RoutingDecision } from './index.js';
+
+export class GatewayClient implements Gateway {
   constructor(private ipc: IPCClient) {}
 
   async selectModel(request: RoutingRequest): Promise<RoutingDecision> {
@@ -847,28 +1035,101 @@ export class GatewayClient {
     return this.ipc.call('routing.spillover', routing);
   }
 
-  // ... other routing methods
+  async registerProvider(provider: ProviderConfig): Promise<void> {
+    return this.ipc.call('routing.registerProvider', provider);
+  }
+
+  async healthReport(): Promise<HealthReport> {
+    return this.ipc.call('routing.healthReport');
+  }
+}
+
+/** Create a GatewayClient connected to a running daemon. */
+export function connectToDaemon(socketPath: string): GatewayClient {
+  const ipc = new IPCClient({ socketPath });
+  return new GatewayClient(ipc);
 }
 ```
 
-### 10.5 Per-Provider Quota Registry
+### 10.7 External consumer usage (the point of keeping it independent)
 
-The Phase 0.5 fix added `quotaRegistry` to `RetryContext`. This phase makes `QuotaRegistry` a daemon-owned service. Each provider gets its own `QuotaTracker` instance, persisted in `UnifiedDB.daemon_quota_state`. Quota state survives daemon restarts.
+```typescript
+// Example: another agentic platform uses @agentsy/gateway as a library
 
-### 10.6 Tests
+import { createGateway } from '@agentsy/gateway';
 
-- Unit: `RoutingService.selectModel` filters by tier, capabilities, cost (per-1M units).
+// Minimal usage — in-memory persistence, no ethics policy
+const gateway = createGateway({
+  models: [
+    { id: 'gpt-4o', provider: 'openai', tier: 'frontier', pricing: { inputPer1MTokens: 2.5, outputPer1MTokens: 10 } },
+    { id: 'claude-sonnet-4', provider: 'anthropic', tier: 'frontier', pricing: { inputPer1MTokens: 3, outputPer1MTokens: 15 } },
+  ],
+});
+
+const decision = await gateway.selectModel({
+  tier: 'frontier',
+  capabilities: ['tool-use'],
+  maxCostPer1KInput: 0.005,
+});
+
+console.log(`Selected: ${decision.replica.modelId} on ${decision.replica.providerId}`);
+
+// With custom persistence + custom ethics policy
+const gateway2 = createGateway({
+  persistence: new MyPostgresPersistenceAdapter(),
+  ethicsPolicy: {
+    filter(candidates, request) {
+      // Block a provider, require ack for another
+      const blocked = candidates.filter(r => r.providerId !== 'xai');
+      return { candidates: blocked, blockedProviders: ['xai'], requiresAcknowledgement: [] };
+    },
+  },
+});
+```
+
+### 10.8 Per-Provider Quota Registry
+
+The Phase 0.5 fix added `quotaRegistry` to `RetryContext`. This phase makes `QuotaRegistry` a first-class gateway component with pluggable persistence. Each provider gets its own `QuotaTracker` instance. When the daemon hosts the gateway, quota state persists to `UnifiedDB.daemon_quota_state` and survives daemon restarts. When an external consumer uses the gateway directly, quota state is in-memory (lost on process restart) unless they supply a `PersistenceAdapter`.
+
+### 10.9 Gateway package README and npm publication
+
+The gateway package gets a proper README documenting:
+1. **Quick start** for external consumers (the example in §10.7)
+2. **PersistenceAdapter interface** for custom persistence
+3. **ProviderEthicsPolicyHook** for custom ethics filtering
+4. **SelectionStrategy** for custom routing strategies
+5. **Daemon hosting** (how agentsy uses it — as a reference for other platforms that want daemon-hosted routing)
+
+The package is published to npm as `@agentsy/gateway` with stable semver. Breaking changes to the public API (`createGateway`, `Gateway`, `PersistenceAdapter`, `ProviderEthicsPolicyHook`, `SelectionStrategy`) require a major version bump.
+
+### 10.10 Tests
+
+- Unit: `Gateway.selectModel` filters by tier, capabilities, cost (per-1M units).
 - Unit: per-provider `QuotaTracker` returns independent snapshots.
-- Integration: CLI → IPC → daemon → `RoutingService.selectModel` → provider. Verify routing decision is logged in `UnifiedDB.daemon_routing_decisions`.
-- Integration: daemon restart preserves quota state.
+- Unit: `PersistenceAdapter` interface — in-memory default works; `UnifiedDBPersistenceAdapter` saves/loads correctly.
+- Unit: `ProviderEthicsPolicyHook` filters candidates correctly.
+- Unit: External consumer usage (§10.7 example) works with in-memory defaults.
+- Integration: Daemon's `RoutingService` instantiates gateway with `UnifiedDBPersistenceAdapter`; routing decision logged in `UnifiedDB.daemon_routing_decisions`.
+- Integration: daemon restart preserves quota state via `UnifiedDBPersistenceAdapter`.
+- Integration: `GatewayClient` IPC shim calls daemon over Unix socket.
 
-### 10.7 Verification
+### 10.11 Verification
 
-- [ ] `RoutingService` runs as a `Service` in the daemon
-- [ ] `@agentsy/gateway` package is a thin IPC client (no routing logic)
-- [ ] Per-provider `QuotaRegistry` persists to `UnifiedDB`
-- [ ] Routing decisions logged for audit
-- [ ] `pnpm check-types && pnpm lint && pnpm test` green
+- [ ] `@agentsy/gateway` package is independently consumable (no daemon dependency required)
+- [ ] `createGateway()` factory works with in-memory defaults
+- [ ] `PersistenceAdapter` interface defined; `InMemoryPersistenceAdapter` is the default
+- [ ] `UnifiedDBPersistenceAdapter` saves/loads quota state, health history, routing decisions, circuit-breaker state
+- [ ] `ProviderEthicsPolicyHook` interface defined; pluggable via `GatewayOptions.ethicsPolicy`
+- [ ] Daemon's `RoutingService` instantiates `createGateway()` with `UnifiedDBPersistenceAdapter` + Phase 20 ethics policy
+- [ ] Daemon's `RoutingService` does NOT reimplement routing logic (delegates to `Gateway`)
+- [ ] `GatewayClient` IPC shim provides same interface as `Gateway` over IPC
+- [ ] `connectToDaemon(socketPath)` convenience factory works
+- [ ] External consumer example (§10.7) works as documented
+- [ ] Gateway package README published with quick start, API reference, and extension points
+- [ ] Per-provider `QuotaRegistry` persists to `UnifiedDB` when daemon-hosted; in-memory when standalone
+- [ ] Routing decisions logged for audit when daemon-hosted
+- [ ] Daemon restart preserves quota state
+- [ ] `pnpm check-types && pnpm lint && pnpm test` green across both `@agentsy/gateway` and `@agentsy/daemon`
 
 ---
 

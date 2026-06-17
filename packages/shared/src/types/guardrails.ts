@@ -1,5 +1,8 @@
 /**
  * Guardrails and policy enforcement types.
+ *
+ * The canonical GuardrailsConfig is now defined in @agentsy/guardrails.
+ * This file re-exports it for backward compatibility.
  */
 
 import type { ToolId } from './brands.js';
@@ -21,26 +24,11 @@ export interface GuardrailResult {
 }
 
 /**
- * Configuration for guardrails. */
-export interface GuardrailsConfig {
-  /** Map of guardrail IDs to their configurations. */
-  configs: Record<
-    string,
-    {
-      enabled: boolean;
-      severity: 'low' | 'medium' | 'high';
-      options?: Record<string, unknown>;
-    }
-  >;
-  /** List of enabled guardrail IDs. */
-  enabledGuardrails: string[];
-
-  /** Action on any guardrail failing. */
-  failAction: 'block' | 'warn' | 'log';
-
-  /** Action on all guardrails passing. */
-  passAction: 'allow' | 'warn' | 'log';
-}
+ * Configuration for guardrails.
+ *
+ * @deprecated Use the canonical GuardrailsConfig from @agentsy/guardrails instead.
+ */
+export type { GuardrailsConfig } from '@agentsy/guardrails';
 
 /**
  * Interface for a guardrail provider.

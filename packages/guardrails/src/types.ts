@@ -31,9 +31,13 @@ export type OWASPCategory =
 
 export type GuardrailPhase =
   | 'input' // Before model call
-  | 'output' // Before model response is delivered
+  | 'retrieval' // Before/after retrieval from external sources
+  | 'memory' // Before/after memory read/write
   | 'tool-input' // Before tool execution
   | 'tool-output' // After tool response
+  | 'action' // Before high-impact action execution
+  | 'output' // Before model response is delivered
+  | 'egress' // Before network egress
   | 'approval'; // During approval escalation
 
 // =============================================================================
@@ -64,7 +68,10 @@ export interface Detection {
  * - `pass`: No issues detected — execution can proceed.
  * - `block`: A policy violation was found — execution MUST stop.
  * - `transform`: Input was sanitised (e.g. PII redacted) and can proceed with the new value.
+ * - `quarantine`: Content that shouldn't be processed or delivered but also shouldn't be hard-blocked
+ *   (potentially-harmful content pending human review).
  * - `escalate`: A medium/high-confidence risk was found that requires human approval.
+ * - `allow-with-approval`: Content is allowed after explicit human approval.
  */
 export type GuardrailResult =
   | {
@@ -83,12 +90,27 @@ export type GuardrailResult =
       readonly phase: GuardrailPhase;
       readonly sanitized: string;
       readonly detections?: readonly Detection[];
+      readonly transformReason?: 'redaction' | 'rewrite' | 'normalization';
+    }
+  | {
+      readonly status: 'quarantine';
+      readonly phase: GuardrailPhase;
+      readonly reason: string;
+      readonly detections?: readonly Detection[];
+      readonly quarantineId: string;
     }
   | {
       readonly status: 'escalate';
       readonly phase: GuardrailPhase;
       readonly reason: string;
       readonly riskScore: number;
+      readonly detections?: readonly Detection[];
+      readonly approvalId?: string;
+    }
+  | {
+      readonly status: 'allow-with-approval';
+      readonly phase: GuardrailPhase;
+      readonly approvalId: string;
       readonly detections?: readonly Detection[];
     };
 
@@ -138,4 +160,43 @@ export interface PipelineConfig {
   readonly promptOnEscalate?: boolean;
   /** Stop evaluating further scanners on the first `block`. */
   readonly shortCircuitOnBlock?: boolean;
+}
+
+// =============================================================================
+// Guardrail decision receipt — audit record for every guardrail evaluation
+// =============================================================================
+
+/**
+ * A complete audit record for a single guardrail evaluation.
+ *
+ * Every guardrail evaluation produces a receipt that captures the policy
+ * decision, reason, risk tier, affected surface, and correlation identifiers.
+ * Receipts are persisted by the audit logger and can be queried for
+ * post-incident review, compliance reporting, and debugging.
+ */
+export interface GuardrailDecisionReceipt {
+  /** Policy identifier, e.g. 'ethics:anti-sycophancy:1.0' */
+  readonly policyId: string;
+  /** The decision outcome */
+  readonly decision: GuardrailResult['status'];
+  /** Controlled vocabulary reason code, e.g. 'SYCOPHANCY_DETECTED' */
+  readonly reasonCode: string;
+  /** Risk tier of the decision */
+  readonly riskTier: 'low' | 'moderate' | 'high' | 'prohibited';
+  /** Which surface was being evaluated */
+  readonly surface: 'input' | 'retrieval' | 'memory' | 'tool' | 'action' | 'output' | 'egress';
+  /** Which guardrail phase was active */
+  readonly phase: GuardrailPhase;
+  /** ISO 8601 timestamp of the evaluation */
+  readonly timestamp: string;
+  /** Correlation ID combining session + turn + scanner-run */
+  readonly correlationId: string;
+  /** Session identifier */
+  readonly sessionId: string;
+  /** Detections that triggered this decision */
+  readonly detections: readonly Detection[];
+  /** Sanitized output, if the decision was a transform */
+  readonly sanitized?: string;
+  /** Fields that were redacted, if applicable */
+  readonly redactedFields?: readonly string[];
 }
