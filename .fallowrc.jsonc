@@ -109,7 +109,17 @@
     "packages/memory/src/commands/mcp.ts",
     "packages/memory/src/commands/daemon/start.ts",
     "packages/memory/src/commands/daemon/status.ts",
-    "packages/memory/src/commands/daemon/stop.ts"
+    "packages/memory/src/commands/daemon/stop.ts",
+    // Runtime sandbox — spawned as a worker thread (no static import chain)
+    "packages/runtime/src/sandbox/virtual/sandbox-worker.ts",
+    // Test utilities — consumed by test files (Fallow production mode ignores test graph)
+    "packages/daemon/src/test-utils.ts",
+    "packages/guardrails/src/test-helpers.ts",
+    "packages/testing/src/benchmarks/retrieval-quality.ts",
+    "packages/testing/src/msw/handlers/connectors.ts",
+    "packages/testing/src/msw/handlers/mcp.ts",
+    "packages/ui/src/shared.test-utils.ts",
+    "packages/vscode/src/test-utils.ts"
   ],
   // Preserve class members that are used via runtime reflection or host integrations.
   "usedClassMembers": [],
