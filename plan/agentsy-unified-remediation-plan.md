@@ -4,7 +4,7 @@
 **Date**: 2026-06-17
 **Repository**: `selfagency/agentsy`
 **Branch reviewed**: `develop`
-**Status**: ACTIVE — Phases 0, 1, 2 complete; Phase 3 onward is the active scope
+**Status**: ACTIVE — Phases 0, 1, 2, 3 complete; Phase 4 onward is the active scope
 **Code reference**: https://github.com/selfagency/agentsy (develop branch)
 
 > **Update from v1.0**: Phases 0 (Critical Bug Fixes), 1 (Daemon Foundation), and 2 (Package Consolidation) from the v2.3 source plan are now COMPLETE on `develop`. Their deliverables (UnifiedDB, daemon IPC, Piscina pool, Honker queues, Bree scheduler, SubprocessManager, 25-package layout) are treated as existing infrastructure in all downstream phases. The active scope of this plan is Phases 3–18: ~100 story points over ~11 sprints.
@@ -63,8 +63,8 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 | 0 | Critical Bug Fixes | v2.3 §3 | 3 | — | P0 | none | — | ✅ COMPLETE |
 | 1 | Daemon Foundation | v2.3 §4 | 13 | — | P0 | Phase 0 | — | ✅ COMPLETE |
 | 2 | Package Consolidation | v2.3 §5 | 2 | — | P1 | Phase 0 | — | ✅ COMPLETE |
-| 3 | Hook Pipeline Redesign + Claude-Code Hook Schema | v2.3 §6 + comp #1, #4 | 5 | 1 | P1 | Phase 0 | — | 🟡 Next |
-| 4 | Guardrails Honest Foundation (Ethics, Receipts, Audit) | gap §Phase 1+2 | 6 | 1–2 | P0 | Phase 3 | E-1, E-2, E-3, E-4, E-5, E-22(partial), E-23, E-38, E-39, E-40, E-41, E-42 | Pending |
+| 3 | Hook Pipeline Redesign + Claude-Code Hook Schema | v2.3 §6 + comp #1, #4 | 5 | 1 | P1 | Phase 0 | — | ✅ COMPLETE |
+| 4 | Guardrails Honest Foundation (Ethics, Receipts, Audit) | gap §Phase 1+2 | 6 | 1–2 | P0 | Phase 3 | E-1, E-2, E-3, E-4, E-5, E-22(partial), E-23, E-38, E-39, E-40, E-41, E-42 | 🟡 Next |
 | 5 | Gateway → Daemon Migration | v2.3 §7 | 5 | 2 | P1 | Phase 1 ✅ | — | Pending |
 | 6 | Streaming Architecture | v2.3 §8 + comp #12 | 5 | 3 | P1 | Phase 5 | — | Pending |
 | 7 | RAG as Daemon Service | v2.3 §9 | 4 | 3 | P2 | Phase 1 ✅ | (supports E-20, E-35) | Pending |
@@ -262,14 +262,26 @@ packages/
 
 ---
 
-## 8. Phase 3 — Hook Pipeline Redesign + Claude-Code Hook Schema 🟡 NEXT
+## 8. Phase 3 — Hook Pipeline Redesign + Claude-Code Hook Schema ✅ COMPLETE
 
-**Priority**: P1 — Sprint 1
-**Story points**: 5
-**Branch**: `feat/hook-pipeline-redesign`
-**Depends on**: Phase 0 ✅ (the minimal hook patch from 0.3 will be replaced)
-**Unblocks**: Phase 4 (guardrails honest foundation needs the new composition model to thread `GuardrailDecisionReceipt`s), Phase 14 (ACP agent needs hook-driven tool interception), Phase 17 (competitive items build on this hook schema)
-**Closes competitive gaps**: #1 (Claude-Code hook schema), #4 (failUnsettledTools from opencode)
+**Status**: Landed on `develop` (branch `feat/hook-pipeline-redesign` merged).
+**Story points**: 5 (actuals reconciled at merge).
+**What shipped** (treat as existing infrastructure; do not regress):
+
+| # | Deliverable | File | Outcome |
+|---|---|---|---|
+| 8.1 | Middleware-style composition model | `packages/runtime/src/hooks/registry.ts` | Hook transforms compose left-to-right (lower priority first); `stop` short-circuits; `continue` and `transform` both pass through. |
+| 8.2 | Claude-Code hook schema | `packages/runtime/src/hooks/schema.ts` | `HookConfig` discriminated union (command/prompt/http/agent) with optional `if` filter; `HookContext` interface. |
+| 8.3 | failUnsettledTools export | `packages/runtime/src/loop/simple-turn.ts` | `failUnsettledTools` function exported and wired into stream error handler; emits `tool_call_update` with `status: 'failed'` for orphaned pending calls. |
+| 8.4 | HookResult re-export | `packages/runtime/src/hooks/types.ts` | `HookResult` re-exported from `schema.ts` for single-source-of-truth. |
+| 8.5 | Type guards in transform composition | `packages/runtime/src/hooks/registry.ts` | Runtime typeof guards before object spread prevent null/undefined pollution. |
+
+**Tests**: 35 passing (existing + new middleware chain tests + stream-error test coverage for `failUnsettledTools`).
+
+**Downstream consumers**:
+- Phase 4 threads `GuardrailDecisionReceipt`s through the new composition model.
+- Phase 14 uses hook-driven tool interception for ACP agents.
+- Phase 17 competitive items build on the Claude-Code hook schema.
 
 ### 8.1 Current Problem
 
