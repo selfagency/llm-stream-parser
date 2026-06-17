@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { LoadedAgent, SkillMetadata, AgentExecutionContext } from './specs/types.js';
 import { SkillCostTracker, selectSkills } from './skills/index.js';
+import type { AgentExecutionContext, LoadedAgent, SkillMetadata } from './specs/types.js';
 
 describe('Skill Selector', () => {
   it('should select applicable skills for a task', () => {

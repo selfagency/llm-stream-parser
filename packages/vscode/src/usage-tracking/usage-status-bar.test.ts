@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getQuotaStatus, UsageStatusBar } from './usage-status-bar.js';
+import { UsageStatusBar } from './usage-status-bar.js';
 
 function makeColorScheme() {
   return { error: '#ff0000', warning: '#ffa500', normal: '#00ff00' };

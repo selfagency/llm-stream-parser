@@ -93,7 +93,9 @@ function createMessageHandler(options: MessageHandlerOptions) {
       options.stderr.push(output);
 
       if (msg.type === 'runtime-error') {
-        if (!resolveOnce(options.resolved, options.worker, options.timeout)) { return; }
+        if (!resolveOnce(options.resolved, options.worker, options.timeout)) {
+          return;
+        }
         options.resolve({
           durationMs: Date.now() - options.start,
           exitCode: 1,
@@ -103,7 +105,9 @@ function createMessageHandler(options: MessageHandlerOptions) {
         });
       }
     } else if (msg.type === 'result') {
-      if (!resolveOnce(options.resolved, options.worker, options.timeout)) { return; }
+      if (!resolveOnce(options.resolved, options.worker, options.timeout)) {
+        return;
+      }
       options.resolve({
         durationMs: Date.now() - options.start,
         exitCode: 0,
@@ -127,7 +131,9 @@ interface ErrorHandlerOptions {
 
 function createErrorHandler(options: ErrorHandlerOptions) {
   return (err: Error) => {
-    if (!resolveOnce(options.resolved, options.worker, options.timeout)) { return; }
+    if (!resolveOnce(options.resolved, options.worker, options.timeout)) {
+      return;
+    }
     options.resolve({
       durationMs: Date.now() - options.start,
       exitCode: 1,
@@ -149,7 +155,9 @@ interface ExitHandlerOptions {
 
 function createExitHandler(options: ExitHandlerOptions) {
   return (code: number) => {
-    if (!resolveOnce(options.resolved, undefined, options.timeout)) { return; }
+    if (!resolveOnce(options.resolved, undefined, options.timeout)) {
+      return;
+    }
     if (code === 0) {
       options.resolve({
         durationMs: Date.now() - options.start,
