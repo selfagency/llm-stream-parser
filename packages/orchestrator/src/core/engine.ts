@@ -535,7 +535,6 @@ export class OrchestrationEngine extends EventEmitter {
     }
   }
 
-  // fallow-ignore-next-line unused-class-member
   monitor(workflowId: string): WorkflowMonitor {
     const context = this.workflows.get(workflowId);
     if (!context) {
@@ -545,7 +544,6 @@ export class OrchestrationEngine extends EventEmitter {
     return new WorkflowMonitor(context);
   }
 
-  // fallow-ignore-next-line unused-class-member
   async cancel(workflowId: string): Promise<void> {
     const execution = this.activeExecutions.get(workflowId);
     if (execution) {

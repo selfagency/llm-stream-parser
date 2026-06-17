@@ -65,7 +65,6 @@ export class ToolCallAccumulator {
    * Useful for emitting tool calls mid-stream when multiple parallel calls are in flight
    * and some complete before others.
    */
-  // fallow-ignore-next-line unused-class-member
   public getCompletedCalls(): NativeToolCall[] {
     const result: NativeToolCall[] = [];
     for (const pending of this.calls.values()) {
@@ -234,7 +233,6 @@ export class ToolCallAccumulator {
    * Call this when the stream ends to capture any calls whose arguments never formed
    * complete JSON during streaming.
    */
-  // fallow-ignore-next-line unused-class-member
   public flush(): NativeToolCall[] {
     const result: NativeToolCall[] = [];
     for (const pending of this.calls.values()) {
