@@ -1,0 +1,22 @@
+<output>
+<compartments>
+<compartment start="513" end="530" title="Batch 2: Fallow entry points for cortexkit, observability exporters, testing MSW, and plugin manifest verification" episode_type="infra" importance="10">
+<p1>
+Batch 2 Fallow entries added for legitimate source files: cortexkit bridges (memory, session), observability exporters (console, langfuse, otlp), testing MSW setup, CLI providers, and plugin manifest. Post-Batch 2 result: 32 total issues (down from 43, -11). Verified `packages/plugins/src/manifest/index.ts` — already registered as a fallow entry (tsup subpath entry for external consumers) at line 104 of `.fallowrc.jsonc`. The "unused" flagging despite the entry registration may indicate a tsup entry vs fallow-entry sync issue being investigated.
+</p1>
+<p2>
+Batch 2 Fallow entries completed: cortexkit bridges (memory, session), observability exporters (console, langfuse, otlp), testing MSW setup, CLI providers, plugin manifest. 32 total issues remain. Verified plugins/manifest is already registered in fallow entry list.
+</p2>
+<p3>
+Fallow batch cleanup ongoing — Batch 2 entries added and verified for cortexkit, observability exporters, testing MSW, CLI providers, and plugin manifest; 32 issues remain.
+</p3>
+<p4/>
+</compartment>
+</compartments>
+<facts>
+</facts>
+<meta>
+<messages_processed>528-530</messages_processed>
+<unprocessed_from>531</unprocessed_from>
+</meta>
+</output>

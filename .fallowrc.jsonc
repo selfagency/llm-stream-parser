@@ -36,6 +36,7 @@
     "packages/types/**"
   ],
   "publicPackages": [
+    "@agentsy/agents",
     "@agentsy/context",
     "@agentsy/core",
     "@agentsy/daemon",
@@ -53,9 +54,11 @@
     "@agentsy/secrets",
     "@agentsy/session",
     "@agentsy/shared",
+    "@agentsy/testing",
     "@agentsy/tokenomics",
     "@agentsy/tools",
-    "@agentsy/ui"
+    "@agentsy/ui",
+    "@agentsy/vscode"
   ],
   // Explicit entry points for packages when package.json exports are insufficient.
   // Test files are entry points for the test runner — including them prevents
@@ -104,14 +107,6 @@
     "packages/plugins/src/manifest/index.ts",
     // Council mode — optional orchestration pattern
     "packages/orchestrator/src/council/index.ts",
-    // Memory CLI — oclif runtime filesystem discovery (no static import chain)
-    "packages/memory/src/commands/init.ts",
-    "packages/memory/src/commands/mcp.ts",
-    "packages/memory/src/commands/daemon/start.ts",
-    "packages/memory/src/commands/daemon/status.ts",
-    "packages/memory/src/commands/daemon/stop.ts",
-    // Runtime sandbox — spawned as a worker thread (no static import chain)
-    "packages/runtime/src/sandbox/virtual/sandbox-worker.ts",
     // Test utilities — consumed by test files (Fallow production mode ignores test graph)
     "packages/daemon/src/test-utils.ts",
     "packages/guardrails/src/test-helpers.ts",
@@ -119,7 +114,47 @@
     "packages/testing/src/msw/handlers/connectors.ts",
     "packages/testing/src/msw/handlers/mcp.ts",
     "packages/ui/src/shared.test-utils.ts",
-    "packages/vscode/src/test-utils.ts"
+    "packages/vscode/src/test-utils.ts",
+    // Phase F — Provider adapters (coded but not yet wired into provider barrel)
+    "packages/providers/src/adapters/mistral.ts",
+    "packages/providers/src/adapters/openai-compatible.ts",
+    "packages/providers/src/adapters/types.ts",
+    // Phase G — Memory sub-modules (public API surface, wired in v2.3 daemon plan)
+    "packages/memory/src/cortexkit/dreamer-consumer.ts",
+    "packages/memory/src/entries/index.ts",
+    "packages/memory/src/extraction/index.ts",
+    "packages/memory/src/recall-router.ts",
+    "packages/memory/src/result-handle.ts",
+    "packages/memory/src/retrieval/rag/test-msw.ts",
+    "packages/memory/src/unified-api.ts",
+    "packages/memory/src/unified-query.ts",
+    // Plugin internals — planned instructions/skills system, not yet wired
+    "packages/plugins/src/index.ts",
+    "packages/plugins/src/instructions/discoverer.ts",
+    "packages/plugins/src/instructions/types.ts",
+    "packages/plugins/src/skills/activator.ts",
+    "packages/plugins/src/skills/discoverer.ts",
+    "packages/plugins/src/skills/manifest.ts",
+    // Runtime AG-UI and memory hooks — unwired runtime features
+    "packages/runtime/src/ag-ui/http-server.ts",
+    "packages/runtime/src/hooks/memory-wiki-synthesis.ts",
+    // Core — unwired context compression
+    "packages/core/src/context/compress-memory-file.ts",
+    // Tokenomics cortexkit bridge
+    "packages/tokenomics/src/cortexkit/budget-provider.ts",
+    // Tools — AgentFS adapter (planned filesystem integration)
+    "packages/tools/src/filesystem/agentfs-adapter.ts",
+    // UI — planned component exports (model-picker, renderers)
+    "packages/ui/src/cli/create-cli-renderer.ts",
+    "packages/ui/src/ink/components/model-picker/model-provider-dropdown.tsx",
+    "packages/ui/src/streaming-md/create-streaming-markdown-renderer.ts"
+  ],
+  // Runtime-discovered files loaded via oclif filesystem scan, worker_threads
+  // spawn, Bree scheduler discovery, etc. — no static import chain to trace.
+  "dynamicallyLoaded": [
+    "packages/memory/src/commands/**/*.ts",
+    "packages/runtime/src/sandbox/virtual/sandbox-worker.ts",
+    "packages/daemon/src/jobs/**/*.ts"
   ],
   // Preserve class members that are used via runtime reflection or host integrations.
   "usedClassMembers": [],
@@ -176,6 +211,17 @@
       "packages/secrets/src/injection/resolver.ts"
     ]
   },
+  // Test file overrides — suppress export/type noise while keeping files in the
+  // module graph (via entry patterns) so production imports from tests are traced.
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.test-d.ts", "**/*.spec.ts", "**/*.spec.tsx"],
+      "rules": {
+        "unused-exports": "off",
+        "unused-types": "off"
+      }
+    }
+  ],
   // Prevent gating on current baseline during remediation; switch to stronger gate after cleanup.
   "audit": {
     "gate": "new-only"
