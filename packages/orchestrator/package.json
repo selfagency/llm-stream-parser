@@ -30,6 +30,11 @@
       "types": "./dist/agent/index.d.ts",
       "import": "./dist/agent/index.js",
       "require": "./dist/agent/index.cjs"
+    },
+    "./council": {
+      "types": "./dist/council/index.d.ts",
+      "import": "./dist/council/index.js",
+      "require": "./dist/council/index.cjs"
     }
   },
   "scripts": {

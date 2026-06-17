@@ -101,7 +101,9 @@
     "packages/cli/src/providers/index.ts",
     "packages/testing/src/msw/setup.ts",
     // Already a tsup subpath entry — external consumers import via package exports
-    "packages/plugins/src/manifest/index.ts"
+    "packages/plugins/src/manifest/index.ts",
+    // Council mode — optional orchestration pattern
+    "packages/orchestrator/src/council/index.ts"
   ],
   // Preserve class members that are used via runtime reflection or host integrations.
   "usedClassMembers": [],
