@@ -151,6 +151,8 @@
     { "file": "packages/cli/src/config/paths.ts", "exports": ["*"] },
     { "file": "packages/cli/src/config/resolve-credentials.ts", "exports": ["*"] },
     { "file": "packages/cli/src/config/schema.ts", "exports": ["BudgetConfig", "ProviderConfig", "ConfigSchema", "DEFAULT_CONFIG", "deepMerge", "loadFromEnv", "loadFromFile"] },
-    { "file": "packages/cli/src/config/migrate.ts", "exports": ["CURRENT_CONFIG_VERSION", "migrateConfigFile", "migrateAndLoad"] }
+    { "file": "packages/cli/src/config/migrate.ts", "exports": ["CURRENT_CONFIG_VERSION", "migrateConfigFile", "migrateAndLoad"] },
+    { "file": "packages/gateway/src/client.ts", "exports": ["*"] },
+    { "file": "packages/gateway/src/registry/index.ts", "exports": ["*"] }
   ]
 }
