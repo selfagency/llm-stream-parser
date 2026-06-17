@@ -88,6 +88,13 @@ function handleStringChar(char: string, state: RepairState): void {
  * Handle a character outside of a string literal.
  */
 function handleStructuralChar(char: string, state: RepairState): string {
+  // Enter string mode
+  if (char === '"') {
+    state.inString = true;
+    state.buffer += char;
+    return char;
+  }
+
   // Opening brackets
   if (char === '{' || char === '[') {
     state.bracketStack.push(char === '{' ? '}' : ']');
