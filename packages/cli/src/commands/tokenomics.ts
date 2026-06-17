@@ -509,7 +509,7 @@ function extractCommitShasAndFiles(entry: import('@agentsy/tokenomics').SessionL
   const commitShas: string[] = [];
   const files: string[] = [];
   if ('artifacts' in entry) {
-    const a = entry.artifacts as Record<string, unknown>;
+    const a = entry.artifacts as unknown as Record<string, unknown>;
     if (Array.isArray(a.commits)) {
       for (const c of a.commits) {
         if (typeof c === 'object' && c !== null && 'sha' in c) {
@@ -537,14 +537,14 @@ async function computeSurvivalForEntry(
     commitShas: string[],
     files: string[],
     repoRoot: string
-  ) => Promise<import('@agentsy/tokenomics').SurvivalResult>
+  ) => import('@agentsy/tokenomics').SurvivalResult | Promise<import('@agentsy/tokenomics').SurvivalResult>
 ): Promise<import('@agentsy/tokenomics').SurvivalResult | null> {
   const { commitShas, files } = extractCommitShasAndFiles(entry);
   if (commitShas.length === 0 || files.length === 0) {
     return null;
   }
   try {
-    return await computeSurvivalRate(entry.sessionId, commitShas, files, repoRoot);
+    return await Promise.resolve(computeSurvivalRate(entry.sessionId, commitShas, files, repoRoot));
   } catch {
     return null;
   }

@@ -51,8 +51,6 @@ describe('Agent Runtime', () => {
       results: new Map(),
       spec,
       state: {
-        currentLayer: undefined,
-        currentStep: undefined,
         completedSteps: [],
         failedSteps: [],
         errors: []
@@ -85,8 +83,6 @@ describe('Agent Runtime', () => {
       results: new Map(),
       spec,
       state: {
-        currentLayer: undefined,
-        currentStep: undefined,
         completedSteps: [],
         failedSteps: [],
         errors: []
@@ -121,8 +117,6 @@ describe('Agent Runtime', () => {
       results: new Map(),
       spec,
       state: {
-        currentLayer: undefined,
-        currentStep: undefined,
         completedSteps: [],
         failedSteps: [],
         errors: []
