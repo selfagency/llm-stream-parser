@@ -9,6 +9,7 @@
  */
 
 import { execSync } from 'node:child_process';
+import { safePathEnv } from '@agentsy/shared/safe-path';
 
 // =============================================================================
 // Types
@@ -188,6 +189,7 @@ export function appendTrailersToStagedCommit(trailers: AiTrailers): void {
   const trailerArgs = buildTrailerArgs(trailers);
 
   execSync(['git', 'interpret-trailers', '--in-place', ...trailerArgs, 'HEAD'].join(' '), {
+    env: safePathEnv(),
     stdio: 'pipe',
     encoding: 'utf-8'
   });

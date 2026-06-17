@@ -11,6 +11,7 @@
  */
 
 import { execSync } from 'node:child_process';
+import { safePathEnv } from '@agentsy/shared/safe-path';
 
 // =============================================================================
 // Types
@@ -82,6 +83,7 @@ export function computeSurvivalRate(
     try {
       const blameOutput = execSync(['git', 'blame', '--porcelain', file].join(' '), {
         cwd: repoRoot,
+        env: safePathEnv(),
         stdio: 'pipe',
         encoding: 'utf-8'
       });

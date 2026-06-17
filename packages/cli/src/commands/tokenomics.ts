@@ -332,9 +332,11 @@ async function buildAttributionReport(since: Date, opts: TokenomicsCliOptions): 
   try {
     const { aggregateGitAiStats } = await import('@agentsy/tokenomics');
     const { execSync } = await import('node:child_process');
+    const { safePathEnv } = await import('@agentsy/shared/safe-path');
 
     const sinceIso = since.toISOString();
     const logOutput = execSync(`git log --since="${sinceIso}" --format="%H" --no-pager`, {
+      env: safePathEnv(),
       encoding: 'utf-8',
       stdio: 'pipe'
     }).trim();
@@ -345,7 +347,11 @@ async function buildAttributionReport(since: Date, opts: TokenomicsCliOptions): 
       return 0;
     }
 
-    const repoRoot = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8', stdio: 'pipe' }).trim();
+    const repoRoot = execSync('git rev-parse --show-toplevel', {
+      env: safePathEnv(),
+      encoding: 'utf-8',
+      stdio: 'pipe'
+    }).trim();
     const stats = aggregateGitAiStats(repoRoot, shas);
 
     if (opts.json) {
@@ -549,6 +555,7 @@ async function handleSurvival(argv: readonly string[], opts: TokenomicsCliOption
   try {
     const { computeSurvivalRate, createSqliteLedgerStore } = await import('@agentsy/tokenomics');
     const { execSync } = await import('node:child_process');
+    const { safePathEnv } = await import('@agentsy/shared/safe-path');
 
     const ledger = await createSqliteLedgerStore(':memory:');
     const entries = await ledger.query({});
@@ -558,7 +565,11 @@ async function handleSurvival(argv: readonly string[], opts: TokenomicsCliOption
       return 0;
     }
 
-    const repoRoot = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8', stdio: 'pipe' }).trim();
+    const repoRoot = execSync('git rev-parse --show-toplevel', {
+      env: safePathEnv(),
+      encoding: 'utf-8',
+      stdio: 'pipe'
+    }).trim();
 
     const results = (
       await Promise.all(entries.map(entry => computeSurvivalForEntry(entry, repoRoot, computeSurvivalRate)))

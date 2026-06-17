@@ -9,6 +9,7 @@
  */
 
 import { execSync } from 'node:child_process';
+import { safePathEnv } from '@agentsy/shared/safe-path';
 
 // =============================================================================
 // Types
@@ -78,6 +79,7 @@ export function readGitAiCommitStats(repoRoot: string, sha: string): GitAiCommit
   try {
     const raw = execSync(`git notes --ref=ai show ${sha} 2>/dev/null || true`, {
       cwd: repoRoot,
+      env: safePathEnv(),
       encoding: 'utf-8',
       stdio: 'pipe'
     }).trim();

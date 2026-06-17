@@ -1,6 +1,7 @@
 import { type ChildProcess, execSync, spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
+import { safePathEnv } from '@agentsy/shared/safe-path';
 import type { Logger } from '../types.js';
 
 export type RestartPolicy = 'always' | 'on-failure' | 'never';
@@ -354,7 +355,8 @@ export class SubprocessManager extends EventEmitter {
 const rssReaders: Record<string, (pid: number) => number | null> = {
   linux: pid => {
     const status = execSync(`grep VmRSS /proc/${pid}/status 2>/dev/null || true`, {
-      encoding: 'utf-8',
+      env: safePathEnv(),
+      encoding: 'utf-8' as const,
       timeout: 1000
     });
     const match = status.match(/VmRSS:\s+(\d+)\s+kB/);
@@ -362,7 +364,8 @@ const rssReaders: Record<string, (pid: number) => number | null> = {
   },
   darwin: pid => {
     const output = execSync(`ps -p ${pid} -o rss= 2>/dev/null || true`, {
-      encoding: 'utf-8',
+      env: safePathEnv(),
+      encoding: 'utf-8' as const,
       timeout: 1000
     });
     const trimmed = output.trim();
@@ -370,7 +373,8 @@ const rssReaders: Record<string, (pid: number) => number | null> = {
   },
   win32: pid => {
     const output = execSync(`wmic process where processid=${pid} get workingsetsize /format:csv 2>nul || echo ""`, {
-      encoding: 'utf-8',
+      env: safePathEnv(),
+      encoding: 'utf-8' as const,
       timeout: 1000
     });
     const match = output.match(/\n(\d+)/);

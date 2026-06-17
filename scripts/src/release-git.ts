@@ -1,17 +1,13 @@
 import type { SpawnSyncOptions, SpawnSyncReturns } from 'node:child_process';
 import { spawnSync } from 'node:child_process';
 
-const SAFE_PATH = ['/usr/bin', '/bin', '/usr/sbin', '/sbin'].join(':');
-
-function withSafePathEnv(): NodeJS.ProcessEnv {
-  return { ...process.env, PATH: SAFE_PATH };
-}
+import { safePathEnv } from '@agentsy/shared/safe-path';
 
 function resolveGitExecutable(): string | null {
-  // nosemgrep: command-injection-path
-  // PATH is explicitly restricted to safe system directories via withSafePathEnv().
+  // nosemgrep: command-injection-path, NOSONAR
+  // PATH is explicitly restricted to safe system directories via safePathEnv().
   const direct = spawnSync('git', ['--version'], {
-    env: withSafePathEnv(),
+    env: safePathEnv(),
     shell: false,
     stdio: 'ignore'
   });
@@ -21,11 +17,11 @@ function resolveGitExecutable(): string | null {
   }
 
   const locatorCommand = process.platform === 'win32' ? 'where' : 'which';
-  // nosemgrep: command-injection-path
-  // PATH is explicitly restricted to safe system directories via withSafePathEnv().
+  // nosemgrep: command-injection-path, NOSONAR
+  // PATH is explicitly restricted to safe system directories via safePathEnv().
   const located = spawnSync(locatorCommand, ['git'], {
     encoding: 'utf-8',
-    env: withSafePathEnv(),
+    env: safePathEnv(),
     shell: false
   });
 
@@ -56,7 +52,8 @@ export function createGitHelpers(root: string): GitHelpers {
       cwd: root,
       encoding: 'utf-8',
       shell: false,
-      ...options
+      ...options,
+      env: { ...safePathEnv(), ...options.env }
     });
 
     if (result.status !== 0) {
@@ -66,7 +63,6 @@ export function createGitHelpers(root: string): GitHelpers {
       throw new Error(details);
     }
 
-    // Ensure the result is properly typed as string
     return result as unknown as SpawnSyncReturns<string>;
   }
 
