@@ -52,7 +52,7 @@ export class LoggerImpl implements Logger {
     [LogLevel.ERROR]: 'ERROR'
   };
 
-  // fallow-ignore-next-line complexity — config merging with multiple optional fields
+  // fallow-ignore-next-line complexity
   constructor(config?: LoggerConfig) {
     this.config = {
       includeTimestamp: config?.includeTimestamp ?? true,
@@ -77,7 +77,7 @@ export class LoggerImpl implements Logger {
     this.log(LogLevel.ERROR, message, attributes, error);
   }
 
-  // fallow-ignore-next-line complexity — log routing with level check and conditional output
+  // fallow-ignore-next-line complexity
   private log(level: LogLevel, message: string, attributes?: Record<string, unknown>, error?: unknown): void {
     if (level < this.config.minLevel) {
       return; // Below minimum level, skip

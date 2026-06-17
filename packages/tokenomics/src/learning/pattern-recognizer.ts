@@ -195,7 +195,7 @@ function buildContextFingerprint(entry: SessionLedgerEntry, keys: string[]): str
  * Parses the first frustration reason and maps it to a FrustrationEventKind.
  * Falls back to a generic label when no known pattern is matched.
  */
-// fallow-ignore-next-line complexity — pattern discriminator with multiple fallback cases
+// fallow-ignore-next-line complexity
 function extractDominantKind(entry: SessionLedgerEntry): FrustrationEventKind {
   const reasons = entry.frustration.reasons;
   if (reasons.length === 0) {

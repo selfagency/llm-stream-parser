@@ -2,10 +2,10 @@ import { eq, like } from 'drizzle-orm';
 import type { MemoryDatabase } from '../database/connection.js';
 import { kvStore } from '../database/schema.js';
 import { cosineSimilarity } from '../math-utils.js';
-import { getDiff } from '../wiki/wiki-manager.js';
+import { getDiff } from '../wiki/wiki-utils.js';
+import type { PageDiff } from '../wiki/wiki-utils.js';
 import type {
   ConceptRelation,
-  PageDiff,
   RawCapture,
   RawCaptureInput,
   VectorSearchResult,

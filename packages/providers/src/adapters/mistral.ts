@@ -84,7 +84,7 @@ function toImageDataUri(mimeType: string, data: Uint8Array | string): string {
   return `data:${mimeType};base64,${base64}`;
 }
 
-// fallow-ignore-next-line complexity — message parsing with multi-field conditional collection
+// fallow-ignore-next-line complexity
 function collectMessageParts(
   message: MistralOutboundMessage,
   normalizeToolCallId: (originalId: string) => string,
@@ -147,7 +147,7 @@ function collectMessageParts(
   };
 }
 
-// fallow-ignore-next-line complexity — content building with role+content-type branching
+// fallow-ignore-next-line complexity
 function buildContentForMistralMessage(
   role: MistralOutboundMessage['role'],
   text: string,
@@ -175,7 +175,7 @@ function buildContentForMistralMessage(
   }
 }
 
-// fallow-ignore-next-line complexity — system message emission with multi-field accounting
+// fallow-ignore-next-line complexity
 function emitSystemMessage(
   out: MistralMessage[],
   text: string,
@@ -197,7 +197,7 @@ function emitSystemMessage(
   }
 }
 
-// fallow-ignore-next-line complexity — non-system message emission with conditional content+tool dispatch
+// fallow-ignore-next-line complexity
 function emitNonSystemMessage(
   out: MistralMessage[],
   role: Extract<MistralOutboundMessage['role'], 'assistant' | 'user'>,

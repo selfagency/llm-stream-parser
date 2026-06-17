@@ -42,14 +42,14 @@ export class ConsoleExporter implements ObservabilitySink {
   private readonly _write: (line: string) => void;
   private readonly _prefix: string;
 
-  // fallow-ignore-next-line complexity — optional config merging with defaults
+  // fallow-ignore-next-line complexity
   constructor(options?: ConsoleExporterOptions) {
     this._pretty = options?.pretty ?? true;
     this._write = options?.write ?? ((line: string) => console.log(line));
     this._prefix = options?.prefix ?? PREFIX;
   }
 
-  // fallow-ignore-next-line complexity — conditional formatting with attribute/event loops
+  // fallow-ignore-next-line complexity
   export(span: SpanData): Promise<void> | void {
     if (this._pretty) {
       this._write(

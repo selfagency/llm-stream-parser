@@ -235,7 +235,7 @@ function getMemoryRequirements(entry: LLMStatsLocalModel): {
   return estimateMemoryRequirementsFromModelId(entry.modelId, entry.quantization);
 }
 
-// fallow-ignore-next-line complexity — recommendation engine with multi-criteria decision branching
+// fallow-ignore-next-line complexity
 function buildRecommendation(inputs: RecommendationInputs): LocalModelRecommendation | null {
   const { entry, criteria, category, modelsDevData, systemCapabilities, availableVram } = inputs;
 

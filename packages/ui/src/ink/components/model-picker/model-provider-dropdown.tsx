@@ -58,7 +58,7 @@ function uniqueProviders(models: readonly ModelEntry[]): ProviderEntry[] {
   return providers;
 }
 
-// fallow-ignore-next-line complexity — React component with multiple conditional render paths
+// fallow-ignore-next-line complexity
 export function ModelProviderDropdown({
   focused = true,
   modelId,

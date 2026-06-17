@@ -149,7 +149,7 @@ function normalizeUsage(raw: unknown): UsageInfo | undefined {
  * Handles OpenAI-compatible chunk envelopes while centralizing Z.ai-specific
  * finish-reason mapping and tolerant usage extraction.
  */
-// fallow-ignore-next-line complexity — conditional field extraction from streaming chunk
+// fallow-ignore-next-line complexity
 export function normalizeZAiChunk(raw: unknown): NormalizerResult | null {
   try {
     if (!isRecord(raw)) {

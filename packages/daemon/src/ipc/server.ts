@@ -111,7 +111,7 @@ export class IPCServer {
     });
   }
 
-  // fallow-ignore-next-line complexity — JSON-RPC 2.0 protocol with parse/validate/route/response lifecycle
+  // fallow-ignore-next-line complexity
   private async handleMessage(clientId: string, raw: string, socket: Socket): Promise<void> {
     let parsed: unknown;
     try {
