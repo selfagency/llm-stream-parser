@@ -11,8 +11,8 @@
  * - Compatible with Node.js http, Hono, Express, Fastify, etc.
  */
 
-import type { AgUiEvent } from '@agentsy/shared';
 import { randomUUID } from 'node:crypto';
+import type { AgUiEvent } from '@agentsy/shared';
 
 /**
  * Options for SSE stream creation.

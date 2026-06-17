@@ -1,9 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
-
 // The functions under test are not exported, so we exercise them through
 // their callers. We test the private-ish helpers indirectly by calling
 // the createUniversalClient functions with different configs via mock fetch.
 import { ReadableStream } from 'node:stream/web';
+import { describe, expect, it, vi } from 'vitest';
 
 import { createUniversalClient } from './client.js';
 

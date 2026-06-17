@@ -5,9 +5,9 @@
  * Emits INTERRUPT events to notify frontends of interruption requests.
  */
 
+import { randomUUID } from 'node:crypto';
 import type { RunInterruptedEvent } from '@agentsy/shared';
 import { EventType } from '@agentsy/shared';
-import { randomUUID } from 'node:crypto';
 
 /**
  * Interrupt reason codes.

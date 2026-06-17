@@ -25,9 +25,9 @@ interface ExtractedToolCall {
 
 /** @internal — pending tool call awaiting completion or failure */
 interface PendingToolCall {
+  args: unknown;
   id: string;
   name: string;
-  args: unknown;
 }
 
 /**

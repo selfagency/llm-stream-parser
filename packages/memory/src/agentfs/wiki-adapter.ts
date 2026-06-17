@@ -2,8 +2,6 @@ import { eq, like } from 'drizzle-orm';
 import type { MemoryDatabase } from '../database/connection.js';
 import { kvStore } from '../database/schema.js';
 import { cosineSimilarity } from '../math-utils.js';
-import { getDiff } from '../wiki/wiki-utils.js';
-import type { PageDiff } from '../wiki/wiki-utils.js';
 import type {
   ConceptRelation,
   RawCapture,
@@ -14,6 +12,8 @@ import type {
   WikiPageHistoryEntry,
   WikiPageInput
 } from '../wiki/wiki-manager.js';
+import type { PageDiff } from '../wiki/wiki-utils.js';
+import { getDiff } from '../wiki/wiki-utils.js';
 
 export interface WikiFsAdapterOptions {
   db: MemoryDatabase;

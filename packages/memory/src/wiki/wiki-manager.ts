@@ -1,20 +1,20 @@
+import { randomUUID } from 'node:crypto';
+import { eq } from 'drizzle-orm';
+import { createWikiFsAdapter } from '../agentfs/wiki-adapter.js';
+import type { MemoryDatabase } from '../database/connection.js';
+import { wikiBacklinks, wikiConcepts, wikiPageHistory, wikiPages, wikiVectors } from '../database/schema.js';
+import { cosineSimilarity } from '../math-utils.js';
 import type { ContentProcessor } from './content-processor.js';
 import { createContentProcessor } from './content-processor.js';
 import type { EntityExtractor } from './entity-extractor.js';
 import { createEntityExtractor } from './entity-extractor.js';
 import type { LocalEmbeddingEngine } from './local-embedding-engine.js';
 import { createLocalEmbeddingEngine } from './local-embedding-engine.js';
-import { cosineSimilarity } from '../math-utils.js';
-import type { MemoryDatabase } from '../database/connection.js';
-import { wikiBacklinks, wikiConcepts, wikiPageHistory, wikiPages, wikiVectors } from '../database/schema.js';
-import { randomUUID } from 'node:crypto';
-import { eq } from 'drizzle-orm';
-import { createWikiFsAdapter } from '../agentfs/wiki-adapter.js';
-import { getDiff, type PageDiff } from './wiki-utils.js';
 import type { NavigationSystem } from './navigation-system.js';
 import { createNavigationSystem } from './navigation-system.js';
 import type { VersionTracker } from './version-tracker.js';
 import { createVersionTracker } from './version-tracker.js';
+import { getDiff, type PageDiff } from './wiki-utils.js';
 
 export type RawSourceType = 'document' | 'conversation' | 'capture';
 

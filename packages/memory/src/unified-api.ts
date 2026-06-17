@@ -8,8 +8,8 @@
 
 import type { MemoryEngine } from './cognitive/memory-engine.js';
 import type { WikiUpserter } from './cortexkit/dreamer-consumer.js';
-import { entryImportance } from './entries/index.js';
 import type { EntrySource, MemoryEntry } from './entries/index.js';
+import { entryImportance } from './entries/index.js';
 import type { FactExtractor } from './extraction/index.js';
 import { routeQuery, type SearchStrategy } from './recall-router.js';
 import { RememberResult, type RememberResultOptions, type RememberStatus } from './result-handle.js';

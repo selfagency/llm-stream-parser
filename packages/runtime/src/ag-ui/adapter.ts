@@ -6,6 +6,7 @@
  * for consumption by any AG-UI frontend (CopilotKit, custom, etc.).
  */
 
+import { randomUUID } from 'node:crypto';
 import type {
   AgUiEvent,
   ReasoningEndEvent,
@@ -22,7 +23,6 @@ import type {
   ToolCallStartEvent
 } from '@agentsy/shared';
 import { EventType } from '@agentsy/shared';
-import { randomUUID } from 'node:crypto';
 
 /**
  * Represents events from createPipeline.

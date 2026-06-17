@@ -5,6 +5,7 @@
  * This allows step-level reasoning to be streamed as REASONING_* events.
  */
 
+import { randomUUID } from 'node:crypto';
 import type {
   ReasoningEndEvent,
   ReasoningMessageContentEvent,
@@ -13,7 +14,6 @@ import type {
   ReasoningStartEvent
 } from '@agentsy/shared';
 import { EventType } from '@agentsy/shared';
-import { randomUUID } from 'node:crypto';
 
 export interface ReasoningMapperOptions {
   encryptReasoning?: boolean;

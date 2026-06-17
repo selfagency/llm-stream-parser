@@ -74,6 +74,7 @@ export type NextFunction = () => Promise<{ response: unknown; tokensUsed: number
 // ---------------------------------------------------------------------------
 
 import { cosineSimilarity } from '../math-utils.js';
+
 export { cosineSimilarity };
 
 // ---------------------------------------------------------------------------

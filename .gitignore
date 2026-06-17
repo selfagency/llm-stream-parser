@@ -263,3 +263,4 @@ tui-results/
 *.db
 *.db-shm
 *.db-wal
+.opencode/magic-context/historian

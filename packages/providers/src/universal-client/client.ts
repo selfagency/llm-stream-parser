@@ -182,8 +182,8 @@ function toProviderRequest(request: CompletionRequest, provider: NormalizerProvi
  * Context object passed to header builder functions.
  */
 interface HeaderContext {
-  headers: Record<string, string>;
   apiKey: string;
+  headers: Record<string, string>;
   organizationId?: string;
   stream?: boolean;
 }
