@@ -4,7 +4,7 @@
 **Date**: 2026-06-17
 **Repository**: `selfagency/agentsy`
 **Branch reviewed**: `develop`
-**Status**: ACTIVE — Phases 0, 1, 2, 3 complete; Phase 4 onward is the active scope
+**Status**: ACTIVE — Phases 0, 1, 2, 3, 4 complete; Phase 5 onward is the active scope
 **Code reference**: https://github.com/selfagency/agentsy (develop branch)
 
 > **Update from v1.0**: Phases 0 (Critical Bug Fixes), 1 (Daemon Foundation), and 2 (Package Consolidation) from the v2.3 source plan are now COMPLETE on `develop`. Their deliverables (UnifiedDB, daemon IPC, Piscina pool, Honker queues, Bree scheduler, SubprocessManager, 25-package layout) are treated as existing infrastructure in all downstream phases. The active scope of this plan is Phases 3–18: ~100 story points over ~11 sprints.
@@ -64,7 +64,7 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 | 1 | Daemon Foundation | v2.3 §4 | 13 | — | P0 | Phase 0 | — | ✅ COMPLETE |
 | 2 | Package Consolidation | v2.3 §5 | 2 | — | P1 | Phase 0 | — | ✅ COMPLETE |
 | 3 | Hook Pipeline Redesign + Claude-Code Hook Schema | v2.3 §6 + comp #1, #4 | 5 | 1 | P1 | Phase 0 | — | ✅ COMPLETE |
-| 4 | Guardrails Honest Foundation (Ethics, Receipts, Audit) | gap §Phase 1+2 | 6 | 1–2 | P0 | Phase 3 | E-1, E-2, E-3, E-4, E-5, E-22(partial), E-23, E-38, E-39, E-40, E-41, E-42 | 🟡 Next |
+| 4 | Guardrails Honest Foundation (Ethics, Receipts, Audit) | gap §Phase 1+2 | 6 | 1–2 | P0 | Phase 3 | E-1, E-2, E-3, E-4, E-5, E-22(partial), E-23, E-38, E-39, E-40, E-41, E-42 | ✅ COMPLETE |
 | 5 | Gateway → Daemon Migration | v2.3 §7 | 5 | 2 | P1 | Phase 1 ✅ | — | Pending |
 | 6 | Streaming Architecture | v2.3 §8 + comp #12 | 5 | 3 | P1 | Phase 5 | — | Pending |
 | 7 | RAG as Daemon Service | v2.3 §9 | 4 | 3 | P2 | Phase 1 ✅ | (supports E-20, E-35) | Pending |
@@ -477,7 +477,32 @@ Wire this into the stream error handler in `packages/runtime/src/loop/simple-tur
 ---
 
 
-## 9. Phase 4 — Guardrails Honest Foundation (Ethics, Receipts, Audit)
+## 9. Phase 4 — Guardrails Honest Foundation (Ethics, Receipts, Audit) ✅ COMPLETE
+
+**Status**: Landed on `develop` (branch `feat/guardrails-honest-foundation` merged).
+**Story points**: 6 (actuals reconciled at merge).
+**What shipped** (treat as existing infrastructure; do not regress):
+
+| # | Deliverable | File | Outcome |
+|---|---|---|---|
+| 9.1 | EthicsRegistry | `packages/guardrails/src/ethics/registry.ts` | 50+ clauses extracted from ETHICS.md, SAFETY.md, GOVERNANCE.md, constitution.md; each with `implementedBy` (null = known gap). |
+| 9.2 | Expanded GuardrailResult (6 states) | `packages/guardrails/src/types.ts` | Added `quarantine` and `allow-with-approval`; `transformReason` discriminator. |
+| 9.3 | GuardrailDecisionReceipt | `packages/guardrails/src/types.ts` | Full audit record with policyId, reasonCode, riskTier, surface, timestamp, correlationId. |
+| 9.4 | Pipeline returns { result, receipt } | `packages/guardrails/src/pipeline.ts` | `evaluate()` returns `{ result, receipt }`; `#resolvePriority` handles 6 states. |
+| 9.5 | Audit logger | `packages/guardrails/src/audit/logger.ts` | `JsonlAuditLogger`, `redactReceipt`, `ReceiptExporter` (JSON/CSV). |
+| 9.6 | Runtime hooks updated | `packages/runtime/src/hooks/guardrail-hooks.ts` | `escalate` differentiated from `block`; `quarantine` handled. |
+| 9.7 | Canonical GuardrailsConfig | `packages/guardrails/src/config.ts` | Single source of truth; shared duplicate deprecated. |
+| 9.8 | README rewrite | `packages/guardrails/README.md` | Matches actual exports; Policy Enforcement Status table. |
+| 9.9 | safety-changelog.md | `safety-changelog.md` | Backfilled with Phase 4 entry. |
+| 9.10 | PR template | `.github/pull_request_template.md` | Ethics review checklist + safety-changelog checkbox. |
+
+**Tests**: 21 test files passing (existing + new ethics-registry, audit-logger tests).
+
+**Downstream consumers**:
+- Phase 9 adds behavioral scanners that populate `implementedBy` in the EthicsRegistry.
+- Phase 10 adds missing surfaces (retrieval, memory, egress) and ingress scanning.
+- Phase 12 wires the audit logger to `UnifiedDB.guardrail_decisions` in the daemon.
+- Phase 16 adds CLI commands for the EthicsRegistry and audit log querying.
 
 **Priority**: P0 — Sprints 1–2
 **Story points**: 6
