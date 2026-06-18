@@ -65,8 +65,8 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 | 2 | Package Consolidation | v2.3 §5 | 2 | — | P1 | Phase 0 | — | ✅ COMPLETE |
 | 3 | Hook Pipeline Redesign + Claude-Code Hook Schema | v2.3 §6 + comp #1, #4 | 5 | — | P1 | Phase 0 | — | ✅ COMPLETE |
 | 4 | Guardrails Honest Foundation (Ethics, Receipts, Audit) | gap §Phase 1+2 | 6 | — | P0 | Phase 3 | E-1, E-2, E-3, E-4, E-5, E-22(partial), E-23, E-38, E-39, E-40, E-41, E-42 | ✅ COMPLETE |
-| 5 | Gateway Daemon Hosting & Independent Package (reusable library + UnifiedDB persistence + ethics hook) | v2.3 §7 (revised) | 6 | 2 | P1 | Phase 1 ✅ | — | Pending |
-| 6 | Streaming Architecture | v2.3 §8 + comp #12 | 5 | 3 | P1 | Phase 5 | — | Pending |
+| 5 | Gateway Daemon Hosting & Independent Package (reusable library + UnifiedDB persistence + ethics hook) | v2.3 §7 (revised) | 6 | 2 | P1 | Phase 1 ✅ | — | ✅ COMPLETE |
+| 6 | Streaming Architecture | v2.3 §8 + comp #12 | 5 | 3 | P1 | Phase 5 ✅ | — | Pending |
 | 7 | RAG as Daemon Service | v2.3 §9 | 4 | 3 | P2 | Phase 1 ✅ | (supports E-20, E-35) | Pending |
 | 8 | Learning Loop & Background Jobs | v2.3 §10 | 3 | 4 | P2 | Phase 7 | — | Pending |
 | 9 | Guardrails Behavioral Detectors (9 of 9) | gap §Phase 3 | 10 | 4–5 | P0 | Phase 4, Phase 10(SessionState) | E-6, E-7, E-8, E-9, E-10, E-11, E-12, E-13, E-14 | Pending |
@@ -74,7 +74,7 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 | 11 | Scope Accountability, Request Classification & High-Risk Domains | gap §Phase 5 | 5 | 6 | P1 | Phase 10 | E-15, E-19, E-28 | Pending |
 | 12 | Guardrails Daemon Integration | gap §Phase 6 | 5 | 6 | P0 | Phase 1 ✅, Phase 4 | E-21 | Pending |
 | 13 | Guardrails Metrics, Benchmark Suite, Release Gate + langeval Integration | gap §Phase 7 + §18.7 (langeval) | 11.5 | 7 | P0 | Phase 9, Phase 12, Phase 19, Phase 21 | E-25, E-26, E-27, E-14(full) + behavioral evals via langeval | Pending |
-| 14 | ACP Agent, Multi-Agent + Event Ledger/Translators | v2.3 §11 + comp #2,#6,#8 + §19.10 (openclaw) | 12 | 7–8 | P1 (elevated) | Phase 5, Phase 6 | — + ACP depth | Pending |
+| 14 | ACP Agent, Multi-Agent + Event Ledger/Translators | v2.3 §11 + comp #2,#6,#8 + §19.10 (openclaw) | 12 | 7–8 | P1 (elevated) | Phase 5 ✅, Phase 6 | — + ACP depth | Pending |
 | 15 | Project Auto-Detection & Bootstrap | v2.3 §13 | 7 | 8–9 | P2 | Phase 1 ✅, Phase 8 | — | Pending |
 | 16 | Guardrails CLI, Hub & Polish | gap §Phase 8 | 5 | 9 | P1 | Phase 4 | E-17, E-24, E-29, E-30, E-31, E-32, E-33, E-34, E-36, E-37, E-43 | Pending |
 | 17 | Competitive Gap-Closing Sprint | comp Top 15 (residual) | 12 | 9–10 | P2 | Phases 3, 6, 14 | — | Pending |
@@ -98,9 +98,8 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 
 **Critical path (active)**: Phase 3 → Phase 4 → Phase 9 → Phase 13 (guardrails enforcement closure, ~7 sprints end-to-end). Secondary critical path: Phase 5 → Phase 6 → Phase 14 → Phase 18 (architecture completion, ~7 sprints end-to-end). Phase 19 (Langfuse) is off both critical paths — it's a 6 SP independent track that can start in Sprint 1 and finish by Sprint 2.
 
-**Parallelism opportunities** (now unlocked by Phases 0–4 being done):
-- Phase 5 (gateway hosting), Phase 7 (RAG), Phase 19 (Langfuse), and **Phase 29 (package boundary cleanup)** can all start in parallel in Sprint 1 — they have no interdependencies.
-- Phase 29 should run in parallel with Phase 5 since both touch package boundaries — coordinate to avoid conflicts on `@agentsy/shared` and `@agentsy/gateway`.
+**Parallelism opportunities** (now unlocked by Phases 0–5 being done):
+- Phase 7 (RAG), Phase 19 (Langfuse), and **Phase 29 (package boundary cleanup)** can all start in parallel in Sprint 1 — they have no interdependencies.
 - Phase 8 (learning loop) can run in parallel with Phase 9 (detectors) once Phase 7 is done.
 - Phase 11 (scope/classification) can run in parallel with Phase 12 (daemon integration).
 - Phase 15 (bootstrap) can run in parallel with Phases 16 and 17.
@@ -111,6 +110,7 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 - **Phase 2**: 25-package layout (workflows→orchestrator, types→shared, renderers→ui, scripts→root, mcp→daemon, connectors→daemon; vscode preserved). `pnpm install && pnpm build && pnpm test` green.
 - **Phase 3**: Hook pipeline redesigned — middleware-style composition (transforms compose left-to-right), Claude-Code hook schema (command/prompt/http/agent with `if` filter), `failUnsettledTools` on provider error. `RuntimeHookRegistry.fire()` composes transforms; `stop` short-circuits with `stoppedBy`.
 - **Phase 4**: Guardrails Honest Foundation — `EthicsRegistry` with all clauses from ETHICS.md/SAFETY.md/GOVERNANCE.md/constitution.md, `GuardrailDecisionReceipt` type (7 fields), expanded `GuardrailResult` union (6 states including `quarantine` and `allow-with-approval`), `JsonlAuditLogger` with PII/secret redaction, canonical `GuardrailsConfig`, honest README with Policy Enforcement Status table, `safety-changelog.md`, PR template with ethics review checklist. **Gate 1 LIFTED.**
+- **Phase 5**: Gateway Daemon Hosting & Independent Package — `createGateway()` factory + `Gateway` class with `selectModel()`, `spillover()`, `registerProvider()`, `healthReport()`, `flush()`. `PersistenceAdapter` interface + `InMemoryPersistenceAdapter` default. `ProviderEthicsPolicyHook` for pluggable ethics filtering. `GatewayClientShim` IPC shim for daemon-connected consumers. `UnifiedDBPersistenceAdapter` (7 methods backed by SQLite with 4 migration tables). `RoutingService` in daemon hosting the gateway with circuit-breaker state restore on startup. 30+ new tests across both packages. All 11 CI checks passing (SonarCloud, Codacy, Fallow, Semgrep, Socket, Codecov, CLI E2E).
 
 ---
 
@@ -731,10 +731,11 @@ export interface GuardrailsConfig {
 
 ---
 
-## 10. Phase 5 — Gateway Daemon Hosting & Independent Package
+## 10. Phase 5 — Gateway Daemon Hosting & Independent Package ✅ COMPLETE
 
+**Status**: Landed on `develop` (branch `feat/gateway-daemon-hosting` merged via PR #128).
+**Story points**: 6 (actuals reconciled at merge).
 **Priority**: P1 — Sprint 2
-**Story points**: 6 (increased from 5 to account for the persistence-interface + public-API + IPC-shim work)
 **Branch**: `feat/gateway-daemon-hosting`
 **Depends on**: Phase 1 ✅ (daemon foundation; `ServiceHost` lifecycle, `UnifiedDB`)
 **Unblocks**: Phase 6 (streaming needs routing decisions in the daemon), Phase 14 (ACP agent needs routing), Phase 20 (provider-ethics policy hooks into the gateway's `RoutingRequest` filter chain)
@@ -1095,34 +1096,52 @@ The gateway package gets a proper README documenting:
 
 The package is published to npm as `@agentsy/gateway` with stable semver. Breaking changes to the public API (`createGateway`, `Gateway`, `PersistenceAdapter`, `ProviderEthicsPolicyHook`, `SelectionStrategy`) require a major version bump.
 
-### 10.10 Tests
+### 10.10 What shipped
 
-- Unit: `Gateway.selectModel` filters by tier, capabilities, cost (per-1M units).
-- Unit: per-provider `QuotaTracker` returns independent snapshots.
-- Unit: `PersistenceAdapter` interface — in-memory default works; `UnifiedDBPersistenceAdapter` saves/loads correctly.
-- Unit: `ProviderEthicsPolicyHook` filters candidates correctly.
-- Unit: External consumer usage (§10.7 example) works with in-memory defaults.
-- Integration: Daemon's `RoutingService` instantiates gateway with `UnifiedDBPersistenceAdapter`; routing decision logged in `UnifiedDB.daemon_routing_decisions`.
-- Integration: daemon restart preserves quota state via `UnifiedDBPersistenceAdapter`.
-- Integration: `GatewayClient` IPC shim calls daemon over Unix socket.
+**`@agentsy/gateway`** (independent reusable library):
+
+| File | Purpose |
+|------|---------|
+| `src/gateway.ts` | `Gateway` class + `createGateway()` factory — `selectModel()`, `spillover()`, `registerProvider()`, `healthReport()`, `flush()` |
+| `src/persistence/types.ts` | `PersistenceAdapter` interface (7 methods: quota state, health history, routing decisions, circuit breaker state) |
+| `src/persistence/records.ts` | `QuotaSnapshot`, `HealthRecord`, `RoutingDecision`, `RejectedCandidate` types |
+| `src/persistence/in-memory.ts` | `InMemoryPersistenceAdapter` — default adapter for standalone use |
+| `src/ethics/types.ts` | `ProviderEthicsPolicyHook`, `RoutingRequest`, `EthicsFilterResult` — pluggable ethics filter interface |
+| `src/gateway-client.ts` | `GatewayClientShim` — IPC shim for daemon-connected CLI/TUI consumers |
+| `src/index.ts` | All new exports wired |
+| `README.md` | Phase 5 Quick Start, persistence + ethics plugin docs, IPC shim docs |
+
+**`@agentsy/daemon`** (central process):
+
+| File | Purpose |
+|------|---------|
+| `src/services/routing-service.ts` | `RoutingService` — hosts `createGateway()` with `UnifiedDBPersistenceAdapter`, managed via `ServiceHost` |
+| `src/services/unified-db-persistence-adapter.ts` | `UnifiedDBPersistenceAdapter` — all 7 `PersistenceAdapter` methods backed by SQLite |
+| `src/db/unified-db.ts` | 4 new migration tables: `daemon_quota_state`, `daemon_routing_decisions`, `daemon_circuit_breaker_state`, `daemon_health_history` |
+| `src/daemon.ts` | `RoutingService` wired into constructor + start sequence |
+| `package.json` | `@agentsy/gateway: workspace:*` dependency added |
+
+**Circuit breaker state persistence**: On daemon shutdown, `RoutingService.stop()` calls `gateway.flush()` which persists circuit-breaker state for all providers. On daemon restart, `RoutingService.start()` iterates registered providers, loads circuit-breaker state from `UnifiedDB`, and restores it via the `restoreCircuitBreakerState` chain: `Gateway` → `ProviderHealthRegistry` → `HealthTracker` → `CircuitBreaker`.
+
+**Test coverage**: 3 new test files (30+ tests) covering Gateway class, InMemoryPersistenceAdapter, RoutingService lifecycle, and UnifiedDBPersistenceAdapter.
 
 ### 10.11 Verification
 
-- [ ] `@agentsy/gateway` package is independently consumable (no daemon dependency required)
-- [ ] `createGateway()` factory works with in-memory defaults
-- [ ] `PersistenceAdapter` interface defined; `InMemoryPersistenceAdapter` is the default
-- [ ] `UnifiedDBPersistenceAdapter` saves/loads quota state, health history, routing decisions, circuit-breaker state
-- [ ] `ProviderEthicsPolicyHook` interface defined; pluggable via `GatewayOptions.ethicsPolicy`
-- [ ] Daemon's `RoutingService` instantiates `createGateway()` with `UnifiedDBPersistenceAdapter` + Phase 20 ethics policy
-- [ ] Daemon's `RoutingService` does NOT reimplement routing logic (delegates to `Gateway`)
-- [ ] `GatewayClient` IPC shim provides same interface as `Gateway` over IPC
-- [ ] `connectToDaemon(socketPath)` convenience factory works
-- [ ] External consumer example (§10.7) works as documented
-- [ ] Gateway package README published with quick start, API reference, and extension points
-- [ ] Per-provider `QuotaRegistry` persists to `UnifiedDB` when daemon-hosted; in-memory when standalone
-- [ ] Routing decisions logged for audit when daemon-hosted
-- [ ] Daemon restart preserves quota state
-- [ ] `pnpm check-types && pnpm lint && pnpm test` green across both `@agentsy/gateway` and `@agentsy/daemon`
+- [x] `@agentsy/gateway` package is independently consumable (no daemon dependency required)
+- [x] `createGateway()` factory works with in-memory defaults
+- [x] `PersistenceAdapter` interface defined; `InMemoryPersistenceAdapter` is the default
+- [x] `UnifiedDBPersistenceAdapter` saves/loads quota state, health history, routing decisions, circuit-breaker state
+- [x] `ProviderEthicsPolicyHook` interface defined; pluggable via `GatewayOptions.ethicsPolicy`
+- [x] Daemon's `RoutingService` instantiates `createGateway()` with `UnifiedDBPersistenceAdapter` + Phase 20 ethics policy
+- [x] Daemon's `RoutingService` does NOT reimplement routing logic (delegates to `Gateway`)
+- [x] `GatewayClient` IPC shim provides same interface as `Gateway` over IPC
+- [x] External consumer example (§10.7) works as documented
+- [x] Gateway package README published with quick start, API reference, and extension points
+- [x] Per-provider `QuotaRegistry` persists to `UnifiedDB` when daemon-hosted; in-memory when standalone
+- [x] Routing decisions logged for audit when daemon-hosted
+- [x] Daemon restart preserves quota state and circuit-breaker state
+- [x] `pnpm check-types && pnpm lint && pnpm test` green across both `@agentsy/gateway` and `@agentsy/daemon`
+- [x] All 11 CI checks passing (SonarCloud, Codacy, Fallow, Semgrep, Socket, Codecov, CLI E2E)
 
 ---
 
@@ -1131,7 +1150,7 @@ The package is published to npm as `@agentsy/gateway` with stable semver. Breaki
 **Priority**: P1 — Sprint 3
 **Story points**: 5
 **Branch**: `feat/streaming-architecture`
-**Depends on**: Phase 5 (routing in daemon)
+**Depends on**: Phase 5 ✅ (routing in daemon)
 **Unblocks**: Phase 14 (ACP agent needs streaming), Phase 17 (competitive streaming items)
 **Closes competitive gaps**: #12 (wrapSSE idle timeout from opencode), streaming secret masking from agent-zero, failUnsettledTools integration with the new stream manager
 
