@@ -92,6 +92,7 @@
     "coverage": "vitest --run --coverage"
   },
   "dependencies": {
+    "@agentsy/gateway": "workspace:*",
     "@agentsy/memory": "workspace:*",
     "@agentsy/shared": "workspace:*",
     "better-sqlite3": "^11.10.0",

@@ -39,4 +39,11 @@ export class HealthTracker {
   canRequest(now?: number): boolean {
     return this.#breaker.canRequest(now);
   }
+
+  /**
+   * Restore circuit breaker state from persistence.
+   */
+  restoreCircuitBreakerState(state: CircuitBreakerState, openedAt?: number): void {
+    this.#breaker.restoreState(state, openedAt);
+  }
 }

@@ -299,3 +299,88 @@ The gateway re-exports from `@agentsy/providers` and `@agentsy/tokenomics` for t
 - `DefaultReplicaSelector` (filter + score + rank replicas)
 - `computeReplicaScore` (tunable scoring formula)
 - `spillover` (failover chain: same replica → same tier → escalate)
+
+## Phase 5 — Reusable Gateway Library (New API)
+
+The gateway is now a **standalone, reusable library** that any agentic platform can consume directly. The daemon *hosts* the gateway with `UnifiedDB`-backed persistence; external consumers use the library with in-memory defaults.
+
+### Quick Start (External Consumer)
+
+```typescript
+import { createGateway } from '@agentsy/gateway';
+import { createProviderRegistry } from '@agentsy/gateway';
+
+const gateway = createGateway({
+  strategy: 'adaptive',
+  providers: [
+    { id: 'openai', name: 'OpenAI', provider: openaiProvider, model: 'gpt-4o' },
+    { id: 'anthropic', name: 'Anthropic', provider: anthropicProvider, model: 'claude-sonnet-4' },
+  ],
+});
+
+const decision = await gateway.selectModel({ tier: 'frontier' });
+console.log(`Selected: ${decision.providerId}/${decision.modelId}`);
+```
+
+### Pluggable Persistence
+
+By default, state is in-memory. Supply a `PersistenceAdapter` for restart-safe operation:
+
+```typescript
+import { createGateway, type PersistenceAdapter } from '@agentsy/gateway';
+
+class MyPostgresAdapter implements PersistenceAdapter {
+  async saveQuotaState(providerId: string, state: QuotaSnapshot): Promise<void> { /* ... */ }
+  async loadQuotaState(providerId: string): Promise<QuotaSnapshot | null> { /* ... */ }
+  // ... other methods
+}
+
+const gateway = createGateway({ persistence: new MyPostgresAdapter() });
+```
+
+### Pluggable Ethics Policy
+
+Filter providers based on ethical rules. The agentsy daemon uses this for its `PROVIDER_ETHICS_POLICY` (Phase 20):
+
+```typescript
+import { createGateway, type ProviderEthicsPolicyHook } from '@agentsy/gateway';
+
+const gateway = createGateway({
+  ethicsPolicy: {
+    filter(candidates, request) {
+      // Block a provider, require ack for another
+      const blocked = candidates.filter(r => r.providerId !== 'xai');
+      return {
+        candidates: blocked,
+        blockedProviders: ['xai'],
+        requiresAcknowledgement: [],
+      };
+    },
+  },
+});
+```
+
+### GatewayClient IPC Shim (Daemon-Connected)
+
+For CLI/TUI consumers that connect to a running daemon:
+
+```typescript
+import { GatewayClientShim } from '@agentsy/gateway';
+// Works with the daemon's IPCClient
+const client = new GatewayClientShim(ipcClient);
+const decision = await client.selectModel({ tier: 'mid' });
+```
+
+### New Exports
+
+- `createGateway(options?)` — Factory function
+- `Gateway` — Main routing class
+- `GatewayOptions` — Factory options (persistence, strategy, ethicsPolicy, providers, logger)
+- `PersistenceAdapter` — Interface for custom persistence
+- `InMemoryPersistenceAdapter` — Default in-memory adapter
+- `HealthRecord`, `QuotaSnapshot`, `RoutingDecision` — Persistence record types
+- `ProviderEthicsPolicyHook` — Pluggable ethics filter
+- `RoutingRequest` — Model selection request
+- `EthicsFilterResult` — Ethics filter result
+- `GatewayClientShim` — IPC client that delegates to daemon
+- `GatewayIPCClient` — Minimal IPC client interface

@@ -12,7 +12,7 @@ export {
   RetryConfigSchema
 } from './config.js';
 export { AllProvidersExhaustedError, type ProviderFailureDetail } from './errors.js';
-export { CircuitBreaker } from './health/circuit-breaker.js';
+export { CircuitBreaker, type CircuitBreakerState } from './health/circuit-breaker.js';
 export { HealthTracker } from './health/health-tracker.js';
 export { LatencyTracker } from './health/latency-tracker.js';
 export { type ProviderHealthEntry, ProviderHealthRegistry } from './health/provider-health-registry.js';
@@ -123,3 +123,19 @@ export {
   type StrategyName,
   StrategyNameSchema
 } from './types.js';
+
+// ---------------------------------------------------------------------------
+// Phase 5 — Gateway as independent reusable package
+// ---------------------------------------------------------------------------
+
+export type { EthicsFilterResult, ProviderEthicsPolicyHook, RoutingRequest } from './ethics/types.js';
+export { createGateway, Gateway, type GatewayOptions, type HealthReport, type Logger } from './gateway.js';
+export { InMemoryPersistenceAdapter } from './persistence/in-memory.js';
+export type { HealthRecord, QuotaSnapshot, RejectedCandidate, RoutingDecision } from './persistence/records.js';
+export type { PersistenceAdapter } from './persistence/types.js';
+
+// ---------------------------------------------------------------------------
+// GatewayClient IPC shim (for daemon-connected consumers)
+// ---------------------------------------------------------------------------
+
+export { GatewayClientShim, type GatewayIPCClient } from './gateway-client.js';
