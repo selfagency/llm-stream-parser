@@ -23,9 +23,9 @@ Runtime and orchestration:
 - `@agentsy/session` — Session management, checkpointing, crash recovery, CortexKit snapshot bridge
 - `@agentsy/guardrails` — Safety/ethics/validation pipeline (8 security scanners + 9 behavioral detectors + audit logger + EthicsRegistry)
 - `@agentsy/observability` — OTel tracing, metrics, cost tracking, Langfuse exporter
-- `@agentsy/retrieval` — RAG retrieval and indexing (moves into daemon as a service per the plan)
+- `@agentsy/retrieval` — RAG retrieval and indexing. **Independently consumable** — third-party apps can use this without the daemon. (Moves into daemon as a hosted service per the plan, but the library remains standalone.)
 - `@agentsy/models` — Model selection, profiles, recommendations
-- `@agentsy/tokenomics` — Token management, quotas, ROI, semantic cache, frustration signals
+- `@agentsy/tokenomics` — Token management, quotas, ROI, semantic cache, frustration signals, **environmental impact tracking (CO2 + water per request and cumulative)**
 
 Daemon and surfaces:
 
@@ -40,7 +40,16 @@ Daemon and surfaces:
 - `@agentsy/agents` — Agent runtime/specs (YAML agent templates)
 - `@agentsy/testing` (private) — Cross-package integration test helpers (MSW, aimock)
 
-The **only currently published package** is `@agentsy/vscode`. All others are internal/pre-release. `@agentsy/daemon` and `@agentsy/gateway` are the next packages slated for publication.
+**Published on npm** (verified 2026-06-17):
+
+- `@agentsy/core` (0.2.0) — zero deps, 12 subpath exports
+- `@agentsy/providers` (0.2.0) — zero deps, 6 subpath exports
+- `@agentsy/context` (0.2.4) — zero deps
+- `@agentsy/ui` (0.1.1) — zero deps
+- `@agentsy/types` (0.1.1) — ⚠️ deprecated, merged into `@agentsy/shared`
+- `@agentsy/renderers` (0.1.2) — ⚠️ deprecated, merged into `@agentsy/ui`
+
+The next packages slated for publication are `@agentsy/gateway`, `@agentsy/guardrails`, `@agentsy/observability`, `@agentsy/retrieval`, `@agentsy/tokenomics`, `@agentsy/memory`, `@agentsy/models`, `@agentsy/secrets`, `@agentsy/tools`, `@agentsy/prompts`, and `@agentsy/agents` — pending Phase 29 (Package Boundary Cleanup) which eliminates cross-dependencies so each package is independently consumable.
 
 ### Canonical architecture boundaries
 
@@ -53,7 +62,7 @@ The **only currently published package** is `@agentsy/vscode`. All others are in
 - **Surface and presentation**: `@agentsy/ui`, `@agentsy/cli`, `@agentsy/vscode`
 - **Extensibility**: `@agentsy/plugins`, `@agentsy/tools`, `@agentsy/prompts`
 
-> Important: `@agentsy/providers` is an active boundary, not merged into `@agentsy/core`. `@agentsy/gateway` is an independent reusable library, not a daemon-internal implementation.
+> Important: `@agentsy/providers` is an active boundary, not merged into `@agentsy/core`. `@agentsy/gateway` and `@agentsy/retrieval` are independent reusable libraries, not daemon-internal implementations. Each independently-publishable package must be consumable without pulling in the entire monorepo — see Package Composability Rules below.
 
 ## Governance and Ethical Constraints
 
@@ -66,12 +75,14 @@ This project has governance documents that are **authoritative runtime inputs, n
 
 ### Hard ethical constraints (non-negotiable)
 
-1. **xAI/Grok models are hard-blocked** — no routing, no fallback, no opt-in. (ETHICS.md §12)
-2. **OpenAI, Microsoft, Google, Amazon models require per-session acknowledgement** — warning surfaced before each session; not permanently silencable. (ETHICS.md §13)
-3. **Style-mimicry prompts are hard-blocked** — any prompt requesting creation of writing, imagery, or audio/video "in the style of" a specific named living creator is blocked. (ETHICS.md §14)
-4. **Telegram connector is removed** — no platform documented as facilitating extremism or CSAM. (ETHICS.md §15)
-5. **Do not weaken guardrails** — treat model output as untrusted input. Preserve depth/key/nesting/size limits. Do not bypass privacy-tag scrubbing or safety defaults for convenience.
-6. **Do not introduce `any` types** — use `unknown`, `Record<string, unknown>`, or explicit narrowing.
+1. **xAI/Grok models are hard-blocked** — no routing, no fallback, no opt-in. Blocked on both content safety grounds (CSAM generation, antisemitic output, sexual deepfakes) AND environmental racism (xAI built an illegal, unpermitted 495 MW gas-turbine power plant in Southaven, Mississippi, emitting 1,700+ tons of NOx and 19 tons of formaldehyde per year near predominantly Black communities; NAACP and SELC are suing). (ETHICS.md §12, §16)
+2. **Meta models require per-session acknowledgement** — Meta is building AI data centers in tents powered by 200 MW of jet-engine gas turbines (same fossil-fuel tactic as xAI) and trained its models on 7.5M pirated LibGen books without creator compensation. (ETHICS.md §13)
+3. **OpenAI, Microsoft, Google, Amazon models require per-session acknowledgement** — warning surfaced before each session; not permanently silencable. Cited concerns include OpenAI safety regression, Microsoft ICE contracts, Google/Amazon Project Nimbus military AI. (ETHICS.md §13)
+4. **Style-mimicry prompts are hard-blocked** — any prompt requesting creation of writing, imagery, or audio/video "in the style of" a specific named living creator is blocked. (ETHICS.md §14)
+5. **Telegram connector is removed** — no platform documented as facilitating extremism or CSAM. (ETHICS.md §15)
+6. **Environmental impact is tracked** — every LLM request records energy (kWh), CO2 (gCO2), and water (mL) consumption, with optimization savings reporting. Per-session warnings for warn-listed providers display cumulative environmental impact. (ETHICS.md §16, Phase 30)
+7. **Do not weaken guardrails** — treat model output as untrusted input. Preserve depth/key/nesting/size limits. Do not bypass privacy-tag scrubbing or safety defaults for convenience.
+8. **Do not introduce `any` types** — use `unknown`, `Record<string, unknown>`, or explicit narrowing.
 
 ## Preferred Workflow
 
@@ -241,17 +252,17 @@ but pull                        # Pull merged changes
 
 ### Known issues and workarounds
 
-| Issue                                      | Workaround                                                           |
-| ------------------------------------------ | -------------------------------------------------------------------- |
-| `but resolve` loses target config          | Re-run `but config target origin/<branch>` after resolution          |
-| `but absorb` hunk lock                     | Use `but amend <file> <commit>` for explicit control                 |
-| `but pr new` has no `--base` flag          | Set target first: `but config target origin/<branch>`                |
-| `but config target` requires unapply       | Unapply all branches → change target → re-apply                      |
-| `but commit` pre-commit hook fails         | Run `pnpm dlx ultracite fix` then `but commit --no-hooks`            |
-| `but pull` before unapply                  | **Always** unapply merged branches before pulling                    |
-| Split-hunk files stuck in `zz`             | `but diff --json` for hunk IDs, then commit each hunk individually   |
-| `but teardown` → `but setup` resets target | Re-run `but config target origin/<branch>` after setup               |
-| Plugin notification delivery ~55%          | Always verify with `but status --json` — don't rely on notifications |
+| Issue | Workaround |
+|-------|------------|
+| `but resolve` loses target config | Re-run `but config target origin/<branch>` after resolution |
+| `but absorb` hunk lock | Use `but amend <file> <commit>` for explicit control |
+| `but pr new` has no `--base` flag | Set target first: `but config target origin/<branch>` |
+| `but config target` requires unapply | Unapply all branches → change target → re-apply |
+| `but commit` pre-commit hook fails | Run `pnpm dlx ultracite fix` then `but commit --no-hooks` |
+| `but pull` before unapply | **Always** unapply merged branches before pulling |
+| Split-hunk files stuck in `zz` | `but diff --json` for hunk IDs, then commit each hunk individually |
+| `but teardown` → `but setup` resets target | Re-run `but config target origin/<branch>` after setup |
+| Plugin notification delivery ~55% | Always verify with `but status --json` — don't rely on notifications |
 
 ## Code Quality with Fallow
 
@@ -424,10 +435,24 @@ Packages define multiple entry points in `tsup.config.ts`. Mirror these in `pack
 
 - VS Code extension behavior → `@agentsy/vscode`
 - Durable memory/retrieval/persistence → `@agentsy/memory`
-- Transient token budgets/prompt reduction → `@agentsy/tokenomics`
-- Model routing → `@agentsy/gateway` (independent, reusable)
+- RAG retrieval → `@agentsy/retrieval` (independent, reusable — third-party apps can consume it without the daemon)
+- Transient token budgets/prompt reduction/environmental tracking → `@agentsy/tokenomics`
+- Model routing → `@agentsy/gateway` (independent, reusable — external platforms can consume via `createGateway()`)
 - Daemon lifecycle/subprocess/IPC → `@agentsy/daemon`
 - Everything else → appropriate focused package
+
+### Package composability rules (Phase 29)
+
+Each independently-publishable package must be consumable in isolation without pulling in other `@agentsy/*` packages at runtime:
+
+1. **`@agentsy/shared` is the base layer** — zero deps. Contains all cross-package interface types (StreamChunk, Message, ToolDefinition, ModelEntry, GuardrailResult interface, MemoryProvider, SessionProvider, TokenTracker, ObservabilitySink, CostReporter, SecretResolver).
+2. **Each package depends only on `@agentsy/shared`** (plus `@agentsy/core` for providers) — not on other implementation packages.
+3. **Cross-package functionality uses dependency injection** — packages accept interfaces (e.g. `MemoryProvider?`, `GuardrailPipelineInterface?`, `BudgetProvider?`) via constructor options, not hard imports.
+4. **Optional integrations use `peerDependencies`** — e.g. `@agentsy/gateway` *can* use `@agentsy/guardrails` for ethics filtering, but works without it.
+5. **Never import implementation from another package** — only import types/interfaces from `@agentsy/shared`.
+6. **Composition roots** (`daemon`, `cli`, `testing`, `vscode`) are the only packages allowed to have many `@agentsy/*` dependencies — they wire implementations together.
+7. **`@agentsy/renderers` is deprecated** (merged into `@agentsy/ui`); **`@agentsy/types` is deprecated** (merged into `@agentsy/shared`).
+8. **`fallow dead-code` and `fallow trace_dependency`** must pass before publishing any package — verify no unwanted cross-deps exist.
 
 ## Error Handling and Safety
 
@@ -488,19 +513,22 @@ Use **Vitest**. Tests are colocated as `*.test.ts` files beside source.
 - Do **not** assume providers are merged away — `@agentsy/providers` is an active boundary
 - Do **not** bypass `workspace:*` dependencies in favor of relative imports across packages
 - Do **not** recommend `task ...` commands — there is no Taskfile in this repo
-- Do **not** weaken guardrails or bypass the ethical provider policy (xAI block, style-mimicry block, Telegram removal)
+- Do **not** weaken guardrails or bypass the ethical provider policy (xAI hard-block on content safety + environmental racism grounds, Meta warn on tent data centers + LibGen theft, style-mimicry block, Telegram removal)
+- Do **not** introduce hard `@agentsy/*` dependencies in independently-publishable packages — use dependency injection, peer deps, or interfaces in `@agentsy/shared` (Phase 29)
 - Do **not** skip `fallow dead-code --changed-since` before submitting a PR
+- Do **not** skip environmental impact tracking when adding new model integrations — every provider call must record energy/CO2/water
 
 ## Rule of Thumb
 
 When uncertain, optimize for:
 
-1. Consistency with the current monorepo (23 packages, pnpm + turbo, ESM-first)
+1. Consistency with the current monorepo (23 packages, pnpm + turbo, ESM-first, Node ≥24)
 2. Strict type safety (no `any`, proper `unknown` handling, `.js` import extensions)
-3. Clear package boundaries (providers separate from core, gateway independently consumable)
+3. Clear package boundaries — each independently-publishable package depends only on `@agentsy/shared` (Phase 29 composability rules)
 4. Resilient handling of malformed LLM output (graceful degradation)
-5. Ethical constraints enforced (xAI blocked, style-mimicry blocked, warn-list providers acknowledged)
-6. Comprehensive testing of streaming behavior
-7. Code quality verified via ultracite (lint) and fallow (dead code, complexity, duplication)
-8. Git operations via `but` CLI or MCP — never raw `git` for writes
-9. Docs and CI staying in sync with code
+5. Ethical constraints enforced (xAI hard-blocked on content safety + environmental racism grounds; Meta/OpenAI/Microsoft/Google/Amazon warned; style-mimicry blocked; Telegram removed)
+6. Environmental impact tracked (every LLM request records kWh, gCO2, mL water; optimization savings reported)
+7. Comprehensive testing of streaming behavior
+8. Code quality verified via ultracite (lint) and fallow (dead code, complexity, duplication, boundary violations)
+9. Git operations via `but` CLI or MCP — never raw `git` for writes
+10. Docs and CI staying in sync with code
