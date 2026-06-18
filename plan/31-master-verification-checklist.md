@@ -98,11 +98,11 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [x] Vector index persists in `UnifiedDB.rag_vectors`
 - [x] Wiki invariant enforced (only `kind: 'semantic'` items indexed)
 
-### Phase 8 — Learning Loop & Background Jobs
+### Phase 8 — Learning Loop & Background Jobs ✅
 
-- [ ] `LearningJob` runs as a Bree-scheduled job
-- [ ] Event bus uses Honker NOTIFY/LISTEN for cross-process wake
-- [ ] Canary and observation events trigger learning immediately
+- [x] `LearningJob` runs as a Bree-scheduled job
+- [x] Event bus uses Honker-backed publish/subscribe
+- [x] Canary and observation events trigger learning immediately
 
 ### Phase 9 — Guardrails Behavioral Detectors
 
@@ -296,12 +296,12 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] `DaemonConfig.docker` schema has correct defaults (all disabled)
 - [ ] Resource checks prevent invocation when memory/CPU insufficient
 
-### Phase 22 — Web Fetcher HTML-to-Markdown
+### Phase 22 — Web Fetcher HTML-to-Markdown ✅
 
-- [ ] `http_fetch` returns Markdown when content-type is `text/html`
-- [ ] `http_fetch` returns raw body when content-type is not HTML
-- [ ] `http_fetch` returns raw HTML when turndown conversion throws (graceful fallback)
-- [ ] `bodyFormat` field correctly reports `markdown` | `html` | `<content-type>`
+- [x] `http_fetch` returns Markdown when content-type is `text/html`
+- [x] `http_fetch` returns raw body when content-type is not HTML
+- [x] `http_fetch` returns raw HTML when turndown conversion throws (graceful fallback)
+- [x] `bodyFormat` field correctly reports `markdown` | `html` | `<content-type>`
 
 ### Phase 23 — AFT, Magic Context & Task Board Integration Hardening
 
@@ -417,6 +417,14 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Local measurement works on Linux; falls back gracefully elsewhere
 - [ ] Real-time API (optional) works with Electricity Maps key
 - [ ] Limitations documented in README
+
+### Phase 34 — Local Trust Sanitization Workflow ✅
+
+- [x] `agentsy sanitize` works on stdin, files, and piped logs
+- [x] `rules import/export` round-trips JSON without loss
+- [x] Local-only mode is default
+- [x] Infra preset demonstrably redacts hostnames, k8s names, and paths
+- [x] Preview shows counts + rule hits before output is copied
 
 ### Cross-Cutting
 

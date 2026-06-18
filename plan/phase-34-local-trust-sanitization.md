@@ -155,4 +155,4 @@ Do **not** fork a second redaction engine.
 * [x] `rules import/export` round-trips JSON without loss
 * [x] Local-only mode is default
 * [x] Infra preset demonstrably redacts hostnames, k8s names, and paths
-* Preview shows counts + rule hits before output is copied
+* [x] Preview shows counts + rule hits before output is copied

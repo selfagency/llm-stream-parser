@@ -84,9 +84,9 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 | 3 | Hook Pipeline Redesign + Claude-Code Hook Schema | v2.3 §6 + comp #1, #4 | 5 | — | P1 | Phase 0 | — | ✅ COMPLETE |
 | 4 | Guardrails Honest Foundation (Ethics, Receipts, Audit) | gap §Phase 1+2 | 6 | — | P0 | Phase 3 | E-1, E-2, E-3, E-4, E-5, E-22(partial), E-23, E-38, E-39, E-40, E-41, E-42 | ✅ COMPLETE |
 | 5 | Gateway Daemon Hosting & Independent Package (reusable library + UnifiedDB persistence + ethics hook) | v2.3 §7 (revised) | 6 | 2 | P1 | Phase 1 ✅ | — | ✅ COMPLETE |
-| 6 | Streaming Architecture | v2.3 §8 + comp #12 | 5 | 3 | P1 | Phase 5 ✅ | — | Pending |
-| 7 | RAG as Daemon Service | v2.3 §9 | 4 | 3 | P2 | Phase 1 ✅ | (supports E-20, E-35) | Pending |
-| 8 | Learning Loop & Background Jobs | v2.3 §10 | 3 | 4 | P2 | Phase 7 | — | Pending |
+| 6 | Streaming Architecture | v2.3 §8 + comp #12 | 5 | 3 | P1 | Phase 5 ✅ | — | ✅ COMPLETE |
+| 7 | RAG as Daemon Service | v2.3 §9 | 4 | 3 | P2 | Phase 1 ✅ | (supports E-20, E-35) | ✅ COMPLETE |
+| 8 | Learning Loop & Background Jobs | v2.3 §10 | 3 | 4 | P2 | Phase 7 | — | ✅ COMPLETE |
 | 9 | Guardrails Behavioral Detectors (9 of 9) | gap §Phase 3 | 10 | 4–5 | P0 | Phase 4, Phase 10(SessionState) | E-6, E-7, E-8, E-9, E-10, E-11, E-12, E-13, E-14 | Pending |
 | 10 | Guardrails Missing Surfaces & Interaction Safeguards + Ingress Scanning | gap §Phase 4 + §15.7 extension | 9 | 5 | P0 | Phase 4 | E-16, E-20, E-35, E-22(full) + ingress/MCP network-policy plumbing | Pending |
 | 11 | Scope Accountability, Request Classification & High-Risk Domains | gap §Phase 5 | 5 | 6 | P1 | Phase 10 | E-15, E-19, E-28 | Pending |
@@ -97,10 +97,10 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 | 16 | Guardrails CLI, Hub & Polish | gap §Phase 8 | 5 | 9 | P1 | Phase 4 | E-17, E-24, E-29, E-30, E-31, E-32, E-33, E-34, E-36, E-37, E-43 | Pending |
 | 17 | Competitive Gap-Closing Sprint | comp Top 15 (residual) | 12 | 9–10 | P2 | Phases 3, 6, 14 | — | Pending |
 | 18 | Missing Capabilities (incl. Council CLI) | v2.3 §12 + audit | 9 | 10–11 | P3 | Phase 14 | — | Pending |
-| 19 | Langfuse Observability Integration | standalone plan | 6 | 1 (parallel) | P2 | Phase 1 ✅ | (observability gap) | Pending |
-| 20 | Ethical Provider & Content Policy (block xAI, warn OpenAI/MS/Google/Amazon, style-mimicry block, Telegram removal) | ethical stance | 8 | 2–3 | P0 | Phase 4, Phase 5 | extends E-1; adds ETHICS.md §12–§15 | Pending |
+| 19 | Langfuse Observability Integration | standalone plan | 6 | 1 (parallel) | P2 | Phase 1 ✅ | (observability gap) | ✅ COMPLETE |
+| 20 | Ethical Provider & Content Policy (block xAI, warn OpenAI/MS/Google/Amazon, style-mimicry block, Telegram removal) | ethical stance | 8 | 2–3 | P0 | Phase 4, Phase 5 | extends E-1; adds ETHICS.md §12–§15 | ✅ COMPLETE |
 | 21 | Docker-Based Optional Tooling (super-linter, presidio) | user request | 8 | 4–5 | P2 | Phase 1 ✅, Phase 12 | (PII + lint capability) | Pending |
-| 22 | Web Fetcher HTML-to-Markdown (turndown) | user request | 2 | 6 | P3 | none | — | Pending |
+| 22 | Web Fetcher HTML-to-Markdown (turndown) | user request | 2 | 6 | P3 | none | — | ✅ COMPLETE |
 | 23 | AFT, Magic Context & Task Board Integration Hardening | §25 audit | 10 | 7–8 | P1 | Phase 1 ✅, Phase 15 | (5 integration gaps) | Pending |
 | 24 | Teams & Remote Daemon Deployment (Docker, OAuth, spend, audit, shared memory, Turso) | user request | ~40 | 13–16 (deferred) | P4 | All of Phases 3–23 + v1 stabilization | (server mode) | DEFERRED |
 | 25 | MITM Egress Proxy for Subprocess Network Interception | §39 + Phase 10 §15.7 | ~12 | 17–18 (deferred) | P4 | Phase 10 §15.7, Phase 21, Phase 24.1 | (network inspection) | DEFERRED |
@@ -109,7 +109,7 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 | 28 | Supply-Chain Security & Policy Attestation (OSV, Conseca, pinned deps, doctor, JSON Schema) | §A.13–A.15 | ~14 | 19–20 (deferred) | P4 | Phase 4, Phase 12, Phase 15, Phase 21 | (compliance posture) | DEFERRED |
 | 29 | Package Boundary Cleanup & Composability (DI, peer deps, eliminate renderers/types, publish independent packages) | audit | 8 | 1–2 | P0 | Phase 2 ✅, Phase 4 ✅ | (cross-dependency problem) | Pending |
 | 33 | AIMock Full Integration (LLMock wiring, MCPMock, VectorMock, AGUIMock, chaos, drift CI) | code audit | 5 | 5 (parallel) | P1 | Phase 7, Phase 31 | (test harness completeness, drift detection) | Pending |
-| 34 | Local Trust Sanitization Workflow (ZipTyPrompt parity) | code audit | 4 | 3 (parallel) | P1 | Phase 4 ✅, Phase 16 | (sanitize-first workflow, custom rules, infra preset) | Pending |
+| 34 | Local Trust Sanitization Workflow (ZipTyPrompt parity) | code audit | 4 | 3 (parallel) | P1 | Phase 4 ✅, Phase 16 | (sanitize-first workflow, custom rules, infra preset) | ✅ COMPLETE |
 | 35 | Skill Discovery, Registry Install & Scope Management (autoskills + skillsor parity) | code audit | 5 | 4 (parallel) | P1 | plugins skill system | (registry install, scope, shadowing, lockfile) | Pending |
 | 36 | Agent Governance Toolkit Pattern Adoption (policy engine, trust mesh, audit) | code audit | 6 | 5 (parallel) | P1 | Phase 4 ✅, Phase 12, Phase 32 | (policy engine, trust mesh, tamper-evident audit, kill switch) | Pending |
 | 31 | AG-UI Adapter Integration (retroactive documentation + daemon wiring) | code audit | 3 | 6 (parallel) | P1 | Phase 6 | (AG-UI/CopilotKit frontend protocol) | Pending |
