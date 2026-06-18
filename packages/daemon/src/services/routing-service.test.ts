@@ -4,7 +4,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { createGateway } from '@agentsy/gateway';
+import type { RoutingDecision } from '@agentsy/gateway';
 import type { UnifiedDB } from '../db/unified-db.js';
 import { RoutingService } from './routing-service.js';
 
@@ -110,7 +110,7 @@ describe('RoutingService.selectModel', () => {
 describe('RoutingService.spillover', () => {
   it('throws if not started', async () => {
     const service = new RoutingService({ db: createMockDB() });
-    await expect(service.spillover({} as never)).rejects.toThrow('not started');
+    await expect(service.spillover({} as RoutingDecision)).rejects.toThrow('not started');
   });
 
   it('delegates to gateway', async () => {

@@ -255,7 +255,6 @@ describe('restoreCircuitBreakerState', () => {
 describe('flush', () => {
   it('persists circuit breaker state for all providers', async () => {
     const persistence = new InMemoryPersistenceAdapter();
-    const saveSpy = vi.spyOn(persistence, 'saveCircuitBreakerState');
     const gw = createGateway({ providers: [PROVIDER_A, PROVIDER_B], persistence });
 
     await gw.flush();

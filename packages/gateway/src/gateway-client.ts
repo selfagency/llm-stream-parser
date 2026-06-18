@@ -59,6 +59,6 @@ export class GatewayClientShim implements Pick<Gateway, 'selectModel' | 'spillov
   }
 
   async registerProvider(provider: ProviderEntry): Promise<void> {
-    await this.#ipc.call('routing.registerProvider', provider as unknown as Record<string, unknown>);
+    await this.#ipc.call('routing.registerProvider', provider);
   }
 }

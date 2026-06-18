@@ -9,8 +9,14 @@
  * @module
  */
 
-import type { ProviderEthicsPolicyHook, RoutingDecision, RoutingRequest } from '@agentsy/gateway';
-import { createGateway, type Gateway, type GatewayOptions } from '@agentsy/gateway';
+import {
+  createGateway,
+  type Gateway,
+  type GatewayOptions,
+  type ProviderEthicsPolicyHook,
+  type RoutingDecision,
+  type RoutingRequest
+} from '@agentsy/gateway';
 
 import type { UnifiedDB } from '../db/unified-db.js';
 import { UnifiedDBPersistenceAdapter } from './unified-db-persistence-adapter.js';
