@@ -1,5 +1,4 @@
 
-
 ## 8. Phase 3 — Hook Pipeline Redesign + Claude-Code Hook Schema ✅ COMPLETE
 
 **Priority**: P1 — Sprint 1
@@ -24,8 +23,6 @@
 > `runtime/src/guardrails/builtin.ts` already uses the correct interface.
 >
 > **No rework required.** Update Phase 12 examples to match the factory pattern.
-
-
 
 ### 8.1 Current Problem
 
@@ -145,6 +142,7 @@ export function createGuardrailHook(deps: GuardrailHookDeps): HookHandler {
 ```
 
 **Execution order** for `UserPromptSubmit`:
+
 1. Guardrail (priority 10) checks and potentially sanitizes the prompt.
 2. Memory pre-turn (priority 20) appends memory context to the (possibly sanitized) prompt.
 3. Both transforms compose — the model sees a sanitized prompt with memory context.
@@ -219,5 +217,3 @@ Wire this into the stream error handler in `packages/runtime/src/loop/simple-tur
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-
-

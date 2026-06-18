@@ -1,5 +1,4 @@
 
-
 ## 19. Phase 14 — ACP Agent & Multi-Agent Deployment
 
 **Priority**: P2 — Sprints 7–8 (consider elevating to P1 — see note below)
@@ -262,5 +261,3 @@ The daemon starts as a local multi-agent system (AD-8). Server deployment with a
 **Effort**: +5 SP (total Phase 14 becomes 12 SP). The event ledger is the highest-value addition — it enables crash recovery and session replay, which are essential for a production ACP implementation.
 
 ---
-
-

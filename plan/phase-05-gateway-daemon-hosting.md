@@ -1,5 +1,4 @@
 
-
 ## 10. Phase 5 — Gateway Daemon Hosting & Independent Package ✅ COMPLETE
 
 **Status**: Landed on `develop` (branch `feat/gateway-daemon-hosting` merged via PR #128).
@@ -24,7 +23,7 @@ The `@agentsy/gateway` package is **not** gutted into a thin IPC client. It rema
 
 ### 10.2 Current Architecture
 
-```
+```text
 CLI → Runtime → Gateway → Providers → LLM APIs
                   ↑
            (routing, health,
@@ -35,7 +34,7 @@ Every CLI invocation instantiates its own gateway. Health probes run per-process
 
 ### 10.3 Target Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────┐
 │ @agentsy/gateway (independent reusable package)     │
 │                                                      │
@@ -357,6 +356,7 @@ The Phase 0.5 fix added `quotaRegistry` to `RetryContext`. This phase makes `Quo
 ### 10.9 Gateway package README and npm publication
 
 The gateway package gets a proper README documenting:
+
 1. **Quick start** for external consumers (the example in §10.7)
 2. **PersistenceAdapter interface** for custom persistence
 3. **ProviderEthicsPolicyHook** for custom ethics filtering
@@ -413,4 +413,3 @@ The package is published to npm as `@agentsy/gateway` with stable semver. Breaki
 - [x] All 11 CI checks passing (SonarCloud, Codacy, Fallow, Semgrep, Socket, Codecov, CLI E2E)
 
 ---
-

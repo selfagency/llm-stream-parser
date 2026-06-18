@@ -144,14 +144,7 @@ export function detectLangfuseFromEnv(env: Record<string, string | undefined> = 
  * @param env - Optional env object (defaults to `process.env`).
  */
 export function createLangfuseExporterFromEnv(
-  options?: {
-    endpoint?: string;
-    publicKey?: string;
-    secretKey?: string;
-    projectId?: string;
-    flushIntervalMs?: number;
-    maxBatchSize?: number;
-  },
+  options?: Partial<LangfuseExporterOptions>,
   env: Record<string, string | undefined> = process.env
 ): LangfuseExporter | null {
   const detection = detectLangfuseFromEnv(env);
@@ -168,7 +161,7 @@ export function createLangfuseExporterFromEnv(
  */
 function resolveLangfuseOptions(
   detection: LangfuseEnvDetection,
-  options: LangfuseExporterOptions | undefined,
+  options: Partial<LangfuseExporterOptions> | undefined,
   env: Record<string, string | undefined>
 ): LangfuseExporterOptions {
   const opts: LangfuseExporterOptions = {
@@ -179,17 +172,17 @@ function resolveLangfuseOptions(
 
   const projectId = options?.projectId ?? detection.projectId;
   if (projectId !== undefined) {
-    (opts as Record<string, string | number | undefined>).projectId = projectId;
+    opts.projectId = projectId;
   }
 
   const flushIntervalMs = options?.flushIntervalMs ?? detection.flushIntervalMs;
   if (flushIntervalMs !== undefined) {
-    (opts as Record<string, string | number | undefined>).flushIntervalMs = flushIntervalMs;
+    opts.flushIntervalMs = flushIntervalMs;
   }
 
   const maxBatchSize = options?.maxBatchSize ?? detection.maxBatchSize;
   if (maxBatchSize !== undefined) {
-    (opts as Record<string, string | number | undefined>).maxBatchSize = maxBatchSize;
+    opts.maxBatchSize = maxBatchSize;
   }
 
   return opts;

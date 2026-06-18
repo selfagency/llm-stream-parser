@@ -1,5 +1,4 @@
 
-
 ## 38. Phase 24 — Teams & Remote Daemon Deployment (DEFERRED — Post-v1)
 
 **Priority**: P4 — Deferred. Do not start until Phases 3–23 are complete and the v1 local-mode product has shipped and stabilized through at least one maintenance sprint.
@@ -29,17 +28,20 @@ Transform agentsy from a single-user local daemon into a multi-user remote-deplo
 
 Phase 24 supports three deployment topologies. All three run the same daemon code; the difference is configuration.
 
-**Topology A — Local background process (current v1 default)**
-```
+## Topology A — Local background process (current v1 default)
+
+```text
 User's laptop
 └── agentsy daemon (Node.js background process)
     └── ~/.agentsy/agentsy.db (SQLite, local file)
     └── ~/.agentsy/daemon.sock (Unix socket, local)
 ```
+
 No auth (Unix socket permissions). Single user. This is what Phases 0–23 build. Phase 24 does not change it.
 
-**Topology B — Local Docker container (new in Phase 24)**
-```
+## Topology B — Local Docker container (new in Phase 24)
+
+```text
 User's laptop
 └── docker compose up
     ├── agentsy-daemon container (Node.js)
@@ -47,10 +49,12 @@ User's laptop
     └── (optional) turso container (libSQL)
         └── /data/turso.db (volume mount)
 ```
+
 Auth: still single-user (no OAuth needed) — the Docker container exposes a localhost port or Unix socket. The benefit is isolation (the daemon doesn't run as the user's PID) and reproducibility (compose file pins versions). Turso is optional here but useful if the user wants cross-device sync.
 
-**Topology C — Remote server, multi-user (the Teams feature)**
-```
+## Topology C — Remote server, multi-user (the Teams feature)
+
+```text
 Remote server (or cloud VM)
 └── docker compose up
     ├── agentsy-daemon container (Node.js)
@@ -64,7 +68,7 @@ Clients (CLI, TUI, ACP editors) connect over WSS (wss://agentsy.example.com/acp)
 and authenticate via OAuth/OIDC.
 ```
 
-#### 38.2.2 OAuth/OIDC authentication
+### 38.2.2 OAuth/OIDC authentication
 
 The daemon's IPC layer (Phase 1, §6) is transport-agnostic. Phase 24 adds a `WebSocketTransport` (already stubbed in AD-9) and an `OAuthAuthenticator` that validates OIDC ID tokens.
 
@@ -104,6 +108,7 @@ interface SessionJWT {
 ```
 
 **Authorization model**:
+
 - **Agents** are owned by a user. Other users can't see or interact with them unless explicitly shared.
 - **Memory scopes** are either `user:<userId>` (private) or `team:<teamId>` (shared). The scope key format from AD-12 (`folder:[hash]`) is extended to `user:<userId>:folder:[hash]` and `team:<teamId>:folder:[hash]`.
 - **Tool execution** requires the user to have the tool in their `scope` claim. Destructive tools require per-action approval (the `ApprovalManager` from Phase 4).
@@ -188,6 +193,7 @@ CREATE INDEX idx_audit_action ON audit_log(action, timestamp);
 ```
 
 **Audit events**:
+
 - Every prompt submitted (`action: 'prompt'`)
 - Every tool call (`action: 'tool_call'`, `tool_name`, `details_json: { args, result_summary }`)
 - Every guardrail decision (`action: 'guardrail_decision'`, `details_json: { receipt }`)
@@ -213,6 +219,7 @@ type ScopeKey =
 ```
 
 **Shared memory semantics**:
+
 - **Team wiki**: a team's `WikiManager` (Phase 23) writes to `team:<teamId>:folder:<hash>`. All team members read from it. Writes are attributed to the user in the wiki page metadata.
 - **Team RAG index**: the `RetrievalService` (Phase 7) indexes team-shared memories into a shared vector index. Personal memories are indexed separately and only retrieved for the owning user.
 - **Personal memories**: `user:<userId>:personal` is private. Other users (including admins) cannot read it. This is enforced at the `MemoryEngine.recall()` layer, not just at the API layer.
@@ -223,6 +230,7 @@ type ScopeKey =
 #### 38.2.6 Docker daemon deployment
 
 **Dockerfile** (`docker/daemon.Dockerfile`):
+
 ```dockerfile
 FROM node:22-slim
 WORKDIR /app
@@ -238,6 +246,7 @@ CMD ["node", "packages/daemon/dist/cli.js", "start"]
 ```
 
 **Docker Compose — Topology B (local Docker)** (`docker-compose.local.yml`):
+
 ```yaml
 services:
   agentsy:
@@ -268,6 +277,7 @@ volumes:
 ```
 
 **Docker Compose — Topology C (remote server, Teams)** (`docker-compose.teams.yml`):
+
 ```yaml
 services:
   agentsy:
@@ -346,7 +356,8 @@ volumes:
 ```
 
 **Caddyfile** (TLS termination + OAuth proxy):
-```
+
+```text
 agentsy.example.com {
     reverse_proxy agentsy:9380
     # Optional: Caddy can also handle OAuth at the proxy layer
@@ -495,4 +506,3 @@ To keep Phase 24 viable, the v1 work must respect these constraints:
 | Admin abuse (admin reads user's personal memory) | Medium | High | Personal memory (`user:<userId>:personal`) is encrypted at rest with a user-derived key. Admins can delete but not read. Document this clearly. |
 
 ---
-

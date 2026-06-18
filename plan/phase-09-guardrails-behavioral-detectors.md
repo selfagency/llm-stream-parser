@@ -1,5 +1,4 @@
 
-
 ## 14. Phase 9 — Guardrails Behavioral Detectors (9 of 9 required)
 
 **Priority**: P0 — Sprints 4–5
@@ -11,14 +10,14 @@
 
 `SAFETY.md` §Output review middleware lists 9 mandatory detector categories. The package implements 0 of them. The 7 built-in scanners are all *security*-shaped (injection, PII, secrets, paths, commands, rate, toxicity) — none address the *behavioral* risks the policy documents emphasize. This phase implements all 9.
 
-
 > ⚠️ **Dependency ordering clarification**: Phase 9 lists "Phase 10 (SessionState)" as a dependency,
 > but Phase 10 appears *after* Phase 9 in the phase ladder. The resolution:
+>
 > - Phase 10 **must land its `SessionState` type** as a standalone PR before Phase 9's `DependencyScanner` can ship.
 > - The other 8 detectors in Phase 9 have no dependency on Phase 10 and can proceed immediately.
 > - **Build order**: Ship Phase 10 `SessionState` extraction first (1–2 day sub-task). Then ship Phase 9's 8 independent scanners. Then ship Phase 9's `DependencyScanner`. Then ship the rest of Phase 10.
 > - Alternatively: move `SessionState` into `@agentsy/shared` and ship it as a standalone PR before either Phase 9 or 10 begins.
-
+>
 > **Build order**: Phase 10 lands `SessionState` first (the dependency scanner needs conversation history). The other 8 detectors can ship in parallel.
 
 ### 14.1 Finding E-6 — No sycophancy detector
@@ -371,6 +370,7 @@ const IDENTITY_ASSUMPTIONS = [
 ### 14.10 Implementation Order
 
 Per `IMPLEMENTATION-PLAN-REVISIONS.md`, priority order:
+
 1. **E-6 SycophancyScanner** — highest priority (Science paper citation).
 2. **E-7 AnthropomorphismScanner** — second priority.
 3. **E-9 HighRiskDomainScanner** — highest stakes (self-harm, medical, legal advice).

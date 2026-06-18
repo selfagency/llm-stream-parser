@@ -1,5 +1,4 @@
 
-
 ## 35. Appendix D — IPC Protocol Spec
 
 ### Socket Location
@@ -14,14 +13,14 @@
 
 Newline-delimited JSON-RPC 2.0:
 
-```
+```text
 Client:  {"jsonrpc":"2.0","id":"1","method":"agent.list","params":{}}\n
 Server:  {"jsonrpc":"2.0","id":"1","result":[{"id":"coder-1","role":"coder","state":"idle"}]}\n
 ```
 
 ### Streaming Protocol
 
-```
+```text
 Client:  {"jsonrpc":"2.0","id":"2","method":"stream.start","params":{"agentId":"coder-1","messages":[...]}}
 Server:  {"jsonrpc":"2.0","id":"2","result":{"streamId":"s-abc123"}}
 Server:  {"jsonrpc":"2.0","method":"stream.chunk","params":{"streamId":"s-abc123","chunk":{"type":"content","text":"Hello"},"index":0}}
@@ -63,4 +62,3 @@ interface AuthToken {
 ```
 
 ---
-

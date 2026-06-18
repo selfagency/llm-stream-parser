@@ -1,5 +1,4 @@
 
-
 ## 21. Phase 16 — Guardrails CLI, Hub & Polish
 
 **Priority**: P1 — Sprint 9
@@ -73,6 +72,7 @@ Wire into CI for first-party packages.
 **E-32 (MEDIUM)** — `ToxicityScanner` `nazi` pattern matches the bare word in any context, including historical/educational text. Severity `high` triggers `block`. **Fix**: Either (a) require a destructive context ("I am a nazi", "heil nazi") or (b) lower severity to `medium` (escalate for human review). Pair with an LLM-based classifier for higher accuracy.
 
 **E-33 (MEDIUM)** — `SecretDetectionScanner` has overly broad patterns:
+
 - Line 105: Vercel pattern `/\b[A-Za-z0-9]{24}\b/g` matches any 24-character alphanumeric string.
 - Line 183: Postmark pattern matches any UUID.
 - Line 244: Snyk pattern matches any UUID.
@@ -109,4 +109,3 @@ Wire into CI for first-party packages.
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

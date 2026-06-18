@@ -1,5 +1,4 @@
 
-
 ## 22. Phase 17 — Competitive Gap-Closing Sprint
 
 **Priority**: P2 — Sprints 9–10
@@ -35,6 +34,7 @@ export class RepoMap {
 
 **Edit-format DSLs (SEARCH/REPLACE with RelativeIndenter, udiff, whole-file)** — ~4 SP
 Open-model support. Many open models (DeepSeek, Qwen, Llama) struggle with structured tool calls but excel at edit-format DSLs. Implement 3 formats:
+
 - **SEARCH/REPLACE** with `RelativeIndenter` (indentation-agnostic matching)
 - **udiff** (unified diff format)
 - **whole-file** (replace entire file content)
@@ -189,4 +189,3 @@ Tree-sitter-based code summarization for context compression. Replaces a long fi
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

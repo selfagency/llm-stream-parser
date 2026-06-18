@@ -25,6 +25,7 @@
 | **Drift Detection** — daily runs against live provider APIs | ✅ (CI config) | ❌ | No CI job configured |
 
 MSW is still used in:
+
 - `gateway/src/__tests__/e2e/gateway-e2e.test.ts` — should migrate to `LLMock`
 - `memory/src/retrieval/rag/test-msw.ts` — should migrate to `VectorMock` + `MCPMock`
 - `testing/src/integration.test.ts` — partial; connector/MCP handlers → `MCPMock`
@@ -41,6 +42,7 @@ provider handlers have already diverged from actual provider formats (no usage t
 validation against real provider responses).
 
 **AIMock solves all three problems MSW cannot**:
+
 1. **Drift detection** — daily CI job catches provider format changes before they reach users
 2. **Record/replay** — fixtures capture real provider behavior once; CI never hits live APIs
 3. **Chaos mode** — proves retry/failover logic actually works under real failure conditions
@@ -80,6 +82,7 @@ afterAll(() => mock.stop());
 ```
 
 **Tests to add**:
+
 - Streaming failover: provider A returns mid-stream disconnect → gateway routes to provider B
 - Tool call round-trip: `LLMock.onToolCall('search', { result: [...] })` → verify tool result injected
 - Chaos 500: gateway retries 3× then exhausts → `AllProvidersExhaustedError`
@@ -245,6 +248,7 @@ jobs:
 ### 33.4 MSW Deprecation Plan
 
 MSW is **not removed entirely** — it remains the right tool for:
+
 - HTTP connector mocking (`connectors.ts` handlers — Discord/Slack webhooks)
 - Non-LLM HTTP services (Turso sync, health endpoints)
 - Custom service mocks without an aimock built-in (e.g. web search in Phase 22)

@@ -5,13 +5,13 @@
 **Repository**: `selfagency/agentsy`
 **Branch reviewed**: `develop`
 **Status**: ACTIVE — Phases 0–5 complete; Phase 6 onward is the active scope
-**Code reference**: https://github.com/selfagency/agentsy (develop branch)
+**Code reference**: <https://github.com/selfagency/agentsy> (develop branch)
 
 > **Update from v1.0**: Phases 0 (Critical Bug Fixes), 1 (Daemon Foundation), and 2 (Package Consolidation) from the v2.3 source plan are now COMPLETE on `develop`. Their deliverables (UnifiedDB, daemon IPC, Piscina pool, Honker queues, Bree scheduler, SubprocessManager, 25-package layout) are treated as existing infrastructure in all downstream phases. The active scope of this plan is Phases 3–18: ~100 story points over ~11 sprints.
-
-
+>
 > **2026-06-17 Plan Audit**: A line-by-line code review against the 28-package codebase identified 20 gaps,
 > corrections, and security findings. Key outcomes:
+>
 > - Phase 2 status qualified: `mcp/` and `connectors/` root packages still contain live code alongside daemon copies.
 > - Phase 3 API shape divergence documented: factory function pattern vs. class pattern in plan examples.
 > - AG-UI adapter (`runtime/src/ag-ui/`) is an unplanned production addition — retroactively documented in new **Phase 31**.
@@ -24,11 +24,13 @@
 > - Version bumped to v1.2.
 
 **Source documents synthesized**:
+
 1. `agentsy-guardrails-gap-analysis.md` — 43 findings (E-1 to E-43), 8-phase guardrails remediation, 812 lines
 2. `agentsy-remediation-plan-v2 (8).md` — v2.3, 9 critical bugs + 10 architectural phases, ~435h, 6650 lines
 3. `agentsy-competitive-comparison.md` — 12 competitors analyzed across 12 dimensions, P0–P3 gap matrix, Top 15 actions, 751 lines
 
 **Merge rules**:
+
 - **Guardrails findings** (E-1 to E-43) are reproduced **inline** in the phase that closes them, preserving severity, files, policy requirement, and recommended fix.
 - **Competitor analysis** is condensed into **Appendix A — 12-Competitor Pattern Atlas** (one section per competitor with top 3 patterns to borrow and target phase). Actionable competitive gaps are threaded inline into the relevant phase as "Port X from Y" notes.
 - **Effort** is expressed in **story points** (1 SP ≈ 8 hours of focused engineering work) and allocated across **2-week sprints**. Sprint capacity assumes a 3-person team at ~60 SP/sprint after overhead.
@@ -49,12 +51,12 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 **Scope of this plan**: 31 phases total (Phases 0–30). **Phases 0–5 are COMPLETE** on `develop` on `develop`. The **active scope is Phases 6–23 + Phases 29–30**: ~166.5 story points over ~11–12 sprints (~22–24 weeks) for a 3-person team. Each phase is independently shippable. Phase 29 (Package Boundary Cleanup) addresses the cross-dependency problem: 12 packages that should be independently consumable currently have hard `@agentsy/*` dependencies. Phase 30 (Environmental Impact Tracking) adds CO2 emissions and water consumption tracking to `@agentsy/tokenomics` — per-request and cumulative, with optimization savings reporting. 6 packages are already published to npm. Phase 5 keeps `@agentsy/gateway` as an **independent reusable package**. Phase 20 (Ethical Provider & Content Policy) now hard-blocks xAI on both content safety AND environmental racism grounds (illegal gas-turbine power plant polluting Black communities in Memphis), and warns against Meta (tent data centers with jet-engine gas turbines + LibGen training-data theft). **Phases 24–28 are DEFERRED** — designs complete (~93 SP combined, ~8 sprints). Buffer is 0 SP — recommend extending to Sprint 12 or descoping P3 items. See Phase 19 (`phase-19-langfuse-observability.md`) for Langfuse integration detail for full detail.
 
 **Three non-negotiable gates** (all in force):
+
 1. **✅ Gate 1 LIFTED** — Phase 4 (Guardrails Honest Foundation) is COMPLETE. The `@agentsy/guardrails` package now has the `EthicsRegistry`, `GuardrailDecisionReceipt` type, expanded `GuardrailResult` union, audit logger, canonical `GuardrailsConfig`, and honest documentation.
 2. **BLOCK** any first-party agent template from shipping until **Phase 12** (Guardrails Daemon Integration) is complete and the **Phase 13** release-gate script passes in CI.
 3. **BLOCK** any first-party agent template from shipping until **Phase 20** (Ethical Provider & Content Policy) is complete — agentsy will not route to xAI/Grok, will not ship a Telegram connector, and will block style-mimicry prompts. These are hard ethical commitments, not configurable preferences.
 
 ---
-
 
 ## 2. Source Documents Synthesized
 
@@ -65,12 +67,12 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 | 3 | `agentsy-competitive-comparison.md` | 751 | 12 competitor repos cloned and source-read (not just READMEs). Three parallel research agents produced reports synthesized here. | Architecture comparison matrix, 12 pattern deep dives, P0/P1/P2/P3 gap tables, Top 15 prioritized actions, "what agentsy does better" list. Actionable gaps threaded inline; condensed atlas in Appendix A. |
 
 **Synthesis decisions**:
+
 - The guardrails gap analysis Phases 1–8 are distributed across the unified ladder (Phases 4, 9, 10, 11, 12, 13, 16) rather than kept as a contiguous block, because several guardrails phases have hard dependencies on the daemon (Phase 1), hook redesign (Phase 3), and streaming (Phase 6).
 - The v2.3 phases keep their relative ordering and dependencies, with the guardrails phases inserted at the earliest point they can ship without blocking architectural work.
 - Competitive items are absorbed into the phase that naturally owns them (e.g. Claude-Code hook schema → Phase 3, HeadTailBuffer → Phase 17) rather than batched into a single "competitive" phase. Phase 17 closes the remaining competitive gaps that don't have a natural architectural home.
 
 ---
-
 
 ## 3. Unified Phase Ladder (Master Table)
 
@@ -121,6 +123,7 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 **Critical path (active)**: Phase 3 → Phase 4 → Phase 9 → Phase 13 (guardrails enforcement closure, ~7 sprints end-to-end). Secondary critical path: Phase 5 → Phase 6 → Phase 14 → Phase 18 (architecture completion, ~7 sprints end-to-end). Phase 19 (Langfuse) is off both critical paths — it's a 6 SP independent track that can start in Sprint 1 and finish by Sprint 2.
 
 **Parallelism opportunities** (now unlocked by Phases 0–5 being done):
+
 - Phase 7 (RAG), Phase 19 (Langfuse), Phase 29 (package boundary cleanup), and **Phase 32 (Security Hardening)** can all start in parallel in Sprint 1 — they have no interdependencies.
 - Phase 31 (AG-UI wiring) can run in parallel with Phase 6 (Streaming), as both operate on daemon streaming infrastructure.
 - Phase 8 (learning loop) can run in parallel with Phase 9 (detectors) once Phase 7 is done.
@@ -128,6 +131,7 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 - Phase 15 (bootstrap) can run in parallel with Phases 16 and 17.
 
 **Deliverables from completed phases** (referenced by downstream work):
+
 - **Phase 0**: 9 bug fixes landed (`UniversalClient` true streaming, tool-call history preservation, hook short-circuit patch, gateway cost units, retry quota map, daemon restart, tool-call ID dedup, retry jitter, error classification).
 - **Phase 1**: `@agentsy/daemon` package with `UnifiedDB` (~/.agentsy/agentsy.db via Honker), Piscina `AgentPool`, Honker durable queues, Bree scheduler, sqlite-worker, `SubprocessManager` (Pup pattern, stall detection), REST control API, JSON-RPC 2.0 over Unix sockets IPC server, ACP server stub, `TerminalBridge`, `ServiceHost` with sleep/wake, `AgentHost`, `ScopeManager` (folder-based), `Supervisor`, `DaemonConfig` schema, CLI integration.
 - **Phase 2**: 25-package layout (workflows→orchestrator, types→shared, renderers→ui, scripts→root, mcp→daemon, connectors→daemon; vscode preserved). `pnpm install && pnpm build && pnpm test` green.
@@ -137,21 +141,24 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 
 ---
 
-
 ## 4. Architectural Decisions (AD-1 to AD-12)
 
 These twelve architectural decisions, inherited from v2.3 §2, govern the entire plan. Each phase must respect them.
 
 ### AD-1: Daemon as the Central Process
+
 The daemon (`@agentsy/daemon`) is the single long-lived process that owns all stateful subsystems. CLI and TUI are thin IPC clients over Unix domain sockets. Editors connect via ACP. Currently every CLI invocation spins up its own runtime, memory engine, gateway, and provider connections — wasteful, prevents cross-session memory, and makes background jobs impossible. A persistent daemon solves all three. The daemon must be crash-resilient (supervisor pattern), support sleep/wake lifecycle for all subsystems, and expose both an internal IPC interface and an external ACP interface.
 
 ### AD-2: Hook Transform Composition
+
 Hook transforms compose left-to-right like Koa/Express middleware. Each hook receives the output of the previous transform. Priority determines execution order. The current short-circuit design (return on first transform) silently drops transformations when both a guardrail hook and a memory hook transform the same event. This is the subject of Phase 0.3 (minimal patch) and Phase 3 (full redesign).
 
 ### AD-3: Daemon-Centric Streaming
+
 The daemon owns all LLM provider connections. Clients request streams via IPC; the daemon pipes events back as JSON-RPC notifications. For ACP clients, the same events map to ACP `session/update` notifications. Centralizing streaming enables daemon-level prompt caching, cost tracking, retry orchestration, and circuit breaking. It also eliminates the fake-streaming bug (Phase 0.1) by removing per-CLI provider connections.
 
 ### AD-4: Merge Small Packages, Keep Big Separate
+
 Packages with <20 source files and no independent deployment boundary merge into a related package. Packages with substantial code stay separate. Everything currently stubbed gets implemented. This drives Phase 2: 27 → 25 packages.
 
 ### AD-5: Gateway as Independent Reusable Package, Hosted by Daemon
@@ -159,28 +166,33 @@ Packages with <20 source files and no independent deployment boundary merge into
 The `@agentsy/gateway` package remains a **standalone, reusable library** that any agentic platform can consume directly — it is not gutted into a thin IPC client. All routing logic (`ModelRegistry`, `ReplicaSelector`, `HealthRegistry`, `QuotaRegistry`, `CircuitBreaker`, `SelectionStrategy`) stays in the gateway package. The daemon *hosts* the gateway: it instantiates the gateway's classes, manages their lifecycle via `ServiceHost`, and adds `UnifiedDB`-backed persistence adapters that external consumers don't need. External consumers can use `@agentsy/gateway` as a programmatic library with in-memory defaults, or plug in their own persistence. An optional `GatewayClient` IPC shim is provided for daemon-connected consumers (CLI, TUI) but is not the only way to use the gateway. The gateway package also exposes a `ProviderEthicsPolicy` hook so external consumers can plug in their own ethics filtering (or use agentsy's `PROVIDER_ETHICS_POLICY` from Phase 20).
 
 ### AD-6: Daemon-Internal RAG
+
 RAG becomes a daemon-internal service. The daemon runs background indexing, maintains the vector store, and serves retrieval requests via MCP. RAG requires persistent state (vector indices, embedding caches). Running it in the daemon enables background indexing without CLI startup, cross-session index reuse, and the wiki invariant (index synthesized pages, not raw events).
 
 ### AD-7: Background + Event-Driven Learning
+
 The learning loop runs as a daemon background job on a configurable schedule AND is triggered by specific events (canary detection, observation threshold). Pure timer-based learning wastes resources when there's nothing to learn. Pure event-driven learning misses patterns that emerge over time. Combining both gives the best of both worlds.
 
 ### AD-8: Multi-Agent with Isolated Scopes → Server Mode
+
 The daemon starts as a local multi-agent system with memory scope isolation. It evolves to support server deployment with authentication, rate limiting, and multi-tenancy. Multi-agent is needed immediately (coder + researcher + planner running simultaneously). Server deployment is a future goal that should inform architectural decisions but not block v1.
 
 ### AD-9: JSON-RPC 2.0 over Unix Sockets (NOT gRPC)
+
 Internal daemon IPC uses JSON-RPC 2.0 over Unix domain sockets with newline-delimited JSON. gRPC with protobuf was evaluated and explicitly rejected. Both processes are local Node.js (no cross-language interop requirement), JSON-RPC is human-readable and debuggable with `socat`, requires no build step, supports streaming via notifications, gets type safety via Zod (runtime + compile-time, superior to protobuf's compile-time-only), aligns with ACP (same wire format internally and externally), and supports future remote access by serving the same method signatures over HTTP/WebSocket.
 
 ### AD-10: ACP (Agent Client Protocol) Agent
+
 The Agentsy daemon becomes an ACP Agent. This replaces the planned custom VS Code extension. ACP is the emerging standard for editor-agent communication — Zed has native support, VS Code has the ACP Client extension, JetBrains is adding support. The daemon already speaks JSON-RPC; ACP is just another transport. The `@agentclientprotocol/sdk` `AgentSideConnection` class is ~500 lines versus ~5000 lines of custom extension code. Note: `@agentsy/vscode` is preserved as a published npm library consumed by third-party VS Code extensions that integrate language model providers with GitHub Copilot Chat — ACP and `@agentsy/vscode` are complementary, not overlapping.
 
 ### AD-11: Subprocess Management with Stall Detection
+
 The daemon manages child processes (tool executors, MCP servers, build runners) and forcefully terminates them when they stall or exceed resource limits. Stalled processes are a real operational problem — a hung MCP server blocks the agent indefinitely with no recovery path. MCP servers are long-lived children that need restart-on-stall. Tool execution needs resource limits. ACP terminal integration maps directly to subprocess management.
 
 ### AD-12: Folder-Based Scoping
+
 Session scope is determined by the folder (working directory), not agent-specified. This aligns with ACP's `session/new` `cwd` parameter and the user's mental model of "I'm working in this project folder." Scope key format: `folder:[sha256-hash-of-absolute-path]`. ACP `additionalDirectories` supports multi-root workspaces. This drives Phase 10's multi-root workspace design and Phase 15's project auto-detection.
 
 ---
 
-
 ---
-

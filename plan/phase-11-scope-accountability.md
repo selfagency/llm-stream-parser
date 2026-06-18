@@ -1,5 +1,4 @@
 
-
 ## 16. Phase 11 — Scope Accountability, Request Classification & High-Risk Domains
 
 **Priority**: P1 — Sprint 6
@@ -201,4 +200,3 @@ Wire into the `RequestClassifier` (§16.2) — if classification detects a high-
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

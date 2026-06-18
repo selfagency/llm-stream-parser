@@ -1,5 +1,4 @@
 
-
 ## 43. Phase 28 — Supply-Chain Security & Policy Attestation (DEFERRED — Post-v1)
 
 **Priority**: P4 — Deferred. Can ship alongside Phase 24–25 (Teams/security hardening batch).
@@ -147,6 +146,7 @@ Update all `package.json` files to use exact versions (`1.2.3` not `^1.2.3`). Ad
 ```
 
 Add CVE comments to dependencies with known issues:
+
 ```json
 {
   "dependencies": {
@@ -221,4 +221,3 @@ writeFileSync('schemas/agent-spec.json', JSON.stringify(zodToJsonSchema(AgentSpe
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

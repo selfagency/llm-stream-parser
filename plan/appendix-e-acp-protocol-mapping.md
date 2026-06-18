@@ -1,5 +1,4 @@
 
-
 ## 36. Appendix E — ACP Protocol Mapping
 
 ### ACP Client → Agent Methods (Daemon Handles)
@@ -95,4 +94,3 @@ export const AGENT_CAPABILITIES: AgentCapabilities = {
 | **Server mode** (future) | WebSocket + TLS | `wss://agentsy.example.com/acp` | JWT authentication |
 
 ---
-

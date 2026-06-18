@@ -1,10 +1,9 @@
 
-
 ## 30. Implementation Order & Milestones
 
 ### 30.1 Sprint-by-Sprint Timeline
 
-```
+```text
 Sprint 1 (Week 1-2):   Phase 3 (Hook Pipeline Redesign) ─────────┐
                        Phase 5 (Gateway → Daemon) ────────────────┤
                        Phase 7 (RAG as Daemon Service) ───────────┤
@@ -32,7 +31,7 @@ Sprint 4 (Week 7-8):   Phase 9 (Guardrails Behavioral Detectors)
 Sprint 5 (Week 9-10):  Phase 9 finish ─────────────────────────────┤
                        Phase 10 (Guardrails Missing Surfaces) ─────┤
                        Phase 21 finish ────────────────────────────┘
-                                                                   
+
 Sprint 6 (Week 11-12): Phase 11 (Scope Accountability)
                        Phase 31 (AG-UI Adapter Daemon Wiring) ─────────────────┤  ← P1, parallel with Phase 6 ───────────┐
                        Phase 12 (Guardrails Daemon Integration) ──┤
@@ -57,7 +56,7 @@ Sprint 11 (Week 21-22): Phase 18 finish ─────────────�
 
 ### 30.2 Dependencies Graph (Active Scope)
 
-```
+```text
 Phase 3 (Hooks) ─────────┬──▶ Phase 4 (Guardrails Foundation) ──┬──▶ Phase 9 (Detectors) ──┐
                           │                                       │                          ├──▶ Phase 13 (Metrics)
 Phase 5 (Gateway) ────────┼──▶ Phase 6 (Streaming) ──┬──▶ Phase 14 (ACP) ──┬──▶ Phase 18 (Missing)
@@ -128,4 +127,3 @@ Active total: ~152.5 SP (Phases 3–23, including Phase 5 independent-gateway re
 | Honker native extension unavailable on some platforms | Low | Medium | Fallback to `better-sqlite3` with polling-based queue (already implemented in Phase 1). |
 
 ---
-

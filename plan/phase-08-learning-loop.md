@@ -1,5 +1,4 @@
 
-
 ## 13. Phase 8 — Learning Loop & Background Jobs
 
 **Priority**: P2 — Sprint 4
@@ -18,11 +17,13 @@ The learning loop runs as a foreground job that blocks the CLI. There's no backg
 The learning loop runs as a daemon background job on a configurable schedule AND is triggered by specific events (canary detection, observation threshold).
 
 **Triggers**:
+
 - **Timer-based**: Bree-scheduled job, default every 1 hour.
 - **Canary detection**: when a memory item is flagged as a "canary" (anomalous pattern), trigger learning immediately.
 - **Observation threshold**: when the count of unprocessed `kind: 'event'` memory items exceeds a threshold (default 100), trigger learning.
 
 **Learning job**:
+
 1. Read unprocessed `kind: 'event'` memory items.
 2. Run the consolidation LLM call (summarize events into `kind: 'semantic'` items).
 3. Index the new semantic items via `RetrievalService.indexNewContent` (Phase 7).
@@ -132,5 +133,3 @@ export class LearningJob {
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-
-

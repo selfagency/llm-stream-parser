@@ -1,5 +1,4 @@
 
-
 ## 28. Phase 22 — Web Fetcher HTML-to-Markdown Enhancement
 
 **Priority**: P3 — Sprint 6
@@ -62,10 +61,12 @@ async function handleHttpFetch(input: Record<string, unknown>): Promise<ToolResu
 ### 28.3 File-by-File Change List
 
 **Modified** (2 files):
+
 - `packages/tools/src/tools/http/index.ts` — add turndown conversion
 - `packages/tools/package.json` — add `turndown` dependency
 
 **New** (1 file):
+
 - `packages/tools/src/tools/http/index.test.ts` — test HTML→Markdown conversion, non-HTML passthrough, conversion failure fallback
 
 ### 28.4 Verification
@@ -77,4 +78,3 @@ async function handleHttpFetch(input: Record<string, unknown>): Promise<ToolResu
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

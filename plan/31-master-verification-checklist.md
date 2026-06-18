@@ -1,10 +1,10 @@
 
-
 ## 31. Master Verification Checklist
 
 This checklist combines the guardrails gap analysis verification items (43 findings), the v2.3 success criteria, and the competitive P0 closures. Organized by phase.
 
 ### Phase 0 — Critical Bug Fixes ✅
+
 - [x] All 9 bug fixes landed on `develop`
 - [x] `UniversalClient` true streaming
 - [x] Tool calls preserved in conversation history
@@ -17,6 +17,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [x] Provider error classification uses HTTP status + specific regexes
 
 ### Phase 1 — Daemon Foundation ✅
+
 - [x] `@agentsy/daemon` package exists
 - [x] `UnifiedDB` consolidates memory.db + context.db + tokenomics.db into `~/.agentsy/agentsy.db`
 - [x] `AgentPool` (Piscina) wired
@@ -31,6 +32,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [x] CLI integration (`agentsy daemon start|stop|status|logs`)
 
 ### Phase 2 — Package Consolidation ✅
+
 - [x] 27 → 25 packages
 - [x] `workflows` → `orchestrator`
 - [x] `types` → `shared`
@@ -42,6 +44,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [x] `pnpm install && pnpm build && pnpm test` green
 
 ### Phase 3 — Hook Pipeline Redesign + Claude-Code Hook Schema ✅
+
 - [x] `RuntimeHookRegistry.fire()` composes transforms left-to-right
 - [x] `stop` short-circuits the pipeline and returns `stoppedBy`
 - [x] Claude-Code hook schema parser handles command/prompt/http/agent types
@@ -50,6 +53,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [x] All existing tests pass (no regressions)
 
 ### Phase 4 — Guardrails Honest Foundation ✅
+
 - [x] `EthicsRegistry` exists; every clause has `implementedBy` or is marked as a known gap
 - [x] `GuardrailDecisionReceipt` type exists with all 7 fields (`policyId`, `decision`, `reasonCode`, `riskTier`, `surface`, `timestamp`, `correlationId`)
 - [x] `quarantine` and `allow-with-approval` are distinct states in `GuardrailResult`
@@ -63,6 +67,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [x] PR template includes ethics review checklist
 
 ### Phase 5 — Gateway Daemon Hosting & Independent Package
+
 - [ ] `@agentsy/gateway` package is independently consumable (no daemon dependency required)
 - [ ] `createGateway()` factory works with in-memory defaults
 - [ ] `PersistenceAdapter` interface defined; `InMemoryPersistenceAdapter` is the default
@@ -79,6 +84,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Daemon restart preserves quota state
 
 ### Phase 6 — Streaming Architecture ✅
+
 - [x] `StreamManager` runs as a `Service` in the daemon
 - [x] `wrapSSE` aborts on idle
 - [x] `StreamingSecretsFilter` masks secrets across chunk boundaries
@@ -86,17 +92,20 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [x] ACP `session/update` notifications emitted for all event types
 
 ### Phase 7 — RAG as Daemon Service ✅
+
 - [x] `RetrievalService` runs as a `Service` in the daemon
 - [x] Background indexing job scheduled and runs
 - [x] Vector index persists in `UnifiedDB.rag_vectors`
 - [x] Wiki invariant enforced (only `kind: 'semantic'` items indexed)
 
 ### Phase 8 — Learning Loop & Background Jobs
+
 - [ ] `LearningJob` runs as a Bree-scheduled job
 - [ ] Event bus uses Honker NOTIFY/LISTEN for cross-process wake
 - [ ] Canary and observation events trigger learning immediately
 
 ### Phase 9 — Guardrails Behavioral Detectors
+
 - [ ] `SycophancyScanner` exists with 20+ fixtures
 - [ ] `AnthropomorphismScanner` exists with 20+ fixtures
 - [ ] `DependencyScanner` exists with multi-turn fixtures (requires `SessionState`)
@@ -110,6 +119,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] `EthicsRegistry.implementedBy` fields updated for all 9 clauses
 
 ### Phase 10 — Guardrails Missing Surfaces & Interaction Safeguards (+ §15.7 Ingress Extension)
+
 - [ ] `GuardrailPhase` includes `retrieval`, `memory`, `action`, `egress`
 - [ ] `RetrievalFirewallScanner` exists (runs `PromptInjectionScanner` on retrieved content — closes E-35)
 - [ ] `MemoryPoisoningScanner` exists
@@ -129,6 +139,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] **§15.7: `HTTP_PROXY` / `HTTPS_PROXY` / `NODE_EXTRA_CA_CERTS` / `SSL_CERT_FILE` / `REQUESTS_CA_BUNDLE` / `GIT_SSL_CAINFO` injected into subprocess env when `proxy-inspect` is set (plumbing for Phase 25)**
 
 ### Phase 11 — Scope Accountability, Request Classification & High-Risk Domains
+
 - [ ] `ScopeDeclaration` type exists
 - [ ] `ScopeDeclarationScanner` enforces it; agent YAML specs consumed
 - [ ] `ScopeDriftScanner` (from Phase 10) consumes `agentScopeDeclaration`
@@ -138,6 +149,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] CLI `agentsy agent show <name> --scope` works
 
 ### Phase 12 — Guardrails Daemon Integration
+
 - [ ] `@agentsy/daemon` depends on `@agentsy/guardrails` and `@agentsy/runtime`
 - [ ] `GuardrailPipeline` and `HookRegistry` instantiated in `Daemon.start()`
 - [ ] All 18 scanners wired (7 security + 9 behavioral + 4 surface + 3 interaction + 2 scope/classification)
@@ -147,6 +159,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Integration test: malicious IPC blocked
 
 ### Phase 13 — Guardrails Metrics, Benchmark Suite, Release Gate + langeval Integration
+
 - [ ] All 12 required safety metrics tracked and exported (via OpenTelemetry or local JSON)
 - [ ] Benchmark suite exists with all 12 required scenarios (20–50 cases each)
 - [ ] `agentsy guardrails benchmark` CLI command runs the suite and produces a report
@@ -166,6 +179,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] **§18.7: Memory + perf regression baselines (`MemoryTestHarness`, `PerfTestHarness`)**
 
 ### Phase 14 — ACP Agent & Multi-Agent Deployment
+
 - [ ] ACP server handles all 20 methods in the compatibility matrix
 - [ ] Folder-based scope isolation works across concurrent sessions
 - [ ] Steering + follow-up queues work (`QueueMode: "all" | "one-at-a-time"`)
@@ -175,6 +189,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Default agents (coder, researcher, planner) loadable from YAML
 
 ### Phase 15 — Project Auto-Detection & Bootstrap
+
 - [ ] `@agentsy/bootstrap` package exists (26th package)
 - [ ] Scanner detects languages, frameworks, package managers, build systems, linters, test runners
 - [ ] `.agentsy/config.yml` schema is stable (`schemaVersion: 1`)
@@ -186,6 +201,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Multi-root workspaces supported via `/add-project-folder`
 
 ### Phase 16 — Guardrails CLI, Hub & Polish
+
 - [ ] `agentsy guardrails install` writes to persistent `.agentsy/guardrails.yaml`
 - [ ] `agentsy guardrails policy <path>` validates and test-evaluates
 - [ ] `agentsy guardrails test <policy-path> <input>` prints decision receipts
@@ -201,6 +217,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] `docs/safety-exceptions.md` exists (states "none" if none)
 
 ### Phase 17 — Competitive Gap-Closing Sprint
+
 - [ ] `RepoMap` (aider) builds and ranks symbols via PageRank
 - [ ] 3 edit-format DSLs (aider): SEARCH/REPLACE with RelativeIndenter, udiff, whole-file
 - [ ] `DirtyJson` tolerant parser (agent-zero) handles malformed LLM JSON
@@ -220,6 +237,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] `pi-ast` structural summaries (oh-my-pi)
 
 ### Phase 18 — Missing Capabilities
+
 - [ ] `OutputValidator` validates and auto-repairs structured output
 - [ ] `CheckpointManager` creates and restores checkpoints
 - [ ] `SandboxService` sandboxes tool execution
@@ -230,6 +248,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] ACP session persistence works across daemon restarts
 
 ### Phase 19 — Langfuse Observability Integration ✅
+
 - [x] `detectLangfuseFromEnv` handles all env-var combinations (missing, partial, both, whitespace, empty, `LANGFUSE_HOST` path variants)
 - [x] `createLangfuseExporterFromEnv` returns `null` on missing vars, returns exporter on present vars, honors optional vars, validates integers, overrides take precedence
 - [x] `createObservabilityFromEnv` returns engine with disabled sink on empty env, enabled sink on present env, respects `langfuseEnabled: false`
@@ -247,6 +266,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [x] `@agentsy/observability` added as dependency of `@agentsy/daemon`
 
 ### Phase 20 — Ethical Provider & Content Policy ✅
+
 - [x] `PROVIDER_ETHICS_POLICY` contains 6 entries (xai block; openai/microsoft/google/amazon/meta warn)
 - [x] `isProviderBlocked('xai')` returns `true`; all others return `false`
 - [x] `requiresAcknowledgement('openai')` returns `true`; `requiresAcknowledgement('meta')` returns `true`; `requiresAcknowledgement('anthropic')` returns `false`
@@ -266,6 +286,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [x] `ETHICS.md` §12–§16 added (§16: environmental racism as a block criterion); `EthicsRegistry` updated with `implementedBy` fields
 
 ### Phase 21 — Docker-Based Optional Tooling
+
 - [ ] `DockerAvailabilityChecker` correctly detects Docker presence, daemon state, and resources
 - [ ] `SuperLinterTool` returns graceful degradation when Docker is absent
 - [ ] `SuperLinterTool` invokes `docker run` with correct args and parses output
@@ -276,12 +297,14 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Resource checks prevent invocation when memory/CPU insufficient
 
 ### Phase 22 — Web Fetcher HTML-to-Markdown
+
 - [ ] `http_fetch` returns Markdown when content-type is `text/html`
 - [ ] `http_fetch` returns raw body when content-type is not HTML
 - [ ] `http_fetch` returns raw HTML when turndown conversion throws (graceful fallback)
 - [ ] `bodyFormat` field correctly reports `markdown` | `html` | `<content-type>`
 
 ### Phase 23 — AFT, Magic Context & Task Board Integration Hardening
+
 - [ ] `WikiManager.upsertPage({ writeBackToMagicContext: true })` writes to both wiki and MC `project_memories`
 - [ ] Dreamer consumer syncs within 1s of MC epoch change (event-driven, not poll)
 - [ ] `getAftBridgeOrNull()` returns `null` when AFT binary missing (no throw)
@@ -296,6 +319,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] `docs/developers/cortexkit-integration.md` updated
 
 ### Phase 24 — Teams & Remote Daemon Deployment (DEFERRED — verify when activated)
+
 - [ ] `agentsy deploy init --topology local-docker` generates a working `docker-compose.local.yml`
 - [ ] `agentsy deploy init --topology teams` generates `docker-compose.teams.yml` + `Caddyfile` + `.env.example`
 - [ ] `docker compose up` starts the daemon in a container with a volume-mounted SQLite DB
@@ -311,6 +335,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] xAI block and style-mimicry block enforced in server mode (Phase 20 policy applies)
 
 ### Phase 25 — MITM Egress Proxy (DEFERRED — verify when activated)
+
 - [ ] `agentsy proxy status` shows proxy running, CA present, port listening
 - [ ] Subprocess with `proxy-inspect` policy routes HTTP through the proxy
 - [ ] Subprocess with `proxy-inspect` policy routes HTTPS through the proxy (TLS interception works)
@@ -329,6 +354,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] `DaemonConfig.proxy` schema accepts all fields with correct defaults
 
 ### Phase 26 — A2A Protocol Support (DEFERRED — verify when activated)
+
 - [ ] A2A server endpoint accepts task creation, streaming, cancellation
 - [ ] External A2A client (gemini-cli) can invoke an agentsy agent and receive streamed results
 - [ ] `a2a_delegate` tool delegates to a remote A2A agent and returns the result
@@ -337,6 +363,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] First call to a new A2A agent URL requires approval; subsequent calls auto-approved
 
 ### Phase 27 — Self-Improvement & Skill Curation (DEFERRED — verify when activated)
+
 - [ ] Skill curator runs when daemon idle >2h and last run >7d
 - [ ] Curator marks skills stale after 30 days, archives after 90 days, never deletes
 - [ ] Post-turn review fires after every turn with inherited prefix cache
@@ -346,6 +373,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Skill AST audit escalates skills with non-critical findings for review
 
 ### Phase 28 — Supply-Chain Security & Policy Attestation (DEFERRED — verify when activated)
+
 - [ ] OSV malware scanner blocks `MAL-*` advisories on MCP/skill install
 - [ ] OSV scanner fails open on timeout (10s)
 - [ ] Policy attestation generates cryptographic hashes (policy, workspace, findings, attestation)
@@ -357,6 +385,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] JSON Schema for `DaemonConfig` and agent specs auto-generated and published
 
 ### Phase 29 — Package Boundary Cleanup & Composability
+
 - [ ] `@agentsy/shared` contains all cross-package interface types (StreamChunk, Message, ToolDefinition, ModelEntry, GuardrailResult interface, MemoryProvider, SessionProvider, TokenTracker interface, ObservabilitySink, CostReporter, SecretResolver)
 - [ ] `@agentsy/ui` depends only on `@agentsy/shared`
 - [ ] `@agentsy/providers` depends only on `@agentsy/core` and `@agentsy/shared`
@@ -374,6 +403,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Each independently-publishable package can be `pnpm build` and `pnpm test` in isolation
 
 ### Phase 30 — Environmental Impact Tracking (CO2 + Water)
+
 - [ ] 4 model energy tiers with estimates matching research
 - [ ] 12+ carbon intensity entries for major cloud regions
 - [ ] WUE entries for AWS, Azure, GCP, local, default
@@ -389,6 +419,7 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Limitations documented in README
 
 ### Cross-Cutting
+
 - [ ] `pnpm check-types` passes on all phases
 - [ ] `pnpm lint` passes on all phases
 - [ ] `pnpm test` passes on all phases (new tests added in each phase)
@@ -397,4 +428,3 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] First-party agent templates pass `release-gate` in CI
 
 ---
-

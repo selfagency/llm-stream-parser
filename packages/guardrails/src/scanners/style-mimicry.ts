@@ -25,12 +25,29 @@ import type { Detection, GuardrailResult, GuardrailScanner, OWASPCategory } from
 // =============================================================================
 
 const STYLE_MIMICRY_PATTERNS: RegExp[] = [
-  // Writing — trigger phrases case-insensitive; name must start uppercase
-  /(?i:in\s+the\s+style\s+of|write\s+like|mimic\s+(?:the\s+)?(?:style|voice)\s+of|imitate\s+(?:the\s+)?writing\s+of)\s+([A-Z][a-zA-Z\s]{1,40})/,
+  // Writing — name captured; uppercase check in evaluate()
+  /in\s+the\s+style\s+of\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /write\s+like\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /mimic\s+the\s+style\s+of\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /mimic\s+the\s+voice\s+of\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /mimic\s+style\s+of\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /mimic\s+voice\s+of\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /imitate\s+the\s+writing\s+of\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /imitate\s+writing\s+of\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
   // Imagery
-  /(?i:in\s+the\s+style\s+of|draw\s+like|paint\s+like|artwork\s+in\s+the\s+manner\s+of|(?:image|picture|illustration)\s+in\s+the\s+style\s+of)\s+([A-Z][a-zA-Z\s]{1,40})/,
+  /draw\s+like\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /paint\s+like\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /artwork\s+in\s+the\s+manner\s+of\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /image\s+in\s+the\s+style\s+of\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /picture\s+in\s+the\s+style\s+of\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /illustration\s+in\s+the\s+style\s+of\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
   // Audio/video
-  /(?i:in\s+the\s+style\s+of|compose\s+like|produce\s+(?:audio|music|video)\s+like|sounds?\s+like)\s+([A-Z][a-zA-Z\s]{1,40})/
+  /compose\s+like\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /produce\s+audio\s+like\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /produce\s+music\s+like\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /produce\s+video\s+like\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /sounds\s+like\s+([A-Za-z][a-zA-Z\s]{1,40})/i,
+  /sound\s+like\s+([A-Za-z][a-zA-Z\s]{1,40})/i
 ];
 
 // =============================================================================
@@ -159,7 +176,8 @@ export class StyleMimicryScanner implements GuardrailScanner {
       const match = pattern.exec(input);
       if (match) {
         const creatorName = match[1]?.trim();
-        if (creatorName && !HISTORICAL_FIGURES.has(creatorName)) {
+        // Name must start with uppercase to distinguish proper names from techniques
+        if (creatorName && /^[A-Z]/.test(creatorName) && !HISTORICAL_FIGURES.has(creatorName)) {
           const detections: Detection[] = [
             {
               id: 'style-mimicry',

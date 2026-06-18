@@ -1,7 +1,5 @@
 
-
 ## 45. Phase 29 — Package Boundary Cleanup & Composability
-
 
 > **2026-06-17 Audit Update**: Code review confirmed the following revised scope for Phase 29:
 >
@@ -16,7 +14,6 @@
 > confusing tooling (turbo.json, pnpm workspace glob). The `mcp` and `connectors` live-code splits
 > are the higher-priority cleanup.
 
-
 **Priority**: P0 — Sprint 1–2 (can run in parallel with Phase 5; must complete before any new packages are published)
 **Story points**: 8
 **Branch**: `refactor/package-boundary-cleanup`
@@ -30,7 +27,7 @@ agentsy was designed as a composable framework where each package can be used in
 
 **Current cross-dependency graph (problematic edges marked)**:
 
-```
+```text
 @agentsy/shared (base layer — zero deps ✅)
 ├── @agentsy/core → shared ✅
 ├── @agentsy/guardrails → shared ✅
@@ -54,6 +51,7 @@ agentsy was designed as a composable framework where each package can be used in
 ```
 
 **Composition roots (correct to have many deps)**:
+
 - `@agentsy/daemon` → memory, observability, shared ✅ (composition root — will gain more deps as it hosts more services)
 - `@agentsy/cli` → many ✅ (composition root — thin client that wires everything)
 - `@agentsy/testing` → many ✅ (test utility)
@@ -111,6 +109,7 @@ This is the biggest change — the runtime becomes a pure execution engine that 
 
 **Current**: imports 7 other packages. This contradicts the Phase 5 goal of an independently consumable gateway.
 **Fix**: The gateway already has the `ProviderEthicsPolicyHook` and `PersistenceAdapter` interfaces (Phase 5 design). Extend the same pattern:
+
 - `ModelRegistry` accepts `ModelEntry[]` (plain data — no `@agentsy/models` import)
 - `HealthRegistry` accepts an optional `MetricsSink?` (no `@agentsy/observability` import)
 - `QuotaRegistry` accepts an optional `BudgetProvider?` (no `@agentsy/tokenomics` import)
@@ -205,6 +204,7 @@ The old `@agentsy/types` package (published as 0.1.1 on npm) was merged into `@a
 | `@agentsy/agents` | shared | Agent specs/templates |
 
 **Composition roots (not independently publishable — they wire everything together)**:
+
 - `@agentsy/runtime` → shared (accepts guardrails, memory, session, tokenomics via injection)
 - `@agentsy/orchestrator` → shared (accepts runtime, gateway, memory, observability via injection)
 - `@agentsy/daemon` → memory, observability, shared (will gain more as it hosts more services)
@@ -232,4 +232,3 @@ The old `@agentsy/types` package (published as 0.1.1 on npm) was merged into `@a
 - [ ] Each independently-publishable package can be `pnpm build` and `pnpm test` in isolation without errors
 
 ---
-

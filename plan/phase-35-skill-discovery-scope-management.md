@@ -7,6 +7,7 @@
 **Unblocks**: reproducible project skill bootstrap, curated global skill installation, shadowed project overrides
 
 > **Adopted patterns**:
+>
 > * `autoskills` → stack-aware detection, curated registry install, verification, lockfile
 > * `skillsor` / Vercel skills → global vs project scope, shadowing, catalog layouts, user-visible scope switching
 

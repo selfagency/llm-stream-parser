@@ -7,6 +7,7 @@
 **Unblocks**: stronger cross-agent governance, remote/server-mode readiness, trust-aware delegation, governance CI gates
 
 > **Adopted AGT patterns**:
+>
 > * deterministic policy engine separate from runtime
 > * trust mesh / scope chain for delegation hops
 > * tamper-evident audit log

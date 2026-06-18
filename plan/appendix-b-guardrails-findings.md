@@ -1,5 +1,4 @@
 
-
 ## 33. Appendix B — 43 Guardrails Findings Cross-Reference Index
 
 Quick-reference: finding ID → severity → title → phase that closes it → status.
@@ -53,4 +52,3 @@ Quick-reference: finding ID → severity → title → phase that closes it → 
 **Summary**: 43 findings — 12 CRITICAL, 14 HIGH, 13 MEDIUM, 7 LOW (one finding E-14 spans two severities). All 43 are closed by Phases 4, 9, 10, 11, 12, 13, and 16.
 
 ---
-

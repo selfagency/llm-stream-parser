@@ -1,5 +1,4 @@
 
-
 ## 37. Final Assessment & Recommendations
 
 ### 37.1 Strategic Priorities
@@ -73,6 +72,7 @@ completes the migration: LLMock → gateway E2E; VectorMock → RAG tests; MCPMo
 AGUIMock → Phase 31 AG-UI tests; chaos suite for failover validation; daily drift CI job.
 
 **Phase 32 — Security Hardening (6 SP, P0)**: Four security gaps identified in code audit:
+
 1. `shell_exec` uses `execSync` without routing through the existing `VirtualSandbox` — a process
    isolation gap.
 2. IPC server has no authentication layer — any process running as the same user can issue
@@ -84,7 +84,6 @@ AGUIMock → Phase 31 AG-UI tests; chaos suite for failover validation; daily dr
 
 Both phases can run in parallel with existing active-scope phases. Phase 32 is the higher priority.
 
-
 **Phase 34 — Local Trust Sanitization Workflow (4 SP, P1)**: ZipTyPrompt's core
 pattern is valuable and directly applicable: browser-local sanitization, no server upload,
 custom regex rules, and a sanitize-first workflow. Agentsy already has redaction primitives
@@ -93,13 +92,11 @@ lacks a dedicated productized command and rules UX. Phase 34 adds `agentsy sanit
 files, infra preset, preview/diff, and import/export so support and SRE users can scrub logs/configs
 before sending them to the model.
 
-
 **Phase 35 — Skill Discovery, Registry Install & Scope Management (5 SP, P1)**: The existing
 `@agentsy/plugins` skill system already has discovery and semantic activation, but lacks the
 `autoskills`/`skillsor` product layer: curated registry install, lockfile, global vs project scope,
 shadowing, and stack-aware recommendation. Phase 35 adds `agentsy skills install/discover/scope`,
 verified bundle installs, and resolution rules so skills can be managed globally and per project.
-
 
 **Phase 36 — Agent Governance Toolkit Pattern Adoption (6 SP, P1)**: AGT’s strongest value is
 its architecture: policy engine separated from runtime, trust mesh / scope-chain delegation,
@@ -108,7 +105,6 @@ Agentsy already has many primitives, but Phase 36 unifies them into a proper gov
 policy decisions are pure, delegation is trust-bounded, and every governance event is tamper-evident.
 
 ### 37.6 Call to Action
-
 
 **Start with Phase 3 in Sprint 1.** It's the highest-leverage next step: it unblocks Phase 4 (guardrails foundation), Phase 14 (ACP agent), and Phase 17 (competitive sprint). Three engineers can run Phase 3, Phase 5, Phase 7, and Phase 19 in parallel from day one — Phase 19 (Langfuse) is a 6 SP quick win that delivers visible value within the first sprint.
 
@@ -123,4 +119,3 @@ The plan is executable. The architecture is sound. The policy documents are clea
 The result will be a framework that is honestly described, ethically enforced, architecturally clean, and competitive on agent quality — the only framework in the landscape that is all four.
 
 ---
-

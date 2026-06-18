@@ -58,7 +58,7 @@ By importing the bridge library directly, agentsy retains full control:
 
 The `@cortexkit/aft-bridge` package exposes exactly the public surface we need:
 
-```
+```text
 BridgePool          — One persistent aft process per project root
 BinaryBridge        — JSON-over-stdio transport to the Rust binary
 findBinary()        — Locate cached/named/PATH binary
@@ -101,7 +101,7 @@ Create `@agentsy/tools/cortexkit` as the comprehensive CortexKit tool surface. E
 
 #### 2.2.1 File Structure
 
-```
+```text
 packages/tools/src/cortexkit/
 ├── index.ts                 # Public exports: registerAllAftTools(registry, bridgePool)
 ├── registry.ts              # registerAllAftTools — iterates all tool definitions
@@ -308,7 +308,7 @@ Create a dedicated hook module in `@agentsy/runtime/hooks/cortexkit/` that wraps
 
 #### 3.2.1 File Structure
 
-```
+```text
 packages/runtime/src/hooks/cortexkit/
 ├── index.ts                 # Public exports
 ├── pre-tool-call.ts         # AFT-specific PreToolCall handler
@@ -401,7 +401,7 @@ export function createAftAuditHook(auditLog: AuditLog): RuntimeHook {
 
 Hooks fire in priority order (highest first). The CortexKit hooks slot into the existing pipeline:
 
-```
+```text
 Priority 100: createApprovalHook          — Gates requiresApproval tools
 Priority  90: createAftGovernanceHook     — Guardrail scanning for AFT tools
 Priority  50: createToolInputGuardrailHook — General tool input guardrails
@@ -568,7 +568,7 @@ The existing `@agentsy/shared/cortexkit/schema.ts` defines 4 tables. Phase 23 sh
 
 Magic Context's historian and dreamer currently run as OpenCode/Pi-spawned subagents. In the direct-import architecture, agentsy can orchestrate them through its own runtime:
 
-```
+```text
 agentsy orchestrator
 ├── Historian agent (triggered at 65% context usage)
 │   ├── Model: routed through gateway (cheapest available)
@@ -663,7 +663,7 @@ export const MagicContextConfigSchema = z.object({
 
 Three-level merge (same pattern as agentsy's existing config):
 
-```
+```text
 Priority (highest wins):
   1. CLI flags (--aft.search-index=false)
   2. Environment variables (AGENTSY_AFT_SEARCH_INDEX=false)
@@ -728,7 +728,7 @@ Build AFT and Magic Context widgets as native Ink (React-for-terminal) component
 
 #### 6.2.1 File Structure
 
-```
+```text
 packages/ui/src/cortexkit/
 ├── index.ts                     # Public exports
 ├── AftDashboard.tsx             # Main AFT status tab
@@ -921,11 +921,13 @@ export function useMemoryCounts(dbPath: string | null, category: string) {
 **Disable CortexKit plugin auto-update. Use standard pnpm dependency management.**
 
 The OpenCode/Pi plugin auto-updater:
+
 - Runs `npm install` into the host's plugin directory
 - Reads `findPluginEntry(ctx.directory)` to locate the plugin in host config
 - These mechanisms have no target in a direct-import architecture
 
 Instead:
+
 - `@cortexkit/aft-bridge` version is managed in agentsy's `package.json`
 - `pnpm update @cortexkit/aft-bridge` updates the TypeScript bridge package
 - `ensureBinary()` in the bridge package handles AFT Rust binary download automatically
@@ -978,7 +980,7 @@ The bridge package and Rust binary share a version. `ensureBinary()` resolves th
 
 ### 8.2 Critical Path
 
-```
+```text
 23.1 (ToolRegistry.replace + hoisted tools)
 ├── 23.2 (sensory + motor tools)
 │   └── 23.10 (AFT Dashboard widget)
@@ -1061,7 +1063,7 @@ The bridge package and Rust binary share a version. `ensureBinary()` resolves th
 
 Add AFT and Magic Context to `agentsy doctor`:
 
-```
+```text
 $ agentsy doctor cortexkit
 
 AFT Bridge:

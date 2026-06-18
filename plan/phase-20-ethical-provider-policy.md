@@ -1,5 +1,4 @@
 
-
 ## 26. Phase 20 — Ethical Provider & Content Policy
 
 **Priority**: P0 — Sprint 2–3 (must land before any first-party agent template ships)
@@ -34,6 +33,7 @@ The pattern is repeated, severe, and unmitigated by the provider — across both
 **Meta — warn-and-acknowledge (elevated from not-listed).** Meta is building AI data centers in tents powered by 200 MW of modular gas turbines — the same fossil-fuel tactic "popularized by competitor xAI" — while rushing to deploy models it can't serve through normal infrastructure ([TechCrunch](https://techcrunch.com/2026/06/04/meta-steals-a-tactic-from-tesla-and-builds-data-centers-in-tents/), [Tom's Hardware](https://www.tomshardware.com/tech-industry/artificial-intelligence/meta-putting-up-tents-across-the-us-to-house-ai-servers-like-a-scene-out-of-the-movie-mad-max-structures-take-three-months-to-build-and-use-jet-engines-for-power), [Data Center Dynamics](https://www.datacenterdynamics.com/en/news/meta-brings-data-centers-in-tents-to-gallatin-tennessee/)). This represents a reckless environmental posture: building disposable infrastructure powered by jet-engine gas turbines to serve AI workloads, bypassing normal data center efficiency standards and environmental review. Additionally, Meta trained its models on the LibGen book heist — 7.5 million pirated books from creators who were never compensated ([Authors Guild](https://authorsguild.org/news/meta-libgen-ai-training-book-heist-what-authors-need-to-know/)). Meta is not hard-blocked — its models (Llama, etc.) are open-weight and some users may have legitimate reasons to self-host — but agentsy will warn about both the environmental recklessness and the training-data theft before each session.
 
 **OpenAI, Microsoft, Google, Amazon — warn-and-acknowledge.** Cited reporting documents:
+
 - *OpenAI*: ChatGPT user risks ([NYT](https://www.nytimes.com/2025/11/23/technology/openai-chatgpt-users-risks.html)); OpenAI distancing itself from safety ([Annielytics](https://www.annielytics.com/blog/ai/is-openai-intentionally-distorting-itself-from-safety/)); ChatGPT creators knew product would cause harm, Florida argues in lawsuit ([Florida Phoenix](https://floridaphoenix.com/2026/06/01/chatgpt-creators-knew-product-would-cause-harm-florida-argues-in-lawsuit/)).
 - *Microsoft*: ICE technology in immigration crackdown ([Guardian](https://www.theguardian.com/us-news/2026/feb/17/ice-microsoft-technology-immigration-crackdown), [DHS AI use-case inventory](https://www.dhs.gov/ai/use-case-inventory/ice), [Computerworld](https://www.computerworld.com/article/4136052/microsoft-undercuts-its-kinder-gentler-image-with-big-ice-contract.html), [Wired](https://www.wired.com/story/how-big-tech-is-powering-trumps-immigration-crackdown/)).
 - *Google*: AI for Israeli military ([WaPo 2026](https://www.washingtonpost.com/technology/2026/02/01/google-ai-israel-military/), [WaPo 2025](https://www.washingtonpost.com/technology/2025/01/21/google-ai-israel-war-hamas-attack-gaza/)); "No Tech for Apartheid" — Project Nimbus $1.2B contract with Israel ([Time](https://time.com/6964364/exclusive-no-tech-for-apartheid-google-workers-protest-project-nimbus-1-2-billion-contract-with-israel/), [The Intercept](https://theintercept.com/2025/05/12/google-nimbus-israel-military-ai-human-rights/)).
@@ -212,11 +212,11 @@ export class StyleMimicryScanner implements GuardrailScanner {
 }
 ```
 
-
 > ⚠️ **2026-06-17 Audit Finding — Telegram Stub Still Present**: `packages/daemon/src/connectors/telegram.ts`
 > still exists and exports `TelegramAdapter` (throws `TelegramAdapterNotAvailableError` on all methods).
 > `ConnectorHost` still includes `telegram` in its config type. These must be deleted as part of this phase.
 > **Concrete file deletions required**:
+>
 > - `rm packages/daemon/src/connectors/telegram.ts`
 > - Remove `telegram` key from `ConnectorHostDeps.config` interface
 > - Remove `telegram` from `DaemonConfig` schema (`packages/daemon/src/config.ts`)
@@ -226,6 +226,7 @@ export class StyleMimicryScanner implements GuardrailScanner {
 #### 26.3.4 Telegram removal
 
 Delete:
+
 - `packages/daemon/src/connectors/telegram.ts`
 - Remove `telegram` from `packages/daemon/src/connectors/index.ts` exports
 - Remove `telegram` from `ConnectorHostDeps.config` in `packages/daemon/src/connectors/connector-host.ts`
@@ -234,7 +235,8 @@ Delete:
 - Remove `grammy` from any optional-dependencies documentation
 
 Add to `safety-changelog.md`:
-```
+
+```text
 
 ## 2026-06-17 — Telegram connector removed
 Removed the Telegram connector on ethical grounds. Telegram is documented as a
@@ -247,6 +249,7 @@ platform for extremist organizing ("Terrorgram") and CSAM distribution. Sources:
 #### 26.3.5 ETHICS.md amendments
 
 Add new clauses to `ETHICS.md` and register them in the `EthicsRegistry` (Phase 4):
+
 - §12: "The framework must not route to providers documented as generating CSAM, antisemitic content, or non-consensual sexual deepfakes. xAI/Grok is blocked."
 - §13: "The framework must warn users before routing to providers documented as complicit in human-rights violations (immigration enforcement, military AI). OpenAI, Microsoft, Google, and Amazon require per-session acknowledgement."
 - §14: "The framework must block prompts requesting creation of work in the style of a specific named living creator. Style mimicry profits from theft of creators' work."
@@ -257,12 +260,14 @@ Each clause's `implementedBy` field points to the corresponding scanner or polic
 ### 26.4 File-by-File Change List
 
 **New** (4 files):
+
 - `packages/guardrails/src/ethics/provider-policy.ts` — `PROVIDER_ETHICS_POLICY`, `getProviderEthicsPolicy()`, `isProviderBlocked()`, `requiresAcknowledgement()`
 - `packages/guardrails/src/scanners/style-mimicry.ts` — `StyleMimicryScanner`
 - `packages/guardrails/src/scanners/style-mimicry.test.ts` — 20+ fixtures (writing, imagery, audio, historical-figure exemption, edge cases)
 - `packages/guardrails/src/ethics/provider-policy.test.ts` — policy lookup, block check, ack check
 
 **Modified** (8 files):
+
 - `packages/gateway/src/services/routing-service.ts` (Phase 5) — apply `PROVIDER_ETHICS_POLICY` in `selectModel()`
 - `packages/daemon/src/daemon.ts` — handle `requiresAcknowledgement` flag in IPC `stream.start` handler; add `agentsy acknowledge-provider` CLI
 - `packages/daemon/src/config.ts` — remove `telegram` from `connectors` schema
@@ -273,6 +278,7 @@ Each clause's `implementedBy` field points to the corresponding scanner or polic
 - `safety-changelog.md` — Telegram removal entry
 
 **Deleted** (1 file):
+
 - `packages/daemon/src/connectors/telegram.ts`
 
 ### 26.5 Edge Cases
@@ -302,4 +308,3 @@ Each clause's `implementedBy` field points to the corresponding scanner or polic
 - [x] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

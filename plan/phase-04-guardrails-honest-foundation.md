@@ -1,5 +1,4 @@
 
-
 ## 9. Phase 4 — Guardrails Honest Foundation (Ethics, Receipts, Audit) ✅ COMPLETE
 
 **Priority**: P0 — Sprints 1–2
@@ -260,4 +259,3 @@ export interface GuardrailsConfig {
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

@@ -1,5 +1,4 @@
 
-
 ## 5. Phase 0 — Critical Bug Fixes ✅ COMPLETE
 
 **Status**: Landed on `develop` (branch `fix/phase0-critical-bugs` merged).
@@ -21,4 +20,3 @@
 **Downstream consumers**: all subsequent phases assume these fixes. Phase 3 will fully replace the Phase 0.3 minimal hook patch with the middleware composition model.
 
 ---
-

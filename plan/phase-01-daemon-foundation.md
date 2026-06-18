@@ -1,5 +1,4 @@
 
-
 ## 6. Phase 1 — Daemon Foundation ✅ COMPLETE
 
 **Status**: Landed on `develop` (branch `feat/daemon-foundation` merged).
@@ -26,6 +25,7 @@
 **Dependencies added**: `piscina@^4`, `bree@^9`, `@russellthehippo/honker-node@^0.x`, `better-sqlite3@^11`.
 
 **Downstream consumers**:
+
 - Phase 5 moves gateway routing into the daemon's `RoutingService`.
 - Phase 6 owns all provider connections in the daemon's `StreamManager`.
 - Phase 7 runs RAG as a daemon service on `UnifiedDB`.
@@ -34,4 +34,3 @@
 - Phase 15 hosts `BootstrapService` in the daemon and seeds Magic Context compartments in `UnifiedDB.context_*`.
 
 ---
-

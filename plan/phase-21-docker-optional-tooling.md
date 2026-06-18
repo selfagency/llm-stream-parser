@@ -1,5 +1,4 @@
 
-
 ## 27. Phase 21 — Docker-Based Optional Tooling
 
 **Priority**: P2 — Sprint 4–5
@@ -180,6 +179,7 @@ docker: z.object({
 #### 27.2.5 Resource-availability contract
 
 Both tools check three conditions before invoking:
+
 1. **Docker available** — `docker --version` and `docker info` succeed.
 2. **Image present** — `docker image inspect` succeeds; if not, offer to pull (interactive) or auto-pull (configurable).
 3. **Resources sufficient** — host has enough free memory (super-linter: ≥2GB, presidio: ≥512MB) and CPU (≥1 core available).
@@ -189,6 +189,7 @@ If any condition fails, the tool returns a graceful degradation result (super-li
 ### 27.3 File-by-File Change List
 
 **New** (5 files):
+
 - `packages/daemon/src/services/docker-availability.ts` — `DockerAvailabilityChecker`
 - `packages/daemon/src/services/docker-availability.test.ts`
 - `packages/tools/src/tools/super-linter/index.ts` — `SuperLinterTool`
@@ -196,6 +197,7 @@ If any condition fails, the tool returns a graceful degradation result (super-li
 - `packages/guardrails/src/scanners/presidio.ts` — `PresidioScanner`
 
 **Modified** (3 files):
+
 - `packages/daemon/src/config.ts` — add `docker` section
 - `packages/daemon/src/daemon.ts` — instantiate `DockerAvailabilityChecker`, pass to tools + guardrails
 - `packages/guardrails/src/index.ts` — export `PresidioScanner`
@@ -213,4 +215,3 @@ If any condition fails, the tool returns a graceful degradation result (super-li
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

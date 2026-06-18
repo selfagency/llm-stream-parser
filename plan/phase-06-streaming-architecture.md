@@ -1,5 +1,4 @@
 
-
 ## 11. Phase 6 — Streaming Architecture
 
 **Priority**: P1 — Sprint 3
@@ -13,7 +12,7 @@
 
 The daemon owns all LLM provider connections. Clients request streams via IPC; the daemon pipes events back as JSON-RPC notifications. For ACP clients, the same events map to ACP `session/update` notifications.
 
-```
+```text
 Client (CLI/TUI/ACP) ──stream.start──▶ Daemon.StreamManager
                                             ↓
                                        Provider → LLM API
@@ -194,4 +193,3 @@ Map daemon stream events to ACP `session/update` notifications:
 - [x] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

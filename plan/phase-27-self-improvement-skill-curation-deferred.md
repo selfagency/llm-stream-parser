@@ -1,5 +1,4 @@
 
-
 ## 42. Phase 27 — Self-Improvement & Skill Curation (DEFERRED — Post-v1)
 
 **Priority**: P4 — Deferred. Ships after Phase 15 (Bootstrap — owns skill installation) and Phase 23 (task board — curator uses the task board).
@@ -147,4 +146,3 @@ export class SkillASTAuditScanner implements GuardrailScanner {
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

@@ -1,5 +1,4 @@
 
-
 ## 48. Phase 26 — A2A Protocol Support (DEFERRED — Post-v1)
 
 **Priority**: P4 — Deferred. Ships after Phase 24 (Teams) — A2A is most valuable in a federated multi-agent context.
@@ -13,6 +12,7 @@
 ### 41.1 Goal
 
 Implement the [A2A (Agent-to-Agent) protocol](https://github.com/a2a-io/a2a-js) so agentsy agents can:
+
 1. **Act as an A2A server** — expose agentsy agents as A2A-callable services that other A2A-compatible clients (gemini-cli, other agentsy instances, third-party A2A agents) can invoke.
 2. **Invoke remote A2A agents as subagents** — an agentsy agent can delegate a sub-task to a remote A2A agent (e.g. a specialized research agent running on another server) and receive the result.
 3. **Federate across daemons** — multiple agentsy daemons (e.g. one per team, one per region) can delegate to each other, enabling distributed agent topologies.
@@ -130,4 +130,3 @@ In server mode (Topology C), the A2A server endpoint is exposed alongside the AC
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

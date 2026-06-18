@@ -71,6 +71,7 @@ async function handleShellExec(input: Record<string, unknown>): Promise<ToolResu
 > tooling) adds the container boundary for high-risk commands.
 
 **Additional hardening** (same PR):
+
 - Add `allowlist?: string[]` to `shell_exec` parameters — blocks any command not in the list
 - Add `denylist: string[]` default: `['rm -rf', 'dd ', 'mkfs', ':(){ :|: & };:']`
 - Log every `shell_exec` invocation to `UnifiedDB.tool_audit_*`
@@ -84,6 +85,7 @@ async function handleShellExec(input: Record<string, unknown>): Promise<ToolResu
 **Finding**: The Unix socket is `chmod 0o600` (owner-only file permissions), which is good. However,
 there is no protocol-level authentication. Any process running as the **same OS user** (including
 malicious code injected into a browser extension, editor plugin, or npm package) can:
+
 - Issue `daemon.shutdown` — crash the daemon
 - Issue `agent.spawn` with arbitrary config — spawn agents
 - Issue `process.spawn` — execute arbitrary commands (even with SubprocessSpecSchema validation, the
@@ -122,7 +124,7 @@ export function verifyClientHandshake(
 
 **Handshake protocol** (added to `IPCMethod` registry):
 
-```
+```text
 Client connects →
 Server sends: { method: "auth.challenge", params: { nonce: "<32-byte-hex>" } }
 Client sends: { method: "auth.respond", params: { hmac: HMAC-SHA256(token, nonce) } }
@@ -131,10 +133,12 @@ All subsequent requests from unauthenticated clients → -32001 Unauthorized
 ```
 
 **Unauthenticated allow-list** (methods that don't require auth):
+
 - `auth.respond` (obviously)
 - `daemon.status` (read-only health check, safe to expose)
 
 **CLI client update** (`packages/daemon/src/ipc/client.ts`):
+
 ```typescript
 async connectAuthenticated(socketPath: string): Promise<void> {
   await this.connect(socketPath);
@@ -146,6 +150,7 @@ async connectAuthenticated(socketPath: string): Promise<void> {
 ```
 
 **Authorisation levels** (phase-appropriate — full RBAC in Phase 24):
+
 - Level 0: Unauthenticated — `auth.respond`, `daemon.status` only
 - Level 1: Authenticated — all current methods
 - Level 2: Admin (future Phase 24) — `daemon.shutdown`, `process.spawn`
@@ -158,6 +163,7 @@ async connectAuthenticated(socketPath: string): Promise<void> {
 **Files**: `packages/runtime/src/approval/approval-manager.ts`, `packages/daemon/src/ipc/protocol.ts`
 **Finding**: `ApprovalManager.requestApproval(toolName, args)` exists and is used by the approval
 hook, but there are no IPC methods to:
+
 - Notify a CLI/TUI client that an approval is pending
 - Accept or reject a pending approval
 
@@ -213,7 +219,8 @@ async requestApproval(toolName: string, args: unknown): Promise<boolean> {
 ```
 
 **CLI integration** (Phase 16 — Guardrails CLI can surface this):
-```
+
+```text
 [agentsy] Tool approval required: shell_exec
   Command: "git push origin main"
   [y/n]:
@@ -226,9 +233,11 @@ async requestApproval(toolName: string, args: unknown): Promise<boolean> {
 **Severity**: MEDIUM
 **File**: `packages/runtime/src/sandbox/virtual/virtual-sandbox.ts`
 **Finding**:
+
 ```typescript
 const WORKER_PATH = join(process.cwd(), 'packages/runtime/dist/sandbox/virtual/sandbox-worker.js');
 ```
+
 This path is relative to `process.cwd()` at runtime. When the daemon starts from any directory
 other than the monorepo root (e.g. via `agentsy daemon start` from a project folder), the worker
 file will not be found and the sandbox will throw on first use.

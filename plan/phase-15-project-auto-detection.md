@@ -1,5 +1,4 @@
 
-
 ## 20. Phase 15 — Project Auto-Detection & Bootstrap
 
 **Priority**: P2 — Sprints 8–9
@@ -124,7 +123,7 @@ Four adapters, each fetching from its authoritative source:
 
 ### 20.5 Skills Spec Compliance
 
-All installed skills (regardless of source) normalize to the AgentSkills spec at https://agentskills.io/specification. Canonical `SKILL.md` format with YAML frontmatter (`name`, `description` required; `license`, `compatibility`, `metadata`, `allowed-tools` optional) + Markdown body + optional `scripts/`, `references/`, `assets/` subdirectories. Three-tier progressive disclosure (~100 / <5000 / on-demand tokens).
+All installed skills (regardless of source) normalize to the AgentSkills spec at <https://agentskills.io/specification>. Canonical `SKILL.md` format with YAML frontmatter (`name`, `description` required; `license`, `compatibility`, `metadata`, `allowed-tools` optional) + Markdown body + optional `scripts/`, `references/`, `assets/` subdirectories. Three-tier progressive disclosure (~100 / <5000 / on-demand tokens).
 
 ### 20.6 Recommendation Engine
 
@@ -215,6 +214,7 @@ Generate `.agentsy/aft.{md,json}` — a structured file-tree map. Markdown for h
 ### 20.10 Magic Context Bootstrap
 
 Seed Magic Context compartments in `UnifiedDB.context_*`:
+
 - `project_memories` — high-level project facts (name, purpose, stack).
 - `compartments` — fine-grained context buckets (e.g. "api-routes", "database-schema", "ui-components").
 - `session_meta` — session-level context (current task, recent files).
@@ -225,6 +225,7 @@ Loaded into every session scoped to this project.
 ### 20.11 Bootstrap Daemon Service
 
 `BootstrapService` runs as a `Service` in the daemon. On session open (ACP `session/new` or CLI invocation), it:
+
 1. Checks if `.agentsy/config.yml` exists. If not, runs `scanProject` and writes it.
 2. Loads the `ProjectProfile` and Magic Context compartments into the session.
 3. Returns the profile + recommendations to the agent.
@@ -245,7 +246,7 @@ Add a `SessionStart` hook (Phase 3 hook schema) that triggers `BootstrapService.
 
 New `@agentsy/bootstrap` package (26th package):
 
-```
+```text
 packages/bootstrap/
 ├── src/
 │   ├── scanner.ts              # ProjectProfile detection
@@ -294,4 +295,3 @@ Support multi-root workspaces via the `/add-project-folder` slash command. Each 
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

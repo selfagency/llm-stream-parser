@@ -1,5 +1,4 @@
 
-
 ## 46. Phase 30 — Environmental Impact Tracking (CO2 + Water)
 
 **Priority**: P1 — Sprint 3–4 (parallel with Phase 6/8; extends tokenomics)
@@ -16,6 +15,7 @@ Add CO2 emissions and water consumption tracking to `@agentsy/tokenomics`, per-r
 ### 46.2 Research basis
 
 **Energy per AI request:**
+
 - ChatGPT query: ~2.9 Wh (arXiv:2509.07218v1, 2025) — 10× a Google search (~0.3 Wh)
 - Global data centers: ~415 TWh in 2024, 1.5% of global electricity (IEA, 2025); projected ~945 TWh by 2030
 - US data centers: 183 TWh in 2024, 4% of US electricity (Pew Research, 2025)
@@ -23,10 +23,12 @@ Add CO2 emissions and water consumption tracking to `@agentsy/tokenomics`, per-r
 - A100 under-clocking: 40% power reduction, 22% performance loss (arXiv:2509.07218v1)
 
 **CO2:**
+
 - Average carbon intensity: ~395.65 gCO2/kWh (IEA cross-calculation, 2024)
 - Global data center CO2: ~182 Mt CO2 (2024, IEA); AI specifically: 32.6–79.7 Mt CO2 (2025, NIH/PMC)
 
 **Water:**
+
 - WUE (Water Usage Effectiveness): Amazon 0.12 L/kWh; Microsoft 0.30 L/kWh; Google est. 0.20–0.30; industry avg 0.84 L/kWh (Axis Intelligence, 2026); EESI broader avg 1.9 L/kWh
 - Per ChatGPT query: 10–25 mL direct+indirect (UC Riverside, Li et al., arXiv:2304.03271, 2023); 519 mL for 100-word GPT-4 email (Washington Post, 2024)
 - Large data centers: up to 5 million gallons/day (Brookings, 2026)
@@ -35,23 +37,24 @@ Add CO2 emissions and water consumption tracking to `@agentsy/tokenomics`, per-r
 - Three components: on-site cooling (WUE), indirect electricity water (grid type), manufacturing water (chips — excluded per-request)
 
 **Sources:**
-- IEA Energy and AI: https://www.iea.org/reports/energy-and-ai
-- Pew Research: https://www.pewresearch.org/short-reads/2025/10/24/what-we-know-about-energy-use-at-us-data-centers-amid-the-ai-boom/
-- arXiv:2509.07218v1: https://arxiv.org/html/2509.07218v1
-- EESI Water: https://www.eesi.org/articles/view/data-centers-and-water-consumption
-- Brookings Water: https://www.brookings.edu/articles/ai-data-centers-and-water/
-- Axis Intelligence Water: https://axis-intelligence.com/ai-data-center-water-usage-statistics/
-- Axis Intelligence Energy: https://axis-intelligence.com/ai-data-center-energy-consumption-statistics/
-- Google Efficiency: https://datacenters.google/efficiency/
-- LBNL 2024 Report: https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report_1.pdf
-- IEA-4E Review: https://www.iea-4e.org/wp-content/uploads/2025/05/Data-Centre-Energy-Use-Critical-Review-of-Models-and-Results.pdf
-- ELI Water Fact Sheet: https://www.eli.org/sites/default/files/files-pdf/Data%20Centers%20and%20Water%20Fact%20Sheet%20ELI%20January%202026%20%281%29.pdf
-- Ceres Drained by Data: https://www.ceres.org/resources/reports/drained-by-data-the-cumulative-impact-of-data-centers-on-regional-water-stress
-- LBNL Water Efficiency: https://datacenters.lbl.gov/water-efficiency
+
+- IEA Energy and AI: <https://www.iea.org/reports/energy-and-ai>
+- Pew Research: <https://www.pewresearch.org/short-reads/2025/10/24/what-we-know-about-energy-use-at-us-data-centers-amid-the-ai-boom/>
+- arXiv:2509.07218v1: <https://arxiv.org/html/2509.07218v1>
+- EESI Water: <https://www.eesi.org/articles/view/data-centers-and-water-consumption>
+- Brookings Water: <https://www.brookings.edu/articles/ai-data-centers-and-water/>
+- Axis Intelligence Water: <https://axis-intelligence.com/ai-data-center-water-usage-statistics/>
+- Axis Intelligence Energy: <https://axis-intelligence.com/ai-data-center-energy-consumption-statistics/>
+- Google Efficiency: <https://datacenters.google/efficiency/>
+- LBNL 2024 Report: <https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report_1.pdf>
+- IEA-4E Review: <https://www.iea-4e.org/wp-content/uploads/2025/05/Data-Centre-Energy-Use-Critical-Review-of-Models-and-Results.pdf>
+- ELI Water Fact Sheet: <https://www.eli.org/sites/default/files/files-pdf/Data%20Centers%20and%20Water%20Fact%20Sheet%20ELI%20January%202026%20%281%29.pdf>
+- Ceres Drained by Data: <https://www.ceres.org/resources/reports/drained-by-data-the-cumulative-impact-of-data-centers-on-regional-water-stress>
+- LBNL Water Efficiency: <https://datacenters.lbl.gov/water-efficiency>
 
 ### 46.3 Design — formulas
 
-```
+```text
 ENERGY:
   E_compute = (total_tokens / 1000) × energy_per_1K_tokens_Wh[tier]
   E_total = E_compute × PUE                  (cloud)
@@ -83,6 +86,7 @@ CACHE HIT:
 ### 46.4 Implementation
 
 **New files in `@agentsy/tokenomics`** (all under `src/environmental/`):
+
 - `energy-tiers.ts` — 4 tiers (edge 0.05 Wh/1K, foundation 0.2, mid-tier 0.8, frontier 2.9) + `classifyModelEnergyTier()`
 - `carbon-intensity.ts` — 12 region entries (AWS, GCP, Azure, local) + `getCarbonIntensity()`
 - `water-usage.ts` — WUE by provider (Amazon 0.12, Azure 0.30, GCP 0.25, local 0, default 0.84) + indirect water by grid type
@@ -94,6 +98,7 @@ CACHE HIT:
 **New `UnifiedDB` table**: `environmental_impact` (links to `session_ledger` via `request_id`)
 
 **Integration**:
+
 - `CostTracker.recordCost()` optionally calls `EnvironmentalImpactCalculator` when present (daemon mode)
 - Phase 20 per-session warning can show cumulative env impact per provider
 - Phase 13 langeval benchmarks report their own environmental cost
@@ -121,4 +126,3 @@ CACHE HIT:
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

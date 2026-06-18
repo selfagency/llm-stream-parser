@@ -1,5 +1,4 @@
 
-
 ## 17. Phase 12 — Guardrails Daemon Integration
 
 **Priority**: P0 — Sprint 6
@@ -10,8 +9,7 @@
 **Closes findings**: E-21
 
 > **🛑 BLOCK GATE**: No first-party agent template may ship until this phase is complete and Phase 13's release-gate script passes in CI.
-
-
+>
 > ⚠️ **2026-06-17 Audit Finding — Memory IPC Stubs**: The daemon's `memory.recall`, `memory.capture`,
 > and `memory.search` IPC handlers are currently stubs (return `{ recalled: true }` etc.). Phase 12
 > must wire the injected `MemoryEngine` to these handlers in addition to the guardrails integration.
@@ -194,4 +192,3 @@ CREATE INDEX idx_guardrail_decisions_decision ON guardrail_decisions(decision);
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

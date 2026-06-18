@@ -1,5 +1,4 @@
 
-
 ## 39. Phase 25 — MITM Egress Proxy for Subprocess Network Interception (DEFERRED — Post-v1)
 
 **Priority**: P4 — Deferred. Ships alongside or shortly after Phase 24 (Teams). Can run in local mode (Topology A/B) but is most valuable in server mode (Topology C) where untrusted subprocesses run on shared infrastructure.
@@ -29,6 +28,7 @@ Run a guardrail-aware MITM (man-in-the-middle) HTTP/HTTPS proxy as a daemon serv
 Rather than building a custom Node.js proxy (which would need to handle CONNECT tunneling, HTTPS decryption, WebSocket interception, and certificate generation — easily 2000+ lines), Phase 25 uses [`mitmproxy`](https://mitmproxy.org/) running in a Docker container with an agentsy addon script.
 
 **Why mitmproxy**:
+
 - Mature, battle-tested, handles HTTPS/WebSocket/SOCKS5 out of the box
 - Scriptable via Python addons — the agentsy addon calls the daemon's guardrail pipeline over a local IPC channel
 - Runs in Docker (reuses Phase 21's `DockerAvailabilityChecker` and resource-awareness patterns)
@@ -36,6 +36,7 @@ Rather than building a custom Node.js proxy (which would need to handle CONNECT 
 - Handles the tricky parts (CA generation, certificate per-domain signing, CONNECT tunneling) for free
 
 **Why not a custom Node.js proxy**:
+
 - HTTPS interception requires a per-connection TLS context with a dynamically-signed certificate — Node.js can do this but it's ~500 lines of fiddly `tls.createSecureContext` code
 - WebSocket interception requires upgrading the connection and parsing frames bidirectionally — another ~300 lines
 - CA management (generation, trust-store installation, rotation) is another ~200 lines
@@ -289,6 +290,7 @@ The daemon's guardrail endpoint supports both: it first checks for the header, t
 ### 39.3 What Phase 25 covers (and doesn't)
 
 **Covers**:
+
 - All HTTP/HTTPS requests from subprocesses that respect `HTTP_PROXY`/`HTTPS_PROXY` env vars (curl, wget, npm, pip, requests, axios, fetch, httpx, etc.)
 - WebSocket and SSE traffic (mitmproxy handles these)
 - Per-subprocess policy enforcement (allowlist, blocklist, inspect, disk-spill)
@@ -297,6 +299,7 @@ The daemon's guardrail endpoint supports both: it first checks for the header, t
 - Audit receipts for every blocked/transformed request
 
 **Does NOT cover** (documented limitations):
+
 - **Raw TCP sockets** — apps that open direct TCP connections (not via HTTP) bypass the proxy. Mitigation: Phase 25 logs a warning when a subprocess with `proxy-inspect` policy opens a non-HTTP connection (via OS-level socket monitoring, if available). Full coverage requires Layer 3 (network namespace) isolation, which is out of scope.
 - **Certificate-pinning apps** — apps that hardcode their trusted CAs and ignore env vars (notably some mobile-app backends, some enterprise tools) will reject the MITM CA. No fix short of patching the app.
 - **Apps that explicitly disable proxy** — some apps (e.g. `curl --noproxy '*'`) bypass the proxy. The `SubprocessManager` can strip `--noproxy` from args for `proxy-inspect` subprocesses, but this is fragile.
@@ -355,4 +358,3 @@ codex (§A.7 of Appendix A) implements this same pattern (MITM network policy pr
 oh-my-pi's `pi-iso` (Phase 17 §22.7) provides filesystem isolation (8 backends) but not network isolation. A future phase could add a network-isolation PAL trait (`pi-net`) analogous to `pi-iso`, but this is research-grade and not planned.
 
 ---
-

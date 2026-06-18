@@ -85,31 +85,38 @@ export function createObservabilityFromEnv(
 
 /**
  * Build the Langfuse override object from options and detection.
+ * Returns undefined when no overrides are set.
  */
 function buildLangfuseOverrides(
   options: AutoInitOptions,
   detection: LangfuseEnvDetection
 ): Record<string, unknown> | undefined {
-  const overrides: Record<string, unknown> = {};
   const lf = options.langfuse;
+  const overrides: Record<string, unknown> = {};
 
-  // Direct override fields (passed straight through)
-  if (lf?.endpoint !== undefined) overrides.endpoint = lf.endpoint;
-  if (lf?.publicKey !== undefined) overrides.publicKey = lf.publicKey;
-  if (lf?.secretKey !== undefined) overrides.secretKey = lf.secretKey;
+  if (lf?.endpoint !== undefined) {
+    overrides.endpoint = lf.endpoint;
+  }
+  if (lf?.publicKey !== undefined) {
+    overrides.publicKey = lf.publicKey;
+  }
+  if (lf?.secretKey !== undefined) {
+    overrides.secretKey = lf.secretKey;
+  }
 
-  // Fallback fields (option ?? detection)
-  const fallbackFields: Array<[string, string | undefined, string | number | undefined]> = [
-    ['projectId', lf?.projectId, detection.projectId],
-    ['flushIntervalMs', lf?.flushIntervalMs, detection.flushIntervalMs],
-    ['maxBatchSize', lf?.maxBatchSize, detection.maxBatchSize]
-  ];
+  const projectId = lf?.projectId ?? detection.projectId;
+  if (projectId !== undefined) {
+    overrides.projectId = projectId;
+  }
 
-  for (const [key, optVal, detVal] of fallbackFields) {
-    const val = optVal ?? detVal;
-    if (val !== undefined) {
-      overrides[key] = val;
-    }
+  const flushIntervalMs = lf?.flushIntervalMs ?? detection.flushIntervalMs;
+  if (flushIntervalMs !== undefined) {
+    overrides.flushIntervalMs = flushIntervalMs;
+  }
+
+  const maxBatchSize = lf?.maxBatchSize ?? detection.maxBatchSize;
+  if (maxBatchSize !== undefined) {
+    overrides.maxBatchSize = maxBatchSize;
   }
 
   return Object.keys(overrides).length > 0 ? overrides : undefined;

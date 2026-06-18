@@ -1,5 +1,4 @@
 
-
 ## 32. Appendix A — 15-Competitor Pattern Atlas
 
 Condensed reference: for each competitor, the top patterns agentsy should borrow and the target phase in this plan. Updated from 12 to 15 competitors (Batch 4 adds openclaw, hermes-agent, gemini-cli).
@@ -174,4 +173,3 @@ Claude-Code derivative with 130+ extensions, 7857 .ts files, and the most mature
 | `config.toml` with 7 layers | defaults → managed → global → project → profile → CLI → env. `ConfigLayerStack` with `ConfigLayerSource` provenance. | (Future enhancement — config layering) |
 
 ---
-

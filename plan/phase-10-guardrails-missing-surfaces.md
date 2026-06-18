@@ -1,5 +1,4 @@
 
-
 ## 15. Phase 10 — Guardrails Missing Surfaces & Interaction Safeguards
 
 **Priority**: P0 — Sprint 5
@@ -40,6 +39,7 @@ export type GuardrailPhase =
 Implement 4 new scanners:
 
 **RetrievalFirewallScanner** (`packages/guardrails/src/scanners/retrieval-firewall.ts`):
+
 - Phase: `retrieval`
 - Domain allowlist (from `GuardrailsConfig.retrievalDomains`)
 - Trust scoring for retrieved content (lower trust = stricter scanning)
@@ -89,17 +89,20 @@ export class RetrievalFirewallScanner implements GuardrailScanner {
 ```
 
 **MemoryPoisoningScanner** (`packages/guardrails/src/scanners/memory-poisoning.ts`):
+
 - Phase: `memory`
 - Scans persisted instructions/notes for injection attempts
 - Schema-validates memory entries
 - Flags suspicious updates (rapid changes to high-trust items)
 
 **ActionScanner** (`packages/guardrails/src/scanners/action.ts`):
+
 - Phase: `action`
 - Schema-validates action parameters
 - Enforces irreversible-action approval gates (e.g. `send_email`, `delete_file`, `transfer_funds`)
 
 **EgressScanner** (`packages/guardrails/src/scanners/egress.ts`):
+
 - Phase: `egress`
 - URL allowlist (from `GuardrailsConfig.egressAllowList`)
 - Request-size limits
@@ -143,18 +146,21 @@ export interface GuardrailContext {
 Implement 3 new scanners that read `SessionState`:
 
 **InteractionSafeguardsScanner** (`packages/guardrails/src/scanners/interaction-safeguards.ts`):
+
 - Phase: `input`
 - Tracks `reassuranceSeekingCount` and `emotionalIntensityScore` over turns
 - Soft session limit: if `turnCount > 50` and `emotionalIntensityScore > 0.7` for 5+ consecutive turns, returns `escalate` with a pause-nudge message
 - Memory retention limit: if `sensitiveContextActive` is true, marks memory items for shorter retention
 
 **CrisisEscalationScanner** (`packages/guardrails/src/scanners/crisis-escalation.ts`):
+
 - Phase: `input`
 - Detects crisis language in the user's message
 - Returns `escalate` with `crisisResources: string[]` in the receipt (hotline numbers, crisis text lines)
 - Sets `sessionState.crisisMode = true`
 
 **ScopeDriftScanner** (`packages/guardrails/src/scanners/scope-drift.ts`):
+
 - Phase: `input`
 - Compares the current request against `agentScopeDeclaration.inScope` (added in Phase 11)
 - Tracks the proportion of in-scope vs out-of-scope requests over a session
@@ -418,4 +424,3 @@ if (spec.networkPolicy?.mode === 'proxy-inspect') {
 This extension adds ~3 SP to Phase 10's existing 6 SP (total 9 SP). The `IngressScanner` is ~1 SP; the MCP client integration is ~1 SP; the `http_fetch` integration is ~0.5 SP; the `SubprocessSpec.networkPolicy` plumbing is ~0.5 SP.
 
 ---
-

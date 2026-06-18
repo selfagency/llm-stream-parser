@@ -1,10 +1,9 @@
 
-
 ## 34. Appendix C — Package Consolidation Map (Before/After)
 
 ### Before (27 packages — pre-Phase 2)
 
-```
+```text
 agents/          (39)   ← Keep
 cli/             (71)   ← Keep (becomes thin daemon client)
 connectors/      (13)   ← Merge into daemon
@@ -37,7 +36,7 @@ workflows/       (1)    ← Merge into orchestrator
 
 ### After (25 packages + root scripts — post-Phase 2)
 
-```
+```text
 agents/          ← Keep
 cli/             ← Keep (thin daemon client)
 core/            ← Keep
@@ -66,7 +65,7 @@ scripts/         ← Root-level tooling (not a package)
 
 ### Future (Phase 15 adds bootstrap)
 
-```
+```text
 bootstrap/       ← NEW (Phase 15) — project scanner, registry adapters, install flow, AGENTS.md / AFT generators
 ```
 
@@ -75,4 +74,3 @@ bootstrap/       ← NEW (Phase 15) — project scanner, registry adapters, inst
 **Note on `@agentsy/vscode` preservation**: The `@agentsy/vscode` package is preserved throughout. It is a published npm library (`@agentsy/vscode` on npm) consumed by third-party VS Code extensions that integrate language model providers with GitHub Copilot Chat. ACP (agent–editor communication) and `@agentsy/vscode` (provider↔Copilot Chat integration) are complementary, not overlapping.
 
 ---
-

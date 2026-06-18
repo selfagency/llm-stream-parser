@@ -1,5 +1,4 @@
 
-
 ## 18. Phase 13 — Guardrails Metrics, Benchmark Suite & Release Gate
 
 **Priority**: P0 — Sprint 7
@@ -273,6 +272,7 @@ Wire into CI: every PR that adds or modifies a first-party agent template must r
 Rather than running langeval as a separate platform, agentsy integrates it at two levels:
 
 **Level 1 — CLI integration (Phase 13, +1 SP)**:
+
 - `agentsy eval run` — invokes langeval's orchestrator API (`POST /orchestrator/campaigns`) with a scenario ID and an agent ID
 - `agentsy eval scenarios` — lists available langeval scenarios (synced from the langeval resource service)
 - `agentsy eval red-team` — launches a red-teaming campaign against the current agent
@@ -280,11 +280,13 @@ Rather than running langeval as a separate platform, agentsy integrates it at tw
 - Results are fetched from langeval's orchestrator and persisted to `UnifiedDB.eval_results` for trend tracking
 
 **Level 2 — CI integration (Phase 13, +1 SP)**:
+
 - A GitHub Actions workflow runs `agentsy eval run --scenario-suite safety --policy always-passes` on every PR touching `packages/guardrails/` or agent templates
 - The release-gate script (§18.3) calls langeval's API to verify the 12 SAFETY.md benchmark scenarios pass before allowing a release
 - Failures post a comment on the PR with a link to the langeval Trace Debugger (Langfuse UI)
 
 **Level 3 — Langfuse cross-reference (Phase 19, +0 SP — already planned)**:
+
 - langeval's Trace Debugger uses Langfuse under the hood
 - Phase 19 (Langfuse observability) already wires Langfuse into the daemon
 - The same Langfuse instance serves both agentsy's runtime tracing and langeval's evaluation tracing — agents can see their own traces alongside the eval results that judged them
@@ -294,12 +296,14 @@ Rather than running langeval as a separate platform, agentsy integrates it at tw
 langeval runs as a Docker Compose stack (it already ships one). Two options:
 
 **Option A — agentsy-managed (recommended for v1)**:
+
 - langeval runs as additional services in agentsy's Docker Compose (extends Phase 21's Docker tooling)
 - `agentsy eval start` / `agentsy eval stop` manage the langeval stack
 - Shared Langfuse instance (Phase 19) — langeval's `LANGFUSE_URL` points to agentsy's Langfuse
 - Shared PostgreSQL (agentsy's `UnifiedDB` or a separate langeval DB)
 
 **Option B — external (for teams with existing langeval)**:
+
 - `DaemonConfig.eval.langevalUrl` points to an external langeval instance
 - agentsy just calls the API; no local langeval services
 - Useful for organizations running a shared langeval across multiple agent projects
@@ -373,5 +377,3 @@ This replaces the original §18.7 (+3 SP for custom behavioral evals). Net chang
 **Total Phase 13 with langeval integration: 11.5 SP** (was 11 SP with custom evals, but delivers far more capability).
 
 ---
-
-

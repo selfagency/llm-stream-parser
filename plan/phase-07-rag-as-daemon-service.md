@@ -1,5 +1,4 @@
 
-
 ## 12. Phase 7 — RAG as Daemon Service
 
 **Priority**: P2 — Sprint 3 (parallel with Phase 6)
@@ -18,12 +17,14 @@ The `@agentsy/retrieval` package exists with chunking, embedding, and vector sto
 Two sub-phases:
 
 **7.1 Fix existing retrieval**:
+
 - Verify chunking strategy (recursive character splitter with overlap).
 - Verify embedding generation (default to OpenAI `text-embedding-3-small`).
 - Verify vector store (`UnifiedDB.rag_vectors` table, using sqlite-vec extension or Honker's vector ops).
 - Wire `RetrievalFirewallScanner` (Phase 10) to re-scan retrieved content for prompt injection.
 
 **7.2 RAG as daemon service**:
+
 - `RetrievalService` runs as a `Service` in the daemon.
 - Background indexing job (Bree-scheduled) runs every N minutes to index new content.
 - Cross-session index reuse — the same `~/.agentsy/agentsy.db` serves all sessions in a folder scope.
@@ -108,4 +109,3 @@ export class RetrievalService implements Service {
 - [x] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
-

@@ -1,5 +1,4 @@
 
-
 ## 7. Phase 2 — Package Consolidation ✅ COMPLETE
 
 **Status**: PARTIALLY COMPLETE — 4 of 6 merges fully landed; 2 require cleanup (see §7.5).
@@ -7,6 +6,7 @@
 **What shipped**: 27 → 25 packages in concept. `pnpm install && pnpm build && pnpm test` green.
 
 > ⚠️ **2026-06-17 Audit Finding**: Four packages remain as filesystem artifacts after the merge:
+>
 > - `packages/renderers/` — `src/` deleted (ghost directory only). Clean up root dir in Phase 29.
 > - `packages/types/` — `src/` deleted (ghost directory only). Clean up root dir in Phase 29.
 > - `packages/mcp/` — **live source files still present** (`diagnostics.ts`, `types.ts`, `index.ts`) alongside `packages/daemon/src/mcp/`. Merge is incomplete. Tracked in Phase 29.
@@ -26,7 +26,8 @@
 **Preserved**: `@agentsy/vscode` (75 files) — published npm library consumed by third-party VS Code extensions that integrate language model providers with GitHub Copilot Chat. ACP (agent–editor communication) and `@agentsy/vscode` (provider↔Copilot Chat integration) are complementary, not overlapping.
 
 **Post-consolidation layout** (25 packages + root scripts):
-```
+
+```text
 packages/
 ├── daemon/        ← Central process (absorbs mcp, connectors)
 ├── core/          ← Stream processing, SSE, tool calls, retry
@@ -57,4 +58,3 @@ packages/
 **Downstream consumers**: All subsequent phases operate on the 25-package layout. Phase 15 adds `@agentsy/bootstrap` as the 26th package.
 
 ---
-
