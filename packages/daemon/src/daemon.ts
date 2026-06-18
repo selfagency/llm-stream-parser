@@ -552,7 +552,7 @@ export class Daemon {
           messages: request.messages.length
         });
 
-        // TODO: Wire through LoadBalancedClient.stream() once
+        // FIXME(phase-14): Wire through LoadBalancedClient.stream() once
         // the streaming provider path is fully connected.
         return {
           [Symbol.asyncIterator]() {

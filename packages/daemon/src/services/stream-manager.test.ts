@@ -281,51 +281,41 @@ describe('StreamManager error handling', () => {
 // =============================================================================
 
 describe('StreamManager secrets filter', () => {
-  it('masks secrets when filter is enabled', async () => {
-    const ipc = createMockIPCServer();
+  async function runFilterTest(
+    ipc: ReturnType<typeof createMockIPCServer>,
+    opts: { secretsFilterEnabled: boolean; filterFactory?: () => StreamingSecretsFilter }
+  ): Promise<string | undefined> {
     const manager = new StreamManager({
       logger: createMockLogger(),
       ipc,
       routing: createMockRoutingService(),
-      secretsFilterEnabled: true,
-      filterFactory: () => new StreamingSecretsFilter({ maxSecretLength: 5 })
+      ...opts
     });
     await manager.start();
 
     const provider = createMockStreamProvider([{ content: 'My key is sk-proj-abc123def456ghi789jkl012' }]);
     manager.startStream({ messages: [{ role: 'user', content: 'Hi' }] }, provider);
-
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    // The chunk should have been broadcast with [REDACTED] content
     const calls = (ipc.broadcast as ReturnType<typeof vi.fn>).mock.calls;
     const chunkCall = calls.find((c: unknown[]) => c[0] === 'stream.chunk');
-    expect(chunkCall).toBeDefined();
-    const payload = (chunkCall as [string, { chunk: { content: string } }])[1];
-    expect(payload.chunk.content).toContain('[REDACTED]');
+    if (!chunkCall) return undefined;
+    return (chunkCall as [string, { chunk: { content: string } }])[1].chunk.content;
+  }
+
+  it('masks secrets when filter is enabled', async () => {
+    const ipc = createMockIPCServer();
+    const content = await runFilterTest(ipc, {
+      secretsFilterEnabled: true,
+      filterFactory: () => new StreamingSecretsFilter({ maxSecretLength: 5 })
+    });
+    expect(content).toContain('[REDACTED]');
   });
 
   it('skips masking when filter is disabled', async () => {
     const ipc = createMockIPCServer();
-    const manager = new StreamManager({
-      logger: createMockLogger(),
-      ipc,
-      routing: createMockRoutingService(),
-      secretsFilterEnabled: false
-    });
-    await manager.start();
-
-    const provider = createMockStreamProvider([{ content: 'My key is sk-proj-abc123def456ghi789jkl012' }]);
-    manager.startStream({ messages: [{ role: 'user', content: 'Hi' }] }, provider);
-
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    const calls = (ipc.broadcast as ReturnType<typeof vi.fn>).mock.calls;
-    const chunkCall = calls.find((c: unknown[]) => c[0] === 'stream.chunk');
-    expect(chunkCall).toBeDefined();
-    const payload = (chunkCall as [string, { chunk: { content: string } }])[1];
-    // Content should NOT be masked when filter is disabled
-    expect(payload.chunk.content).toContain('sk-proj-abc123def456ghi789jkl012');
+    const content = await runFilterTest(ipc, { secretsFilterEnabled: false });
+    expect(content).toContain('sk-proj-abc123def456ghi789jkl012');
   });
 
   it('uses custom filter factory when provided', async () => {

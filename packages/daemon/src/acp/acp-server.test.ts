@@ -30,6 +30,14 @@ function createMockACPAdapter(): ACPNotificationAdapter {
   } as unknown as ACPNotificationAdapter;
 }
 
+function createMockDaemon() {
+  return {
+    streamManager: createMockStreamManager(),
+    acpNotificationAdapter: createMockACPAdapter(),
+    routing: {} as never
+  } as unknown as import('../daemon.js').Daemon;
+}
+
 describe('ACPServer', () => {
   it('should log disabled state', async () => {
     const logger = createMockLogger({ info: vi.fn() });
@@ -56,14 +64,6 @@ describe('ACPServer', () => {
 });
 
 describe('ACPSessionBridge', () => {
-  function createMockDaemon() {
-    return {
-      streamManager: createMockStreamManager(),
-      acpNotificationAdapter: createMockACPAdapter(),
-      routing: {} as never
-    } as unknown as import('../daemon.js').Daemon;
-  }
-
   it('should create with defaults', () => {
     const bridge = new ACPSessionBridge({ daemon: createMockDaemon(), logger: createMockLogger() });
     expect(bridge.sessionId).toBeTruthy();
