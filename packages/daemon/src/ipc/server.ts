@@ -2,10 +2,14 @@ import { randomUUID } from 'node:crypto';
 import { chmod, unlink } from 'node:fs/promises';
 import { createServer, type Socket } from 'node:net';
 import type { Logger } from '../types.js';
+import { generateDaemonToken, verifyClientHandshake } from './auth.js';
 import type { IPCResponse } from './protocol.js';
 import { ErrorCode, IPCRequestSchema } from './protocol.js';
 
 const MAX_MESSAGE_BYTES = 10 * 1024 * 1024; // 10 MB
+
+/** Methods that unauthenticated clients may call. */
+const UNAUTHENTICATED_ALLOWLIST = new Set(['auth.respond', 'daemon.status']);
 
 export interface IPCServerConfig {
   logger: Logger;

@@ -1,5 +1,9 @@
-import { execSync } from 'node:child_process';
+import { createVirtualSandbox } from '@agentsy/runtime';
 import type { ToolDefinition, ToolResult } from '../../definitions.js';
+
+const sandbox = createVirtualSandbox();
+
+const DEFAULT_DENYLIST = ['rm -rf', 'dd ', 'mkfs', ':(){ :|: & };:', '> /dev/sda', 'forkbomb'];
 
 export function createShellTool(): ToolDefinition {
   return {
@@ -20,35 +24,49 @@ export function createShellTool(): ToolDefinition {
   };
 }
 
-function handleShellExec(input: Record<string, unknown>): Promise<ToolResult> {
+async function handleShellExec(input: Record<string, unknown>): Promise<ToolResult> {
   const command = typeof input.command === 'string' ? input.command : '';
   if (!command) {
-    return Promise.resolve({ ok: false, data: null, error: 'Missing required parameter: command' });
+    return { ok: false, data: null, error: 'Missing required parameter: command' };
+  }
+
+  // Denylist check
+  for (const pattern of DEFAULT_DENYLIST) {
+    if (command.toLowerCase().includes(pattern.toLowerCase())) {
+      return { ok: false, data: null, error: `Command blocked by denylist: matches "${pattern}"` };
+    }
   }
 
   const timeout = typeof input.timeout === 'number' ? input.timeout : 30_000;
   const cwd = typeof input.workdir === 'string' ? input.workdir : undefined;
 
-  try {
-    const output = execSync(command, { encoding: 'utf-8', timeout, cwd, maxBuffer: 10 * 1024 * 1024 });
-    return Promise.resolve({ ok: true, data: { stdout: output, stderr: '', exitCode: 0 } });
-  } catch (error) {
-    return Promise.resolve(parseShellError(error));
-  }
-}
+  // Execute via Worker Thread sandbox for isolation
+  const shellCode = `
+    const { execSync } = require('child_process');
+    try {
+      const output = execSync(${JSON.stringify(command)}, {
+        encoding: 'utf-8',
+        cwd: ${JSON.stringify(cwd ?? process.cwd())},
+        timeout: ${timeout},
+        maxBuffer: 10 * 1024 * 1024
+      });
+      console.log(output);
+    } catch (e) {
+      if (e.stdout) console.log(String(e.stdout));
+      if (e.stderr) console.error(String(e.stderr));
+      throw e;
+    }
+  `;
 
-function parseShellError(error: unknown): ToolResult {
-  if (error instanceof Error && 'stdout' in error && 'stderr' in error) {
-    const execErr = error as unknown as { stdout: Buffer; stderr: Buffer; status: number | null };
-    return {
-      ok: true,
-      data: {
-        stdout: execErr.stdout?.toString() ?? '',
-        stderr: execErr.stderr?.toString() ?? '',
-        exitCode: execErr.status ?? 1
-      }
-    };
+  const result = await sandbox.execute({ code: shellCode, timeoutMs: timeout });
+  if (result.status === 'timeout') {
+    return { ok: false, data: null, error: `shell_exec timed out after ${timeout}ms` };
   }
-  const message = error instanceof Error ? error.message : String(error);
-  return { ok: false, data: null, error: `shell_exec error: ${message}` };
+  if (result.status === 'blocked') {
+    return { ok: false, data: null, error: 'shell_exec blocked by sandbox policy' };
+  }
+  return {
+    ok: result.status === 'ok',
+    data: { stdout: result.stdout, stderr: result.stderr, exitCode: result.exitCode ?? 0 }
+  };
 }
