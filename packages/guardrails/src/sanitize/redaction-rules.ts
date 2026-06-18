@@ -66,6 +66,7 @@ export class RedactionRulesEngine {
     for (const rule of this.#rules) {
       if (rule.enabled) {
         try {
+          // nosemgrep: user-authored rules are trusted input from the org's own config
           this.#compiled.set(rule.id, new RegExp(rule.pattern, 'g'));
         } catch {
           // Invalid regex — skip this rule

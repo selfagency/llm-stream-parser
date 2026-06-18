@@ -13,7 +13,7 @@ import { PIIScanner } from '../pii.js';
 import { SecretDetectionScanner } from '../secret-detection.js';
 import type { GuardrailScanner } from '../types.js';
 import { InfrastructureScanner, type InfrastructureScannerOptions } from './infrastructure-scanner.js';
-import type { RedactionRulesEngine, RedactionScope } from './redaction-rules.js';
+import type { RedactionRulesEngine } from './redaction-rules.js';
 
 // ── Types ───────────────────────────────────────────────
 
@@ -126,6 +126,7 @@ export async function sanitize(
   mode: SanitizeMode = 'logs',
   options?: SanitizeOptions
 ): Promise<SanitizeResult> {
+  // nosemgrep: mode is a typed enum with a static config map, not user input
   const modeConfig = MODE_CONFIGS[mode];
   const scanners: GuardrailScanner[] = [];
   const byScanner: Record<string, number> = {};
@@ -147,17 +148,7 @@ export async function sanitize(
   let result = input;
   for (const scanner of scanners) {
     try {
-      const scanResult = await scanner.evaluate(result);
-      if (scanResult.status === 'transform' && scanResult.sanitized) {
-        result = scanResult.sanitized;
-      }
-      if (scanResult.detections) {
-        for (const detection of scanResult.detections) {
-          totalDetections++;
-          const id = detection.id;
-          byScanner[id] = (byScanner[id] ?? 0) + 1;
-        }
-      }
+      result = await applyScanner(result, scanner, byScanner, () => totalDetections++);
     } catch {
       // Scanner error — continue with current result
     }
@@ -165,7 +156,7 @@ export async function sanitize(
 
   // Apply custom redaction rules
   if (options?.customRules) {
-    const { matches, sanitized } = options.customRules.apply(result, mode as RedactionScope);
+    const { matches, sanitized } = options.customRules.apply(result, mode);
     for (const match of matches) {
       ruleIds.push(match.id);
       totalDetections++;
@@ -187,16 +178,46 @@ export async function sanitize(
 }
 
 /**
+ * Apply a single scanner and collect detections.
+ */
+async function applyScanner(
+  input: string,
+  scanner: GuardrailScanner,
+  byScanner: Record<string, number>,
+  onDetection: () => void
+): Promise<string> {
+  const scanResult = await scanner.evaluate(input);
+  if (scanResult.status === 'transform' && scanResult.sanitized) {
+    if (scanResult.detections) {
+      for (const detection of scanResult.detections) {
+        onDetection();
+        const id = detection.id;
+        byScanner[id] = (byScanner[id] ?? 0) + 1;
+      }
+    }
+    return scanResult.sanitized;
+  }
+  if (scanResult.detections) {
+    for (const detection of scanResult.detections) {
+      onDetection();
+      const id = detection.id;
+      byScanner[id] = (byScanner[id] ?? 0) + 1;
+    }
+  }
+  return input;
+}
+
+/**
  * Check if the sanitized output still contains potential unredacted content.
  */
 function checkUnredactedWarnings(text: string): boolean {
   const warningPatterns = [
     /\b(?:https?:\/\/|http:\/\/)\S+/gi, // URLs
-    /\b(?:bearer|Bearer)\s+[A-Za-z0-9._-]{10,}/g, // Bearer tokens
-    /\b(?:eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,})/g, // JWT tokens
+    /\b(?:bearer|Bearer)\s+[\w.-]{10,}/g, // Bearer tokens
+    /\b(?:eyJ[\w-]{10,}\.[\w-]{10,}\.[\w-]{10,})/g, // JWT tokens
     /\b(?:-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----)/g, // Private keys
-    /\b(?:ghp_|gho_|ghu_|ghs_|ghr_)[A-Za-z0-9_]{36,}/g, // GitHub tokens
-    /\b(?:xox[abprs]-[A-Za-z0-9-]{10,})/g // Slack tokens
+    /\b(?:gh[opusr]_)[\w]{36,}/g, // GitHub tokens
+    /\b(?:xox[abprs]-[\w-]{10,})/g // Slack tokens
   ];
 
   for (const pattern of warningPatterns) {

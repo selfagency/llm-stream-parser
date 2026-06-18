@@ -36,6 +36,7 @@ import type { CliIO } from '../index.js';
 function getFlagValue(args: readonly string[], flag: string): string | null {
   const index = args.indexOf(flag);
   if (index >= 0 && index + 1 < args.length) {
+    // nosemgrep: index is derived from indexOf on argv, not attacker-controlled
     return args[index + 1] ?? null;
   }
   return null;

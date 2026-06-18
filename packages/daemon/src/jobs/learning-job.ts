@@ -79,68 +79,19 @@ export class LearningJob {
     const logger = this.#deps.logger;
 
     try {
-      // 1. Query unprocessed events
-      const events = await this.#deps.db.query<{
-        content: string;
-        created_at: string;
-        id: string;
-        metadata: string;
-        scope: string;
-      }>(
-        `SELECT id, scope, content, metadata, created_at FROM memory_items
-         WHERE kind = 'event' AND processed_at IS NULL
-         ORDER BY created_at ASC LIMIT ?`,
-        [MAX_EVENTS_PER_RUN]
-      );
-
+      const events = await this.#queryEvents();
       if (events.length === 0) {
-        logger.debug('No unprocessed events to consolidate');
         return { eventsProcessed: 0, semanticItemsCreated: 0, indexed: 0, skipped: 0 };
       }
 
-      logger.info('Consolidating events', { count: events.length });
-
-      // 2. Consolidate — currently uses a simple heuristic grouping
-      //    In production, this would call an LLM with CONSOLIDATION_PROMPT
       const semanticItems = this.#consolidateHeuristic(events);
-
       if (semanticItems.length === 0) {
-        // Mark events as processed even if no semantic items were created
         await this.#markProcessed(events);
         return { eventsProcessed: events.length, semanticItemsCreated: 0, indexed: 0, skipped: 0 };
       }
 
-      // 3. Insert semantic items
-      const scope = events[0]?.scope ?? 'default';
-      for (const item of semanticItems) {
-        await this.#deps.db.execute(
-          `INSERT INTO memory_items (id, scope, kind, content, metadata, created_at)
-           VALUES (?, ?, 'semantic', ?, ?, ?)`,
-          [
-            randomUUID(),
-            scope,
-            item.content,
-            JSON.stringify({ category: item.category, tags: item.metadata?.tags ?? [], consolidated: true }),
-            new Date().toISOString()
-          ]
-        );
-      }
-
-      // 4. Mark events as processed
-      await this.#markProcessed(events);
-
-      // 5. Index new semantic items via RetrievalService
-      let indexed = 0;
-      let skipped = 0;
-      try {
-        const result = await this.#deps.retrieval.indexNewContent(scope);
-        indexed = result.indexed;
-        skipped = result.skipped;
-      } catch (error) {
-        logger.error('Failed to index new semantic items', {
-          error: error instanceof Error ? error.message : String(error)
-        });
-      }
+      const scope = await this.#insertSemanticItems(semanticItems, events);
+      const { indexed, skipped } = await this.#indexNewContent(scope, logger);
 
       logger.info('Learning pass completed', {
         eventsProcessed: events.length,
@@ -149,12 +100,7 @@ export class LearningJob {
         skipped
       });
 
-      return {
-        eventsProcessed: events.length,
-        semanticItemsCreated: semanticItems.length,
-        indexed,
-        skipped
-      };
+      return { eventsProcessed: events.length, semanticItemsCreated: semanticItems.length, indexed, skipped };
     } catch (error) {
       logger.error('Learning job failed', {
         error: error instanceof Error ? error.message : String(error)
@@ -162,6 +108,54 @@ export class LearningJob {
       throw error;
     } finally {
       this.#running = false;
+    }
+  }
+
+  #queryEvents(): Promise<Array<{ content: string; created_at: string; id: string; metadata: string; scope: string }>> {
+    return this.#deps.db.query<{
+      content: string;
+      created_at: string;
+      id: string;
+      metadata: string;
+      scope: string;
+    }>(
+      `SELECT id, scope, content, metadata, created_at FROM memory_items
+       WHERE kind = 'event' AND processed_at IS NULL
+       ORDER BY created_at ASC LIMIT ?`,
+      [MAX_EVENTS_PER_RUN]
+    );
+  }
+
+  async #insertSemanticItems(
+    semanticItems: SemanticItem[],
+    events: Array<{ id: string; scope: string }>
+  ): Promise<string> {
+    const scope = events[0]?.scope ?? 'default';
+    for (const item of semanticItems) {
+      await this.#deps.db.execute(
+        `INSERT INTO memory_items (id, scope, kind, content, metadata, created_at)
+         VALUES (?, ?, 'semantic', ?, ?, ?)`,
+        [
+          randomUUID(),
+          scope,
+          item.content,
+          JSON.stringify({ category: item.category, tags: item.metadata?.tags ?? [], consolidated: true }),
+          new Date().toISOString()
+        ]
+      );
+    }
+    await this.#markProcessed(events);
+    return scope;
+  }
+
+  async #indexNewContent(scope: string, logger: Logger): Promise<{ indexed: number; skipped: number }> {
+    try {
+      return await this.#deps.retrieval.indexNewContent(scope);
+    } catch (error) {
+      logger.error('Failed to index new semantic items', {
+        error: error instanceof Error ? error.message : String(error)
+      });
+      return { indexed: 0, skipped: 0 };
     }
   }
 
