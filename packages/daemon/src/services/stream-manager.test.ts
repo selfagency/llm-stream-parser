@@ -8,6 +8,7 @@ import type { IPCServer } from '../ipc/server.js';
 import type { Logger } from '../types.js';
 import type { RoutingService } from './routing-service.js';
 import { StreamManager, type StreamProvider } from './stream-manager.js';
+import { StreamingSecretsFilter } from '../streaming/secrets-filter.js';
 
 // =============================================================================
 // Mocks
@@ -151,7 +152,8 @@ describe('StreamManager stream management', () => {
     const manager = new StreamManager({
       logger: createMockLogger(),
       ipc,
-      routing: createMockRoutingService()
+      routing: createMockRoutingService(),
+      secretsFilterEnabled: false
     });
     await manager.start();
 
@@ -172,7 +174,8 @@ describe('StreamManager stream management', () => {
     const manager = new StreamManager({
       logger: createMockLogger(),
       ipc,
-      routing: createMockRoutingService()
+      routing: createMockRoutingService(),
+      secretsFilterEnabled: false
     });
     await manager.start();
 
@@ -191,7 +194,8 @@ describe('StreamManager stream management', () => {
     const manager = new StreamManager({
       logger: createMockLogger(),
       ipc: createMockIPCServer(),
-      routing: createMockRoutingService()
+      routing: createMockRoutingService(),
+      secretsFilterEnabled: false
     });
     await manager.start();
 
@@ -216,7 +220,8 @@ describe('StreamManager stream management', () => {
     const manager = new StreamManager({
       logger: createMockLogger(),
       ipc: createMockIPCServer(),
-      routing: createMockRoutingService()
+      routing: createMockRoutingService(),
+      secretsFilterEnabled: false
     });
     await manager.start();
 
@@ -268,5 +273,163 @@ describe('StreamManager error handling', () => {
         error: expect.objectContaining({ message: 'Provider error' })
       })
     );
+  });
+});
+
+// =============================================================================
+// Secrets filter
+// =============================================================================
+
+describe('StreamManager secrets filter', () => {
+  it('masks secrets when filter is enabled', async () => {
+    const ipc = createMockIPCServer();
+    const manager = new StreamManager({
+      logger: createMockLogger(),
+      ipc,
+      routing: createMockRoutingService(),
+      secretsFilterEnabled: true,
+      filterFactory: () => new StreamingSecretsFilter({ maxSecretLength: 5 })
+    });
+    await manager.start();
+
+    const provider = createMockStreamProvider([{ content: 'My key is sk-proj-abc123def456ghi789jkl012' }]);
+    manager.startStream({ messages: [{ role: 'user', content: 'Hi' }] }, provider);
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // The chunk should have been broadcast with [REDACTED] content
+    const calls = (ipc.broadcast as ReturnType<typeof vi.fn>).mock.calls;
+    const chunkCall = calls.find((c: unknown[]) => c[0] === 'stream.chunk');
+    expect(chunkCall).toBeDefined();
+    const payload = (chunkCall as [string, { chunk: { content: string } }])[1];
+    expect(payload.chunk.content).toContain('[REDACTED]');
+  });
+
+  it('skips masking when filter is disabled', async () => {
+    const ipc = createMockIPCServer();
+    const manager = new StreamManager({
+      logger: createMockLogger(),
+      ipc,
+      routing: createMockRoutingService(),
+      secretsFilterEnabled: false
+    });
+    await manager.start();
+
+    const provider = createMockStreamProvider([{ content: 'My key is sk-proj-abc123def456ghi789jkl012' }]);
+    manager.startStream({ messages: [{ role: 'user', content: 'Hi' }] }, provider);
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    const calls = (ipc.broadcast as ReturnType<typeof vi.fn>).mock.calls;
+    const chunkCall = calls.find((c: unknown[]) => c[0] === 'stream.chunk');
+    expect(chunkCall).toBeDefined();
+    const payload = (chunkCall as [string, { chunk: { content: string } }])[1];
+    // Content should NOT be masked when filter is disabled
+    expect(payload.chunk.content).toContain('sk-proj-abc123def456ghi789jkl012');
+  });
+
+  it('uses custom filter factory when provided', async () => {
+    const ipc = createMockIPCServer();
+    const filterFactory = vi.fn().mockReturnValue({
+      feed: vi.fn().mockReturnValue('masked-output'),
+      flush: vi.fn().mockReturnValue(null),
+      reset: vi.fn()
+    });
+    const manager = new StreamManager({
+      logger: createMockLogger(),
+      ipc,
+      routing: createMockRoutingService(),
+      filterFactory
+    });
+    await manager.start();
+
+    const provider = createMockStreamProvider([{ content: 'Hello' }]);
+    manager.startStream({ messages: [{ role: 'user', content: 'Hi' }] }, provider);
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(filterFactory).toHaveBeenCalled();
+  });
+});
+
+// =============================================================================
+// Tool call tracking
+// =============================================================================
+
+describe('StreamManager tool call tracking', () => {
+  it('tracks pending tool calls from nativeToolCallDeltas', async () => {
+    const ipc = createMockIPCServer();
+    const manager = new StreamManager({
+      logger: createMockLogger(),
+      ipc,
+      routing: createMockRoutingService()
+    });
+    await manager.start();
+
+    const provider = createMockStreamProvider([
+      {
+        nativeToolCallDeltas: [{ index: 0, id: 'call-1', name: 'get_weather', argumentsDelta: '{"city":"London"}' }]
+      }
+    ]);
+    manager.startStream({ messages: [{ role: 'user', content: 'Hi' }] }, provider);
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    const calls = (ipc.broadcast as ReturnType<typeof vi.fn>).mock.calls;
+    const chunkCall = calls.find((c: unknown[]) => c[0] === 'stream.chunk');
+    expect(chunkCall).toBeDefined();
+    const payload = (chunkCall as [string, { chunk: { nativeToolCallDeltas: unknown[] } }])[1];
+    expect(payload.chunk.nativeToolCallDeltas).toHaveLength(1);
+  });
+});
+
+// =============================================================================
+// Content types
+// =============================================================================
+
+describe('StreamManager content types', () => {
+  it('broadcasts thinking chunks', async () => {
+    const ipc = createMockIPCServer();
+    const manager = new StreamManager({
+      logger: createMockLogger(),
+      ipc,
+      routing: createMockRoutingService()
+    });
+    await manager.start();
+
+    const provider = createMockStreamProvider([{ thinking: 'I am thinking...' }]);
+    manager.startStream({ messages: [{ role: 'user', content: 'Hi' }] }, provider);
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(ipc.broadcast).toHaveBeenCalledWith(
+      'stream.chunk',
+      expect.objectContaining({
+        chunk: expect.objectContaining({ thinking: 'I am thinking...' })
+      })
+    );
+  });
+
+  it('skips chunks with no content', async () => {
+    const ipc = createMockIPCServer();
+    const manager = new StreamManager({
+      logger: createMockLogger(),
+      ipc,
+      routing: createMockRoutingService()
+    });
+    await manager.start();
+
+    // Empty chunk — should not be broadcast
+    const provider = createMockStreamProvider([{}]);
+    manager.startStream({ messages: [{ role: 'user', content: 'Hi' }] }, provider);
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // stream.end should still be broadcast, but no stream.chunk for the empty chunk
+    const chunkCalls = (ipc.broadcast as ReturnType<typeof vi.fn>).mock.calls.filter(
+      (c: unknown[]) => c[0] === 'stream.chunk'
+    );
+    // The empty chunk should not produce a stream.chunk notification
+    expect(chunkCalls.length).toBe(0);
   });
 });

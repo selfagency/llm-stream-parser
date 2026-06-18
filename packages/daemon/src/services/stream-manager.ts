@@ -224,7 +224,9 @@ export class StreamManager {
   ): Promise<void> {
     const { idleTimeoutMs = 30_000 } = this.#deps;
 
-    const filter = this.#secretsFilterEnabled() ? (this.#deps.filterFactory?.() ?? undefined) : undefined;
+    const filter = this.#secretsFilterEnabled()
+      ? (this.#deps.filterFactory?.() ?? new (await import('../streaming/secrets-filter.js')).StreamingSecretsFilter())
+      : undefined;
 
     try {
       const { wrapSSE } = await import('../streaming/wrap-sse.js');

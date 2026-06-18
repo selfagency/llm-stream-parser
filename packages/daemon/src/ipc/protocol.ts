@@ -159,7 +159,7 @@ export interface IPCStreamError {
 
 /** Schema for stream.start IPC request params. */
 export const StreamStartRequestSchema = z.object({
-  messages: z.array(z.object({ role: z.string(), content: z.string() })),
+  messages: z.array(z.object({ role: z.string(), content: z.string() })).nonempty(),
   model: z.string().optional(),
   routing: z.record(z.string(), z.unknown()).optional(),
   system: z.string().optional()
