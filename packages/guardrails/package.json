@@ -35,6 +35,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./sanitize": {
+      "types": "./dist/sanitize/index.d.ts",
+      "import": "./dist/sanitize/index.js"
     }
   },
   "scripts": {

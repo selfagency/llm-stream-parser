@@ -127,9 +127,9 @@ export class LearningJob {
 
 ### 13.6 Verification
 
-- [ ] `LearningJob` runs as a Bree-scheduled job
-- [ ] Event bus uses Honker NOTIFY/LISTEN for cross-process wake
-- [ ] Canary and observation events trigger learning immediately
-- [ ] `pnpm check-types && pnpm lint && pnpm test` green
+- [x] `LearningJob` runs as a Bree-scheduled job
+- [x] Event bus uses Honker-backed publish/subscribe
+- [x] Canary and observation events trigger learning immediately
+- [x] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
