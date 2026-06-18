@@ -289,28 +289,13 @@ export class StreamManager {
   }
 
   #emitChunk(stream: ActiveStream, chunk: StreamChunk, acpBridge?: ACPStreamBridge): void {
-    const hasContent =
-      chunk.content !== undefined ||
-      chunk.thinking !== undefined ||
-      chunk.nativeToolCallDeltas !== undefined ||
-      chunk.done === true;
-    if (!hasContent) {
+    if (!this.#chunkHasContent(chunk)) {
       return;
     }
 
     const index = stream.chunkIndex++;
 
-    // Update usage tracking
-    if (chunk.usage) {
-      stream.usage.inputTokens += chunk.usage.inputTokens ?? 0;
-      stream.usage.outputTokens += chunk.usage.outputTokens ?? 0;
-      // costUsd is an estimate per chunk — accumulated at stream.end
-    }
-
-    if (chunk.stepUsage) {
-      stream.usage.inputTokens += chunk.stepUsage.inputTokens ?? 0;
-      stream.usage.outputTokens += chunk.stepUsage.outputTokens ?? 0;
-    }
+    this.#accumulateUsage(stream, chunk);
 
     // IPC notification — broadcast to all connected clients
     this.#deps.ipc.broadcast('stream.chunk', {
@@ -321,6 +306,23 @@ export class StreamManager {
 
     // ACP bridge
     acpBridge?.emitChunk?.(stream.id, chunk);
+  }
+
+  #chunkHasContent(chunk: StreamChunk): boolean {
+    return (
+      chunk.content !== undefined ||
+      chunk.thinking !== undefined ||
+      chunk.nativeToolCallDeltas !== undefined ||
+      chunk.done === true
+    );
+  }
+
+  #accumulateUsage(stream: ActiveStream, chunk: StreamChunk): void {
+    const src = chunk.usage ?? chunk.stepUsage;
+    if (src) {
+      stream.usage.inputTokens += src.inputTokens ?? 0;
+      stream.usage.outputTokens += src.outputTokens ?? 0;
+    }
   }
 
   #emitEnd(stream: ActiveStream, acpBridge?: ACPStreamBridge): void {

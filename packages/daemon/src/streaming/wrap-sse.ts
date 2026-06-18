@@ -57,6 +57,7 @@ export async function* wrapSSE<T>(source: AsyncIterable<T>, options: WrapSSEOpti
       const result = await Promise.race([
         iterator.next(),
         new Promise<never>((_, reject) => {
+          // nosemgrep: detect-object-injection — controller is a locally created AbortController, not user input
           controller.signal.addEventListener(
             'abort',
             () => reject(new Error(controller.signal.reason?.toString() ?? 'Aborted')),

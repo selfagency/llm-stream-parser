@@ -454,9 +454,7 @@ export class Daemon {
           })
         );
       }
-      return Promise.resolve(
-        this.streamManager.startStream(parsed.data, this.createDefaultStreamProvider(), undefined)
-      );
+      return Promise.resolve(this.streamManager.startStream(parsed.data, this.createDefaultStreamProvider()));
     });
     this.ipc.handle('stream.cancel', req => {
       const parsed = StreamIdSchema.safeParse(req);
