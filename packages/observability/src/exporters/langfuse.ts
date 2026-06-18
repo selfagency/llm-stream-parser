@@ -168,33 +168,31 @@ export function createLangfuseExporterFromEnv(
  */
 function resolveLangfuseOptions(
   detection: LangfuseEnvDetection,
-  options:
-    | {
-        endpoint?: string;
-        publicKey?: string;
-        secretKey?: string;
-        projectId?: string;
-        flushIntervalMs?: number;
-        maxBatchSize?: number;
-      }
-    | undefined,
+  options: LangfuseExporterOptions | undefined,
   env: Record<string, string | undefined>
 ): LangfuseExporterOptions {
-  const publicKey = options?.publicKey ?? env.LANGFUSE_PUBLIC_KEY?.trim() ?? '';
-  const secretKey = options?.secretKey ?? env.LANGFUSE_SECRET_KEY?.trim() ?? '';
-  const endpoint = options?.endpoint ?? detection.endpoint;
-  const projectId = options?.projectId ?? detection.projectId;
-  const flushIntervalMs = options?.flushIntervalMs ?? detection.flushIntervalMs;
-  const maxBatchSize = options?.maxBatchSize ?? detection.maxBatchSize;
-
-  return {
-    publicKey,
-    secretKey,
-    endpoint,
-    ...(projectId ? { projectId } : {}),
-    ...(flushIntervalMs === undefined ? {} : { flushIntervalMs }),
-    ...(maxBatchSize === undefined ? {} : { maxBatchSize })
+  const opts: LangfuseExporterOptions = {
+    publicKey: options?.publicKey ?? env.LANGFUSE_PUBLIC_KEY?.trim() ?? '',
+    secretKey: options?.secretKey ?? env.LANGFUSE_SECRET_KEY?.trim() ?? '',
+    endpoint: options?.endpoint ?? detection.endpoint
   };
+
+  const projectId = options?.projectId ?? detection.projectId;
+  if (projectId !== undefined) {
+    (opts as Record<string, string | number | undefined>).projectId = projectId;
+  }
+
+  const flushIntervalMs = options?.flushIntervalMs ?? detection.flushIntervalMs;
+  if (flushIntervalMs !== undefined) {
+    (opts as Record<string, string | number | undefined>).flushIntervalMs = flushIntervalMs;
+  }
+
+  const maxBatchSize = options?.maxBatchSize ?? detection.maxBatchSize;
+  if (maxBatchSize !== undefined) {
+    (opts as Record<string, string | number | undefined>).maxBatchSize = maxBatchSize;
+  }
+
+  return opts;
 }
 
 // ── Helpers ─────────────────────────────────────────────

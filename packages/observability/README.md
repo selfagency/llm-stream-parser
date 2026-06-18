@@ -44,7 +44,7 @@ agentsy status
 
 Expected startup log:
 
-```
+```text
 [daemon] observability: langfuse enabled — Loaded from LANGFUSE_PUBLIC_KEY + LANGFUSE_SECRET_KEY; endpoint=https://cloud.langfuse.com/api/public/otlp/v1/traces
 ```
 
@@ -60,7 +60,7 @@ observability:
 
 Expected startup log:
 
-```
+```text
 [daemon] observability: langfuse disabled — Disabled by config (langfuseEnabled = false)
 ```
 
