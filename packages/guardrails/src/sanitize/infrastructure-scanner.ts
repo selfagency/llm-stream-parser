@@ -106,29 +106,29 @@ const PATH_PATTERNS: readonly RegExp[] = FS_ROOTS.map(
 // nosemgrep: all LABEL_PATTERNS are hardcoded regex literals
 const LABEL_PATTERNS: readonly RegExp[] = [
   // service.* labels
-  /\bservice\.name\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\bservice\.type\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\bservice\.account\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\bservice\.port\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\bservice\.cluster\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\bservice\.namespace\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\bservice\.selector\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\bservice\.label\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\bservice\.name\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\bservice\.type\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\bservice\.account\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\bservice\.port\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\bservice\.cluster\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\bservice\.namespace\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\bservice\.selector\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\bservice\.label\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
   // app.* labels
-  /\bapp\.kubernetes\.io\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\bapp\.instance\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\bapp\.name\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\bapp\.version\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\bapp\.kubernetes\.io\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\bapp\.instance\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\bapp\.name\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\bapp\.version\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
   // helm labels
-  /\bhelm\.sh\/chart\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\bhelm\.sh\/chart\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
   // traefik labels
-  /\btraefik\.frontend\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\btraefik\.backend\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\btraefik\.service\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\btraefik\.frontend\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\btraefik\.backend\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\btraefik\.service\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
   // envoy labels
-  /\benvoy\.cluster\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\benvoy\.service\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
-  /\benvoy\.route\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi
+  /\benvoy\.cluster\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\benvoy\.service\s*[:=]\s*['"]?[-\w./]+['"]?/gi,
+  /\benvoy\.route\s*[:=]\s*['"]?[-\w./]+['"]?/gi
 ];
 
 // ── Scanner ────────────────────────────────────────────
