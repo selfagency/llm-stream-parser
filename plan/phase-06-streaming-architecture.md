@@ -186,12 +186,12 @@ Map daemon stream events to ACP `session/update` notifications:
 
 ### 11.7 Verification
 
-- [ ] `StreamManager` runs as a `Service` in the daemon
-- [ ] `wrapSSE` aborts on idle
-- [ ] `StreamingSecretsFilter` masks secrets across chunk boundaries
-- [ ] `failUnsettledTools` fires on stream error
-- [ ] ACP `session/update` notifications emitted for all event types
-- [ ] `pnpm check-types && pnpm lint && pnpm test` green
+- [x] `StreamManager` runs as a `Service` in the daemon
+- [x] `wrapSSE` aborts on idle
+- [x] `StreamingSecretsFilter` masks secrets across chunk boundaries
+- [x] `failUnsettledTools` fires on stream error
+- [x] ACP `session/update` notifications emitted for all event types
+- [x] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
 

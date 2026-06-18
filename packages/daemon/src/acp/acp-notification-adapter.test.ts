@@ -3,8 +3,8 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { ACPNotificationAdapter } from './acp-notification-adapter.js';
 import type { Logger } from '../types.js';
+import { ACPNotificationAdapter } from './acp-notification-adapter.js';
 
 // =============================================================================
 // Mocks

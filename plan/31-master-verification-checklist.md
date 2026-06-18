@@ -78,18 +78,18 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Routing decisions logged for audit when daemon-hosted
 - [ ] Daemon restart preserves quota state
 
-### Phase 6 — Streaming Architecture
-- [ ] `StreamManager` runs as a `Service` in the daemon
-- [ ] `wrapSSE` aborts on idle
-- [ ] `StreamingSecretsFilter` masks secrets across chunk boundaries
-- [ ] `failUnsettledTools` fires on stream error
-- [ ] ACP `session/update` notifications emitted for all event types
+### Phase 6 — Streaming Architecture ✅
+- [x] `StreamManager` runs as a `Service` in the daemon
+- [x] `wrapSSE` aborts on idle
+- [x] `StreamingSecretsFilter` masks secrets across chunk boundaries
+- [x] `failUnsettledTools` fires on stream error
+- [x] ACP `session/update` notifications emitted for all event types
 
-### Phase 7 — RAG as Daemon Service
-- [ ] `RetrievalService` runs as a `Service` in the daemon
-- [ ] Background indexing job scheduled and runs
-- [ ] Vector index persists in `UnifiedDB.rag_vectors`
-- [ ] Wiki invariant enforced (only `kind: 'semantic'` items indexed)
+### Phase 7 — RAG as Daemon Service ✅
+- [x] `RetrievalService` runs as a `Service` in the daemon
+- [x] Background indexing job scheduled and runs
+- [x] Vector index persists in `UnifiedDB.rag_vectors`
+- [x] Wiki invariant enforced (only `kind: 'semantic'` items indexed)
 
 ### Phase 8 — Learning Loop & Background Jobs
 - [ ] `LearningJob` runs as a Bree-scheduled job
@@ -229,41 +229,41 @@ This checklist combines the guardrails gap analysis verification items (43 findi
 - [ ] Image support in prompts works
 - [ ] ACP session persistence works across daemon restarts
 
-### Phase 19 — Langfuse Observability Integration
-- [ ] `detectLangfuseFromEnv` handles all env-var combinations (missing, partial, both, whitespace, empty, `LANGFUSE_HOST` path variants)
-- [ ] `createLangfuseExporterFromEnv` returns `null` on missing vars, returns exporter on present vars, honors optional vars, validates integers, overrides take precedence
-- [ ] `createObservabilityFromEnv` returns engine with disabled sink on empty env, enabled sink on present env, respects `langfuseEnabled: false`
-- [ ] `loadDotenv` loads `.env`, prioritizes `.env.local`, does not override existing `process.env`, throws on malformed file, silent on missing file
-- [ ] `DaemonConfig.observability` schema accepts all fields with correct defaults
-- [ ] Daemon constructor calls `loadDotenv()` then `createObservabilityFromEnv()`
-- [ ] Daemon `start()` logs each sink with enabled/disabled + reason
-- [ ] Daemon `stop()` calls `observability.shutdown()` before `db.close()`
-- [ ] `agentsy status` shows observability wiring
-- [ ] Manual smoke: Langfuse dashboard receives traces
-- [ ] Manual smoke: env vars absent → daemon logs "langfuse disabled" → daemon works normally
-- [ ] Manual smoke: `observability.langfuse.enabled: false` → "disabled by config" log
-- [ ] Manual smoke: malformed `.env` → warning logged, daemon continues
-- [ ] Observability README rewritten with Langfuse integration docs, env-var table, quick start, redaction caveat
-- [ ] `@agentsy/observability` added as dependency of `@agentsy/daemon`
+### Phase 19 — Langfuse Observability Integration ✅
+- [x] `detectLangfuseFromEnv` handles all env-var combinations (missing, partial, both, whitespace, empty, `LANGFUSE_HOST` path variants)
+- [x] `createLangfuseExporterFromEnv` returns `null` on missing vars, returns exporter on present vars, honors optional vars, validates integers, overrides take precedence
+- [x] `createObservabilityFromEnv` returns engine with disabled sink on empty env, enabled sink on present env, respects `langfuseEnabled: false`
+- [x] `loadDotenv` loads `.env`, prioritizes `.env.local`, does not override existing `process.env`, throws on malformed file, silent on missing file
+- [x] `DaemonConfig.observability` schema accepts all fields with correct defaults
+- [x] Daemon constructor calls `loadDotenv()` then `createObservabilityFromEnv()`
+- [x] Daemon `start()` logs each sink with enabled/disabled + reason
+- [x] Daemon `stop()` calls `observability.shutdown()` before `db.close()`
+- [x] `agentsy status` shows observability wiring
+- [x] Manual smoke: Langfuse dashboard receives traces
+- [x] Manual smoke: env vars absent → daemon logs "langfuse disabled" → daemon works normally
+- [x] Manual smoke: `observability.langfuse.enabled: false` → "disabled by config" log
+- [x] Manual smoke: malformed `.env` → warning logged, daemon continues
+- [x] Observability README rewritten with Langfuse integration docs, env-var table, quick start, redaction caveat
+- [x] `@agentsy/observability` added as dependency of `@agentsy/daemon`
 
-### Phase 20 — Ethical Provider & Content Policy
-- [ ] `PROVIDER_ETHICS_POLICY` contains 6 entries (xai block; openai/microsoft/google/amazon/meta warn)
-- [ ] `isProviderBlocked('xai')` returns `true`; all others return `false`
-- [ ] `requiresAcknowledgement('openai')` returns `true`; `requiresAcknowledgement('meta')` returns `true`; `requiresAcknowledgement('anthropic')` returns `false`
-- [ ] xAI block rationale cites both content safety (CSAM, antisemitism, deepfakes) AND environmental racism (illegal gas turbines, 495 MW, NOx/formaldehyde, NAACP lawsuit)
-- [ ] Meta warn rationale cites tent data centers (200 MW gas turbines) AND LibGen training-data theft
-- [ ] `RoutingService.selectModel()` removes blocked providers before returning candidates
-- [ ] `RoutingService.selectModel()` attaches `requiresAcknowledgement` to warn-listed providers
-- [ ] Daemon IPC `stream.start` returns `acknowledgement-required` error when ack is missing
-- [ ] Per-session warning can display cumulative environmental impact from Phase 30 ("You have used X for N requests, producing Y gCO2")
-- [ ] `agentsy acknowledge-provider --provider openai` records ack in `UnifiedDB.session_meta`
-- [ ] Acknowledgement is per-session — new session requires re-ack
-- [ ] `StyleMimicryScanner` blocks "in the style of [living creator]" for writing, imagery, audio
-- [ ] `StyleMimicryScanner` passes "in the style of Shakespeare" (historical)
-- [ ] `StyleMimicryScanner` passes "in a stream-of-consciousness style" (technique, no name)
-- [ ] `telegram.ts` deleted; no references remain in `packages/daemon` or `packages/cli`
-- [ ] `safety-changelog.md` has Telegram removal entry with sources
-- [ ] `ETHICS.md` §12–§16 added (§16: environmental racism as a block criterion); `EthicsRegistry` updated with `implementedBy` fields
+### Phase 20 — Ethical Provider & Content Policy ✅
+- [x] `PROVIDER_ETHICS_POLICY` contains 6 entries (xai block; openai/microsoft/google/amazon/meta warn)
+- [x] `isProviderBlocked('xai')` returns `true`; all others return `false`
+- [x] `requiresAcknowledgement('openai')` returns `true`; `requiresAcknowledgement('meta')` returns `true`; `requiresAcknowledgement('anthropic')` returns `false`
+- [x] xAI block rationale cites both content safety (CSAM, antisemitism, deepfakes) AND environmental racism (illegal gas turbines, 495 MW, NOx/formaldehyde, NAACP lawsuit)
+- [x] Meta warn rationale cites tent data centers (200 MW gas turbines) AND LibGen training-data theft
+- [x] `RoutingService.selectModel()` removes blocked providers before returning candidates
+- [x] `RoutingService.selectModel()` attaches `requiresAcknowledgement` to warn-listed providers
+- [x] Daemon IPC `stream.start` returns `acknowledgement-required` error when ack is missing
+- [x] Per-session warning can display cumulative environmental impact from Phase 30 ("You have used X for N requests, producing Y gCO2")
+- [x] `agentsy acknowledge-provider --provider openai` records ack in `UnifiedDB.session_meta`
+- [x] Acknowledgement is per-session — new session requires re-ack
+- [x] `StyleMimicryScanner` blocks "in the style of [living creator]" for writing, imagery, audio
+- [x] `StyleMimicryScanner` passes "in the style of Shakespeare" (historical)
+- [x] `StyleMimicryScanner` passes "in a stream-of-consciousness style" (technique, no name)
+- [x] `telegram.ts` deleted; no references remain in `packages/daemon` or `packages/cli`
+- [x] `safety-changelog.md` has Telegram removal entry with sources
+- [x] `ETHICS.md` §12–§16 added (§16: environmental racism as a block criterion); `EthicsRegistry` updated with `implementedBy` fields
 
 ### Phase 21 — Docker-Based Optional Tooling
 - [ ] `DockerAvailabilityChecker` correctly detects Docker presence, daemon state, and resources

@@ -156,7 +156,7 @@ describe('spillover', () => {
     const decision = await gw.selectModel({});
     const result = await gw.spillover(decision);
     expect(result).not.toBeNull();
-    expect(result!.providerId).not.toBe(decision.providerId);
+    expect(result?.providerId).not.toBe(decision.providerId);
   });
 
   it('persists the spillover decision', async () => {

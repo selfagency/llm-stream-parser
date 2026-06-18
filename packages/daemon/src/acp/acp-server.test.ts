@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { StreamManager } from '../services/stream-manager.js';
 import { createMockLogger } from '../test-utils.js';
 import { ACPNotificationAdapter } from './acp-notification-adapter.js';
 import { ACPServer } from './acp-server.js';
 import { ACPSessionBridge } from './acp-session-bridge.js';
-import type { StreamManager } from '../services/stream-manager.js';
 
 function createMockStreamManager(): StreamManager {
   return {
@@ -153,7 +153,7 @@ describe('ACPSessionBridge', () => {
 describe('ACPNotificationAdapter', () => {
   it('should wire and unwire sessions', () => {
     const adapter = new ACPNotificationAdapter({ logger: createMockLogger() });
-    expect(() => adapter.wireAgentToSession('agent-1', 'sess-1', () => {})).not.toThrow();
+    expect(() => adapter.wireAgentToSession('agent-1', 'sess-1', vi.fn())).not.toThrow();
     expect(() => adapter.unwireSession('sess-1')).not.toThrow();
   });
 

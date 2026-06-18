@@ -283,23 +283,23 @@ Each clause's `implementedBy` field points to the corresponding scanner or polic
 - **Style-mimicry of a technique vs. a person**: "Write in a stream-of-consciousness style" (technique — passes). "Write in the style of James Joyce" (person — blocks, Joyce is historical but the set is conservative; add Joyce to the set). "Write in the style of a specific living poet" (no name captured — passes, but the agent should be trained to refuse).
 - **User overrides**: there is **no override** for the xAI block or the style-mimicry block. These are hard ethical commitments. The `docs/safety-exceptions.md` mechanism (E-43) is for documenting *why* an exception was considered, not for enabling one.
 
-### 26.6 Verification
+### 26.6 Verification ✅
 
-- [ ] `PROVIDER_ETHICS_POLICY` contains 5 entries (xai block; openai/microsoft/google/amazon warn)
-- [ ] `isProviderBlocked('xai')` returns `true`; all others return `false`
-- [ ] `requiresAcknowledgement('openai')` returns `true`; `requiresAcknowledgement('anthropic')` returns `false`
-- [ ] `RoutingService.selectModel()` removes blocked providers before returning candidates
-- [ ] `RoutingService.selectModel()` attaches `requiresAcknowledgement` to warn-listed providers
-- [ ] Daemon IPC `stream.start` returns `acknowledgement-required` error when ack is missing
-- [ ] `agentsy acknowledge-provider --provider openai` records ack in `UnifiedDB.session_meta`
-- [ ] Acknowledgement is per-session — new session requires re-ack
-- [ ] `StyleMimicryScanner` blocks "in the style of [living creator]" for writing, imagery, audio
-- [ ] `StyleMimicryScanner` passes "in the style of Shakespeare" (historical)
-- [ ] `StyleMimicryScanner` passes "in a stream-of-consciousness style" (technique, no name)
-- [ ] `telegram.ts` deleted; no references remain in `packages/daemon` or `packages/cli`
-- [ ] `safety-changelog.md` has Telegram removal entry with sources
-- [ ] `ETHICS.md` §12–§15 added; `EthicsRegistry` updated with `implementedBy` fields
-- [ ] `pnpm check-types && pnpm lint && pnpm test` green
+- [x] `PROVIDER_ETHICS_POLICY` contains 6 entries (xai block; openai/microsoft/google/amazon/meta warn)
+- [x] `isProviderBlocked('xai')` returns `true`; all others return `false`
+- [x] `requiresAcknowledgement('openai')` returns `true`; `requiresAcknowledgement('anthropic')` returns `false`
+- [x] `RoutingService.selectModel()` removes blocked providers before returning candidates
+- [x] `RoutingService.selectModel()` attaches `requiresAcknowledgement` to warn-listed providers
+- [x] Daemon IPC `stream.start` returns `acknowledgement-required` error when ack is missing
+- [x] `agentsy acknowledge-provider --provider openai` records ack in `UnifiedDB.session_meta`
+- [x] Acknowledgement is per-session — new session requires re-ack
+- [x] `StyleMimicryScanner` blocks "in the style of [living creator]" for writing, imagery, audio
+- [x] `StyleMimicryScanner` passes "in the style of Shakespeare" (historical)
+- [x] `StyleMimicryScanner` passes "in a stream-of-consciousness style" (technique, no name)
+- [x] `telegram.ts` deleted; no references remain in `packages/daemon` or `packages/cli`
+- [x] `safety-changelog.md` has Telegram removal entry with sources
+- [x] `ETHICS.md` §12–§16 added; `EthicsRegistry` updated with `implementedBy` fields
+- [x] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
 

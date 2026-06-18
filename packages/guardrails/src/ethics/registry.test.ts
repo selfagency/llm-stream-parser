@@ -29,15 +29,18 @@ describe('EthicsRegistry', () => {
 
   it('every clause has implementedBy or is a known gap', () => {
     for (const clause of DEFAULT_ETHICS_REGISTRY.all) {
-      // At this phase, all clauses are known gaps (implementedBy === null)
-      // Phases 9-11 will populate implementedBy for scanner-enforceable clauses
-      expect(clause.implementedBy).toBeNull();
+      // Phase 20: provider-ethics-policy, style-mimicry-scanner, and telegram-removed
+      // are now implemented. Remaining clauses are known gaps (implementedBy === null).
+      expect(clause.implementedBy).not.toBeUndefined();
     }
   });
 
-  it('getEthicsGaps returns all clauses when none are implemented', () => {
+  it('getEthicsGaps returns only clauses without implementedBy', () => {
     const gaps = DEFAULT_ETHICS_REGISTRY.getEthicsGaps();
-    expect(gaps.length).toBe(DEFAULT_ETHICS_REGISTRY.all.length);
+    expect(gaps.length).toBeLessThan(DEFAULT_ETHICS_REGISTRY.all.length);
+    for (const gap of gaps) {
+      expect(gap.implementedBy).toBeNull();
+    }
   });
 
   it('getClausesBySource returns clauses from the specified document', () => {
@@ -64,12 +67,12 @@ describe('EthicsRegistry', () => {
     expect(clause?.section).toBe('§3');
   });
 
-  it('implementedCount is 0 when no scanners are implemented', () => {
-    expect(DEFAULT_ETHICS_REGISTRY.implementedCount).toBe(0);
+  it('implementedCount reflects Phase 20 implemented clauses', () => {
+    expect(DEFAULT_ETHICS_REGISTRY.implementedCount).toBeGreaterThan(0);
   });
 
-  it('gapCount equals total clauses when none are implemented', () => {
-    expect(DEFAULT_ETHICS_REGISTRY.gapCount).toBe(DEFAULT_ETHICS_REGISTRY.all.length);
+  it('gapCount is less than total clauses when some are implemented', () => {
+    expect(DEFAULT_ETHICS_REGISTRY.gapCount).toBeLessThan(DEFAULT_ETHICS_REGISTRY.all.length);
   });
 
   it('custom registry with implemented clauses works', () => {

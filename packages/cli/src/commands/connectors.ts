@@ -28,11 +28,9 @@ async function handleConnectorsListCommand(_argv: readonly string[], io: CliIO):
 
   const { isDiscordAdapterAvailable } = await import('@agentsy/daemon/connectors');
   const { isSlackAdapterAvailable } = await import('@agentsy/daemon/connectors');
-  const { isTelegramAdapterAvailable } = await import('@agentsy/daemon/connectors');
 
   stdout(`  Discord:   ${isDiscordAdapterAvailable() ? '✅ available' : '❌ not available (install discord.js)'}`);
   stdout(`  Slack:     ${isSlackAdapterAvailable() ? '✅ available' : '❌ not available (install @slack/bolt)'}`);
-  stdout(`  Telegram:  ${isTelegramAdapterAvailable() ? '✅ available' : '❌ not available (install grammy)'}`);
 
   return 0;
 }

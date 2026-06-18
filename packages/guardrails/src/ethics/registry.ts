@@ -274,10 +274,53 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
   clause(
     'ethics:labor-worker-dignity',
     'ETHICS.md',
-    '§12',
+    '§17',
     'First-party practices should recognize data workers as collaborators, advocate for fair compensation and working conditions, and reject the normalization of opaque, extractive data pipelines.',
     'release-gate'
   ),
+
+  // ── ETHICS.md §12–§16 (Phase 20) ──────────────────────────────────────
+
+  {
+    id: 'ethics:no-xai-routing',
+    source: 'ETHICS.md',
+    section: '§12',
+    text: 'The framework must not route to providers documented as generating CSAM, antisemitic content, or non-consensual sexual deepfakes. xAI/Grok is hard-blocked.',
+    enforceableAs: 'policy-rule',
+    implementedBy: 'provider-ethics-policy'
+  },
+  {
+    id: 'ethics:warn-openai-microsoft-google-amazon-meta',
+    source: 'ETHICS.md',
+    section: '§13',
+    text: 'The framework must warn users before routing to providers documented as complicit in human-rights violations. OpenAI, Microsoft, Google, Amazon, and Meta require per-session acknowledgement.',
+    enforceableAs: 'policy-rule',
+    implementedBy: 'provider-ethics-policy'
+  },
+  {
+    id: 'ethics:no-style-mimicry',
+    source: 'ETHICS.md',
+    section: '§14',
+    text: 'The framework must block prompts requesting creation of writing, imagery, or audio/video in the style of a specific named living creator.',
+    enforceableAs: 'scanner',
+    implementedBy: 'style-mimicry-scanner'
+  },
+  {
+    id: 'ethics:no-telegram-connector',
+    source: 'ETHICS.md',
+    section: '§15',
+    text: 'The framework must not ship connectors to platforms documented as facilitating extremism or CSAM. Telegram is removed.',
+    enforceableAs: 'release-gate',
+    implementedBy: 'telegram-removed'
+  },
+  {
+    id: 'ethics:environmental-impact-tracking',
+    source: 'ETHICS.md',
+    section: '§16',
+    text: 'Every LLM request records energy consumption (kWh), CO2 emissions (gCO2), and water consumption (mL). Cumulative tracking per session, user, team, and project is maintained.',
+    enforceableAs: 'policy-rule',
+    implementedBy: null
+  },
 
   // ── SAFETY.md ───────────────────────────────────────────────────────────
   clause(

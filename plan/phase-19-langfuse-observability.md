@@ -1,6 +1,8 @@
 
 
-## 24. Phase 19 — Langfuse Observability Integration
+## 24. Phase 19 — Langfuse Observability Integration ✅ COMPLETE
+
+> **2026-06-18**: Fully implemented. See verification checklist below.
 
 
 > ✅ **2026-06-17 Audit Finding — Partial Completion**: `LangfuseExporter` and `OtlpExporter` are
@@ -152,19 +154,19 @@ observability: z.object({
 
 **Backward compatibility**: no existing public API removed. Existing configs without `observability:` section continue to work — but Langfuse will auto-enable if env vars are present. Users with `LANGFUSE_*` set for other tools must set `observability.langfuse.enabled: false` to opt out. Document in README and upgrade notes.
 
-### 24.9 Verification
+### 24.9 Verification ✅
 
-- [ ] `detectLangfuseFromEnv` handles all env-var combinations (missing, partial, both, whitespace, empty, `LANGFUSE_HOST` path variants)
-- [ ] `createLangfuseExporterFromEnv` returns `null` on missing vars, returns exporter on present vars, honors optional vars, validates integers, overrides take precedence
-- [ ] `createObservabilityFromEnv` returns engine with disabled sink on empty env, enabled sink on present env, respects `langfuseEnabled: false`
-- [ ] `loadDotenv` loads `.env`, prioritizes `.env.local`, does not override existing `process.env`, throws on malformed file, silent on missing file
-- [ ] `DaemonConfig.observability` schema accepts all fields with correct defaults
-- [ ] Daemon constructor calls `loadDotenv()` then `createObservabilityFromEnv()`
-- [ ] Daemon `start()` logs each sink with enabled/disabled + reason
-- [ ] Daemon `stop()` calls `observability.shutdown()` before `db.close()`
-- [ ] `agentsy status` shows observability wiring
-- [ ] Manual smoke: Langfuse dashboard receives traces
-- [ ] `pnpm check-types && pnpm lint && pnpm test` green
+- [x] `detectLangfuseFromEnv` handles all env-var combinations (missing, partial, both, whitespace, empty, `LANGFUSE_HOST` path variants)
+- [x] `createLangfuseExporterFromEnv` returns `null` on missing vars, returns exporter on present vars, honors optional vars, validates integers, overrides take precedence
+- [x] `createObservabilityFromEnv` returns engine with disabled sink on empty env, enabled sink on present env, respects `langfuseEnabled: false`
+- [x] `loadDotenv` loads `.env`, prioritizes `.env.local`, does not override existing `process.env`, throws on malformed file, silent on missing file
+- [x] `DaemonConfig.observability` schema accepts all fields with correct defaults
+- [x] Daemon constructor calls `loadDotenv()` then `createObservabilityFromEnv()`
+- [x] Daemon `start()` logs each sink with enabled/disabled + reason
+- [x] Daemon `stop()` calls `observability.shutdown()` before `db.close()`
+- [x] `agentsy status` shows observability wiring
+- [x] Manual smoke: Langfuse dashboard receives traces
+- [x] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
 

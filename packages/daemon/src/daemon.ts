@@ -536,7 +536,7 @@ export class Daemon {
       const parsed = StreamStartRequestSchema.safeParse(req);
       if (!parsed.success) {
         return Promise.reject(
-          Object.assign(new Error('Invalid stream request: ' + parsed.error.issues.map(i => i.message).join('; ')), {
+          Object.assign(new Error(`Invalid stream request: ${parsed.error.issues.map(i => i.message).join('; ')}`), {
             code: -32_602
           })
         );

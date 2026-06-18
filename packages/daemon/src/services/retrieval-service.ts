@@ -16,6 +16,7 @@ import type { TimerScheduler } from '../jobs/bree-scheduler.js';
 import type { CreateEmbeddingProviderOptions, EmbeddingProvider } from '../retrieval/index.js';
 import { createEmbeddingProvider } from '../retrieval/index.js';
 import type { Logger } from '../types.js';
+import type { Service } from './routing-service.js';
 
 // ── Types ──────────────────────────────────────────────
 
@@ -57,7 +58,7 @@ function hashString(str: string): string {
 
 // ── RetrievalService ───────────────────────────────────
 
-export class RetrievalService {
+export class RetrievalService implements Service {
   readonly name = 'retrieval';
   #state: 'stopped' | 'starting' | 'active' | 'sleeping' | 'stopping' = 'stopped';
   readonly #deps: RetrievalServiceDeps;

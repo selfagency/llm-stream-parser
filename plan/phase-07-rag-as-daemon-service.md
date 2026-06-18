@@ -101,11 +101,11 @@ export class RetrievalService implements Service {
 
 ### 12.6 Verification
 
-- [ ] `RetrievalService` runs as a `Service` in the daemon
-- [ ] Background indexing job scheduled and runs
-- [ ] Vector index persists in `UnifiedDB.rag_vectors`
-- [ ] Wiki invariant enforced (only `kind: 'semantic'` items indexed)
-- [ ] `pnpm check-types && pnpm lint && pnpm test` green
+- [x] `RetrievalService` runs as a `Service` in the daemon
+- [x] Background indexing job scheduled and runs
+- [x] Vector index persists in `UnifiedDB.rag_vectors`
+- [x] Wiki invariant enforced (only `kind: 'semantic'` items indexed)
+- [x] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
 

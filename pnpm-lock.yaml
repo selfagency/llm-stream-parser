@@ -186,9 +186,21 @@ importers:
       '@agentsy/gateway':
         specifier: workspace:*
         version: link:../gateway
+      '@agentsy/guardrails':
+        specifier: workspace:*
+        version: link:../guardrails
       '@agentsy/memory':
         specifier: workspace:*
         version: link:../memory
+      '@agentsy/observability':
+        specifier: workspace:*
+        version: link:../observability
+      '@agentsy/providers':
+        specifier: workspace:*
+        version: link:../providers
+      '@agentsy/retrieval':
+        specifier: workspace:*
+        version: link:../retrieval
       '@agentsy/shared':
         specifier: workspace:*
         version: link:../shared

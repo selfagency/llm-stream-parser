@@ -60,6 +60,24 @@ export type { EnforceableAs, EthicalClause, PolicySource } from './ethics/regist
 export { DEFAULT_ETHICS_REGISTRY, EthicsRegistry } from './ethics/registry.js';
 
 // ---------------------------------------------------------------------------
+// Provider ethics policy — hard blocks and warn-and-acknowledge entries
+// ---------------------------------------------------------------------------
+
+export type { ProviderEthicsAction, ProviderEthicsEntry } from './ethics/provider-policy.js';
+export {
+  getProviderEthicsPolicy,
+  isProviderBlocked,
+  PROVIDER_ETHICS_POLICY,
+  requiresAcknowledgement
+} from './ethics/provider-policy.js';
+
+// ---------------------------------------------------------------------------
+// Style-mimicry scanner — blocks prompts targeting living creators
+// ---------------------------------------------------------------------------
+
+export { StyleMimicryScanner } from './scanners/style-mimicry.js';
+
+// ---------------------------------------------------------------------------
 // Audit logger — decision receipt persistence and export
 // ---------------------------------------------------------------------------
 

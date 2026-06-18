@@ -2,13 +2,13 @@
  * Tests for StreamManager.
  */
 
-import { describe, expect, it, vi } from 'vitest';
 import type { StreamChunk } from '@agentsy/shared';
+import { describe, expect, it, vi } from 'vitest';
 import type { IPCServer } from '../ipc/server.js';
+import { StreamingSecretsFilter } from '../streaming/secrets-filter.js';
 import type { Logger } from '../types.js';
 import type { RoutingService } from './routing-service.js';
 import { StreamManager, type StreamProvider } from './stream-manager.js';
-import { StreamingSecretsFilter } from '../streaming/secrets-filter.js';
 
 // =============================================================================
 // Mocks
@@ -57,7 +57,9 @@ function createMockStreamProvider(chunks: StreamChunk[] = []): StreamProvider {
             next() {
               if (i < chunks.length) {
                 // nosemgrep: detect-object-injection — chunks is a local array, not user input
-                return Promise.resolve({ done: false, value: chunks[i++]! });
+                const chunk = chunks[i];
+                i++;
+                return Promise.resolve({ done: false, value: chunk });
               }
               return Promise.resolve({ done: true, value: undefined });
             }
@@ -298,7 +300,9 @@ async function runFilterTest(
 
   const calls = (ipc.broadcast as ReturnType<typeof vi.fn>).mock.calls;
   const chunkCall = calls.find((c: unknown[]) => c[0] === 'stream.chunk');
-  if (!chunkCall) return undefined;
+  if (!chunkCall) {
+    return;
+  }
   return (chunkCall as [string, { chunk: { content: string } }])[1].chunk.content;
 }
 

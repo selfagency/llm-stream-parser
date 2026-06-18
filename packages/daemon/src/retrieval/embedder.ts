@@ -138,7 +138,7 @@ function createRemoteEmbedder(opts: RemoteEmbedderOptions): EmbeddingProvider {
     embed(text: string): Promise<number[]> {
       return embedSingle(text);
     },
-    embedBatch(texts: string[]): Promise<number[][]> {
+    async embedBatch(texts: string[]): Promise<number[][]> {
       if (texts.length === 0) {
         return Promise.resolve([]);
       }
