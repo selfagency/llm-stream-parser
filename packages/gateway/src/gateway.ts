@@ -101,6 +101,54 @@ export class Gateway {
   // ===========================================================================
 
   /**
+   * Build a selection context for the given candidate providers.
+   *
+   * Populates health and quota maps from the registries, and maps
+   * the routing request's capabilities and tier into the strategy
+   * context format.
+   */
+  #buildSelectionContext(candidates: ProviderEntry[], request: RoutingRequest): SelectionContext {
+    const healthMap = new Map<string, ProviderHealthEntry>();
+    const quotaMap = new Map<
+      string,
+      { rpmLimit: number; rpmRemaining: number; tpmLimit: number; tpmRemaining: number }
+    >();
+
+    for (const p of candidates) {
+      healthMap.set(p.id, this.#healthRegistry.getStatus(p.id));
+      const tracker = this.#quotaRegistry.getTracker(p.id);
+      if (tracker) {
+        quotaMap.set(p.id, tracker.getUsageSnapshot());
+      }
+    }
+
+    const requestObj: SelectionContext['request'] = { estimatedInputTokens: 100 };
+    if (request.capabilities) {
+      requestObj.requires = request.capabilities.map(c => {
+        if (c === 'tool-use') return 'tools' as const;
+        if (c === 'vision') return 'vision' as const;
+        if (c === 'streaming') return 'streaming' as const;
+        if (c === 'json') return 'json' as const;
+        return 'tools' as const;
+      });
+    }
+    if (request.tier) {
+      requestObj.taskTier = request.tier as 'micro' | 'small' | 'mid' | 'frontier';
+    }
+
+    return { health: healthMap, quota: quotaMap, request: requestObj };
+  }
+
+  /**
+   * Persist a routing decision for audit, swallowing errors.
+   */
+  async #persistDecision(decision: RoutingDecision): Promise<void> {
+    await this.#persistence.saveRoutingDecision(decision).catch(() => {
+      this.#logger.warn('Failed to persist routing decision');
+    });
+  }
+
+  /**
    * Select a model for the given routing request.
    *
    * 1. Apply ethics policy (if configured)
@@ -140,47 +188,7 @@ export class Gateway {
     }
 
     // 2. Build selection context
-    const healthMap = new Map<string, ProviderHealthEntry>();
-    const quotaMap = new Map<
-      string,
-      { rpmLimit: number; rpmRemaining: number; tpmLimit: number; tpmRemaining: number }
-    >();
-
-    for (const p of candidates) {
-      healthMap.set(p.id, this.#healthRegistry.getStatus(p.id));
-      const tracker = this.#quotaRegistry.getTracker(p.id);
-      if (tracker) {
-        quotaMap.set(p.id, tracker.getUsageSnapshot());
-      }
-    }
-
-    const requestObj: SelectionContext['request'] = { estimatedInputTokens: 100 };
-    if (request.capabilities) {
-      requestObj.requires = request.capabilities.map(c => {
-        if (c === 'tool-use') {
-          return 'tools' as const;
-        }
-        if (c === 'vision') {
-          return 'vision' as const;
-        }
-        if (c === 'streaming') {
-          return 'streaming' as const;
-        }
-        if (c === 'json') {
-          return 'json' as const;
-        }
-        return 'tools' as const;
-      });
-    }
-    if (request.tier) {
-      requestObj.taskTier = request.tier as 'micro' | 'small' | 'mid' | 'frontier';
-    }
-
-    const context: SelectionContext = {
-      health: healthMap,
-      quota: quotaMap,
-      request: requestObj
-    };
+    const context = this.#buildSelectionContext(candidates, request);
 
     // 3. Strategy-based selection
     const selected = this.#strategy.select(candidates, context);
@@ -199,9 +207,7 @@ export class Gateway {
     };
 
     // 4. Persist decision for audit
-    await this.#persistence.saveRoutingDecision(decision).catch(() => {
-      this.#logger.warn('Failed to persist routing decision');
-    });
+    await this.#persistDecision(decision);
 
     return decision;
   }
@@ -225,26 +231,7 @@ export class Gateway {
       return null;
     }
 
-    const healthMap = new Map<string, ProviderHealthEntry>();
-    const quotaMap = new Map<
-      string,
-      { rpmLimit: number; rpmRemaining: number; tpmLimit: number; tpmRemaining: number }
-    >();
-
-    for (const p of candidates) {
-      healthMap.set(p.id, this.#healthRegistry.getStatus(p.id));
-      const tracker = this.#quotaRegistry.getTracker(p.id);
-      if (tracker) {
-        quotaMap.set(p.id, tracker.getUsageSnapshot());
-      }
-    }
-
-    const context: SelectionContext = {
-      health: healthMap,
-      quota: quotaMap,
-      request: { estimatedInputTokens: 100 }
-    };
-
+    const context = this.#buildSelectionContext(candidates, {});
     const selected = this.#strategy.select(candidates, context);
     if (!selected) {
       return null;
@@ -261,10 +248,7 @@ export class Gateway {
       timestamp: new Date().toISOString()
     };
 
-    await this.#persistence.saveRoutingDecision(spilloverDecision).catch(() => {
-      this.#logger.warn('Failed to persist spillover decision');
-    });
-
+    await this.#persistDecision(spilloverDecision);
     return spilloverDecision;
   }
 
@@ -291,6 +275,7 @@ export class Gateway {
   async healthReport(): Promise<HealthReport> {
     const providers: Record<string, ProviderHealthEntry> = {};
     for (const providerId of this.#healthRegistry.listProviderIds()) {
+      // nosemgrep: detect-object-injection — providerId is an internal key from the health registry, not user input
       providers[providerId] = this.#healthRegistry.getStatus(providerId);
     }
     return { providers, timestamp: new Date().toISOString() };
