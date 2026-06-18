@@ -149,6 +149,55 @@ export class Gateway {
   }
 
   /**
+   * Apply the ethics policy filter to candidates, if configured.
+   * Returns filtered candidates (or the original list if no policy).
+   */
+  #applyEthicsPolicy(candidates: ProviderEntry[], request: RoutingRequest): ProviderEntry[] {
+    if (!this.#ethicsPolicy) {
+      return candidates;
+    }
+
+    const replicas: ModelReplica[] = candidates.map(p => ({
+      id: p.id,
+      logicalModelId: p.model ?? p.id,
+      providerId: p.id,
+      upstreamModelName: p.model ?? p.id,
+      cost: { inputPer1MTokens: 0, outputPer1MTokens: 0 },
+      isLocal: false
+    }));
+    const ethicsResult = this.#ethicsPolicy.filter(replicas, request);
+    const blockedIds = new Set(ethicsResult.blockedProviders);
+    const filtered = candidates.filter(p => !blockedIds.has(p.id));
+    if (ethicsResult.blockedProviders.length > 0) {
+      this.#logger.info(`Ethics policy blocked providers: ${ethicsResult.blockedProviders.join(', ')}`);
+    }
+    return filtered;
+  }
+
+  /**
+   * Build a routing decision from the selection result.
+   */
+  #buildDecision(
+    selected: ProviderEntry | undefined,
+    candidates: ProviderEntry[],
+    request: RoutingRequest,
+    reasons: string[]
+  ): RoutingDecision {
+    return {
+      id: randomUUID(),
+      modelId: selected?.model ?? selected?.id ?? 'none',
+      providerId: selected?.id ?? 'none',
+      replicaId: selected?.id ?? 'none',
+      tier: request.tier ?? 'unknown',
+      selectedBecause: reasons,
+      rejectedCandidates: candidates
+        .filter(p => p.id !== selected?.id)
+        .map(p => ({ id: p.id, reasons: ['not-selected'] })),
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  /**
    * Select a model for the given routing request.
    *
    * 1. Apply ethics policy (if configured)
@@ -167,48 +216,16 @@ export class Gateway {
    * inspects `taskTier` (e.g., `AdaptiveStrategy` with tier-aware weights).
    */
   async selectModel(request: RoutingRequest): Promise<RoutingDecision> {
-    let candidates = [...this.#providers.values()];
-
-    // 1. Apply ethics policy (Phase 20 hook — pluggable, optional)
-    if (this.#ethicsPolicy) {
-      const replicas: ModelReplica[] = candidates.map(p => ({
-        id: p.id,
-        logicalModelId: p.model ?? p.id,
-        providerId: p.id,
-        upstreamModelName: p.model ?? p.id,
-        cost: { inputPer1MTokens: 0, outputPer1MTokens: 0 },
-        isLocal: false
-      }));
-      const ethicsResult = this.#ethicsPolicy.filter(replicas, request);
-      const blockedIds = new Set(ethicsResult.blockedProviders);
-      candidates = candidates.filter(p => !blockedIds.has(p.id));
-      if (ethicsResult.blockedProviders.length > 0) {
-        this.#logger.info(`Ethics policy blocked providers: ${ethicsResult.blockedProviders.join(', ')}`);
-      }
-    }
-
-    // 2. Build selection context
+    const candidates = this.#applyEthicsPolicy([...this.#providers.values()], request);
     const context = this.#buildSelectionContext(candidates, request);
-
-    // 3. Strategy-based selection
     const selected = this.#strategy.select(candidates, context);
-
-    const decision: RoutingDecision = {
-      id: randomUUID(),
-      modelId: selected?.model ?? selected?.id ?? 'none',
-      providerId: selected?.id ?? 'none',
-      replicaId: selected?.id ?? 'none',
-      tier: request.tier ?? 'unknown',
-      selectedBecause: selected ? ['strategy-selected'] : ['no-candidates'],
-      rejectedCandidates: candidates
-        .filter(p => p.id !== selected?.id)
-        .map(p => ({ id: p.id, reasons: ['not-selected'] })),
-      timestamp: new Date().toISOString()
-    };
-
-    // 4. Persist decision for audit
+    const decision = this.#buildDecision(
+      selected,
+      candidates,
+      request,
+      selected ? ['strategy-selected'] : ['no-candidates']
+    );
     await this.#persistDecision(decision);
-
     return decision;
   }
 
@@ -237,17 +254,9 @@ export class Gateway {
       return null;
     }
 
-    const spilloverDecision: RoutingDecision = {
-      id: randomUUID(),
-      modelId: selected.model ?? selected.id,
-      providerId: selected.id,
-      replicaId: selected.id,
-      tier: decision.tier,
-      selectedBecause: ['spillover-fallback'],
-      rejectedCandidates: [],
-      timestamp: new Date().toISOString()
-    };
-
+    const spilloverDecision = this.#buildDecision(selected, candidates, { tier: decision.tier }, [
+      'spillover-fallback'
+    ]);
     await this.#persistDecision(spilloverDecision);
     return spilloverDecision;
   }
