@@ -351,6 +351,18 @@ export class UnifiedDB {
       {
         name: '010_gateway_health_history',
         sql: 'CREATE TABLE IF NOT EXISTS daemon_health_history (id INTEGER PRIMARY KEY AUTOINCREMENT, provider_id TEXT NOT NULL, record_json TEXT NOT NULL, timestamp TEXT NOT NULL)'
+      },
+      {
+        name: '011_rag_vectors',
+        sql: 'CREATE TABLE IF NOT EXISTS rag_vectors (id TEXT PRIMARY KEY, scope TEXT NOT NULL, memory_item_id TEXT NOT NULL, chunk_index INTEGER NOT NULL, content TEXT NOT NULL, embedding TEXT NOT NULL, indexed_at INTEGER DEFAULT (unixepoch()))'
+      },
+      {
+        name: '012_rag_indexed',
+        sql: 'CREATE TABLE IF NOT EXISTS rag_indexed (memory_item_id TEXT PRIMARY KEY, indexed_at INTEGER DEFAULT (unixepoch()))'
+      },
+      {
+        name: '013_memory_items_bridge',
+        sql: "CREATE TABLE IF NOT EXISTS memory_items (id TEXT PRIMARY KEY, scope TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'episodic', content TEXT NOT NULL, created_at INTEGER DEFAULT (unixepoch()))"
       }
     ];
 

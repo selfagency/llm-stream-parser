@@ -1,4 +1,8 @@
+import type { ProviderEthicsPolicyHook } from '@agentsy/gateway';
+import { isProviderBlocked, requiresAcknowledgement } from '@agentsy/guardrails';
 import type { MemoryEngine } from '@agentsy/memory';
+import type { ObservabilityEngine } from '@agentsy/observability';
+import { createObservabilityFromEnv } from '@agentsy/observability';
 import { z } from 'zod';
 import { ACPNotificationAdapter } from './acp/acp-notification-adapter.js';
 import { ACPServer } from './acp/acp-server.js';
@@ -8,14 +12,16 @@ import type { DaemonConfig } from './config.js';
 import { resolveConfig } from './config.js';
 import { ConnectorHost } from './connectors/connector-host.js';
 import { UnifiedDB } from './db/unified-db.js';
-import { IPCServer } from './ipc/server.js';
+import { loadDotenv } from './env.js';
 import { StreamStartRequestSchema } from './ipc/protocol.js';
+import { IPCServer } from './ipc/server.js';
 import { TimerScheduler } from './jobs/bree-scheduler.js';
 import { HonkerQueueAdapter } from './jobs/honker-queue.js';
 import { Sleeper } from './lifecycle/sleeper.js';
 import { Supervisor } from './lifecycle/supervisor.js';
 import { AgentPool } from './pool/agent-pool.js';
 import { SubprocessManager } from './processes/subprocess-manager.js';
+import { RetrievalService } from './services/retrieval-service.js';
 import { RoutingService } from './services/routing-service.js';
 import { ServiceHost } from './services/service-host.js';
 import type { StreamProvider } from './services/stream-manager.js';
@@ -157,8 +163,11 @@ export class Daemon {
   readonly supervisor: Supervisor;
   readonly sleeper: Sleeper;
   readonly routing: RoutingService;
+  readonly retrieval: RetrievalService;
   readonly streamManager: StreamManager;
   readonly acpNotificationAdapter: ACPNotificationAdapter;
+  readonly observability: ObservabilityEngine;
+  private readonly _observabilitySinks: Array<{ type: string; enabled: boolean; reason: string }>;
 
   private readonly config: DaemonConfig;
   private readonly logger: Logger;
@@ -166,6 +175,59 @@ export class Daemon {
   constructor(deps: DaemonDeps) {
     this.config = resolveConfig(deps.config);
     this.logger = createLogger(this.config.logging);
+
+    // Load .env files before any env-dependent initialization
+    if (this.config.observability.enabled) {
+      try {
+        loadDotenv(this.config.observability.envFiles);
+      } catch (err) {
+        this.logger.warn('Failed to load .env file', err);
+      }
+    }
+
+    // Initialize observability engine from env
+    const langfuseOverrides: Record<string, unknown> = {};
+    const lf = this.config.observability.langfuse;
+    if (lf.endpoint !== undefined) {
+      langfuseOverrides.endpoint = lf.endpoint;
+    }
+    if (lf.publicKey !== undefined) {
+      langfuseOverrides.publicKey = lf.publicKey;
+    }
+    if (lf.secretKey !== undefined) {
+      langfuseOverrides.secretKey = lf.secretKey;
+    }
+    if (lf.projectId !== undefined) {
+      langfuseOverrides.projectId = lf.projectId;
+    }
+    if (lf.flushIntervalMs !== undefined) {
+      langfuseOverrides.flushIntervalMs = lf.flushIntervalMs;
+    }
+    if (lf.maxBatchSize !== undefined) {
+      langfuseOverrides.maxBatchSize = lf.maxBatchSize;
+    }
+
+    const obsResult = createObservabilityFromEnv(
+      {
+        serviceName: this.config.observability.serviceName,
+        serviceVersion: this.config.observability.serviceVersion,
+        langfuseEnabled: this.config.observability.langfuse.enabled,
+        langfuse:
+          Object.keys(langfuseOverrides).length > 0
+            ? (langfuseOverrides as {
+                endpoint?: string;
+                publicKey?: string;
+                secretKey?: string;
+                projectId?: string;
+                flushIntervalMs?: number;
+                maxBatchSize?: number;
+              })
+            : undefined
+      },
+      this.logger
+    );
+    this.observability = obsResult.engine;
+    this._observabilitySinks = obsResult.sinks;
 
     // Unified database: ~/.agentsy/agentsy.db — single file for all subsystems
     this.db =
@@ -260,7 +322,8 @@ export class Daemon {
     });
 
     this.routing = new RoutingService({
-      db: this.db
+      db: this.db,
+      ethicsPolicy: this.#createProviderEthicsPolicyHook()
     });
 
     this.acpNotificationAdapter = new ACPNotificationAdapter({
@@ -273,6 +336,15 @@ export class Daemon {
       routing: this.routing,
       idleTimeoutMs: this.config.streaming.idleTimeoutMs,
       secretsFilterEnabled: this.config.streaming.secretsFilterEnabled
+    });
+
+    this.retrieval = new RetrievalService({
+      db: this.db,
+      embedderOptions: {
+        remoteEnabled: false
+      },
+      logger: this.logger.child('retrieval'),
+      scheduler: this.scheduler
     });
   }
 
@@ -322,6 +394,10 @@ export class Daemon {
       await this.streamManager.start();
       this.services.register('stream', this.streamManager);
 
+      // 8c. Start retrieval service (RAG)
+      await this.retrieval.start();
+      this.services.register('retrieval', this.retrieval);
+
       // 9. Start IPC server
       await this.ipc.start();
       this.registerIPCHandlers();
@@ -355,6 +431,15 @@ export class Daemon {
         agents: this.agents.count(),
         services: this.services.count()
       });
+
+      // Log observability sink status
+      for (const sink of this._observabilitySinks) {
+        if (sink.enabled) {
+          this.logger.info(`observability: ${sink.type} enabled — ${sink.reason}`);
+        } else {
+          this.logger.info(`observability: ${sink.type} disabled — ${sink.reason}`);
+        }
+      }
     } catch (error) {
       this.transition('crashed');
       this.logger.error('Daemon failed to start', error);
@@ -381,10 +466,12 @@ export class Daemon {
       await withTimeout(this.pool.destroy(), timeout);
       await withTimeout(this.connectors.shutdown(), timeout);
       await withTimeout(this.agents.shutdown(), timeout);
+      await withTimeout(this.retrieval.stop(), timeout);
       await withTimeout(this.jobs.stop(), timeout);
       if (this.memory?.shutdown) {
         await withTimeout(this.memory.shutdown(), timeout);
       }
+      await withTimeout(this.observability.shutdown(), timeout);
       await withTimeout(this.db.close(), timeout);
 
       // Remove process-level handlers
@@ -536,6 +623,38 @@ export class Daemon {
       }
       return Promise.resolve(this.processes.getOutput(parsed.data.processId));
     });
+
+    // RAG / retrieval IPC handlers
+    this.ipc.handle('retrieval.retrieve', req => {
+      const parsed = z.object({ query: z.string(), scope: z.string().optional() }).safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid retrieval request'), { code: -32_602 }));
+      }
+      return this.retrieval.retrieve(parsed.data.query, parsed.data.scope ?? 'default');
+    });
+    this.ipc.handle('retrieval.index', req => {
+      const parsed = z
+        .object({ content: z.string(), memoryItemId: z.string(), scope: z.string().optional() })
+        .safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid index request'), { code: -32_602 }));
+      }
+      return this.retrieval.indexContent(parsed.data.content, parsed.data.memoryItemId, parsed.data.scope ?? 'default');
+    });
+    this.ipc.handle('retrieval.index-new', req => {
+      const parsed = z.object({ scope: z.string().optional() }).safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid index-new request'), { code: -32_602 }));
+      }
+      return this.retrieval.indexNewContent(parsed.data.scope ?? 'default');
+    });
+    this.ipc.handle('retrieval.delete', req => {
+      const parsed = z.object({ memoryItemId: z.string() }).safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid delete request'), { code: -32_602 }));
+      }
+      return this.retrieval.deleteItem(parsed.data.memoryItemId);
+    });
   }
 
   /**
@@ -577,11 +696,46 @@ export class Daemon {
       agents: this.agents.count(),
       processes: this.processes.count(),
       jobs: this.jobs.count(),
-      services: this.services.count()
+      services: this.services.count(),
+      observability: {
+        enabled: this._observabilitySinks.some(s => s.enabled),
+        sinks: this._observabilitySinks.map(s => ({ type: s.type, enabled: s.enabled }))
+      }
     };
   }
 
   private handleDisplay(_req: Record<string, unknown>): Record<string, unknown> {
     return { rendered: true };
+  }
+
+  /**
+   * Create the provider ethics policy hook for the gateway.
+   *
+   * Implements agentsy's PROVIDER_ETHICS_POLICY: hard-block xAI/Grok,
+   * warn-and-acknowledge for Meta/OpenAI/Microsoft/Google/Amazon.
+   */
+  #createProviderEthicsPolicyHook(): ProviderEthicsPolicyHook {
+    return {
+      filter: (candidates, _request) => {
+        const blockedProviders: string[] = [];
+        const requiresAck: string[] = [];
+        const filtered = candidates.filter(r => {
+          if (isProviderBlocked(r.providerId)) {
+            blockedProviders.push(r.providerId);
+            return false;
+          }
+          if (requiresAcknowledgement(r.providerId)) {
+            requiresAck.push(r.providerId);
+          }
+          return true;
+        });
+
+        return {
+          candidates: filtered,
+          blockedProviders,
+          requiresAcknowledgement: requiresAck
+        };
+      }
+    };
   }
 }
