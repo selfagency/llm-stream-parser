@@ -42,6 +42,53 @@ export interface IPCResponse {
 
 // ── Streaming ──────────────────────────────────────
 
+import type { StreamChunk } from '@agentsy/shared';
+
+/**
+ * JSON-safe payload for a stream.chunk notification.
+ * Maps StreamChunk fields to serializable primitives.
+ */
+export interface StreamChunkPayload {
+  content?: string | undefined;
+  done?: boolean | undefined;
+  finishReason?: string | undefined;
+  nativeToolCallDeltas?:
+    | Array<{
+        argumentsDelta?: string | undefined;
+        id?: string | undefined;
+        index: number;
+        name?: string | undefined;
+      }>
+    | undefined;
+  stepIndex?: number | undefined;
+  stepUsage?: { inputTokens?: number | undefined; outputTokens?: number | undefined } | undefined;
+  thinking?: string | undefined;
+  tool_calls?: Array<{ function?: { name?: string | undefined; arguments?: unknown } | undefined }> | undefined;
+  usage?: { inputTokens?: number | undefined; outputTokens?: number | undefined } | undefined;
+}
+
+/** Convert a StreamChunk to a JSON-safe payload for IPC transmission. */
+export function toStreamChunkPayload(chunk: StreamChunk): StreamChunkPayload {
+  return {
+    content: chunk.content,
+    done: chunk.done,
+    finishReason: chunk.finishReason,
+    nativeToolCallDeltas: chunk.nativeToolCallDeltas?.map(d => ({
+      argumentsDelta: d.argumentsDelta,
+      id: d.id,
+      index: d.index,
+      name: d.name
+    })),
+    stepIndex: chunk.stepIndex,
+    stepUsage: chunk.stepUsage
+      ? { inputTokens: chunk.stepUsage.inputTokens, outputTokens: chunk.stepUsage.outputTokens }
+      : undefined,
+    thinking: chunk.thinking,
+    tool_calls: chunk.tool_calls,
+    usage: chunk.usage ? { inputTokens: chunk.usage.inputTokens, outputTokens: chunk.usage.outputTokens } : undefined
+  } satisfies StreamChunkPayload;
+}
+
 export const IPCStreamChunkSchema = z.object({
   jsonrpc: z.literal('2.0'),
   method: z.literal('stream.chunk'),
@@ -109,6 +156,16 @@ export interface IPCStreamError {
 }
 
 // ── Method Registry ────────────────────────────────
+
+/** Schema for stream.start IPC request params. */
+export const StreamStartRequestSchema = z.object({
+  messages: z.array(z.object({ role: z.string(), content: z.string() })),
+  model: z.string().optional(),
+  routing: z.record(z.string(), z.unknown()).optional(),
+  system: z.string().optional()
+});
+
+export type StreamStartRequest = z.infer<typeof StreamStartRequestSchema>;
 
 export type IPCMethod =
   // Agent lifecycle

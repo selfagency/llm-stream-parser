@@ -9,6 +9,7 @@ import { resolveConfig } from './config.js';
 import { ConnectorHost } from './connectors/connector-host.js';
 import { UnifiedDB } from './db/unified-db.js';
 import { IPCServer } from './ipc/server.js';
+import { StreamStartRequestSchema } from './ipc/protocol.js';
 import { TimerScheduler } from './jobs/bree-scheduler.js';
 import { HonkerQueueAdapter } from './jobs/honker-queue.js';
 import { Sleeper } from './lifecycle/sleeper.js';
@@ -445,15 +446,16 @@ export class Daemon {
     this.ipc.handle('memory.search', () => Promise.resolve({ searched: true }));
 
     this.ipc.handle('stream.start', (req, _context) => {
-      // Streaming is now managed by StreamManager.
-      // The client receives notifications via `context.sendNotification`.
-      // For now, we delegate to the stream manager which will broadcast
-      // chunks to all connected clients via IPC broadcast.
-      //
-      // TODO: Wire per-client notification delivery so chunks go only
-      // to the requesting client instead of broadcast.
+      const parsed = StreamStartRequestSchema.safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(
+          Object.assign(new Error('Invalid stream request: ' + parsed.error.issues.map(i => i.message).join('; ')), {
+            code: -32_602
+          })
+        );
+      }
       return Promise.resolve(
-        this.streamManager.startStream(req as never, this.createDefaultStreamProvider(), undefined)
+        this.streamManager.startStream(parsed.data, this.createDefaultStreamProvider(), undefined)
       );
     });
     this.ipc.handle('stream.cancel', req => {

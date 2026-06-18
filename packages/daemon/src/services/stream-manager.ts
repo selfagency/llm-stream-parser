@@ -15,6 +15,7 @@
 
 import { randomUUID } from 'node:crypto';
 import type { StreamChunk } from '@agentsy/shared';
+import { toStreamChunkPayload } from '../ipc/protocol.js';
 import type { IPCServer } from '../ipc/server.js';
 import type { StreamingSecretsFilter } from '../streaming/secrets-filter.js';
 import type { Logger } from '../types.js';
@@ -38,11 +39,11 @@ export interface StreamRequest {
   /** The conversation messages. */
   messages: Array<{ role: string; content: string }>;
   /** Optional provider model override. */
-  model?: string;
+  model?: string | undefined;
   /** Routing hints passed to the gateway. */
-  routing?: Record<string, unknown>;
+  routing?: Record<string, unknown> | undefined;
   /** Optional system prompt. */
-  system?: string;
+  system?: string | undefined;
 }
 
 export interface PendingToolCall {
@@ -314,7 +315,7 @@ export class StreamManager {
     // IPC notification — broadcast to all connected clients
     this.#deps.ipc.broadcast('stream.chunk', {
       streamId: stream.id,
-      chunk: chunk as unknown as Record<string, unknown>,
+      chunk: toStreamChunkPayload(chunk),
       index
     });
 
