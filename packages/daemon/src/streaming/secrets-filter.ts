@@ -91,7 +91,10 @@ const DB_PATTERNS: SecretPattern[] = [
   }
 ];
 
-/** Combined pattern list — all categories concatenated. */
+/** Combined pattern list — all categories concatenated.
+ * NOTE: Keep in sync with packages/guardrails/src/secret-detection.ts.
+ * When adding patterns here, add them there too, and vice versa.
+ */
 const ALL_PATTERNS: SecretPattern[] = [...AI_PATTERNS, ...CLOUD_PATTERNS, ...AUTH_PATTERNS, ...DB_PATTERNS];
 
 // ── Masking helpers ────────────────────────────────────

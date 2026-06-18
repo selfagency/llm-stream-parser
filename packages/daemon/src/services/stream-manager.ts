@@ -359,6 +359,5 @@ export class StreamManager {
     }
 
     this.#deps.logger.error('Stream error', { streamId: stream.id, error: serialized.message });
-    this.#activeStreams.delete(stream.id);
   }
 }
