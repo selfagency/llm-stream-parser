@@ -13,10 +13,12 @@ import { resolveConfig } from './config.js';
 import { ConnectorHost } from './connectors/connector-host.js';
 import { UnifiedDB } from './db/unified-db.js';
 import { loadDotenv } from './env.js';
+import { HonkerEventBus } from './events/event-bus.js';
 import { StreamStartRequestSchema } from './ipc/protocol.js';
 import { IPCServer } from './ipc/server.js';
 import { TimerScheduler } from './jobs/bree-scheduler.js';
 import { HonkerQueueAdapter } from './jobs/honker-queue.js';
+import { LearningJob } from './jobs/learning-job.js';
 import { Sleeper } from './lifecycle/sleeper.js';
 import { Supervisor } from './lifecycle/supervisor.js';
 import { AgentPool } from './pool/agent-pool.js';
@@ -167,6 +169,8 @@ export class Daemon {
   readonly streamManager: StreamManager;
   readonly acpNotificationAdapter: ACPNotificationAdapter;
   readonly observability: ObservabilityEngine;
+  readonly eventBus: HonkerEventBus;
+  readonly learningJob: LearningJob;
   private readonly _observabilitySinks: Array<{ type: string; enabled: boolean; reason: string }>;
 
   private readonly config: DaemonConfig;
@@ -322,6 +326,20 @@ export class Daemon {
       logger: this.logger.child('retrieval'),
       scheduler: this.scheduler
     });
+
+    // Event bus for cross-process communication
+    this.eventBus = new HonkerEventBus({
+      logger: this.logger.child('event-bus'),
+      queue: this.jobs
+    });
+
+    // Learning job — background consolidation of event memory items
+    this.learningJob = new LearningJob({
+      db: this.db,
+      retrieval: this.retrieval,
+      eventBus: this.eventBus,
+      logger: this.logger.child('learning')
+    });
   }
 
   async start(): Promise<void> {
@@ -373,6 +391,17 @@ export class Daemon {
       // 8c. Start retrieval service (RAG)
       await this.retrieval.start();
       this.services.register('retrieval', this.retrieval);
+
+      // 8d. Schedule learning job — every 1 hour
+      await this.scheduler.schedule({
+        name: 'learning-loop',
+        type: 'interval',
+        schedule: '3600000', // 1 hour
+        handler: './jobs/learning-job.js',
+        timeout: 120_000,
+        scope: 'maintenance'
+      });
+      this.logger.info('Learning job scheduled (interval: 1h)');
 
       // 9. Start IPC server
       await this.ipc.start();

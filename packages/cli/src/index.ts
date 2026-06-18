@@ -255,6 +255,11 @@ async function handleGuardrailsCommand(rest: readonly string[], io: CliIO): Prom
   return runGuardrailsCommand(rest, io);
 }
 
+async function handleSanitizeCommand(rest: readonly string[], io: CliIO): Promise<number> {
+  const { runSanitizeCommand } = await import('./commands/sanitize.js');
+  return runSanitizeCommand(rest, io);
+}
+
 async function handleSecretsCommand(rest: readonly string[], io: CliIO): Promise<number> {
   const { runSecretsCommand } = await import('./commands/secrets.js');
   return runSecretsCommand(rest, io);
@@ -356,6 +361,12 @@ const COMMANDS: Record<string, CommandEntry> = {
       install: handleGuardrailsCommand,
       uninstall: handleGuardrailsCommand,
       policy: handleGuardrailsCommand
+    }
+  },
+  sanitize: {
+    handler: handleSanitizeCommand,
+    subcommands: {
+      rules: handleSanitizeCommand
     }
   },
   config: { handler: handleConfigCommand },
