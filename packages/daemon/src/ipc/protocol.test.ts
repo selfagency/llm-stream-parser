@@ -5,7 +5,9 @@ import {
   IPCResponseSchema,
   IPCStreamChunkSchema,
   IPCStreamEndSchema,
-  IPCStreamErrorSchema
+  IPCStreamErrorSchema,
+  StreamStartRequestSchema,
+  toStreamChunkPayload
 } from './protocol.js';
 
 describe('IPCRequestSchema', () => {
@@ -101,5 +103,83 @@ describe('ErrorCode', () => {
     expect(ErrorCode.MethodNotFound).toBe(-32_601);
     expect(ErrorCode.InvalidParams).toBe(-32_602);
     expect(ErrorCode.InternalError).toBe(-32_603);
+  });
+});
+
+describe('StreamStartRequestSchema', () => {
+  it('should validate a valid stream start request', () => {
+    const result = StreamStartRequestSchema.parse({
+      messages: [{ role: 'user', content: 'Hello' }],
+      model: 'gpt-4',
+      system: 'You are a helpful assistant.'
+    });
+    expect(result.messages).toHaveLength(1);
+    expect(result.model).toBe('gpt-4');
+    expect(result.system).toBe('You are a helpful assistant.');
+  });
+
+  it('should accept minimal request with only messages', () => {
+    const result = StreamStartRequestSchema.parse({
+      messages: [{ role: 'user', content: 'Hi' }]
+    });
+    expect(result.messages).toHaveLength(1);
+    expect(result.model).toBeUndefined();
+  });
+
+  it('should reject request without messages', () => {
+    expect(() => StreamStartRequestSchema.parse({})).toThrow();
+  });
+
+  it('should reject request with empty messages', () => {
+    expect(() => StreamStartRequestSchema.parse({ messages: [] })).toThrow();
+  });
+});
+
+describe('toStreamChunkPayload', () => {
+  it('should convert a content chunk', () => {
+    const result = toStreamChunkPayload({ content: 'Hello' });
+    expect(result.content).toBe('Hello');
+    expect(result.done).toBeUndefined();
+  });
+
+  it('should convert a done chunk with usage', () => {
+    const result = toStreamChunkPayload({
+      done: true,
+      finishReason: 'stop',
+      usage: { inputTokens: 10, outputTokens: 20 }
+    });
+    expect(result.done).toBe(true);
+    expect(result.finishReason).toBe('stop');
+    expect(result.usage?.inputTokens).toBe(10);
+    expect(result.usage?.outputTokens).toBe(20);
+  });
+
+  it('should convert a thinking chunk', () => {
+    const result = toStreamChunkPayload({ thinking: 'I am thinking...' });
+    expect(result.thinking).toBe('I am thinking...');
+  });
+
+  it('should convert native tool call deltas', () => {
+    const result = toStreamChunkPayload({
+      nativeToolCallDeltas: [{ index: 0, id: 'call-1', name: 'get_weather', argumentsDelta: '{"city":"London"}' }]
+    });
+    expect(result.nativeToolCallDeltas).toHaveLength(1);
+    expect(result.nativeToolCallDeltas?.[0]?.id).toBe('call-1');
+    expect(result.nativeToolCallDeltas?.[0]?.name).toBe('get_weather');
+  });
+
+  it('should convert step usage', () => {
+    const result = toStreamChunkPayload({
+      stepUsage: { inputTokens: 5, outputTokens: 10 }
+    });
+    expect(result.stepUsage?.inputTokens).toBe(5);
+    expect(result.stepUsage?.outputTokens).toBe(10);
+  });
+
+  it('should handle empty chunk', () => {
+    const result = toStreamChunkPayload({});
+    expect(result.content).toBeUndefined();
+    expect(result.done).toBeUndefined();
+    expect(result.usage).toBeUndefined();
   });
 });

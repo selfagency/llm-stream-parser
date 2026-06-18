@@ -125,10 +125,18 @@ export class Gateway {
     const requestObj: SelectionContext['request'] = { estimatedInputTokens: 100 };
     if (request.capabilities) {
       requestObj.requires = request.capabilities.map(c => {
-        if (c === 'tool-use') return 'tools' as const;
-        if (c === 'vision') return 'vision' as const;
-        if (c === 'streaming') return 'streaming' as const;
-        if (c === 'json') return 'json' as const;
+        if (c === 'tool-use') {
+          return 'tools' as const;
+        }
+        if (c === 'vision') {
+          return 'vision' as const;
+        }
+        if (c === 'streaming') {
+          return 'streaming' as const;
+        }
+        if (c === 'json') {
+          return 'json' as const;
+        }
         return 'tools' as const;
       });
     }

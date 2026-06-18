@@ -3,9 +3,8 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-
-import { UnifiedDBPersistenceAdapter } from './unified-db-persistence-adapter.js';
 import type { UnifiedDB } from '../db/unified-db.js';
+import { UnifiedDBPersistenceAdapter } from './unified-db-persistence-adapter.js';
 
 // =============================================================================
 // Mocks
@@ -42,7 +41,7 @@ describe('quota state', () => {
     await adapter.saveQuotaState('openai', {
       rpmLimit: 100,
       rpmRemaining: 50,
-      tpmLimit: 10000,
+      tpmLimit: 10_000,
       tpmRemaining: 5000,
       updatedAt: '2024-01-01T00:00:00Z'
     });
@@ -59,7 +58,7 @@ describe('quota state', () => {
       state_json: JSON.stringify({
         rpmLimit: 100,
         rpmRemaining: 50,
-        tpmLimit: 10000,
+        tpmLimit: 10_000,
         tpmRemaining: 5000,
         updatedAt: '2024-01-01T00:00:00Z'
       })

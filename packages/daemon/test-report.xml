@@ -1,0 +1,875 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="211" failures="0" errors="0" time="2.146074123">
+    <testsuite name="src/config.test.ts" timestamp="2026-06-18T13:20:51.533Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="6" failures="0" errors="0" skipped="0" time="0.006910875">
+        <testcase classname="src/config.test.ts" name="DaemonConfigSchema &gt; should apply defaults for empty config" time="0.002775958">
+        </testcase>
+        <testcase classname="src/config.test.ts" name="DaemonConfigSchema &gt; should override specific fields" time="0.000296542">
+        </testcase>
+        <testcase classname="src/config.test.ts" name="DaemonConfigSchema &gt; should reject invalid log levels" time="0.000967625">
+        </testcase>
+        <testcase classname="src/config.test.ts" name="DaemonConfigSchema &gt; should reject negative maxConnections" time="0.000271625">
+        </testcase>
+        <testcase classname="src/config.test.ts" name="resolveConfig &gt; should return full config from partial" time="0.00018925">
+        </testcase>
+        <testcase classname="src/config.test.ts" name="resolveConfig &gt; should return defaults for empty input" time="0.000151834">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/daemon.test.ts" timestamp="2026-06-18T13:20:51.534Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="7" failures="0" errors="0" skipped="0" time="0.050358416">
+        <testcase classname="src/daemon.test.ts" name="Daemon &gt; should start and stop" time="0.015168375">
+            <system-out>
+[daemon] Honker queue started { queues: [ [32m&apos;default&apos;[39m, [32m&apos;agents&apos;[39m, [32m&apos;maintenance&apos;[39m, [32m&apos;indexing&apos;[39m ] }
+
+[daemon] TimerScheduler started
+
+[daemon] ScopeManager initialized
+
+[daemon] AgentHost initialized
+
+[daemon] SubprocessManager started
+
+[daemon] ConnectorHost initialized
+
+[daemon][stream]StreamManager started
+
+[daemon] ACP server disabled
+
+[daemon] Supervisor disabled
+[daemon] Sleeper disabled
+[daemon] Daemon started {
+  pid: [33m16601[39m,
+  socket: [32m&apos;/var/folders/vp/1khdyg6j3pzg_pqkxd4cdjg80000gn/T/agentsy-test-daemon-1.sock&apos;[39m,
+  acp: [32m&apos;disabled&apos;[39m,
+  db: [32m&apos;:memory:&apos;[39m,
+  dbMode: [32m&apos;fallback&apos;[39m,
+  agents: [33m0[39m,
+  services: [33m5[39m
+}
+
+[daemon] ACP server stopped
+
+[daemon] Sleeper stopped
+
+[daemon] Supervisor stopped
+
+[daemon] TimerScheduler stopped
+
+[daemon] ConnectorHost shut down
+
+[daemon] AgentHost shut down
+
+[daemon] Honker queue stopping
+
+[daemon] Daemon stopped
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/daemon.test.ts" name="Daemon &gt; should reject start when already running" time="0.008915125">
+            <system-out>
+[daemon] Honker queue started { queues: [ [32m&apos;default&apos;[39m, [32m&apos;agents&apos;[39m, [32m&apos;maintenance&apos;[39m, [32m&apos;indexing&apos;[39m ] }
+
+[daemon] TimerScheduler started
+
+[daemon] ScopeManager initialized
+
+[daemon] AgentHost initialized
+
+[daemon] SubprocessManager started
+
+[daemon] ConnectorHost initialized
+
+[daemon][stream]StreamManager started
+
+[daemon] ACP server disabled
+
+[daemon] Supervisor disabled
+[daemon] Sleeper disabled
+[daemon] Daemon started {
+  pid: [33m16601[39m,
+  socket: [32m&apos;/var/folders/vp/1khdyg6j3pzg_pqkxd4cdjg80000gn/T/agentsy-test-daemon-2.sock&apos;[39m,
+  acp: [32m&apos;disabled&apos;[39m,
+  db: [32m&apos;:memory:&apos;[39m,
+  dbMode: [32m&apos;fallback&apos;[39m,
+  agents: [33m0[39m,
+  services: [33m5[39m
+}
+
+[daemon] ACP server stopped
+
+[daemon] Sleeper stopped
+
+[daemon] Supervisor stopped
+
+[daemon] TimerScheduler stopped
+
+[daemon] ConnectorHost shut down
+
+[daemon] AgentHost shut down
+
+[daemon] Honker queue stopping
+
+[daemon] Daemon stopped
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/daemon.test.ts" name="Daemon &gt; should notify state change listeners" time="0.010749167">
+            <system-out>
+[daemon] Honker queue started { queues: [ [32m&apos;default&apos;[39m, [32m&apos;agents&apos;[39m, [32m&apos;maintenance&apos;[39m, [32m&apos;indexing&apos;[39m ] }
+
+[daemon] TimerScheduler started
+
+[daemon] ScopeManager initialized
+
+[daemon] AgentHost initialized
+
+[daemon] SubprocessManager started
+
+[daemon] ConnectorHost initialized
+
+[daemon][stream]StreamManager started
+
+[daemon] ACP server disabled
+
+[daemon] Supervisor disabled
+[daemon] Sleeper disabled
+[daemon] Daemon started {
+  pid: [33m16601[39m,
+  socket: [32m&apos;/var/folders/vp/1khdyg6j3pzg_pqkxd4cdjg80000gn/T/agentsy-test-daemon-3.sock&apos;[39m,
+  acp: [32m&apos;disabled&apos;[39m,
+  db: [32m&apos;:memory:&apos;[39m,
+  dbMode: [32m&apos;fallback&apos;[39m,
+  agents: [33m0[39m,
+  services: [33m5[39m
+}
+
+[daemon] ACP server stopped
+
+[daemon] Sleeper stopped
+
+[daemon] Supervisor stopped
+
+[daemon] TimerScheduler stopped
+
+[daemon] ConnectorHost shut down
+
+[daemon] AgentHost shut down
+
+[daemon] Honker queue stopping
+
+[daemon] Daemon stopped
+
+            </system-out>
+            <system-err>
+[daemon] Failed to set socket permissions {
+  error: Error: ENOENT: no such file or directory, chmod &apos;/var/folders/vp/1khdyg6j3pzg_pqkxd4cdjg80000gn/T/agentsy-test-daemon-3.sock&apos;
+  [90m    at chmod (node:internal/fs/promises:1092:10)[39m {
+    errno: [33m-2[39m,
+    code: [32m&apos;ENOENT&apos;[39m,
+    syscall: [32m&apos;chmod&apos;[39m,
+    path: [32m&apos;/var/folders/vp/1khdyg6j3pzg_pqkxd4cdjg80000gn/T/agentsy-test-daemon-3.sock&apos;[39m
+  }
+}
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/daemon.test.ts" name="Daemon &gt; should return status with state and pid" time="0.007843">
+            <system-out>
+[daemon] Honker queue started { queues: [ [32m&apos;default&apos;[39m, [32m&apos;agents&apos;[39m, [32m&apos;maintenance&apos;[39m, [32m&apos;indexing&apos;[39m ] }
+
+[daemon] TimerScheduler started
+
+[daemon] ScopeManager initialized
+
+[daemon] AgentHost initialized
+
+[daemon] SubprocessManager started
+
+[daemon] ConnectorHost initialized
+
+[daemon][stream]StreamManager started
+
+[daemon] ACP server disabled
+
+[daemon] Supervisor disabled
+[daemon] Sleeper disabled
+[daemon] Daemon started {
+  pid: [33m16601[39m,
+  socket: [32m&apos;/var/folders/vp/1khdyg6j3pzg_pqkxd4cdjg80000gn/T/agentsy-test-daemon-4.sock&apos;[39m,
+  acp: [32m&apos;disabled&apos;[39m,
+  db: [32m&apos;:memory:&apos;[39m,
+  dbMode: [32m&apos;fallback&apos;[39m,
+  agents: [33m0[39m,
+  services: [33m5[39m
+}
+
+[daemon] ACP server stopped
+
+[daemon] Sleeper stopped
+
+[daemon] Supervisor stopped
+
+[daemon] TimerScheduler stopped
+
+[daemon] ConnectorHost shut down
+
+[daemon] AgentHost shut down
+
+[daemon] Honker queue stopping
+
+[daemon] Daemon stopped
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/daemon.test.ts" name="Daemon &gt; should create a default stream provider" time="0.003394833">
+            <system-out>
+[daemon] Honker queue started { queues: [ [32m&apos;default&apos;[39m, [32m&apos;agents&apos;[39m, [32m&apos;maintenance&apos;[39m, [32m&apos;indexing&apos;[39m ] }
+
+[daemon] TimerScheduler started
+
+[daemon] ScopeManager initialized
+
+[daemon] AgentHost initialized
+
+[daemon] SubprocessManager started
+
+[daemon] ConnectorHost initialized
+
+[daemon][stream]StreamManager started
+
+[daemon] ACP server disabled
+
+[daemon] Supervisor disabled
+[daemon] Sleeper disabled
+[daemon] Daemon started {
+  pid: [33m16601[39m,
+  socket: [32m&apos;/var/folders/vp/1khdyg6j3pzg_pqkxd4cdjg80000gn/T/agentsy-test-daemon-5.sock&apos;[39m,
+  acp: [32m&apos;disabled&apos;[39m,
+  db: [32m&apos;:memory:&apos;[39m,
+  dbMode: [32m&apos;fallback&apos;[39m,
+  agents: [33m0[39m,
+  services: [33m5[39m
+}
+
+[daemon] ACP server stopped
+
+[daemon] Sleeper stopped
+
+[daemon] Supervisor stopped
+
+[daemon] TimerScheduler stopped
+
+[daemon] ConnectorHost shut down
+
+[daemon] AgentHost shut down
+
+[daemon] Honker queue stopping
+
+[daemon] Daemon stopped
+
+            </system-out>
+            <system-err>
+[daemon] Failed to set socket permissions {
+  error: Error: ENOENT: no such file or directory, chmod &apos;/var/folders/vp/1khdyg6j3pzg_pqkxd4cdjg80000gn/T/agentsy-test-daemon-5.sock&apos;
+  [90m    at chmod (node:internal/fs/promises:1092:10)[39m {
+    errno: [33m-2[39m,
+    code: [32m&apos;ENOENT&apos;[39m,
+    syscall: [32m&apos;chmod&apos;[39m,
+    path: [32m&apos;/var/folders/vp/1khdyg6j3pzg_pqkxd4cdjg80000gn/T/agentsy-test-daemon-5.sock&apos;[39m
+  }
+}
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/daemon.test.ts" name="Daemon &gt; should have streamManager and acpNotificationAdapter after construction" time="0.00040375">
+        </testcase>
+        <testcase classname="src/daemon.test.ts" name="Daemon &gt; should register stream service on start" time="0.00231575">
+            <system-out>
+[daemon] Honker queue started { queues: [ [32m&apos;default&apos;[39m, [32m&apos;agents&apos;[39m, [32m&apos;maintenance&apos;[39m, [32m&apos;indexing&apos;[39m ] }
+
+[daemon] TimerScheduler started
+
+[daemon] ScopeManager initialized
+
+[daemon] AgentHost initialized
+
+[daemon] SubprocessManager started
+
+[daemon] ConnectorHost initialized
+
+[daemon][stream]StreamManager started
+
+[daemon] ACP server disabled
+
+[daemon] Supervisor disabled
+[daemon] Sleeper disabled
+[daemon] Daemon started {
+  pid: [33m16601[39m,
+  socket: [32m&apos;/var/folders/vp/1khdyg6j3pzg_pqkxd4cdjg80000gn/T/agentsy-test-daemon-7.sock&apos;[39m,
+  acp: [32m&apos;disabled&apos;[39m,
+  db: [32m&apos;:memory:&apos;[39m,
+  dbMode: [32m&apos;fallback&apos;[39m,
+  agents: [33m0[39m,
+  services: [33m5[39m
+}
+
+[daemon] ACP server stopped
+
+[daemon] Sleeper stopped
+
+[daemon] Supervisor stopped
+
+[daemon] TimerScheduler stopped
+
+[daemon] ConnectorHost shut down
+
+[daemon] AgentHost shut down
+
+[daemon] Honker queue stopping
+
+[daemon] Daemon stopped
+
+            </system-out>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/acp/acp-capabilities.test.ts" timestamp="2026-06-18T13:20:51.538Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="1" failures="0" errors="0" skipped="0" time="0.002025875">
+        <testcase classname="src/acp/acp-capabilities.test.ts" name="AGENT_CAPABILITIES &gt; should have all capabilities set to false (Phase 1 stub)" time="0.0011705">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/acp/acp-notification-adapter.test.ts" timestamp="2026-06-18T13:20:51.538Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="8" failures="0" errors="0" skipped="0" time="0.004374875">
+        <testcase classname="src/acp/acp-notification-adapter.test.ts" name="ACPNotificationAdapter &gt; wires and unwires sessions" time="0.001518292">
+        </testcase>
+        <testcase classname="src/acp/acp-notification-adapter.test.ts" name="ACPNotificationAdapter &gt; emits agent_message_chunk for content chunks" time="0.001051208">
+        </testcase>
+        <testcase classname="src/acp/acp-notification-adapter.test.ts" name="ACPNotificationAdapter &gt; emits agent_thought_chunk for thinking chunks" time="0.000169541">
+        </testcase>
+        <testcase classname="src/acp/acp-notification-adapter.test.ts" name="ACPNotificationAdapter &gt; emits tool_call for tool call deltas" time="0.000142917">
+        </testcase>
+        <testcase classname="src/acp/acp-notification-adapter.test.ts" name="ACPNotificationAdapter &gt; emits usage_update on emitUsage" time="0.000183375">
+        </testcase>
+        <testcase classname="src/acp/acp-notification-adapter.test.ts" name="ACPNotificationAdapter &gt; emits error on emitError" time="0.000131791">
+        </testcase>
+        <testcase classname="src/acp/acp-notification-adapter.test.ts" name="ACPNotificationAdapter &gt; returns 0 for unwired agents" time="0.000106625">
+        </testcase>
+        <testcase classname="src/acp/acp-notification-adapter.test.ts" name="ACPNotificationAdapter &gt; unwires all sessions for a given sessionId" time="0.00010475">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/acp/acp-server.test.ts" timestamp="2026-06-18T13:20:51.539Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="15" failures="0" errors="0" skipped="0" time="0.217926417">
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPServer &gt; should log disabled state" time="0.002245375">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPServer &gt; should start and stop" time="0.000261084">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPSessionBridge &gt; should create with defaults" time="0.001207417">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPSessionBridge &gt; should accept custom ids and cwd" time="0.000255459">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPSessionBridge &gt; should handle prompt and wire ACP adapter" time="0.101533709">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPSessionBridge &gt; should handle prompt with streaming chunks" time="0.105374084">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPSessionBridge &gt; should cancel" time="0.000785167">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPSessionBridge &gt; should set mode and config options" time="0.000227209">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPSessionBridge &gt; should close cleanly" time="0.002805333">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPNotificationAdapter &gt; should wire and unwire sessions" time="0.000802292">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPNotificationAdapter &gt; should emit tool call end" time="0.000545875">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPNotificationAdapter &gt; should emit tool call end without output" time="0.000159666">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPNotificationAdapter &gt; should emit usage update" time="0.000197167">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPNotificationAdapter &gt; should emit error" time="0.000138167">
+        </testcase>
+        <testcase classname="src/acp/acp-server.test.ts" name="ACPNotificationAdapter &gt; should return 0 for unwired agents on all emit methods" time="0.000084083">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/agents/agent-host.test.ts" timestamp="2026-06-18T13:20:51.540Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="5" failures="0" errors="0" skipped="0" time="0.004396792">
+        <testcase classname="src/agents/agent-host.test.ts" name="AgentHost &gt; should spawn and list agents" time="0.002081">
+        </testcase>
+        <testcase classname="src/agents/agent-host.test.ts" name="AgentHost &gt; should kill an agent" time="0.0001775">
+        </testcase>
+        <testcase classname="src/agents/agent-host.test.ts" name="AgentHost &gt; should send a message" time="0.00044075">
+        </testcase>
+        <testcase classname="src/agents/agent-host.test.ts" name="AgentHost &gt; should start and cancel streams" time="0.000194">
+        </testcase>
+        <testcase classname="src/agents/agent-host.test.ts" name="AgentHost &gt; should shutdown cleanly" time="0.000440333">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/agents/scope-manager.test.ts" timestamp="2026-06-18T13:20:51.540Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="6" failures="0" errors="0" skipped="0" time="0.003816666">
+        <testcase classname="src/agents/scope-manager.test.ts" name="ScopeManager &gt; should derive consistent scope keys" time="0.001407541">
+        </testcase>
+        <testcase classname="src/agents/scope-manager.test.ts" name="ScopeManager &gt; should derive different keys for different paths" time="0.000460333">
+        </testcase>
+        <testcase classname="src/agents/scope-manager.test.ts" name="ScopeManager &gt; should register and retrieve scopes" time="0.000158417">
+        </testcase>
+        <testcase classname="src/agents/scope-manager.test.ts" name="ScopeManager &gt; should not duplicate scope registrations" time="0.000532208">
+        </testcase>
+        <testcase classname="src/agents/scope-manager.test.ts" name="ScopeManager &gt; should list all scopes" time="0.000115541">
+        </testcase>
+        <testcase classname="src/agents/scope-manager.test.ts" name="ScopeManager &gt; should remove a scope" time="0.000102625">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/cli/index.test.ts" timestamp="2026-06-18T13:20:51.541Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="4" failures="0" errors="0" skipped="0" time="1.023898458">
+        <testcase classname="src/cli/index.test.ts" name="CLI commands &gt; startDaemon should create and start a daemon" time="0.015255333">
+            <system-out>
+[daemon] UnifiedDB opened { path: [32m&apos;:memory:&apos;[39m, mode: [32m&apos;fallback&apos;[39m }
+
+[daemon] Database migrations complete
+
+[daemon] Honker queue started { queues: [ [32m&apos;default&apos;[39m, [32m&apos;agents&apos;[39m, [32m&apos;maintenance&apos;[39m, [32m&apos;indexing&apos;[39m ] }
+
+[daemon] TimerScheduler started
+
+[daemon] ScopeManager initialized
+
+[daemon] AgentHost initialized
+
+[daemon] SubprocessManager started
+
+[daemon] ConnectorHost initialized
+
+[daemon][stream]StreamManager started
+
+[daemon] ACP server disabled
+
+[daemon] Supervisor disabled
+[daemon] Sleeper disabled
+[daemon] Daemon started {
+  pid: [33m16597[39m,
+  socket: [32m&apos;/var/folders/vp/1khdyg6j3pzg_pqkxd4cdjg80000gn/T/agentsy-test-cli.sock&apos;[39m,
+  acp: [32m&apos;disabled&apos;[39m,
+  db: [32m&apos;:memory:&apos;[39m,
+  dbMode: [32m&apos;fallback&apos;[39m,
+  agents: [33m0[39m,
+  services: [33m5[39m
+}
+
+[daemon] ACP server stopped
+
+[daemon] Sleeper stopped
+
+[daemon] Supervisor stopped
+
+[daemon] TimerScheduler stopped
+
+[daemon] ConnectorHost shut down
+
+[daemon] AgentHost shut down
+
+[daemon] Honker queue stopping
+
+[daemon] UnifiedDB closed
+
+[daemon] Daemon stopped
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/cli/index.test.ts" name="CLI commands &gt; stopDaemon should attempt to connect and shutdown" time="0.003477125">
+        </testcase>
+        <testcase classname="src/cli/index.test.ts" name="CLI commands &gt; daemonStatus should attempt to connect and get status" time="0.000354667">
+        </testcase>
+        <testcase classname="src/cli/index.test.ts" name="CLI commands &gt; restartDaemon should handle missing daemon gracefully" time="1.003694958">
+            <system-out>
+[daemon] UnifiedDB opened { path: [32m&apos;:memory:&apos;[39m, mode: [32m&apos;fallback&apos;[39m }
+
+[daemon] Database migrations complete
+
+[daemon] Honker queue started { queues: [ [32m&apos;default&apos;[39m, [32m&apos;agents&apos;[39m, [32m&apos;maintenance&apos;[39m, [32m&apos;indexing&apos;[39m ] }
+
+[daemon] TimerScheduler started
+
+[daemon] ScopeManager initialized
+
+[daemon] AgentHost initialized
+
+[daemon] SubprocessManager started
+
+[daemon] ConnectorHost initialized
+
+[daemon][stream]StreamManager started
+
+[daemon] ACP server started { transport: [32m&apos;websocket&apos;[39m, port: [33m9380[39m }
+
+[daemon] Supervisor disabled
+[daemon] Sleeper disabled
+[daemon] Daemon started {
+  pid: [33m16597[39m,
+  socket: [32m&apos;/var/folders/vp/1khdyg6j3pzg_pqkxd4cdjg80000gn/T/agentsy-test-missing.sock&apos;[39m,
+  acp: [32m&apos;enabled&apos;[39m,
+  db: [32m&apos;:memory:&apos;[39m,
+  dbMode: [32m&apos;fallback&apos;[39m,
+  agents: [33m0[39m,
+  services: [33m5[39m
+}
+
+            </system-out>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/connectors/connector-host.test.ts" timestamp="2026-06-18T13:20:51.542Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="3" failures="0" errors="0" skipped="0" time="0.003146541">
+        <testcase classname="src/connectors/connector-host.test.ts" name="ConnectorHost &gt; should register and list connectors" time="0.001913125">
+        </testcase>
+        <testcase classname="src/connectors/connector-host.test.ts" name="ConnectorHost &gt; should unregister connectors" time="0.000207083">
+        </testcase>
+        <testcase classname="src/connectors/connector-host.test.ts" name="ConnectorHost &gt; should clear connectors on shutdown" time="0.000136">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/connectors/diagnostics.test.ts" timestamp="2026-06-18T13:20:51.542Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="2" failures="0" errors="0" skipped="0" time="0.002141708">
+        <testcase classname="src/connectors/diagnostics.test.ts" name="connector diagnostics &gt; returns a setup guide" time="0.001056833">
+        </testcase>
+        <testcase classname="src/connectors/diagnostics.test.ts" name="connector diagnostics &gt; returns a diagnostics report" time="0.000132417">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/db/unified-db.test.ts" timestamp="2026-06-18T13:20:51.543Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="13" failures="0" errors="0" skipped="0" time="0.024867209">
+        <testcase classname="src/db/unified-db.test.ts" name="UnifiedDB &gt; should open and close" time="0.017837625">
+        </testcase>
+        <testcase classname="src/db/unified-db.test.ts" name="UnifiedDB &gt; should run migrations" time="0.001523958">
+        </testcase>
+        <testcase classname="src/db/unified-db.test.ts" name="UnifiedDB &gt; should be idempotent on repeated migrations" time="0.000814958">
+        </testcase>
+        <testcase classname="src/db/unified-db.test.ts" name="UnifiedDB &gt; should create and use queues" time="0.000404">
+        </testcase>
+        <testcase classname="src/db/unified-db.test.ts" name="UnifiedDB &gt; should enqueue and claim jobs" time="0.000414208">
+        </testcase>
+        <testcase classname="src/db/unified-db.test.ts" name="UnifiedDB &gt; should create and use streams" time="0.00023925">
+        </testcase>
+        <testcase classname="src/db/unified-db.test.ts" name="UnifiedDB &gt; should append and read from streams" time="0.00114025">
+        </testcase>
+        <testcase classname="src/db/unified-db.test.ts" name="UnifiedDB &gt; should read from stream with offset" time="0.000372125">
+        </testcase>
+        <testcase classname="src/db/unified-db.test.ts" name="UnifiedDB &gt; should execute transactions" time="0.000328583">
+        </testcase>
+        <testcase classname="src/db/unified-db.test.ts" name="UnifiedDB &gt; should rollback transactions on rollback" time="0.000236334">
+        </testcase>
+        <testcase classname="src/db/unified-db.test.ts" name="UnifiedDB &gt; should query with parameters" time="0.00025">
+        </testcase>
+        <testcase classname="src/db/unified-db.test.ts" name="UnifiedDB &gt; should querySingle return first result" time="0.000199167">
+        </testcase>
+        <testcase classname="src/db/unified-db.test.ts" name="UnifiedDB &gt; should querySingle return null for empty results" time="0.000139833">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/ipc/protocol.test.ts" timestamp="2026-06-18T13:20:51.544Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="20" failures="0" errors="0" skipped="0" time="0.006822875">
+        <testcase classname="src/ipc/protocol.test.ts" name="IPCRequestSchema &gt; should validate a valid request" time="0.001930625">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="IPCRequestSchema &gt; should accept request without params" time="0.000157208">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="IPCRequestSchema &gt; should reject non-2.0 jsonrpc" time="0.000815375">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="IPCRequestSchema &gt; should accept missing id (notification)" time="0.000092083">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="IPCResponseSchema &gt; should validate a successful response" time="0.000545375">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="IPCResponseSchema &gt; should validate an error response" time="0.000236791">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="IPCStreamChunkSchema &gt; should validate a stream chunk" time="0.000134">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="IPCStreamEndSchema &gt; should validate stream end" time="0.00007775">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="IPCStreamErrorSchema &gt; should validate stream error" time="0.000112417">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="ErrorCode &gt; should have standard JSON-RPC error codes" time="0.000111">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="StreamStartRequestSchema &gt; should validate a valid stream start request" time="0.0006">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="StreamStartRequestSchema &gt; should accept minimal request with only messages" time="0.000133875">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="StreamStartRequestSchema &gt; should reject request without messages" time="0.000135375">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="StreamStartRequestSchema &gt; should reject request with empty messages" time="0.000121583">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="toStreamChunkPayload &gt; should convert a content chunk" time="0.000098875">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="toStreamChunkPayload &gt; should convert a done chunk with usage" time="0.000084583">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="toStreamChunkPayload &gt; should convert a thinking chunk" time="0.000049083">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="toStreamChunkPayload &gt; should convert native tool call deltas" time="0.000112167">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="toStreamChunkPayload &gt; should convert step usage" time="0.000061708">
+        </testcase>
+        <testcase classname="src/ipc/protocol.test.ts" name="toStreamChunkPayload &gt; should handle empty chunk" time="0.000061209">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/ipc/server.test.ts" timestamp="2026-06-18T13:20:51.546Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="5" failures="0" errors="0" skipped="0" time="0.019153667">
+        <testcase classname="src/ipc/server.test.ts" name="IPCServer + IPCClient integration &gt; should handle request/response" time="0.006415125">
+        </testcase>
+        <testcase classname="src/ipc/server.test.ts" name="IPCServer + IPCClient integration &gt; should handle errors" time="0.001956791">
+        </testcase>
+        <testcase classname="src/ipc/server.test.ts" name="IPCServer + IPCClient integration &gt; should handle method not found" time="0.000868916">
+        </testcase>
+        <testcase classname="src/ipc/server.test.ts" name="IPCServer + IPCClient integration &gt; should broadcast to all connected clients" time="0.006054375">
+        </testcase>
+        <testcase classname="src/ipc/server.test.ts" name="IPCServer + IPCClient integration &gt; should start and stop cleanly" time="0.0024165">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/jobs/bree-scheduler.test.ts" timestamp="2026-06-18T13:20:51.546Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="5" failures="0" errors="0" skipped="0" time="0.016899083">
+        <testcase classname="src/jobs/bree-scheduler.test.ts" name="TimerScheduler &gt; should start and stop" time="0.013293917">
+        </testcase>
+        <testcase classname="src/jobs/bree-scheduler.test.ts" name="TimerScheduler &gt; should schedule a one_time job" time="0.000944666">
+        </testcase>
+        <testcase classname="src/jobs/bree-scheduler.test.ts" name="TimerScheduler &gt; should list scheduled jobs" time="0.000786">
+        </testcase>
+        <testcase classname="src/jobs/bree-scheduler.test.ts" name="TimerScheduler &gt; should cancel a scheduled job" time="0.000307792">
+        </testcase>
+        <testcase classname="src/jobs/bree-scheduler.test.ts" name="TimerScheduler &gt; should enqueue via the queue adapter" time="0.000487459">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/jobs/honker-queue.test.ts" timestamp="2026-06-18T13:20:51.547Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="9" failures="0" errors="0" skipped="0" time="0.014815209">
+        <testcase classname="src/jobs/honker-queue.test.ts" name="HonkerQueueAdapter &gt; should start and initialize queues" time="0.010330291">
+        </testcase>
+        <testcase classname="src/jobs/honker-queue.test.ts" name="HonkerQueueAdapter &gt; should enqueue jobs" time="0.000444375">
+        </testcase>
+        <testcase classname="src/jobs/honker-queue.test.ts" name="HonkerQueueAdapter &gt; should enqueue jobs with queue option" time="0.000264334">
+        </testcase>
+        <testcase classname="src/jobs/honker-queue.test.ts" name="HonkerQueueAdapter &gt; should claim jobs in FIFO order" time="0.000908167">
+        </testcase>
+        <testcase classname="src/jobs/honker-queue.test.ts" name="HonkerQueueAdapter &gt; should return null when queue is empty" time="0.00030775">
+        </testcase>
+        <testcase classname="src/jobs/honker-queue.test.ts" name="HonkerQueueAdapter &gt; should ack jobs without error" time="0.000332208">
+        </testcase>
+        <testcase classname="src/jobs/honker-queue.test.ts" name="HonkerQueueAdapter &gt; should cancel jobs without error" time="0.000253875">
+        </testcase>
+        <testcase classname="src/jobs/honker-queue.test.ts" name="HonkerQueueAdapter &gt; should list jobs" time="0.000284667">
+        </testcase>
+        <testcase classname="src/jobs/honker-queue.test.ts" name="HonkerQueueAdapter &gt; should stop cleanly" time="0.000656">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/jobs/job-definitions.test.ts" timestamp="2026-06-18T13:20:51.548Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="3" failures="0" errors="0" skipped="0" time="0.002557">
+        <testcase classname="src/jobs/job-definitions.test.ts" name="Job definitions &gt; should have pre-defined maintenance jobs" time="0.001112875">
+        </testcase>
+        <testcase classname="src/jobs/job-definitions.test.ts" name="Job definitions &gt; each definition should have required fields" time="0.000287416">
+        </testcase>
+        <testcase classname="src/jobs/job-definitions.test.ts" name="Job definitions &gt; should have memory-consolidation job" time="0.000159208">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/jobs/job-queue.test.ts" timestamp="2026-06-18T13:20:51.548Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="5" failures="0" errors="0" skipped="0" time="0.003981333">
+        <testcase classname="src/jobs/job-queue.test.ts" name="JobQueue &gt; should enqueue and dequeue items" time="0.002093917">
+        </testcase>
+        <testcase classname="src/jobs/job-queue.test.ts" name="JobQueue &gt; should peek without removing" time="0.000173333">
+        </testcase>
+        <testcase classname="src/jobs/job-queue.test.ts" name="JobQueue &gt; should remove by id" time="0.000121125">
+        </testcase>
+        <testcase classname="src/jobs/job-queue.test.ts" name="JobQueue &gt; should clear all items" time="0.000097625">
+        </testcase>
+        <testcase classname="src/jobs/job-queue.test.ts" name="JobQueue &gt; should return undefined when dequeuing empty queue" time="0.000066166">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/jobs/scheduler.test.ts" timestamp="2026-06-18T13:20:51.549Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="4" failures="0" errors="0" skipped="0" time="0.0041185">
+        <testcase classname="src/jobs/scheduler.test.ts" name="JobScheduler &gt; should start and stop cleanly" time="0.0021265">
+        </testcase>
+        <testcase classname="src/jobs/scheduler.test.ts" name="JobScheduler &gt; should schedule and list jobs" time="0.000809625">
+        </testcase>
+        <testcase classname="src/jobs/scheduler.test.ts" name="JobScheduler &gt; should cancel a job" time="0.0001435">
+        </testcase>
+        <testcase classname="src/jobs/scheduler.test.ts" name="JobScheduler &gt; should clear jobs on stop" time="0.000090292">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/display/tui-bridge.test.ts" timestamp="2026-06-18T13:20:51.549Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="3" failures="0" errors="0" skipped="0" time="0.003437333">
+        <testcase classname="src/display/tui-bridge.test.ts" name="TUIBridge &gt; should render empty string by default" time="0.001401208">
+        </testcase>
+        <testcase classname="src/display/tui-bridge.test.ts" name="TUIBridge &gt; should log on start" time="0.000882625">
+        </testcase>
+        <testcase classname="src/display/tui-bridge.test.ts" name="TUIBridge &gt; should log on stop" time="0.000177958">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lifecycle/sleeper.test.ts" timestamp="2026-06-18T13:20:51.549Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="3" failures="0" errors="0" skipped="0" time="0.00329025">
+        <testcase classname="src/lifecycle/sleeper.test.ts" name="Sleeper &gt; should watch services when enabled" time="0.002037083">
+        </testcase>
+        <testcase classname="src/lifecycle/sleeper.test.ts" name="Sleeper &gt; should log disabled state" time="0.000192083">
+        </testcase>
+        <testcase classname="src/lifecycle/sleeper.test.ts" name="Sleeper &gt; should stop cleanly" time="0.000128541">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lifecycle/supervisor.test.ts" timestamp="2026-06-18T13:20:51.550Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="3" failures="0" errors="0" skipped="0" time="0.004508875">
+        <testcase classname="src/lifecycle/supervisor.test.ts" name="Supervisor &gt; should watch daemon when enabled" time="0.003169208">
+        </testcase>
+        <testcase classname="src/lifecycle/supervisor.test.ts" name="Supervisor &gt; should log disabled state" time="0.000230667">
+        </testcase>
+        <testcase classname="src/lifecycle/supervisor.test.ts" name="Supervisor &gt; should stop cleanly" time="0.000137458">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/processes/subprocess-manager.test.ts" timestamp="2026-06-18T13:20:51.550Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="6" failures="0" errors="0" skipped="0" time="0.081691416">
+        <testcase classname="src/processes/subprocess-manager.test.ts" name="SubprocessManager &gt; should start and stop cleanly" time="0.003491834">
+        </testcase>
+        <testcase classname="src/processes/subprocess-manager.test.ts" name="SubprocessManager &gt; should spawn a process and return an id" time="0.016357458">
+        </testcase>
+        <testcase classname="src/processes/subprocess-manager.test.ts" name="SubprocessManager &gt; should list processes" time="0.034808666">
+        </testcase>
+        <testcase classname="src/processes/subprocess-manager.test.ts" name="SubprocessManager &gt; should kill a process" time="0.005985042">
+        </testcase>
+        <testcase classname="src/processes/subprocess-manager.test.ts" name="SubprocessManager &gt; should get process output" time="0.010917917">
+        </testcase>
+        <testcase classname="src/processes/subprocess-manager.test.ts" name="SubprocessManager &gt; should kill all processes on killAll" time="0.008426542">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/processes/terminal-bridge.test.ts" timestamp="2026-06-18T13:20:51.550Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="4" failures="0" errors="0" skipped="0" time="0.004037125">
+        <testcase classname="src/processes/terminal-bridge.test.ts" name="TerminalBridge &gt; should create a terminal via subprocess manager" time="0.002444">
+        </testcase>
+        <testcase classname="src/processes/terminal-bridge.test.ts" name="TerminalBridge &gt; should create terminal without optional args" time="0.000214625">
+        </testcase>
+        <testcase classname="src/processes/terminal-bridge.test.ts" name="TerminalBridge &gt; should log on writeInput" time="0.0001305">
+        </testcase>
+        <testcase classname="src/processes/terminal-bridge.test.ts" name="TerminalBridge &gt; should log on resizeTerminal" time="0.000294209">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/mcp/diagnostics.test.ts" timestamp="2026-06-18T13:20:51.551Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="2" failures="0" errors="0" skipped="0" time="0.00196625">
+        <testcase classname="src/mcp/diagnostics.test.ts" name="MCP diagnostics &gt; returns a setup guide" time="0.000987708">
+        </testcase>
+        <testcase classname="src/mcp/diagnostics.test.ts" name="MCP diagnostics &gt; returns a diagnostics report" time="0.000139">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/pool/agent-pool.test.ts" timestamp="2026-06-18T13:20:51.551Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="3" failures="0" errors="0" skipped="0" time="0.02047475">
+        <testcase classname="src/pool/agent-pool.test.ts" name="AgentPool &gt; should create a pool with config" time="0.007507042">
+        </testcase>
+        <testcase classname="src/pool/agent-pool.test.ts" name="AgentPool &gt; should return stats structure" time="0.005465166">
+        </testcase>
+        <testcase classname="src/pool/agent-pool.test.ts" name="AgentPool &gt; should destroy cleanly" time="0.004389292">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/pool/worker-entry.test.ts" timestamp="2026-06-18T13:20:51.551Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="2" failures="0" errors="0" skipped="0" time="0.015412708">
+        <testcase classname="src/pool/worker-entry.test.ts" name="Worker entry &gt; should handle known task types by returning a result" time="0.013154291">
+        </testcase>
+        <testcase classname="src/pool/worker-entry.test.ts" name="Worker entry &gt; should throw for unknown task types" time="0.001174">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/services/routing-service.test.ts" timestamp="2026-06-18T13:20:51.551Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="12" failures="0" errors="0" skipped="0" time="0.007111958">
+        <testcase classname="src/services/routing-service.test.ts" name="RoutingService lifecycle &gt; starts in stopped state" time="0.001507792">
+        </testcase>
+        <testcase classname="src/services/routing-service.test.ts" name="RoutingService lifecycle &gt; transitions to active after start" time="0.000375917">
+        </testcase>
+        <testcase classname="src/services/routing-service.test.ts" name="RoutingService lifecycle &gt; transitions to sleeping on sleep" time="0.000132042">
+        </testcase>
+        <testcase classname="src/services/routing-service.test.ts" name="RoutingService lifecycle &gt; transitions back to active on wakeup" time="0.000119">
+        </testcase>
+        <testcase classname="src/services/routing-service.test.ts" name="RoutingService lifecycle &gt; transitions to stopped after stop" time="0.000146375">
+        </testcase>
+        <testcase classname="src/services/routing-service.test.ts" name="RoutingService lifecycle &gt; exposes gateway instance after start" time="0.000173458">
+        </testcase>
+        <testcase classname="src/services/routing-service.test.ts" name="RoutingService lifecycle &gt; clears gateway instance after stop" time="0.000092375">
+        </testcase>
+        <testcase classname="src/services/routing-service.test.ts" name="RoutingService.selectModel &gt; throws if not started" time="0.000929625">
+        </testcase>
+        <testcase classname="src/services/routing-service.test.ts" name="RoutingService.selectModel &gt; delegates to gateway" time="0.001975166">
+        </testcase>
+        <testcase classname="src/services/routing-service.test.ts" name="RoutingService.spillover &gt; throws if not started" time="0.000230542">
+        </testcase>
+        <testcase classname="src/services/routing-service.test.ts" name="RoutingService.spillover &gt; delegates to gateway" time="0.0001875">
+        </testcase>
+        <testcase classname="src/services/routing-service.test.ts" name="RoutingService circuit breaker restore &gt; restores circuit breaker state on start" time="0.000122417">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/services/service-host.test.ts" timestamp="2026-06-18T13:20:51.552Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="5" failures="0" errors="0" skipped="0" time="0.002918709">
+        <testcase classname="src/services/service-host.test.ts" name="ServiceHost &gt; should register and retrieve a service" time="0.00113675">
+        </testcase>
+        <testcase classname="src/services/service-host.test.ts" name="ServiceHost &gt; should unregister a service" time="0.000152416">
+        </testcase>
+        <testcase classname="src/services/service-host.test.ts" name="ServiceHost &gt; should track service state" time="0.000098125">
+        </testcase>
+        <testcase classname="src/services/service-host.test.ts" name="ServiceHost &gt; should list all services" time="0.000566125">
+        </testcase>
+        <testcase classname="src/services/service-host.test.ts" name="ServiceHost &gt; should return undefined for unregistered service" time="0.000089125">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/services/stream-manager.test.ts" timestamp="2026-06-18T13:20:51.553Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="18" failures="0" errors="0" skipped="0" time="0.478136167">
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager lifecycle &gt; starts in stopped state" time="0.001649834">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager lifecycle &gt; transitions to running after start" time="0.000241292">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager lifecycle &gt; transitions to stopped on sleep" time="0.000133292">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager lifecycle &gt; transitions back to running on wakeup" time="0.000120375">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager lifecycle &gt; transitions to stopped after stop" time="0.000133833">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager stream management &gt; starts a stream and returns a streamId" time="0.000859416">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager stream management &gt; broadcasts stream.chunk notifications" time="0.0524575">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager stream management &gt; broadcasts stream.end on completion" time="0.051350083">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager stream management &gt; cancels a running stream" time="0.000343791">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager stream management &gt; returns false when cancelling unknown stream" time="0.00013225">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager stream management &gt; reports active stream count" time="0.000194542">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager error handling &gt; broadcasts stream.error on provider failure" time="0.05188525">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager secrets filter &gt; masks secrets when filter is enabled" time="0.052857167">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager secrets filter &gt; skips masking when filter is disabled" time="0.050674208">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager secrets filter &gt; uses custom filter factory when provided" time="0.052796208">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager tool call tracking &gt; tracks pending tool calls from nativeToolCallDeltas" time="0.052598625">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager content types &gt; broadcasts thinking chunks" time="0.054108875">
+        </testcase>
+        <testcase classname="src/services/stream-manager.test.ts" name="StreamManager content types &gt; skips chunks with no content" time="0.053870292">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/services/unified-db-persistence-adapter.test.ts" timestamp="2026-06-18T13:20:51.555Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="10" failures="0" errors="0" skipped="0" time="0.007243667">
+        <testcase classname="src/services/unified-db-persistence-adapter.test.ts" name="quota state &gt; saves quota state with INSERT" time="0.002828833">
+        </testcase>
+        <testcase classname="src/services/unified-db-persistence-adapter.test.ts" name="quota state &gt; loads quota state from query result" time="0.000333">
+        </testcase>
+        <testcase classname="src/services/unified-db-persistence-adapter.test.ts" name="quota state &gt; returns null when no quota state exists" time="0.00010775">
+        </testcase>
+        <testcase classname="src/services/unified-db-persistence-adapter.test.ts" name="health history &gt; saves health records" time="0.000178667">
+        </testcase>
+        <testcase classname="src/services/unified-db-persistence-adapter.test.ts" name="health history &gt; loads health history" time="0.001889417">
+        </testcase>
+        <testcase classname="src/services/unified-db-persistence-adapter.test.ts" name="health history &gt; returns empty array when no health records" time="0.000231375">
+        </testcase>
+        <testcase classname="src/services/unified-db-persistence-adapter.test.ts" name="routing decisions &gt; saves routing decisions" time="0.000209375">
+        </testcase>
+        <testcase classname="src/services/unified-db-persistence-adapter.test.ts" name="circuit breaker state &gt; saves circuit breaker state" time="0.000172375">
+        </testcase>
+        <testcase classname="src/services/unified-db-persistence-adapter.test.ts" name="circuit breaker state &gt; loads circuit breaker state" time="0.0001505">
+        </testcase>
+        <testcase classname="src/services/unified-db-persistence-adapter.test.ts" name="circuit breaker state &gt; returns null when no circuit breaker state exists" time="0.000093166">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/streaming/secrets-filter.test.ts" timestamp="2026-06-18T13:20:51.555Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="13" failures="0" errors="0" skipped="0" time="0.004292541">
+        <testcase classname="src/streaming/secrets-filter.test.ts" name="StreamingSecretsFilter &gt; passes through non-secret text unchanged" time="0.001774667">
+        </testcase>
+        <testcase classname="src/streaming/secrets-filter.test.ts" name="StreamingSecretsFilter &gt; masks a secret in a single chunk" time="0.0002295">
+        </testcase>
+        <testcase classname="src/streaming/secrets-filter.test.ts" name="StreamingSecretsFilter &gt; masks a secret split across two chunks" time="0.000142083">
+        </testcase>
+        <testcase classname="src/streaming/secrets-filter.test.ts" name="StreamingSecretsFilter &gt; flushes remaining buffered text" time="0.00038675">
+        </testcase>
+        <testcase classname="src/streaming/secrets-filter.test.ts" name="StreamingSecretsFilter &gt; returns null from flush when buffer is empty" time="0.00007">
+        </testcase>
+        <testcase classname="src/streaming/secrets-filter.test.ts" name="StreamingSecretsFilter &gt; resets the buffer on reset()" time="0.0000665">
+        </testcase>
+        <testcase classname="src/streaming/secrets-filter.test.ts" name="StreamingSecretsFilter &gt; masks multiple secrets in the same chunk" time="0.000087375">
+        </testcase>
+        <testcase classname="src/streaming/secrets-filter.test.ts" name="StreamingSecretsFilter &gt; masks JWT tokens" time="0.000077083">
+        </testcase>
+        <testcase classname="src/streaming/secrets-filter.test.ts" name="StreamingSecretsFilter &gt; masks AWS access keys" time="0.000079375">
+        </testcase>
+        <testcase classname="src/streaming/secrets-filter.test.ts" name="StreamingSecretsFilter &gt; masks private key headers" time="0.000063917">
+        </testcase>
+        <testcase classname="src/streaming/secrets-filter.test.ts" name="StreamingSecretsFilter &gt; masks database connection strings" time="0.000068459">
+        </testcase>
+        <testcase classname="src/streaming/secrets-filter.test.ts" name="StreamingSecretsFilter &gt; handles empty input" time="0.000055208">
+        </testcase>
+        <testcase classname="src/streaming/secrets-filter.test.ts" name="StreamingSecretsFilter &gt; uses extra patterns when provided" time="0.000139792">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/streaming/wrap-sse.test.ts" timestamp="2026-06-18T13:20:51.557Z" hostname="selfagency-m1mb.munchkin-mamba.ts.net" tests="6" failures="0" errors="0" skipped="0" time="0.099340875">
+        <testcase classname="src/streaming/wrap-sse.test.ts" name="wrapSSE &gt; yields all chunks from the source" time="0.001778542">
+        </testcase>
+        <testcase classname="src/streaming/wrap-sse.test.ts" name="wrapSSE &gt; yields nothing from an empty source" time="0.000131041">
+        </testcase>
+        <testcase classname="src/streaming/wrap-sse.test.ts" name="wrapSSE &gt; aborts on idle timeout" time="0.024302875">
+        </testcase>
+        <testcase classname="src/streaming/wrap-sse.test.ts" name="wrapSSE &gt; resets idle timer on each chunk" time="0.054614625">
+        </testcase>
+        <testcase classname="src/streaming/wrap-sse.test.ts" name="wrapSSE &gt; aborts on external signal" time="0.016048583">
+        </testcase>
+        <testcase classname="src/streaming/wrap-sse.test.ts" name="wrapSSE &gt; cleans up timer on completion" time="0.001373709">
+        </testcase>
+    </testsuite>
+</testsuites>

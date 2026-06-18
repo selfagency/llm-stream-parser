@@ -69,6 +69,41 @@ describe('Daemon', () => {
     const daemon = new Daemon({ config: testConfig('4'), db: createTestDB(), pool: createMockPool() });
     await daemon.start();
     expect(daemon.state).toBe('running');
+    const status = daemon.getStatus();
+    expect(status).toHaveProperty('state', 'running');
+    expect(status).toHaveProperty('pid');
+    expect(status).toHaveProperty('services');
+    await daemon.stop();
+  });
+
+  it('should create a default stream provider', async () => {
+    const daemon = new Daemon({ config: testConfig('5'), db: createTestDB(), pool: createMockPool() });
+    await daemon.start();
+    const provider = daemon.createDefaultStreamProvider();
+    expect(provider).toBeDefined();
+    expect(typeof provider.stream).toBe('function');
+    const iterable = provider.stream({ model: 'test', messages: [{ role: 'user', content: 'hi' }] });
+    // nosemgrep: detect-object-injection — Symbol.asyncIterator is a well-known symbol, not user input
+    const iterator = iterable[Symbol.asyncIterator]();
+    const result = await iterator.next();
+    expect(result.done).toBe(true);
+    await daemon.stop();
+  });
+
+  it('should have streamManager and acpNotificationAdapter after construction', () => {
+    const daemon = new Daemon({ config: testConfig('6'), db: createTestDB(), pool: createMockPool() });
+    expect(daemon.streamManager).toBeDefined();
+    expect(daemon.streamManager.name).toBe('stream');
+    expect(daemon.acpNotificationAdapter).toBeDefined();
+  });
+
+  it('should register stream service on start', async () => {
+    const daemon = new Daemon({ config: testConfig('7'), db: createTestDB(), pool: createMockPool() });
+    await daemon.start();
+    const services = daemon.services.list();
+    const streamService = services.find(s => s.name === 'stream');
+    expect(streamService).toBeDefined();
+    expect(daemon.streamManager.state).toBe('running');
     await daemon.stop();
   });
 });

@@ -17,7 +17,8 @@ export default defineConfig({
     'mcp/index': 'src/mcp/index.ts',
     'db/index': 'src/db/index.ts',
     'display/index': 'src/display/index.ts',
-    'cli/index': 'src/cli/index.ts'
+    'cli/index': 'src/cli/index.ts',
+    'streaming/index': 'src/streaming/index.ts'
   },
   format: ['esm', 'cjs'],
   platform: 'node',

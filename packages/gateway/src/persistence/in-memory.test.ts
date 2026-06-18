@@ -20,7 +20,7 @@ describe('InMemoryPersistenceAdapter', () => {
     const state: QuotaSnapshot = {
       rpmLimit: 100,
       rpmRemaining: 50,
-      tpmLimit: 10000,
+      tpmLimit: 10_000,
       tpmRemaining: 5000,
       updatedAt: new Date().toISOString()
     };
@@ -39,15 +39,15 @@ describe('InMemoryPersistenceAdapter', () => {
     const state1: QuotaSnapshot = {
       rpmLimit: 100,
       rpmRemaining: 50,
-      tpmLimit: 10000,
+      tpmLimit: 10_000,
       tpmRemaining: 5000,
       updatedAt: '2024-01-01T00:00:00Z'
     };
     const state2: QuotaSnapshot = {
       rpmLimit: 200,
       rpmRemaining: 100,
-      tpmLimit: 20000,
-      tpmRemaining: 10000,
+      tpmLimit: 20_000,
+      tpmRemaining: 10_000,
       updatedAt: '2024-01-02T00:00:00Z'
     };
 
