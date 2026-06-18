@@ -1,25 +1,16 @@
-import { existsSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { AgentPool } from './agent-pool.js';
 
-// Create a minimal worker file so Piscina doesn't fail on eager spawn
+// Create a minimal worker file at module load time so Piscina can find it.
+// The file persists across test runs (small, harmless) to avoid race conditions
+// between Piscina's async worker spawning and test teardown.
 const TEST_FILENAME = join(tmpdir(), 'agentsy-test-worker.mjs');
-
-beforeAll(() => {
+if (!existsSync(TEST_FILENAME)) {
   writeFileSync(TEST_FILENAME, 'export default () => {};\n', 'utf-8');
-});
-
-afterAll(() => {
-  try {
-    if (existsSync(TEST_FILENAME)) {
-      unlinkSync(TEST_FILENAME);
-    }
-  } catch {
-    /* fine */
-  }
-});
+}
 
 describe('AgentPool', () => {
   it('should create a pool with config', async () => {
