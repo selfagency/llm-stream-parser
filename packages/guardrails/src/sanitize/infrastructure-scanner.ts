@@ -5,14 +5,15 @@
  * filesystem paths, stack traces, ports, and service discovery labels
  * that should be redacted before sharing logs, configs, or incident artifacts.
  *
+ * All regex patterns are hardcoded at module level to avoid SonarCloud
+ * regex-complexity thresholds and Semgrep ReDoS false positives.
+ *
  * @module
  */
 
 import type { Detection, GuardrailResult, GuardrailScanner } from '../types.js';
 
-// ── Pattern Groups ─────────────────────────────────────
-// Patterns are split into arrays of simple single-alternation regexes
-// to avoid SonarCloud regex-complexity thresholds.
+// ── Pattern Groups (all hardcoded at module level) ─────
 
 /** Internal hostname TLD suffixes. */
 const INTERNAL_TLDS = [
@@ -34,10 +35,7 @@ const INTERNAL_TLDS = [
   'cluster',
   'pod',
   'node'
-];
-
-/** Kubernetes resource name prefixes. */
-const K8S_NAMESPACES = ['kube-system', 'kube-public', 'kube-node-lease'];
+] as const;
 
 /** Kubernetes resource types. */
 const K8S_RESOURCE_TYPES = [
@@ -52,7 +50,7 @@ const K8S_RESOURCE_TYPES = [
   'ingress',
   'cronjob',
   'job'
-];
+] as const;
 
 /** Filesystem root directories. */
 const FS_ROOTS = [
@@ -75,17 +73,67 @@ const FS_ROOTS = [
   'dev',
   'proc',
   'sys'
-];
+] as const;
 
-/** Service label prefixes. */
-const SERVICE_LABEL_PREFIXES = [
-  { prefix: 'service\\.', fields: ['name', 'type', 'account', 'port', 'cluster', 'namespace', 'selector', 'label'] },
-  { prefix: 'app\\.', fields: ['kubernetes\\.io', 'instance', 'name', 'version'] },
-  { prefix: 'helm\\.sh/', fields: ['chart'] }
-];
+/**
+ * Build a hostname regex for a given TLD.
+ * All TLD values are compile-time constants from INTERNAL_TLDS.
+ */
+// nosemgrep: tld values are compile-time constants from INTERNAL_TLDS
+function hostnameForTld(tld: string): RegExp {
+  return new RegExp(`\\b(?:[a-zA-Z][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])\\.${tld}\\b`, 'gi');
+}
 
-const TRAEFIK_LABELS = ['traefik\\.frontend', 'traefik\\.backend', 'traefik\\.service'];
-const ENVOY_LABELS = ['envoy\\.cluster', 'envoy\\.service', 'envoy\\.route'];
+/** Build a k8s resource regex for a given resource type. */
+// nosemgrep: kind values are compile-time constants from K8S_RESOURCE_TYPES
+function k8sForType(kind: string): RegExp {
+  return new RegExp(`\\b${kind}\\/[a-z][a-z0-9-]{0,61}[a-z0-9]\\b`, 'gi');
+}
+
+/** Build a label regex for a given pattern prefix. */
+// nosemgrep: pattern values are compile-time constants
+function labelForPattern(pattern: string): RegExp {
+  return new RegExp(`\\b${pattern}\\s*[:=]\\s*['"]?[a-zA-Z0-9_.\\-/]+['"]?`, 'gi');
+}
+
+// Pre-computed pattern arrays — build once at module load
+// nosemgrep: tld values are compile-time constants from INTERNAL_TLDS
+const HOSTNAME_PATTERNS: readonly RegExp[] = INTERNAL_TLDS.map(tld => hostnameForTld(tld));
+
+// nosemgrep: kind values are compile-time constants from K8S_RESOURCE_TYPES
+const K8S_RESOURCE_PATTERNS: readonly RegExp[] = K8S_RESOURCE_TYPES.map(kind => k8sForType(kind));
+
+// nosemgrep: root values are compile-time constants from FS_ROOTS
+const PATH_PATTERNS: readonly RegExp[] = FS_ROOTS.map(
+  root => new RegExp(`(?:/(?:${root})(?:/[^\\s"'\\x60)\\]},;:]{1,255})?)`, 'gi')
+);
+
+const LABEL_PATTERNS: readonly RegExp[] = [
+  // service.* labels
+  labelForPattern('service\\.name'),
+  labelForPattern('service\\.type'),
+  labelForPattern('service\\.account'),
+  labelForPattern('service\\.port'),
+  labelForPattern('service\\.cluster'),
+  labelForPattern('service\\.namespace'),
+  labelForPattern('service\\.selector'),
+  labelForPattern('service\\.label'),
+  // app.* labels
+  labelForPattern('app\\.kubernetes\\.io'),
+  labelForPattern('app\\.instance'),
+  labelForPattern('app\\.name'),
+  labelForPattern('app\\.version'),
+  // helm labels
+  labelForPattern('helm\\.sh/chart'),
+  // traefik labels
+  labelForPattern('traefik\\.frontend'),
+  labelForPattern('traefik\\.backend'),
+  labelForPattern('traefik\\.service'),
+  // envoy labels
+  labelForPattern('envoy\\.cluster'),
+  labelForPattern('envoy\\.service'),
+  labelForPattern('envoy\\.route')
+];
 
 // ── Scanner ────────────────────────────────────────────
 
@@ -106,6 +154,12 @@ export interface InfrastructureScannerOptions {
   urls?: boolean;
 }
 
+interface DetectionEntry {
+  id: string;
+  pattern: RegExp;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+}
+
 /**
  * Infrastructure-details scanner for local trust sanitization.
  *
@@ -123,60 +177,138 @@ export class InfrastructureScanner implements GuardrailScanner {
     owaspCategories: ['asi-06'] as const
   };
 
-  readonly #options: Required<InfrastructureScannerOptions>;
+  /** Active detection entries for this instance. Built once in constructor. */
+  readonly #entries: DetectionEntry[];
 
   constructor(options?: InfrastructureScannerOptions) {
-    this.#options = {
-      hostnames: options?.hostnames ?? true,
-      kubernetes: options?.kubernetes ?? true,
-      paths: options?.paths ?? true,
-      stackTraces: options?.stackTraces ?? true,
-      ports: options?.ports ?? true,
-      urls: options?.urls ?? true,
-      labels: options?.labels ?? true
+    this.#entries = InfrastructureScanner.#buildEntries(options ?? {});
+  }
+
+  /** Build detection entries based on enabled categories. */
+  static #buildEntries(options: InfrastructureScannerOptions): DetectionEntry[] {
+    const opts = {
+      hostnames: options.hostnames ?? true,
+      kubernetes: options.kubernetes ?? true,
+      paths: options.paths ?? true,
+      stackTraces: options.stackTraces ?? true,
+      ports: options.ports ?? true,
+      urls: options.urls ?? true,
+      labels: options.labels ?? true
     };
+
+    const det: DetectionEntry[] = [];
+
+    InfrastructureScanner.#appendHostnames(opts.hostnames, det);
+    InfrastructureScanner.#appendK8s(opts.kubernetes, det);
+    InfrastructureScanner.#appendPaths(opts.paths, det);
+    InfrastructureScanner.#appendStackTraces(opts.stackTraces, det);
+    InfrastructureScanner.#appendPorts(opts.ports, det);
+    InfrastructureScanner.#appendUrls(opts.urls, det);
+    InfrastructureScanner.#appendLabels(opts.labels, det);
+
+    return det;
+  }
+
+  static #appendHostnames(enabled: boolean, det: DetectionEntry[]): void {
+    if (!enabled) {
+      return;
+    }
+    for (const pattern of HOSTNAME_PATTERNS) {
+      det.push({ id: 'internal-hostname', pattern, severity: 'medium' });
+    }
+  }
+
+  static #appendK8s(enabled: boolean, det: DetectionEntry[]): void {
+    if (!enabled) {
+      return;
+    }
+    det.push({ id: 'k8s-resource', pattern: /\bkube-system\b/gi, severity: 'high' });
+    det.push({ id: 'k8s-resource', pattern: /\bkube-public\b/gi, severity: 'high' });
+    det.push({ id: 'k8s-resource', pattern: /\bkube-node-lease\b/gi, severity: 'high' });
+    det.push({ id: 'k8s-resource', pattern: /\bkube-[a-z]+\b/gi, severity: 'high' });
+    for (const pattern of K8S_RESOURCE_PATTERNS) {
+      det.push({ id: 'k8s-resource', pattern, severity: 'high' });
+    }
+  }
+
+  static #appendPaths(enabled: boolean, det: DetectionEntry[]): void {
+    if (!enabled) {
+      return;
+    }
+    for (const pattern of PATH_PATTERNS) {
+      det.push({ id: 'filesystem-path', pattern, severity: 'medium' });
+    }
+  }
+
+  static #appendStackTraces(enabled: boolean, det: DetectionEntry[]): void {
+    if (!enabled) {
+      return;
+    }
+    det.push({
+      id: 'stack-trace',
+      pattern: /\s+at\s+(?:\S+\s+)?\(?(?:\/[^\s"'`)\]},;:]+):(\d+)(?::(\d+))?\)?/gi,
+      severity: 'medium'
+    });
+  }
+
+  static #appendPorts(enabled: boolean, det: DetectionEntry[]): void {
+    if (!enabled) {
+      return;
+    }
+    det.push({
+      id: 'port-number',
+      pattern: /\bport[:\s]*(\d{4,5})\b|\blisten[:\s]*(\d{4,5})\b|\bbind[:\s]*(\d{4,5})\b/gi,
+      severity: 'low'
+    });
+  }
+
+  static #appendUrls(enabled: boolean, det: DetectionEntry[]): void {
+    if (!enabled) {
+      return;
+    }
+    det.push({
+      id: 'internal-url',
+      pattern:
+        /\b(?:https?:\/\/)?(?:[a-z][a-z0-9-]{0,61})\.(?:internal|local|corp|intranet|svc|cluster\.local)(?::\d{2,5})?(?:\/[^\s"'`)\]},;:]*)?/gi,
+      severity: 'high'
+    });
+  }
+
+  static #appendLabels(enabled: boolean, det: DetectionEntry[]): void {
+    if (!enabled) {
+      return;
+    }
+    for (const pattern of LABEL_PATTERNS) {
+      det.push({ id: 'service-label', pattern, severity: 'medium' });
+    }
   }
 
   evaluate(input: string, _context?: Record<string, unknown>): GuardrailResult {
     const detections: Detection[] = [];
 
-    if (this.#options.hostnames) {
-      this.#matchAll(input, this.#hostnamePatterns(), 'internal-hostname', 'medium', detections);
-    }
-
-    if (this.#options.kubernetes) {
-      this.#matchAll(input, this.#k8sPatterns(), 'k8s-resource', 'high', detections);
-    }
-
-    if (this.#options.paths) {
-      this.#matchAll(input, this.#pathPatterns(), 'filesystem-path', 'medium', detections);
-    }
-
-    if (this.#options.stackTraces) {
-      const stackPattern = /\s+at\s+(?:\S+\s+)?\(?(?:\/[^\s"'`)\]},;:]+):(\d+)(?::(\d+))?\)?/gi;
-      this.#matchAll(input, [stackPattern], 'stack-trace', 'medium', detections);
-    }
-
-    if (this.#options.ports) {
-      const portPattern = /\bport[:\s]*(\d{4,5})\b|\blisten[:\s]*(\d{4,5})\b|\bbind[:\s]*(\d{4,5})\b/gi;
-      this.#matchAll(input, [portPattern], 'port-number', 'low', detections);
-    }
-
-    if (this.#options.urls) {
-      const urlPattern =
-        /\b(?:https?:\/\/)?(?:[a-z][a-z0-9-]{0,61})\.(?:internal|local|corp|intranet|svc|cluster\.local)(?::\d{2,5})?(?:\/[^\s"'`)\]},;:]*)?/gi;
-      this.#matchAll(input, [urlPattern], 'internal-url', 'high', detections);
-    }
-
-    if (this.#options.labels) {
-      this.#matchAll(input, this.#labelPatterns(), 'service-label', 'medium', detections);
+    for (const entry of this.#entries) {
+      entry.pattern.lastIndex = 0;
+      for (;;) {
+        const match = entry.pattern.exec(input);
+        if (match === null) {
+          break;
+        }
+        detections.push({
+          id: entry.id,
+          severity: entry.severity,
+          description: `Infrastructure detail: ${entry.id}`,
+          snippet: match[0],
+          start: match.index,
+          end: match.index + match[0].length,
+          confidence: 0.8
+        });
+      }
     }
 
     if (detections.length === 0) {
       return { status: 'pass', phase: 'input' };
     }
 
-    // Redact all detected infrastructure details
     let sanitized = input;
     for (const detection of detections) {
       if (detection.snippet) {
@@ -191,73 +323,5 @@ export class InfrastructureScanner implements GuardrailScanner {
       detections,
       transformReason: 'redaction'
     };
-  }
-
-  /** Build an array of simple hostname-matching regexes, one per TLD. */
-  #hostnamePatterns(): RegExp[] {
-    return INTERNAL_TLDS.map(tld => new RegExp(`\\b(?:[a-zA-Z][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])\\.${tld}\\b`, 'gi'));
-  }
-
-  /** Build an array of simple k8s-resource-matching regexes. */
-  #k8sPatterns(): RegExp[] {
-    const patterns: RegExp[] = [];
-    for (const ns of K8S_NAMESPACES) {
-      patterns.push(new RegExp(`\\b${ns}\\b`, 'gi'));
-    }
-    for (const kind of K8S_RESOURCE_TYPES) {
-      patterns.push(new RegExp(`\\b${kind}\\/[a-z][a-z0-9-]{0,61}[a-z0-9]\\b`, 'gi'));
-    }
-    patterns.push(/\bkube-[a-z]+\b/gi);
-    return patterns;
-  }
-
-  /** Build an array of filesystem-path-matching regexes. */
-  #pathPatterns(): RegExp[] {
-    const BACKTICK = '\x60';
-    return FS_ROOTS.map(root => new RegExp(`(?:/(?:${root})(?:/[^\\s"'${BACKTICK})\\]},;:]{1,255})?)`, 'gi'));
-  }
-
-  /** Build an array of service-label-matching regexes. */
-  #labelPatterns(): RegExp[] {
-    const patterns: RegExp[] = [];
-    for (const { prefix, fields } of SERVICE_LABEL_PREFIXES) {
-      for (const field of fields) {
-        patterns.push(new RegExp(`\\b${prefix}${field}\\s*[:=]\\s*['"]?[a-zA-Z0-9_.\\-/]+['"]?`, 'gi'));
-      }
-    }
-    for (const label of TRAEFIK_LABELS) {
-      patterns.push(new RegExp(`\\b${label}\\s*[:=]\\s*['"]?[a-zA-Z0-9_.\\-/]+['"]?`, 'gi'));
-    }
-    for (const label of ENVOY_LABELS) {
-      patterns.push(new RegExp(`\\b${label}\\s*[:=]\\s*['"]?[a-zA-Z0-9_.\\-/]+['"]?`, 'gi'));
-    }
-    return patterns;
-  }
-
-  #matchAll(
-    input: string,
-    patterns: RegExp[],
-    id: string,
-    severity: 'low' | 'medium' | 'high' | 'critical',
-    detections: Detection[]
-  ): void {
-    for (const pattern of patterns) {
-      pattern.lastIndex = 0;
-      for (;;) {
-        const match = pattern.exec(input);
-        if (match === null) {
-          break;
-        }
-        detections.push({
-          id,
-          severity,
-          description: `Infrastructure detail: ${id}`,
-          snippet: match[0],
-          start: match.index,
-          end: match.index + match[0].length,
-          confidence: 0.8
-        });
-      }
-    }
   }
 }
