@@ -159,7 +159,27 @@ export function createLangfuseExporterFromEnv(
     return null;
   }
 
-  // Overrides take precedence over env vars
+  const resolved = resolveLangfuseOptions(detection, options, env);
+  return new LangfuseExporter(resolved);
+}
+
+/**
+ * Resolve Langfuse exporter options from detection + overrides + env.
+ */
+function resolveLangfuseOptions(
+  detection: LangfuseEnvDetection,
+  options:
+    | {
+        endpoint?: string;
+        publicKey?: string;
+        secretKey?: string;
+        projectId?: string;
+        flushIntervalMs?: number;
+        maxBatchSize?: number;
+      }
+    | undefined,
+  env: Record<string, string | undefined>
+): LangfuseExporterOptions {
   const publicKey = options?.publicKey ?? env.LANGFUSE_PUBLIC_KEY?.trim() ?? '';
   const secretKey = options?.secretKey ?? env.LANGFUSE_SECRET_KEY?.trim() ?? '';
   const endpoint = options?.endpoint ?? detection.endpoint;
@@ -167,14 +187,14 @@ export function createLangfuseExporterFromEnv(
   const flushIntervalMs = options?.flushIntervalMs ?? detection.flushIntervalMs;
   const maxBatchSize = options?.maxBatchSize ?? detection.maxBatchSize;
 
-  return new LangfuseExporter({
+  return {
     publicKey,
     secretKey,
     endpoint,
     ...(projectId ? { projectId } : {}),
     ...(flushIntervalMs === undefined ? {} : { flushIntervalMs }),
     ...(maxBatchSize === undefined ? {} : { maxBatchSize })
-  });
+  };
 }
 
 // ── Helpers ─────────────────────────────────────────────

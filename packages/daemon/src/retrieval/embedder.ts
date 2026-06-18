@@ -140,7 +140,7 @@ function createRemoteEmbedder(opts: RemoteEmbedderOptions): EmbeddingProvider {
     },
     async embedBatch(texts: string[]): Promise<number[][]> {
       if (texts.length === 0) {
-        return Promise.resolve([]);
+        return [];
       }
 
       const url = `${baseUrl.replace(/\/$/, '')}/embeddings`;

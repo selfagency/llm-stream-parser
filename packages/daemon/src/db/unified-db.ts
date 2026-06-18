@@ -1,5 +1,4 @@
 import path from 'node:path';
-import { getExtensionPath } from '@sqliteai/sqlite-vector';
 import type Database from 'better-sqlite3';
 import type { Logger } from '../types.js';
 
@@ -43,7 +42,6 @@ export class UnifiedDB {
   private readonly config: UnifiedDBConfig;
   private _mode: 'native' | 'fallback' = 'fallback';
   private _open = false;
-  private _hasVectorExtension = false;
 
   constructor(config: UnifiedDBConfig) {
     this.config = config;
@@ -57,12 +55,6 @@ export class UnifiedDB {
     return this._open;
   }
 
-  get hasVectorExtension(): boolean {
-    return this._hasVectorExtension;
-  }
-
-  // fallow-ignore-next-line complexity
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: extension loading + DB init is inherently sequential; refactoring would obscure the linear setup flow
   async open(): Promise<void> {
     // Try Honker native extension
     if (this.config.extensionPath && this.config.blake3ExtensionPath) {
@@ -99,19 +91,6 @@ export class UnifiedDB {
 
       this.db = new Database(this.config.path);
       this._mode = 'fallback';
-
-      // Load sqlite-vector extension for native vector search
-      try {
-        const vectorExtPath = getExtensionPath();
-        this.db.loadExtension(vectorExtPath);
-        this._hasVectorExtension = true;
-        this.config.logger.info('sqlite-vector extension loaded');
-      } catch (extErr) {
-        this._hasVectorExtension = false;
-        this.config.logger.warn('sqlite-vector extension not available, falling back to JS vector search', {
-          error: extErr instanceof Error ? extErr.message : String(extErr)
-        });
-      }
 
       if (this.config.walMode !== false) {
         this.db.pragma('journal_mode = WAL');
@@ -374,7 +353,7 @@ export class UnifiedDB {
       },
       {
         name: '011_rag_vectors',
-        sql: 'CREATE TABLE IF NOT EXISTS rag_vectors (id TEXT PRIMARY KEY, scope TEXT NOT NULL, memory_item_id TEXT NOT NULL, chunk_index INTEGER NOT NULL, content TEXT NOT NULL, embedding BLOB, indexed_at INTEGER DEFAULT (unixepoch()))'
+        sql: 'CREATE TABLE IF NOT EXISTS rag_vectors (id TEXT PRIMARY KEY, scope TEXT NOT NULL, memory_item_id TEXT NOT NULL, chunk_index INTEGER NOT NULL, content TEXT NOT NULL, embedding TEXT NOT NULL, indexed_at INTEGER DEFAULT (unixepoch()))'
       },
       {
         name: '012_rag_indexed',
@@ -398,18 +377,6 @@ export class UnifiedDB {
           this.config.logger.debug('Applied migration', { name: migration.name });
         }
       })();
-    }
-
-    // Initialize sqlite-vector column after table exists (only when extension loaded)
-    if (this._hasVectorExtension) {
-      try {
-        db.prepare("SELECT vector_init('rag_vectors', 'embedding', 'type=FLOAT32,dimension=32,distance=COSINE')").get();
-        this.config.logger.info('sqlite-vector column initialized');
-      } catch (initErr) {
-        this.config.logger.warn('sqlite-vector column init failed', {
-          error: initErr instanceof Error ? initErr.message : String(initErr)
-        });
-      }
     }
 
     this.config.logger.info('Database migrations complete');

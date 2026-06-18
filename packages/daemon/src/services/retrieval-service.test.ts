@@ -28,7 +28,6 @@ function createMockDb(): UnifiedDB {
   return {
     isOpen: true,
     mode: 'fallback',
-    hasVectorExtension: false,
     open: vi.fn().mockResolvedValue(undefined),
     close: vi.fn().mockResolvedValue(undefined),
     migrate: vi.fn().mockResolvedValue(undefined),

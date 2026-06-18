@@ -64,14 +64,12 @@ export class RetrievalService implements Service {
   readonly #deps: RetrievalServiceDeps;
   readonly #embedder: EmbeddingProvider;
   readonly #chunker: IndexingPipeline;
-  readonly #hasVectorExtension: boolean;
   #indexJobId: string | null = null;
 
   constructor(deps: RetrievalServiceDeps) {
     this.#deps = deps;
     this.#embedder = createEmbeddingProvider(deps.embedderOptions);
     this.#chunker = new IndexingPipeline({ chunkSize: 256, chunkOverlap: 32 });
-    this.#hasVectorExtension = deps.db.hasVectorExtension;
   }
 
   get state(): string {
@@ -119,8 +117,8 @@ export class RetrievalService implements Service {
    * Retrieve relevant chunks for a query.
    *
    * 1. Embeds the query using the configured embedder
-   * 2. Vector search via sqlite-vector native cosine distance (with JS fallback)
-   * 3. Returns results sorted by distance (closest first)
+   * 2. Vector search — fetch vectors for scope, rank in JS
+   * 3. Returns results sorted by similarity
    */
   async retrieve(query: string, scope: string, options: RetrieveOptions = {}): Promise<RetrievedChunk[]> {
     const limit = options.limit ?? 10;
@@ -128,35 +126,7 @@ export class RetrievalService implements Service {
     // 1. Embed the query
     const queryEmbedding = await this.#embedder.embed(query);
 
-    if (this.#hasVectorExtension) {
-      // 2a. Native vector search via sqlite-vector quantized scan
-      const queryJson = `[${queryEmbedding.join(',')}]`;
-      const rows = await this.#deps.db.query<{
-        content: string;
-        distance: number;
-        id: string;
-        memory_item_id: string;
-        scope: string;
-      }>(
-        `SELECT r.id, r.scope, r.memory_item_id, r.content, v.distance
-         FROM rag_vectors AS r
-         JOIN vector_quantize_scan('rag_vectors', 'embedding', vector_as_f32(?), ?) AS v
-         ON r.rowid = v.rowid
-         WHERE r.scope = ?
-         ORDER BY v.distance`,
-        [queryJson, limit * 2, scope]
-      );
-
-      return rows.map(r => ({
-        content: r.content,
-        id: r.id,
-        memoryItemId: r.memory_item_id,
-        scope: r.scope,
-        score: 1 - r.distance
-      }));
-    }
-
-    // 2b. Fallback: fetch vectors and rank in JS
+    // 2. Fetch vectors for the scope
     const rows = await this.#deps.db.query<{
       content: string;
       embedding: string;
@@ -169,6 +139,7 @@ export class RetrievalService implements Service {
       return [];
     }
 
+    // 3. Score and rank in JS
     const scored: Array<{ chunk: RetrievedChunk; similarity: number }> = [];
     for (const row of rows) {
       let storedEmbedding: number[];
@@ -230,21 +201,23 @@ export class RetrievalService implements Service {
     try {
       let indexed = 0;
       for (let i = 0; i < chunks.length; i++) {
+        // nosemgrep: detect-object-injection — i is a local loop index, not user input
         const chunk = chunks[i];
         if (!chunk) {
           continue;
         }
+        // nosemgrep: detect-object-injection — i is a local loop index, not user input
         const embedding = embeddings[i];
         if (!embedding) {
           continue;
         }
 
-        const id = `rag-${hashString(`${memoryItemId}-${i}`)}`;
-        const embeddingJson = `[${embedding.join(',')}]`;
+        const chunkId = `${memoryItemId}-${i}`;
+        const id = `rag-${hashString(chunkId)}`;
         tx.execute(
           `INSERT INTO rag_vectors (id, scope, memory_item_id, chunk_index, content, embedding)
-           VALUES (?, ?, ?, ?, ?, vector_as_f32(?))`,
-          [id, scope, memoryItemId, i, chunk.content, embeddingJson]
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [id, scope, memoryItemId, i, chunk.content, JSON.stringify(embedding)]
         );
         indexed++;
       }
@@ -313,7 +286,9 @@ export class RetrievalService implements Service {
     let normB = 0;
 
     for (let i = 0; i < Math.min(vecA.length, vecB.length); i++) {
+      // nosemgrep: detect-object-injection — i is a local loop index, not user input
       const a = vecA[i] ?? 0;
+      // nosemgrep: detect-object-injection — i is a local loop index, not user input
       const b = vecB[i] ?? 0;
       dotProduct += a * b;
       normA += a * a;

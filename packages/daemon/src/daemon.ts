@@ -186,43 +186,19 @@ export class Daemon {
     }
 
     // Initialize observability engine from env
-    const langfuseOverrides: Record<string, unknown> = {};
-    const lf = this.config.observability.langfuse;
-    if (lf.endpoint !== undefined) {
-      langfuseOverrides.endpoint = lf.endpoint;
-    }
-    if (lf.publicKey !== undefined) {
-      langfuseOverrides.publicKey = lf.publicKey;
-    }
-    if (lf.secretKey !== undefined) {
-      langfuseOverrides.secretKey = lf.secretKey;
-    }
-    if (lf.projectId !== undefined) {
-      langfuseOverrides.projectId = lf.projectId;
-    }
-    if (lf.flushIntervalMs !== undefined) {
-      langfuseOverrides.flushIntervalMs = lf.flushIntervalMs;
-    }
-    if (lf.maxBatchSize !== undefined) {
-      langfuseOverrides.maxBatchSize = lf.maxBatchSize;
-    }
-
     const obsResult = createObservabilityFromEnv(
       {
         serviceName: this.config.observability.serviceName,
         serviceVersion: this.config.observability.serviceVersion,
         langfuseEnabled: this.config.observability.langfuse.enabled,
-        langfuse:
-          Object.keys(langfuseOverrides).length > 0
-            ? (langfuseOverrides as {
-                endpoint?: string;
-                publicKey?: string;
-                secretKey?: string;
-                projectId?: string;
-                flushIntervalMs?: number;
-                maxBatchSize?: number;
-              })
-            : undefined
+        langfuse: {
+          endpoint: this.config.observability.langfuse.endpoint,
+          publicKey: this.config.observability.langfuse.publicKey,
+          secretKey: this.config.observability.langfuse.secretKey,
+          projectId: this.config.observability.langfuse.projectId,
+          flushIntervalMs: this.config.observability.langfuse.flushIntervalMs,
+          maxBatchSize: this.config.observability.langfuse.maxBatchSize
+        }
       },
       this.logger
     );

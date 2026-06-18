@@ -16,10 +16,12 @@ describe('loadDotenv', () => {
     // Restore original env
     for (const key of Object.keys(process.env)) {
       if (!(key in originalEnv)) {
+        // nosemgrep: detect-object-injection — key is from Object.keys, not user input
         delete process.env[key];
       }
     }
     for (const [key, value] of Object.entries(originalEnv)) {
+      // nosemgrep: detect-object-injection — key is from Object.entries, not user input
       process.env[key] = value;
     }
   });

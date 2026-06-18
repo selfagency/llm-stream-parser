@@ -25,7 +25,7 @@ import type { Detection, GuardrailResult, GuardrailScanner, OWASPCategory } from
 // =============================================================================
 
 const STYLE_MIMICRY_PATTERNS: RegExp[] = [
-  // Writing — trigger phrases are case-insensitive; name must start uppercase
+  // Writing — trigger phrases case-insensitive; name must start uppercase
   /(?i:in\s+the\s+style\s+of|write\s+like|mimic\s+(?:the\s+)?(?:style|voice)\s+of|imitate\s+(?:the\s+)?writing\s+of)\s+([A-Z][a-zA-Z\s]{1,40})/,
   // Imagery
   /(?i:in\s+the\s+style\s+of|draw\s+like|paint\s+like|artwork\s+in\s+the\s+manner\s+of|(?:image|picture|illustration)\s+in\s+the\s+style\s+of)\s+([A-Z][a-zA-Z\s]{1,40})/,
