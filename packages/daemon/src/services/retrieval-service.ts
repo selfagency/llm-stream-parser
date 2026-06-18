@@ -64,12 +64,14 @@ export class RetrievalService implements Service {
   readonly #deps: RetrievalServiceDeps;
   readonly #embedder: EmbeddingProvider;
   readonly #chunker: IndexingPipeline;
+  readonly #hasVectorExtension: boolean;
   #indexJobId: string | null = null;
 
   constructor(deps: RetrievalServiceDeps) {
     this.#deps = deps;
     this.#embedder = createEmbeddingProvider(deps.embedderOptions);
     this.#chunker = new IndexingPipeline({ chunkSize: 256, chunkOverlap: 32 });
+    this.#hasVectorExtension = deps.db.hasVectorExtension;
   }
 
   get state(): string {
@@ -117,17 +119,44 @@ export class RetrievalService implements Service {
    * Retrieve relevant chunks for a query.
    *
    * 1. Embeds the query using the configured embedder
-   * 2. Vector search in UnifiedDB.rag_vectors (filtered by scope)
-   * 3. Returns results sorted by cosine similarity
+   * 2. Vector search via sqlite-vector native cosine distance (with JS fallback)
+   * 3. Returns results sorted by distance (closest first)
    */
   async retrieve(query: string, scope: string, options: RetrieveOptions = {}): Promise<RetrievedChunk[]> {
     const limit = options.limit ?? 10;
-    const minSimilarity = options.minSimilarity ?? 0.7;
 
     // 1. Embed the query
     const queryEmbedding = await this.#embedder.embed(query);
 
-    // 2. Vector search — fetch all vectors for the scope and rank
+    if (this.#hasVectorExtension) {
+      // 2a. Native vector search via sqlite-vector quantized scan
+      const queryJson = `[${queryEmbedding.join(',')}]`;
+      const rows = await this.#deps.db.query<{
+        content: string;
+        distance: number;
+        id: string;
+        memory_item_id: string;
+        scope: string;
+      }>(
+        `SELECT r.id, r.scope, r.memory_item_id, r.content, v.distance
+         FROM rag_vectors AS r
+         JOIN vector_quantize_scan('rag_vectors', 'embedding', vector_as_f32(?), ?) AS v
+         ON r.rowid = v.rowid
+         WHERE r.scope = ?
+         ORDER BY v.distance`,
+        [queryJson, limit * 2, scope]
+      );
+
+      return rows.map(r => ({
+        content: r.content,
+        id: r.id,
+        memoryItemId: r.memory_item_id,
+        scope: r.scope,
+        score: 1 - r.distance
+      }));
+    }
+
+    // 2b. Fallback: fetch vectors and rank in JS
     const rows = await this.#deps.db.query<{
       content: string;
       embedding: string;
@@ -140,9 +169,7 @@ export class RetrievalService implements Service {
       return [];
     }
 
-    // 3. Score and rank locally
     const scored: Array<{ chunk: RetrievedChunk; similarity: number }> = [];
-
     for (const row of rows) {
       let storedEmbedding: number[];
       try {
@@ -150,24 +177,20 @@ export class RetrievalService implements Service {
       } catch {
         continue;
       }
-
       const similarity = this.#cosineSimilarity(queryEmbedding, storedEmbedding);
-      if (similarity >= minSimilarity) {
-        scored.push({
-          chunk: {
-            content: row.content,
-            id: row.id,
-            memoryItemId: row.memory_item_id,
-            scope: row.scope,
-            score: similarity
-          },
-          similarity
-        });
-      }
+      scored.push({
+        chunk: {
+          content: row.content,
+          id: row.id,
+          memoryItemId: row.memory_item_id,
+          scope: row.scope,
+          score: similarity
+        },
+        similarity
+      });
     }
 
     scored.sort((a, b) => b.similarity - a.similarity);
-
     return scored.slice(0, limit).map(s => s.chunk);
   }
 
@@ -202,31 +225,39 @@ export class RetrievalService implements Service {
     const texts = chunks.map(c => c.content);
     const embeddings = await this.#embedder.embedBatch(texts);
 
-    // Store in UnifiedDB
-    let indexed = 0;
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      if (!chunk) {
-        continue;
-      }
-      const embedding = embeddings[i];
-      if (!embedding) {
-        continue;
+    // Store in UnifiedDB (atomic: vectors + index record in one transaction)
+    const tx = this.#deps.db.transaction();
+    try {
+      let indexed = 0;
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        if (!chunk) {
+          continue;
+        }
+        const embedding = embeddings[i];
+        if (!embedding) {
+          continue;
+        }
+
+        const id = `rag-${hashString(`${memoryItemId}-${i}`)}`;
+        const embeddingJson = `[${embedding.join(',')}]`;
+        tx.execute(
+          `INSERT INTO rag_vectors (id, scope, memory_item_id, chunk_index, content, embedding)
+           VALUES (?, ?, ?, ?, ?, vector_as_f32(?))`,
+          [id, scope, memoryItemId, i, chunk.content, embeddingJson]
+        );
+        indexed++;
       }
 
-      const id = `rag-${hashString(`${memoryItemId}-${i}`)}`;
-      await this.#deps.db.execute(
-        `INSERT INTO rag_vectors (id, scope, memory_item_id, chunk_index, content, embedding)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [id, scope, memoryItemId, i, chunk.content, JSON.stringify(embedding)]
-      );
-      indexed++;
+      // Mark as indexed
+      tx.execute('INSERT INTO rag_indexed (memory_item_id) VALUES (?)', [memoryItemId]);
+
+      tx.commit();
+      return { indexed, skipped: 0 };
+    } catch {
+      tx.rollback();
+      return { indexed: 0, skipped: 0 };
     }
-
-    // Mark as indexed
-    await this.#deps.db.execute('INSERT INTO rag_indexed (memory_item_id) VALUES (?)', [memoryItemId]);
-
-    return { indexed, skipped: 0 };
   }
 
   /**

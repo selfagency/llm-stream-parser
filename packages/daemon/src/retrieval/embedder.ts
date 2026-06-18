@@ -31,7 +31,7 @@ function hashWord(word: string): number {
 }
 
 /**
- * L2-normalize a vector in place.
+ * L2-normalize a vector (returns a new array).
  */
 function normalize(vec: number[]): number[] {
   const magnitude = Math.sqrt(vec.reduce((sum, val) => sum + val * val, 0));

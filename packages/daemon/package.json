@@ -104,6 +104,7 @@
     "@agentsy/providers": "workspace:*",
     "@agentsy/retrieval": "workspace:*",
     "@agentsy/shared": "workspace:*",
+    "@sqliteai/sqlite-vector": "^1.0.0",
     "better-sqlite3": "^11.10.0",
     "bree": "^9.2.3",
     "piscina": "^4.7.0",

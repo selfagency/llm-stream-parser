@@ -28,6 +28,7 @@ function createMockDb(): UnifiedDB {
   return {
     isOpen: true,
     mode: 'fallback',
+    hasVectorExtension: false,
     open: vi.fn().mockResolvedValue(undefined),
     close: vi.fn().mockResolvedValue(undefined),
     migrate: vi.fn().mockResolvedValue(undefined),
@@ -94,7 +95,22 @@ function createMockDb(): UnifiedDB {
     }),
     queue: vi.fn(),
     stream: vi.fn(),
-    transaction: vi.fn()
+    transaction: vi.fn(() => ({
+      execute: vi.fn((sql: string, params?: unknown[]) => {
+        if (sql.startsWith('INSERT INTO rag_vectors')) {
+          const existing = store.get('rag_vectors') ?? [];
+          existing.push({ sql, params });
+          store.set('rag_vectors', existing);
+        }
+        if (sql.startsWith('INSERT INTO rag_indexed')) {
+          const existing = store.get('rag_indexed') ?? [];
+          existing.push({ sql, params });
+          store.set('rag_indexed', existing);
+        }
+      }),
+      commit: vi.fn(),
+      rollback: vi.fn()
+    }))
   } as unknown as UnifiedDB;
 }
 
@@ -173,7 +189,8 @@ describe('RetrievalService', () => {
 
       expect(result.indexed).toBeGreaterThan(0);
       expect(result.skipped).toBe(0);
-      expect(db.execute).toHaveBeenCalled();
+      // INSERTs happen via transaction.execute, not db.execute
+      expect(db.transaction).toHaveBeenCalled();
     });
 
     it('skips already indexed items', async () => {
