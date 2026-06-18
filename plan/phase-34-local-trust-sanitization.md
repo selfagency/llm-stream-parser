@@ -151,8 +151,8 @@ Do **not** fork a second redaction engine.
 
 ### 34.6 Verification
 
-* `agentsy sanitize` works on stdin, files, and piped logs
-* `rules import/export` round-trips JSON without loss
-* Local-only mode is default
-* Infra preset demonstrably redacts hostnames, k8s names, and paths
+* [x] `agentsy sanitize` works on stdin, files, and piped logs
+* [x] `rules import/export` round-trips JSON without loss
+* [x] Local-only mode is default
+* [x] Infra preset demonstrably redacts hostnames, k8s names, and paths
 * Preview shows counts + rule hits before output is copied

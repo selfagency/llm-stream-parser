@@ -71,10 +71,10 @@ async function handleHttpFetch(input: Record<string, unknown>): Promise<ToolResu
 
 ### 28.4 Verification
 
-- [ ] `http_fetch` returns Markdown when content-type is `text/html`
-- [ ] `http_fetch` returns raw body when content-type is not HTML
-- [ ] `http_fetch` returns raw HTML when turndown conversion throws (graceful fallback)
-- [ ] `bodyFormat` field correctly reports `markdown` | `html` | `<content-type>`
-- [ ] `pnpm check-types && pnpm lint && pnpm test` green
+- [x] `http_fetch` returns Markdown when content-type is `text/html`
+- [x] `http_fetch` returns raw body when content-type is not HTML
+- [x] `http_fetch` returns raw HTML when turndown conversion throws (graceful fallback)
+- [x] `bodyFormat` field correctly reports `markdown` | `html` | `<content-type>`
+- [x] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
