@@ -22,10 +22,11 @@ GOVERNANCE.md, and docs/constitution.md are logged here.
 - 47 new tests (22 provider-policy + 25 style-mimicry).
 
 **Sources**:
-- xAI block: https://www.nbcnews.com/tech/internet/elon-musk-grok-antisemitic-posts-x-rcna217634, https://www.selc.org/news/xai-built-an-illegal-power-plant-to-power-its-data-center/, https://naacp.org/articles/naacp-selc-condemns-mississippi-approval-xai-power-plant-regulators-ignore-public
-- Meta warn: https://techcrunch.com/2026/06/04/meta-steals-a-tactic-from-tesla-and-builds-data-centers-in-tents/, https://authorsguild.org/news/meta-libgen-ai-training-book-heist-what-authors-need-to-know/
-- Style-mimicry: https://arxiv.org/html/2401.06178v2, https://authorsguild.org/news/meta-libgen-ai-training-book-heist-what-authors-need-to-know/
-- Telegram removal: https://www.counteringextremism.org/analysis/reports/the-three-phases-of-terrorgram, https://www.splcenter.org/resources/hatewatch/telegrams-toxic-recommendations-perpetuate-extremism/
+
+- xAI block: <https://www.nbcnews.com/tech/internet/elon-musk-grok-antisemitic-posts-x-rcna217634>, <https://www.selc.org/news/xai-built-an-illegal-power-plant-to-power-its-data-center/>, <https://naacp.org/articles/naacp-selc-condemns-mississippi-approval-xai-power-plant-regulators-ignore-public>
+- Meta warn: <https://techcrunch.com/2026/06/04/meta-steals-a-tactic-from-tesla-and-builds-data-centers-in-tents/>, <https://authorsguild.org/news/meta-libgen-ai-training-book-heist-what-authors-need-to-know/>
+- Style-mimicry: <https://arxiv.org/html/2401.06178v2>, <https://authorsguild.org/news/meta-libgen-ai-training-book-heist-what-authors-need-to-know/>
+- Telegram removal: <https://www.counteringextremism.org/analysis/reports/the-three-phases-of-terrorgram>, <https://www.splcenter.org/resources/hatewatch/telegrams-toxic-recommendations-perpetuate-extremism/>
 
 ## 2026-06-17 — Phase 4: Guardrails Honest Foundation
 
