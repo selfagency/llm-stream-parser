@@ -5,8 +5,9 @@
  * Emits INTERRUPT events to notify frontends of interruption requests.
  */
 
-import type { RunInterruptedEvent } from '@agentsy/types';
-import { EventType } from '@agentsy/types';
+import { randomUUID } from 'node:crypto';
+import type { RunInterruptedEvent } from '@agentsy/shared';
+import { EventType } from '@agentsy/shared';
 
 /**
  * Interrupt reason codes.
@@ -108,7 +109,7 @@ export function createInterruptEvent(
     reason: string;
     options?: { message: string };
   } = {
-    id: `interrupt_${Math.random().toString(36).slice(2, 11)}`,
+    id: `interrupt_${randomUUID()}`,
     reason: String(reason)
   };
   if (message !== undefined) {

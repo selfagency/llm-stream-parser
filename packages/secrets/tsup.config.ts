@@ -11,7 +11,7 @@ export default defineConfig({
   },
   external: [
     '@agentsy/runtime',
-    '@agentsy/types',
+    '@agentsy/shared',
     '@aws-sdk/client-secrets-manager',
     '@azure/identity',
     '@azure/keyvault-secrets',

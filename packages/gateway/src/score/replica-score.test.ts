@@ -14,7 +14,7 @@ function makeInput(overrides: Partial<ReplicaScoreInput> = {}): ReplicaScoreInpu
 
 describe('computeReplicaScore — quota headroom', () => {
   it('applies no headroom bonus when headroomPercentage is undefined', () => {
-    const score = computeReplicaScore(makeInput({ headroomPercentage: undefined }));
+    const score = computeReplicaScore(makeInput({}));
     const baseline = computeReplicaScore(makeInput({ headroomPercentage: 0 }));
     // 0% headroom × 0.15 = 0, same as undefined
     expect(score).toBe(baseline);
@@ -43,7 +43,7 @@ describe('computeReplicaScore — quota headroom', () => {
   it('zero quotaHeadroom weight disables headroom contribution', () => {
     const weights: ReplicaScoreWeights = { quotaHeadroom: 0 };
     const withHeadroom = computeReplicaScore(makeInput({ headroomPercentage: 80 }), weights);
-    const withoutHeadroom = computeReplicaScore(makeInput({ headroomPercentage: undefined }), weights);
+    const withoutHeadroom = computeReplicaScore(makeInput({}), weights);
     expect(withHeadroom).toBe(withoutHeadroom);
   });
 

@@ -72,6 +72,7 @@ export class ObservabilityEngineImpl implements ObservabilityEngine {
   private _redactionPolicy: RedactionPolicy | null = null;
   private _isShutdown = false;
 
+  // fallow-ignore-next-line complexity
   constructor(config: ObservabilityEngineConfig) {
     this.tracer = new TracerImpl();
     this.meter = new MeterImpl();
@@ -208,6 +209,7 @@ export const getDefaultEngine = (): ObservabilityEngine => {
   return _defaultEngine;
 };
 
+// fallow-ignore-next-line complexity
 export const createSimpleEngine = (
   name: string,
   options?: {

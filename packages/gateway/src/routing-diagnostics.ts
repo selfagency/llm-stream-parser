@@ -12,8 +12,14 @@ import type { ModelEntry, ModelReplica, ModelSelectionResult, ModelTier } from '
 // =============================================================================
 
 export interface RoutingDiagnostic {
-  /** When the routing decision was made. */
-  timestamp: string;
+  /** Whether the decision involved escalation to a higher tier. */
+  escalationUsed: boolean;
+  /** Candidates that were considered and rejected, with reasons. */
+  rejectedCandidates: Array<{
+    modelId?: string;
+    replicaId?: string;
+    reasons: string[];
+  }>;
   /** Requested tier. */
   requestedTier: ModelTier;
   /** Requested use case. */
@@ -22,16 +28,10 @@ export interface RoutingDiagnostic {
   selectedModel?: ModelEntry;
   /** The selected replica. */
   selectedReplica?: ModelReplica;
-  /** Candidates that were considered and rejected, with reasons. */
-  rejectedCandidates: Array<{
-    modelId?: string;
-    replicaId?: string;
-    reasons: string[];
-  }>;
   /** Whether the decision involved spillover to another tier. */
   spilloverUsed: boolean;
-  /** Whether the decision involved escalation to a higher tier. */
-  escalationUsed: boolean;
+  /** When the routing decision was made. */
+  timestamp: string;
 }
 
 // =============================================================================

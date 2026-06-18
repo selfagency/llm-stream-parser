@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { Logger } from '../types.js';
 
 export interface JobSchedulerDeps {
@@ -18,7 +19,7 @@ export class JobScheduler {
   }
 
   schedule(spec: Record<string, unknown>): Promise<string> {
-    const id = `job_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const id = `job_${randomUUID().slice(0, 8)}`;
     this.jobs.set(id, {
       id,
       type: (spec.type as string) ?? 'once',

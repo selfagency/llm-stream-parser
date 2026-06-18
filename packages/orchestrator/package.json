@@ -30,6 +30,11 @@
       "types": "./dist/agent/index.d.ts",
       "import": "./dist/agent/index.js",
       "require": "./dist/agent/index.cjs"
+    },
+    "./council": {
+      "types": "./dist/council/index.d.ts",
+      "import": "./dist/council/index.js",
+      "require": "./dist/council/index.cjs"
     }
   },
   "scripts": {
@@ -47,7 +52,7 @@
     "@agentsy/memory": "workspace:*",
     "@agentsy/observability": "workspace:*",
     "@agentsy/runtime": "workspace:*",
-    "@agentsy/types": "workspace:*",
+    "@agentsy/shared": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

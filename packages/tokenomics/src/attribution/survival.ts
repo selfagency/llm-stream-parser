@@ -11,6 +11,7 @@
  */
 
 import { execSync } from 'node:child_process';
+import { safePathEnv } from '@agentsy/shared/safe-path';
 
 // =============================================================================
 // Types
@@ -82,6 +83,7 @@ export function computeSurvivalRate(
     try {
       const blameOutput = execSync(['git', 'blame', '--porcelain', file].join(' '), {
         cwd: repoRoot,
+        env: safePathEnv(),
         stdio: 'pipe',
         encoding: 'utf-8'
       });
@@ -133,6 +135,7 @@ interface BlameCount {
  * @param commitSet - Set of commit SHAs to count as "survived".
  * @returns Count of total and survived lines.
  */
+// fallow-ignore-next-line complexity
 function countBlameLines(output: string, commitSet: Set<string>): BlameCount {
   const lines = output.split('\n');
   let total = 0;

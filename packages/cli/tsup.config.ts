@@ -5,9 +5,8 @@ export default defineConfig({
   dts: true,
   entry: { index: 'src/index.ts', cli: 'src/cli.ts', config: 'src/config/index.ts' },
   external: [
-    '@agentsy/connectors',
     '@agentsy/core',
-    '@agentsy/mcp',
+    '@agentsy/daemon',
     '@agentsy/models',
     '@agentsy/providers',
     '@agentsy/secrets',

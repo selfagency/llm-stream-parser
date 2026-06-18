@@ -33,7 +33,7 @@ function makeEscalateScanner(id: string, reason: string, score: number, priority
 describe('GuardrailPipeline', () => {
   it('returns pass when no scanners registered', async () => {
     const pipeline = new GuardrailPipeline();
-    const result = await pipeline.evaluate('test', 'input');
+    const { result } = await pipeline.evaluate('test', 'input');
     expect(result.status).toBe('pass');
   });
 
@@ -44,7 +44,7 @@ describe('GuardrailPipeline', () => {
       makePassScanner('pass-1'),
       makeBlockScanner('block-2', 'Should not run')
     );
-    const result = await pipeline.evaluate('test', 'input');
+    const { result } = await pipeline.evaluate('test', 'input');
     expect(result.status).toBe('block');
     expect((result as Extract<GuardrailResult, { status: 'block' }>).reason).toBe('First block');
     // Only first scanner should have been called
@@ -56,7 +56,7 @@ describe('GuardrailPipeline', () => {
   it('returns pass when all scanners pass', async () => {
     const pipeline = new GuardrailPipeline();
     pipeline.add(makePassScanner('pass-1'), makePassScanner('pass-2'));
-    const result = await pipeline.evaluate('test', 'input');
+    const { result } = await pipeline.evaluate('test', 'input');
     expect(result.status).toBe('pass');
   });
 
@@ -91,7 +91,7 @@ describe('GuardrailPipeline', () => {
       makeTransformScanner('transform-1', 'sanitized_output'),
       makePassScanner('pass-2')
     );
-    const result = await pipeline.evaluate('raw input', 'input');
+    const { result } = await pipeline.evaluate('raw input', 'input');
     expect(result.status).toBe('transform');
     expect((result as Extract<GuardrailResult, { status: 'transform' }>).sanitized).toBe('sanitized_output');
   });
@@ -99,7 +99,7 @@ describe('GuardrailPipeline', () => {
   it('escalate is returned when no block or transform', async () => {
     const pipeline = new GuardrailPipeline();
     pipeline.add(makePassScanner('pass-1'), makeEscalateScanner('esc-1', 'Suspicious activity', 0.75));
-    const result = await pipeline.evaluate('test', 'input');
+    const { result } = await pipeline.evaluate('test', 'input');
     expect(result.status).toBe('escalate');
     expect((result as Extract<GuardrailResult, { status: 'escalate' }>).riskScore).toBe(0.75);
   });
@@ -111,7 +111,7 @@ describe('GuardrailPipeline', () => {
       makeTransformScanner('transform-1', 'cleaned'),
       makeBlockScanner('block-1', 'Policy violation')
     );
-    const result = await pipeline.evaluate('test', 'input');
+    const { result } = await pipeline.evaluate('test', 'input');
     expect(result.status).toBe('block');
   });
 
@@ -128,7 +128,7 @@ describe('GuardrailPipeline', () => {
     const s1 = makeBlockScanner('block-1', 'First block');
     const s2 = makeBlockScanner('block-2', 'Second block');
     pipeline.add(s1, s2);
-    const result = await pipeline.evaluate('test', 'input');
+    const { result } = await pipeline.evaluate('test', 'input');
     // Both scanners run, but only first block is returned (no short-circuit after block-1)
     // Actually without short-circuit, both run and the first block is returned
     expect(result.status).toBe('block');
@@ -187,7 +187,7 @@ describe('GuardrailPipeline', () => {
     // Input contains both 'secret' and 'x' — transform should fire first,
     // then the block scanner sees the REDACTED version (which still contains 'secret')
     const input = 'The x secret is xyz';
-    const result = await pipeline.evaluate(input, 'input');
+    const { result } = await pipeline.evaluate(input, 'input');
 
     // The detection scanner should have been called with the REDACTED input
     // (NOT the original which contained 'secret' multiple times)
@@ -213,9 +213,9 @@ describe('GuardrailPipeline', () => {
   it('evaluateInput and evaluateOutput are shortcuts', async () => {
     const pipeline = new GuardrailPipeline();
     pipeline.add(makePassScanner('pass-1'));
-    const inputResult = await pipeline.evaluateInput('test');
+    const { result: inputResult } = await pipeline.evaluateInput('test');
     expect(inputResult.status).toBe('pass');
-    const outputResult = await pipeline.evaluateOutput('test');
+    const { result: outputResult } = await pipeline.evaluateOutput('test');
     expect(outputResult.status).toBe('pass');
   });
 });

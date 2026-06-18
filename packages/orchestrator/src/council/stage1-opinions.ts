@@ -1,9 +1,9 @@
 import type { CouncilDefinition, FirstOpinion } from './types.js';
 
 interface ExecuteModelOptions {
+  messages: Array<{ role: string; content: string }>;
   model: string;
   provider: string;
-  messages: Array<{ role: string; content: string }>;
 }
 
 /**

@@ -14,31 +14,31 @@ describe('RewriteDetector', () => {
   it('emits immediate_rewrite when file changed within window', () => {
     const onEvent = vi.fn();
     const detector = new RewriteDetector(onEvent);
-    detector.onWriteToolCall('/tmp/test.ts', 'sess_1', 0, Date.now());
-    detector.onFileChanged('/tmp/test.ts', 10);
+    detector.onWriteToolCall('/nonexistent-test-path/test.ts', 'sess_1', 0, Date.now());
+    detector.onFileChanged('/nonexistent-test-path/test.ts', 10);
     expect(onEvent).toHaveBeenCalledWith(expect.objectContaining({ kind: 'immediate_rewrite', sessionId: 'sess_1' }));
   });
 
   it('does not emit when file not in window', () => {
     const onEvent = vi.fn();
     const detector = new RewriteDetector(onEvent);
-    detector.onFileChanged('/tmp/test.ts', 10);
+    detector.onFileChanged('/nonexistent-test-path/test.ts', 10);
     expect(onEvent).not.toHaveBeenCalled();
   });
 
   it('does not emit when delta is too small', () => {
     const onEvent = vi.fn();
     const detector = new RewriteDetector(onEvent);
-    detector.onWriteToolCall('/tmp/test.ts', 'sess_1', 0, Date.now());
-    detector.onFileChanged('/tmp/test.ts', 2);
+    detector.onWriteToolCall('/nonexistent-test-path/test.ts', 'sess_1', 0, Date.now());
+    detector.onFileChanged('/nonexistent-test-path/test.ts', 2);
     expect(onEvent).not.toHaveBeenCalled();
   });
 
   it('does not emit when window expired', () => {
     const onEvent = vi.fn();
     const detector = new RewriteDetector(onEvent);
-    detector.onWriteToolCall('/tmp/test.ts', 'sess_1', 0, Date.now() - 100_000);
-    detector.onFileChanged('/tmp/test.ts', 10);
+    detector.onWriteToolCall('/nonexistent-test-path/test.ts', 'sess_1', 0, Date.now() - 100_000);
+    detector.onFileChanged('/nonexistent-test-path/test.ts', 10);
     expect(onEvent).not.toHaveBeenCalled();
   });
 });
@@ -98,7 +98,7 @@ describe('detectAbandonment', () => {
       'sess_1',
       60_000,
       [{ sha: 'abc', message: 'fix', branch: 'main', timestamp: new Date() }],
-      ['/tmp/test.ts']
+      ['/nonexistent-test-path/test.ts']
     );
     expect(event).toBeUndefined();
   });

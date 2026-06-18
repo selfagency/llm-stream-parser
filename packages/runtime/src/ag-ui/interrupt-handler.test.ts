@@ -4,7 +4,7 @@
  * Verifies interrupt detection, event creation, and abort controller behavior
  */
 
-import { EventType } from '@agentsy/types';
+import { EventType } from '@agentsy/shared';
 import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import {

@@ -10,7 +10,7 @@ export function createMemoryPreTurnHook(): AgentHookDefinition {
   return {
     name: 'memory-pre-turn',
     description: 'Retrieve relevant memories from previous turns',
-    handler: async (context: AgentExecutionContext): Promise<void> => {
+    handler: (context: AgentExecutionContext): void => {
       if (context.task) {
         context.state.completedSteps.push('memory-retrieval');
       }
@@ -26,7 +26,7 @@ export function createMemoryPostTurnHook(): AgentHookDefinition {
   return {
     name: 'memory-post-turn',
     description: 'Capture observations and decisions from completed turn',
-    handler: async (context: AgentExecutionContext): Promise<void> => {
+    handler: (context: AgentExecutionContext): void => {
       const { state, results } = context;
       if (state.completedSteps.length > 0) {
         results.set('lastObservations', {

@@ -69,8 +69,8 @@ export default defineConfig({
         replacement: resolve(__dirname, '../providers/src/index.ts')
       },
       {
-        find: '@agentsy/renderers',
-        replacement: resolve(__dirname, '../renderers/src/index.ts')
+        find: '@agentsy/ui',
+        replacement: resolve(__dirname, '../ui/src/index.ts')
       }
     ]
   },

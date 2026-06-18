@@ -1,69 +1,100 @@
 # Agent Instructions — @agentsy Monorepo
 
-Production-oriented TypeScript monorepo for LLM stream parsing, agent infrastructure, and VS Code integration. The `plan/` directory contains phased implementation plans but most domains have been promoted to manifest-backed packages.
+Production-oriented TypeScript monorepo for an AI agent framework with daemon-centric architecture, guardrails enforcement, governance documents, and multi-surface deployment (CLI, ACP, server mode). The `plan/` directory contains phased implementation plans; per-package `IMPLEMENTATION-PLAN.md` files hold detailed domain planning.
 
 ## Repo Identity
 
-This repository is a **pnpm workspace monorepo** orchestrated with **Turborepo** containing **23 manifest-backed packages**.
+This is a **pnpm workspace monorepo** with **23 packages** (post-Phase 2 consolidation, the old `types`, `renderers`, `mcp`, `connectors`, `scripts`, and `workflows` packages have been merged into their surviving targets). All packages target **Node.js ≥24**.
 
 ### Current packages
 
 Core infrastructure:
 
-- `@agentsy/core` — Stream processing bundle (processor, SSE (Server-Sent Events), XML filter, structured JSON, thinking block parsing, retry, recovery)
-- `@agentsy/types` — Shared TypeScript types across all packages
-- `@agentsy/providers` — Provider normalizers (Anthropic, OpenAI, Mistral, and others) and API adapters
-- `@agentsy/mcp` — Model Context Protocol (MCP) types and utilities
+- `@agentsy/core` — Stream processing (LLMStreamProcessor, SSE, XML filter, structured JSON, thinking block parsing, retry, recovery)
+- `@agentsy/shared` — Shared TypeScript types and cross-package utilities (absorbed the former `@agentsy/types`; also hosts CortexKit integration: AFT bridge manager, Magic Context schema)
+- `@agentsy/providers` — Provider normalizers (Anthropic, OpenAI, Mistral, Gemini) and `UniversalClient`
+- `@agentsy/gateway` — Model routing gateway (7 selection strategies, replica scoring, health tracking, circuit breaker, quota enforcement). **Independently consumable library** — external platforms can use `createGateway()` without the daemon. The daemon hosts it with `UnifiedDB`-backed persistence and a `ProviderEthicsPolicyHook`.
 
 Runtime and orchestration:
 
-- `@agentsy/runtime` — Agent execution runtime with sandboxing and Agent-Generated User Interface (AG-UI) protocol adapter
-- `@agentsy/orchestrator` — Agent orchestration and scheduling
-- `@agentsy/memory` — Three-tier memory engine (raw event log, synthesized wiki, vector retrieval)
-- `@agentsy/session` — Session management and caching
-- `@agentsy/context` — Token budgeting and output compression
-- `@agentsy/guardrails` — Safety and validation boundaries
-- `@agentsy/observability` — Metrics and tracing
-- `@agentsy/retrieval` — Retrieval-Augmented Generation (RAG) retrieval and indexing
-- `@agentsy/models` — Model selection and recommendation
+- `@agentsy/runtime` — Agent execution runtime with sandboxing and AG-UI protocol adapter
+- `@agentsy/orchestrator` — Agent orchestration, council (three-stage review), task board, workflows (absorbed)
+- `@agentsy/memory` — Three-tier cognitive memory engine (raw event log, synthesized wiki, vector retrieval) + CortexKit integration (AFT, Magic Context, Turso sync)
+- `@agentsy/session` — Session management, checkpointing, crash recovery, CortexKit snapshot bridge
+- `@agentsy/guardrails` — Safety/ethics/validation pipeline (8 security scanners + 9 behavioral detectors + audit logger + EthicsRegistry)
+- `@agentsy/observability` — OTel tracing, metrics, cost tracking, Langfuse exporter
+- `@agentsy/retrieval` — RAG retrieval and indexing. **Independently consumable** — third-party apps can use this without the daemon. (Moves into daemon as a hosted service per the plan, but the library remains standalone.)
+- `@agentsy/models` — Model selection, profiles, recommendations
+- `@agentsy/tokenomics` — Token management, quotas, ROI, semantic cache, frustration signals, **environmental impact tracking (CO2 + water per request and cumulative)**
 
-Surfaces and utilities:
+Daemon and surfaces:
 
-- `@agentsy/vscode` — VS Code Language Model Chat Provider integration (currently published)
-- `@agentsy/renderers` — CLI, Text-based User Interface (TUI), and renderers (plain text, streaming markdown, Ink components)
-- `@agentsy/ui` — UI components and event sourcingng
-- `@agentsy/cli` — CLI commands
-- `@agentsy/connectors` — Platform connectors (Discord, Slack, Telegram)
+- `@agentsy/daemon` — Central long-lived process: `UnifiedDB` (SQLite via Honker), Piscina agent pool, Honker durable queues, Bree scheduler, `SubprocessManager` (stall detection, memory limits), IPC server (JSON-RPC over Unix sockets), ACP server stub, `ServiceHost` with sleep/wake, `AgentHost`, `ScopeManager` (folder-based), `Supervisor`. Absorbs MCP server and connectors.
+- `@agentsy/ui` — UI store/bridge + Ink/TUI rendering (absorbed the former `@agentsy/renderers` package; rendering tree lives under `packages/ui/src/renderers/`)
+- `@agentsy/cli` — Thin daemon client + TUI
+- `@agentsy/vscode` — Published npm library for GitHub Copilot Chat integration (consumed by third-party VS Code extensions; NOT a custom extension — ACP handles agent–editor communication)
 - `@agentsy/tools` — Tool implementations and filesystem utilities
-- `@agentsy/prompts` — Prompt management
+- `@agentsy/prompts` — Prompt layering
 - `@agentsy/plugins` — Plugin system
-- `@agentsy/secrets` — Secret management
+- `@agentsy/secrets` — Secret management (12 provider backends: 1Password, Bitwarden, Dashlane, LastPass, Apple PM, Vault, AWS SM, GCP SM, Azure KV, Doppler, Infisical, exec)
+- `@agentsy/agents` — Agent runtime/specs (YAML agent templates)
+- `@agentsy/testing` (private) — Cross-package integration test helpers (MSW, aimock)
 
-Build and testing:
+**Published on npm** (verified 2026-06-17):
 
-- `@agentsy/scripts` (private) — Release and validation scripts
-- `@agentsy/testing` (private) — Cross-package integration tests
+- `@agentsy/core` (0.2.0) — zero deps, 12 subpath exports
+- `@agentsy/providers` (0.2.0) — zero deps, 6 subpath exports
+- `@agentsy/context` (0.2.4) — zero deps
+- `@agentsy/ui` (0.1.1) — zero deps
+- `@agentsy/types` (0.1.1) — ⚠️ deprecated, merged into `@agentsy/shared`
+- `@agentsy/renderers` (0.1.2) — ⚠️ deprecated, merged into `@agentsy/ui`
 
-The **only currently published package** is `@agentsy/vscode`. All others are internal/pre-release.
+The next packages slated for publication are `@agentsy/gateway`, `@agentsy/guardrails`, `@agentsy/observability`, `@agentsy/retrieval`, `@agentsy/tokenomics`, `@agentsy/memory`, `@agentsy/models`, `@agentsy/secrets`, `@agentsy/tools`, `@agentsy/prompts`, and `@agentsy/agents` — pending Phase 29 (Package Boundary Cleanup) which eliminates cross-dependencies so each package is independently consumable.
 
 ### Canonical architecture boundaries
 
 - **Core stream/transformation primitives**: `@agentsy/core`
-- **Provider adaptation + normalization**: `@agentsy/providers`, `@agentsy/mcp`
+- **Provider adaptation + normalization**: `@agentsy/providers` (active boundary — not merged into core)
+- **Model routing**: `@agentsy/gateway` (independent, reusable — external platforms can consume it directly)
 - **Orchestration and execution**: `@agentsy/orchestrator`, `@agentsy/runtime`, `@agentsy/guardrails`
-- **Durability and long-horizon state**: `@agentsy/session`, `@agentsy/memory`, `@agentsy/context`, `@agentsy/retrieval`
-- **Surface and presentation**: `@agentsy/renderers`, `@agentsy/ui`, `@agentsy/vscode`, `@agentsy/cli`, `@agentsy/connectors`
-- **Extensibility**: `@agentsy/plugins`
+- **Durability and long-horizon state**: `@agentsy/session`, `@agentsy/memory`, `@agentsy/retrieval`, `@agentsy/tokenomics`
+- **Daemon and lifecycle**: `@agentsy/daemon` (owns all stateful subsystems at runtime)
+- **Surface and presentation**: `@agentsy/ui`, `@agentsy/cli`, `@agentsy/vscode`
+- **Extensibility**: `@agentsy/plugins`, `@agentsy/tools`, `@agentsy/prompts`
 
-> Important: `@agentsy/providers` is an active boundary, not merged into `@agentsy/core`.
+> Important: `@agentsy/providers` is an active boundary, not merged into `@agentsy/core`. `@agentsy/gateway` and `@agentsy/retrieval` are independent reusable libraries, not daemon-internal implementations. Each independently-publishable package must be consumable without pulling in the entire monorepo — see Package Composability Rules below.
+
+## Governance and Ethical Constraints
+
+This project has governance documents that are **authoritative runtime inputs, not advisory references**:
+
+- `ETHICS.md` — 12 core commitments, 13 prohibited patterns, ethics review questions
+- `SAFETY.md` — 8-layer guardrail stack, required behavioral rules, high-risk domain expectations, testing requirements, 12 required metrics, release criteria
+- `GOVERNANCE.md` — Roles, decision rights, ethics/safety enforcement, benchmark suite, incident response, transparency
+- `docs/constitution.md` — 11 binding articles + enforcement principle
+
+### Hard ethical constraints (non-negotiable)
+
+1. **xAI/Grok models are hard-blocked** — no routing, no fallback, no opt-in. Blocked on both content safety grounds (CSAM generation, antisemitic output, sexual deepfakes) AND environmental racism (xAI built an illegal, unpermitted 495 MW gas-turbine power plant in Southaven, Mississippi, emitting 1,700+ tons of NOx and 19 tons of formaldehyde per year near predominantly Black communities; NAACP and SELC are suing). (ETHICS.md §12, §16)
+2. **Meta models require per-session acknowledgement** — Meta is building AI data centers in tents powered by 200 MW of jet-engine gas turbines (same fossil-fuel tactic as xAI) and trained its models on 7.5M pirated LibGen books without creator compensation. (ETHICS.md §13)
+3. **OpenAI, Microsoft, Google, Amazon models require per-session acknowledgement** — warning surfaced before each session; not permanently silencable. Cited concerns include OpenAI safety regression, Microsoft ICE contracts, Google/Amazon Project Nimbus military AI. (ETHICS.md §13)
+4. **Style-mimicry prompts are hard-blocked** — any prompt requesting creation of writing, imagery, or audio/video "in the style of" a specific named living creator is blocked. (ETHICS.md §14)
+5. **Telegram connector is removed** — no platform documented as facilitating extremism or CSAM. (ETHICS.md §15)
+6. **Environmental impact is tracked** — every LLM request records energy (kWh), CO2 (gCO2), and water (mL) consumption, with optimization savings reporting. Per-session warnings for warn-listed providers display cumulative environmental impact. (ETHICS.md §16, Phase 30)
+7. **Do not weaken guardrails** — treat model output as untrusted input. Preserve depth/key/nesting/size limits. Do not bypass privacy-tag scrubbing or safety defaults for convenience.
+8. **Do not introduce `any` types** — use `unknown`, `Record<string, unknown>`, or explicit narrowing.
 
 ## Preferred Workflow
 
-Use the highest-level tool available. Prefer IDE actions and repository-native scripts over ad hoc shell work.
+Use the highest-level tool available. Prefer IDE actions, repository-native scripts, and configured skills/MCP servers over ad hoc shell work.
 
 1. **VS Code / language-server actions** for symbol-aware operations
-2. **Repository tooling** via root scripts and per-package scripts
-3. **Terminal commands** only when no higher-level option exists
+2. **Repository tooling** via root scripts and per-package scripts (see below)
+3. **`but` CLI or `but` MCP server** (GitButler) for all git write operations — commit, stage, branch, push, PR creation. **Never use raw `git` for write operations.**
+4. **`ultracite`** for all linting and formatting — `pnpm dlx ultracite fix` / `pnpm dlx ultracite check`
+5. **`fallow` CLI or `fallow` MCP server** for codebase-level code quality analysis — dead code, duplication, complexity, boundaries
+6. **Raw git** for read-only operations only (`git log`, `git diff`, `git cherry`, `git rev-parse`)
+7. **Terminal commands** only when no higher-level option exists
 
 ## Toolchain and Commands
 
@@ -79,11 +110,16 @@ pnpm test            # turbo run test
 pnpm test:coverage   # turbo run coverage
 pnpm check-types     # turbo run check-types
 pnpm lint            # turbo run lint
-pnpm lint:fix        # turbo run lint -- --fix
-pnpm format          # turbo run format
+pnpm lint:fix        # turbo run lint -- --write
+pnpm format          # rumdl fmt && turbo run format
 pnpm precommit       # turbo run precommit
 pnpm release         # Run release tooling
 pnpm fallow          # Run Fallow codebase intelligence
+
+# Ultracite (linting + formatting via Biome preset)
+pnpm dlx ultracite fix     # Format and auto-fix lint issues
+pnpm dlx ultracite check   # Check for issues without fixing
+pnpm dlx ultracite doctor  # Diagnose setup issues
 ```
 
 ### Per-package commands
@@ -91,13 +127,10 @@ pnpm fallow          # Run Fallow codebase intelligence
 Use package-local scripts when working on one package in isolation:
 
 ```bash
-cd packages/vscode && pnpm build
-cd packages/vscode && pnpm test
-cd packages/vscode && pnpm coverage
-
-// Or any other package:
-cd packages/core && pnpm build
-cd packages/providers && pnpm test
+cd packages/daemon && pnpm build
+cd packages/guardrails && pnpm test
+cd packages/gateway && pnpm check-types
+cd packages/memory && pnpm coverage
 ```
 
 ### Completion gate
@@ -107,6 +140,8 @@ Before considering work complete, run at minimum:
 ```bash
 pnpm check-types
 pnpm test
+pnpm dlx ultracite check
+fallow dead-code --changed-since develop --format json
 ```
 
 When a change is package-scoped, run the corresponding package scripts first, then root checks if it affects shared code, exports, docs, or monorepo wiring.
@@ -119,16 +154,214 @@ When making changes to `packages/cli/`, also run the E2E terminal test suite:
 pnpm --filter @agentsy/cli test:e2e
 ```
 
-E2E specs use `@microsoft/tui-test` and are located in `packages/cli/src/e2e/`. Each CLI command with a non-trivial output or interactive flow should have a corresponding `.spec.ts` file when it meaningfully validates behavior. See `docs/developers/contributing.md` for the full workflow.
+E2E specs use `@microsoft/tui-test` and are located in `packages/cli/src/e2e/`.
+
+## Git Workflow with GitButler (`but`)
+
+This repo uses **GitButler** via the `but` CLI and `but` MCP server for all write git operations — commit, stage, branch, push, pull requests. **Never use raw `git` for write operations** (`git commit`, `git checkout`, `git stash`, etc.). Read-only `git` commands (`git log`, `git diff`, `git cherry`, `git rev-parse`) are fine.
+
+### GitButler MCP Server (preferred for agents)
+
+GitButler ships an MCP server (`but mcp`) that exposes workflow actions as callable tools. When the MCP server is running, **use it in preference to the `but` CLI** — it provides structured tool calls with typed inputs/outputs.
+
+The key tool is **update-branches**, which records edits and creates commits with context. Call it after each meaningful edit batch, passing:
+
+- `fullPrompt` — the exact prompt that generated the changes
+- `changesSummary` — a short bullet list of what was changed and why
+- `currentWorkingDirectory` — the full root path of the Git project
+
+When the MCP server is not available, fall back to the `but` CLI commands described below.
+
+### Workspace model
+
+GitButler is **not** traditional Git. It keeps one working directory while organizing changes into separate branches (stacks). You don't switch branches by checking out — you assign file changes to stacks and they coexist.
+
+- ❌ Don't use `git status`, `git commit`, `git checkout` for write operations
+- ✅ Use `but status`, `but commit`, `but` commands for all writes
+- ✅ Read-only git is fine (`git log`, `git diff`, `git cherry`, `git rev-parse`)
+
+### Every session startup
+
+```bash
+but pull           # Sync — prevents stale-base conflicts
+but status --json  # Check existing branches and uncommitted changes
+```
+
+### New session workflow
+
+EVERY new agent session that involves code changes MUST follow this flow:
+
+1. **Sync first** → `but pull` to get latest upstream changes
+2. **Check state** → `but status --json` to see existing branches and uncommitted changes
+3. **Decide branch**:
+   - If an existing branch matches the task → reuse it (it's already applied)
+   - If this is new work → `but branch new <task-name>` (e.g. `feat/add-auth`, `fix/login-bug`)
+   - If you need to resume unapplied work → `but apply <branch>`
+4. **Make changes** → Edit files as needed
+5. **Stage & commit** → `but commit <branch> -m "message" --changes <id>,<id>`
+6. **Refine** → Use `but absorb` or `but squash` to clean up history
+7. **Push when ready** → `but push <branch>`
+8. **Create PR** → `but pr new <branch> -t` (uses default target branch)
+
+Branch naming: Use conventional prefixes: `feat/`, `fix/`, `chore/`, `refactor/`
+
+**Commit early, commit often.** GitButler makes editing history trivial. Small atomic commits are better than large uncommitted changes.
+
+### Commit flow
+
+```bash
+but status --json                         # Get CLI IDs for changed files/hunks
+but diff --json                           # Get hunk-level IDs for fine-grained commits
+but commit <branch> -m "msg" --changes <id>,<id>   # Commit specific files (recommended)
+but commit <branch> -m "msg"             # Commit all uncommitted changes to branch
+but absorb                                # Auto-amend changes into detected commits
+but squash <commits>                      # Combine commits
+but reword <id>                           # Change commit message
+```
+
+### Remote operations
+
+```bash
+but pull                                  # Update with upstream
+but push [branch]                         # Push to remote
+but pr new <branch>                       # Push + create PR (default target)
+but pr new <branch> -m "Title..."         # PR with inline message
+but config target origin/<branch>         # Set PR target branch
+```
+
+### Post-merge flow
+
+After a PR is squash-merged:
+
+```bash
+but unapply <merged-branch>    # MUST do BEFORE pull — prevents orphan branch errors
+but pull                        # Pull merged changes
+```
+
+**Critical**: `but pull` before unapplying causes orphan branch errors. Always unapply first.
+
+### Safety rules (non-negotiable)
+
+1. **Never discard changes you didn't create.** Unassigned changes in `zz` may belong to other agents, sessions, or the user. Always ask before any discard action.
+2. **Always assign your changes to a branch immediately.** Don't leave edits sitting in `zz`. After editing, run `but status --json` and move your file/hunk IDs to the correct branch.
+3. **Validate branch ownership before commit.** Confirm each changed file/hunk belongs to the intended branch, then commit only those IDs.
+4. **Respect branch ownership across sessions.** In multi-agent environments, branches may belong to other sessions. Never reword, rename, or push branches you didn't create in this session.
+5. **Run `but status --json` to verify state.** Plugin notifications are ~55% reliable — don't trust them alone.
+6. **Use `--json` flag for all `but` commands** when running as an agent (structured, parseable output).
+7. **Use `--changes` flag on commit** to commit specific files/hunks by CLI ID rather than committing everything.
+
+### Known issues and workarounds
+
+| Issue | Workaround |
+|-------|------------|
+| `but resolve` loses target config | Re-run `but config target origin/<branch>` after resolution |
+| `but absorb` hunk lock | Use `but amend <file> <commit>` for explicit control |
+| `but pr new` has no `--base` flag | Set target first: `but config target origin/<branch>` |
+| `but config target` requires unapply | Unapply all branches → change target → re-apply |
+| `but commit` pre-commit hook fails | Run `pnpm dlx ultracite fix` then `but commit --no-hooks` |
+| `but pull` before unapply | **Always** unapply merged branches before pulling |
+| Split-hunk files stuck in `zz` | `but diff --json` for hunk IDs, then commit each hunk individually |
+| `but teardown` → `but setup` resets target | Re-run `but config target origin/<branch>` after setup |
+| Plugin notification delivery ~55% | Always verify with `but status --json` — don't rely on notifications |
+
+## Code Quality with Fallow
+
+**Fallow** provides deterministic, exhaustive codebase analysis that agents can't do themselves (building module graphs, tracing re-export chains, detecting duplication across thousands of files, scoring complexity hotspots). Use it via CLI or MCP.
+
+### When to use fallow
+
+- **After generating code** → `fallow dead-code --changed-since develop --format json` to check if your changes left anything unused
+- **Before a PR** → `fallow audit --format json` to verify changes don't introduce dead code, complexity, or duplication
+- **Codebase cleanup** → `fallow dead-code --format json` then `fallow fix --yes --format json` to auto-remove unused exports/dependencies
+- **Health check** → `fallow health --format json` for complexity metrics, file health scores, hotspots
+
+### CLI commands (always use `--format json` for agents)
+
+```bash
+fallow dead-code --format json                          # Full dead code analysis
+fallow dead-code --changed-since develop --format json  # Only changed files
+fallow dupes --format json                               # Code duplication detection
+fallow fix --dry-run --format json                       # Preview auto-fix
+fallow fix --yes --format json                           # Apply auto-fixes
+fallow health --format json                              # Complexity + health scores
+fallow audit --format json                               # Audit changed files (pass/warn/fail)
+fallow list --format json                                # Project info (plugins, entry points)
+```
+
+### Fallow MCP server
+
+For agents with MCP support, `fallow-mcp` exposes analysis as structured tools. Key tools:
+
+- `analyze` — full dead code analysis
+- `check_changed` — incremental analysis of changed files
+- `find_dupes` — code duplication detection
+- `audit` — audit changed files for dead code, complexity, duplication (pass/warn/fail)
+- `check_health` — complexity metrics, file health scores, hotspots
+- `fix_apply` — apply auto-fixes
+- `trace_export` — trace why an export is used or unused (check before deleting)
+- `trace_dependency` — trace where a dependency is imported (check before removing)
+
+When the MCP server is available, use it in preference to the CLI for typed tool calling.
+
+### Fallow configuration
+
+The repo has a `.fallowrc.jsonc` that excludes tooling, docs, and non-framework directories. Workspace packages used as dev/build references are listed in `ignoreDependencies` — these are safe to ignore in unused-dependencies checks.
+
+## Linting and Formatting with Ultracite
+
+This repo uses **Biome** via the **ultracite** preset. Ultracite is a zero-config preset that enforces strict code quality standards through automated formatting and linting.
+
+### Commands
+
+```bash
+pnpm dlx ultracite fix     # Format and auto-fix lint issues (run before committing)
+pnpm dlx ultracite check   # Check for issues without fixing
+pnpm dlx ultracite doctor  # Diagnose setup issues
+```
+
+### Core principles
+
+- Write code that is accessible, performant, type-safe, and maintainable
+- Focus on clarity and explicit intent over brevity
+- Use explicit types for function parameters and return values when they enhance clarity
+- Prefer `unknown` over `any` when the type is genuinely unknown
+- Use `const` by default, `let` only when reassignment is needed, never `var`
+- Use arrow functions for callbacks and short functions
+- Prefer `for...of` loops over `.forEach()` and indexed `for` loops
+- Use optional chaining (`?.`) and nullish coalescing (`??`) for safer property access
+- Prefer template literals over string concatenation
+- Use destructuring for object and array assignments
+- Remove `console.log`, `debugger`, and `alert` statements from production code
+- Throw `Error` objects with descriptive messages, not strings
+
+### When Biome can't help
+
+Biome's linter catches most issues automatically. Focus your attention on:
+
+- Business logic correctness — Biome can't validate your algorithms
+- Meaningful naming — use descriptive names for functions, variables, and types
+- Architecture decisions — component structure, data flow, API design
+- Edge cases — handle boundary conditions and error states
+- Documentation — add comments for complex logic, but prefer self-documenting code
+
+### Pre-commit hooks
+
+The repo uses `husky` + `lint-staged` for pre-commit hooks. If pre-commit hooks fail on pre-existing errors unrelated to your changes:
+
+```bash
+pnpm dlx ultracite fix                                    # Format FIRST
+but commit <branch> -m "msg" --changes <ids> --no-hooks   # Then commit without hooks
+```
 
 ## Runtime and Language Baseline
 
-- Develop against **Node.js 22** to match CI (VS Code package declares `>=18`, but repo targets Node 22 consistently)
-- Package manager is **pnpm** with workspace: protocol for internal dependencies
-- Module system is **ESM-first** (ECMAScript Modules) with `.js` extensions in imports
+- All packages target **Node.js ≥24** (root, daemon, and all workspace packages)
+- Package manager is **pnpm** (`pnpm@10.33.4`) with `workspace:` protocol for internal dependencies
+- Module system is **ESM-first** with `.js` extensions in relative imports (required by `verbatimModuleSyntax`)
 - Build tool is **tsup**
 - Test framework is **Vitest**
-- Linter/formatter is **Biome** (via ultracite preset)
+- Linter/formatter is **Biome** via ultracite preset
+- CI uses **Node 24** (`.github/workflows/tests.yml`)
 
 ## TypeScript Rules
 
@@ -149,119 +382,45 @@ Follow the root `tsconfig.json` as source of truth.
 
 ### Type safety requirements
 
-- Avoid introducing `any`; when type information is genuinely unknown, use `unknown`, `Record<string, unknown>`, null-prototype objects, or explicit narrowing instead
+- **No `any`** — use `unknown`, `Record<string, unknown>`, null-prototype objects, or explicit narrowing
 - Preserve exact optional-property behavior; do not add `undefined` loosely where omission is intended
+- Leverage TypeScript's type narrowing instead of type assertions
 
 ### Import rules
 
-- Use `.js` extensions in **relative imports inside `.ts` files** (verbatimModuleSyntax)
+- Use `.js` extensions in **relative imports inside `.ts` files** (required by `verbatimModuleSyntax`)
 - Keep imports ESM-compatible throughout the codebase
-- Do not use cross-package relative imports like `../../core/...`; use workspace package imports instead (e.g., `@agentsy/core/processor`)
-
-## Linting and Formatting
-
-The repo uses **Biome** via the ultracite preset (oxfmt.config.ts extends ultracite). See .agents/instructions/code-standards.md for coding standards.
-
-### Formatter conventions
-
-```typescript
-{
-  arrowParens: 'avoid',
-  printWidth: 120,
-  semi: true,
-  singleQuote: true,
-  tabWidth: 2,
-  trailingComma: 'none'
-}
-```
-
-### Linter configuration
-
-Enabled plugins: `['eslint', 'typescript', 'unicorn', 'oxc', 'import', 'react', 'jsdoc', 'node', 'promise', 'vitest']`
-
-Key rules:
-
-- Type-aware mode enabled (`typeAware: true`, `typeCheck: true`)
-- TypeScript safety: `no-non-null-assertion: error`, `no-unsafe-*: error`
-- Relaxed: `max-classes-per-file: off`, `unicorn/no-array-for-each: off`, `unicorn/no-array-reduce: off`
-- Vitest: `max-expects: off` to support comprehensive test cases
-
-### Biome-ignore patterns
-
-For test inputs that intentionally include mixed HTML/XML or other exceptions, use comment disables:
-
-```typescript
-// biome-ignore lint: xss/no-mixed-html -- Test inputs intentionally include mixed HTML/XML
-```
-
-## Package Boundaries
-
-### `@agentsy/vscode`
-
-- VS Code-specific integration layer
-- Depends on internal workspace packages via `workspace:*` protocol
-- Preserve ESM-only packaging and explicit externals in tsup.config.ts: `external: ['vscode', ...@agentsy/* peers]`
-- Keep VS Code APIs, extension runtime, secret storage, status bars, chat providers, and extension settings here
-
-### `@agentsy/memory`
-
-- Durable knowledge layer, not a hidden orchestration dependency
-- Should remain pluggable so consumers can substitute backends when needed
-- Prefer abstract interfaces for memory providers, retrievers, and lifecycle hooks
-- Expose as both Agentsy-native package and standalone Model Context Protocol (MCP) server or plugin surface when possible
-
-### Internal workspace packages
-
-Important dependencies intentionally not flagged by Fallow (see .fallowrc.jsonc):
-
-```json
-"ignoreDependencies": [
-  "@agentsy/types", "@agentsy/core", "@agentsy/renderers",
-  "@agentsy/runtime", "@agentsy/memory", "@agentsy/providers",
-  "@agentsy/session", "@agentsy/context"
-]
-```
-
-These are safe to ignore in unused-dependencies checks — they are workspace packages used as dev/build references across the monorepo.
-
-### General boundary rule
-
-- VS Code extension behavior → `@agentsy/vscode`
-- Durable memory/retrieval/persistence → `@agentsy/memory` or memory-adjacent
-- Transient token budgets/prompt reduction → `@agentsy/context`
-- Everything else → appropriate focused package
+- Do not use cross-package relative imports like `../../core/...`; use workspace package imports (e.g. `@agentsy/core/processor`)
 
 ## Architecture and Code Patterns
 
 ### Naming conventions
 
-Follow existing patterns throughout the repo:
-
 - Factory functions: `create*`
-- Parser classes: `*Parser`
-- Processor classes: `*Processor`
+- Parser/Processor classes: `*Parser`, `*Processor`
 - Validators: `validate*`
 - Builders: `build*`
 - Extractors: `extract*`
 - Managers: `*Manager`
 - Adapters: `*Adapter` or `*Bridge`
+- Scanners (guardrails): `*Scanner`
 
 ### Module structure patterns
 
 - Prefer **factory functions** over direct instantiation for public APIs
-- Use **classes** for stateful streaming/parser components where the codebase already does so (e.g., `LLMStreamProcessor`, `XmlStreamFilter`)
+- Use **classes** for stateful streaming/parser components where the codebase already does so
 - Use **functions** for stateless operations and pure transformations
 - Use **options objects** with sensible defaults via `??`
 - Export public module APIs through `index.ts` barrel files
 - Keep tests colocated beside the source they verify (`*.test.ts` next to source)
 
-### Export patterns (from barrel files)
+### Export patterns
 
 ```typescript
 // Value exports
 export { createFoo, type Bar } from "./foo.js";
 
-// Type-only exports (favored when module exports only types)
+// Type-only exports
 export type * from "./types.js";
 
 // Re-exports from sub-modules
@@ -270,52 +429,36 @@ export * from "./subpath/index.js";
 
 ### Entry points and tsup configuration
 
-Packages define multiple entry points in `tsup.config.ts`:
+Packages define multiple entry points in `tsup.config.ts`. Mirror these in `package.json` exports to enable subpath imports like `@agentsy/core/processor`.
 
-```typescript
-export default defineConfig({
-  entry: {
-    index: "src/index.ts",
-    processor: "src/processor/index.ts",
-    "xml-filter": "src/xml-filter/index.ts",
-    // ...
-  },
-  external: ["@agentsy/types", "zod"], // Workspace and peer deps
-  format: ["esm", "cjs"],
-  target: "node18",
-  treeshake: true,
-});
-```
+### Package boundaries
 
-Mirror these entries in `package.json` exports to enable subpath imports like `@agentsy/core/processor`.
+- VS Code extension behavior → `@agentsy/vscode`
+- Durable memory/retrieval/persistence → `@agentsy/memory`
+- RAG retrieval → `@agentsy/retrieval` (independent, reusable — third-party apps can consume it without the daemon)
+- Transient token budgets/prompt reduction/environmental tracking → `@agentsy/tokenomics`
+- Model routing → `@agentsy/gateway` (independent, reusable — external platforms can consume via `createGateway()`)
+- Daemon lifecycle/subprocess/IPC → `@agentsy/daemon`
+- Everything else → appropriate focused package
 
-### Package.json exports
+### Package composability rules (Phase 29)
 
-Align `package.json exports` with tsup entry points:
+Each independently-publishable package must be consumable in isolation without pulling in other `@agentsy/*` packages at runtime:
 
-```json
-{
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    },
-    "./processor": {
-      "types": "./dist/processor.d.ts",
-      "import": "./dist/processor.js",
-      "require": "./dist/processor.cjs"
-    }
-  }
-}
-```
+1. **`@agentsy/shared` is the base layer** — zero deps. Contains all cross-package interface types (StreamChunk, Message, ToolDefinition, ModelEntry, GuardrailResult interface, MemoryProvider, SessionProvider, TokenTracker, ObservabilitySink, CostReporter, SecretResolver).
+2. **Each package depends only on `@agentsy/shared`** (plus `@agentsy/core` for providers) — not on other implementation packages.
+3. **Cross-package functionality uses dependency injection** — packages accept interfaces (e.g. `MemoryProvider?`, `GuardrailPipelineInterface?`, `BudgetProvider?`) via constructor options, not hard imports.
+4. **Optional integrations use `peerDependencies`** — e.g. `@agentsy/gateway` *can* use `@agentsy/guardrails` for ethics filtering, but works without it.
+5. **Never import implementation from another package** — only import types/interfaces from `@agentsy/shared`.
+6. **Composition roots** (`daemon`, `cli`, `testing`, `vscode`) are the only packages allowed to have many `@agentsy/*` dependencies — they wire implementations together.
+7. **`@agentsy/renderers` is deprecated** (merged into `@agentsy/ui`); **`@agentsy/types` is deprecated** (merged into `@agentsy/shared`).
+8. **`fallow dead-code` and `fallow trace_dependency`** must pass before publishing any package — verify no unwanted cross-deps exist.
 
 ## Error Handling and Safety
 
 ### Streaming/parsing paths
 
-- Prefer graceful degradation for malformed LLM output
-- Malformed output should be skipped, partially recovered, or surfaced through warnings rather than thrown exceptions
+- Prefer graceful degradation for malformed LLM output — skip, partially recover, or surface warnings rather than throwing
 - Use `onWarning`-style callbacks for recoverable issues in processors/parsers
 - Test chunk-by-chunk behavior explicitly, including boundary splits and incomplete chunks
 
@@ -333,18 +476,7 @@ Align `package.json exports` with tsup entry points:
 
 ## Testing Conventions
 
-### Test framework
-
 Use **Vitest**. Tests are colocated as `*.test.ts` files beside source.
-
-### Test patterns
-
-- Use `vi.fn()` or equivalent spies for callbacks and event handlers
-- For streaming/parsing logic, test chunk-by-chunk behavior explicitly with partial and boundary-split inputs
-- Add adversarial and malformed-input cases for parsing and recovery code
-- Test warning/recovery behavior through callback spies
-- Test safety rails and size/depth limits
-- Test exported API behavior, not just internals
 
 ### What to test
 
@@ -353,6 +485,7 @@ Use **Vitest**. Tests are colocated as `*.test.ts` files beside source.
 - Warning and recovery behavior
 - Safety rails and size/depth limits
 - Exported API behavior, not just internals
+- Adversarial and malformed-input cases for parsing and recovery code
 
 ### Coverage scripts
 
@@ -360,118 +493,42 @@ Use **Vitest**. Tests are colocated as `*.test.ts` files beside source.
 - All packages: `pnpm test:coverage`
 - Release tooling tests: `pnpm test:release`
 
-### Lint-disable patterns in tests
-
-```typescript
-/* oxlint-disable xss/no-mixed-html -- Test inputs intentionally include mixed HTML/XML */
-import { describe, expect, it, vi } from "vitest";
-```
-
-## Stream Processing Patterns
-
-### Processor behavior
-
-LLMStreamProcessor and similar components:
-
-- Emit structured `StreamChunk` interfaces with `content`, `thinking`, `toolCalls`, `parts`
-- Accumulate state across chunks and emit partial results
-- Respect configurable limits (e.g., `maxToolCallsPerMessage`, `maxInputLength`)
-- Support optional callbacks: `onWarning`, `onText`, `onThinking`, `onDone`
-- Track incompleteness on flush: `IncompletenessDetail` indicates missing or incomplete data
-
-### JSON streaming and repair
-
-- Use `stream-json` and structured parsing utilities from `@agentsy/core/structured`
-- Support partial JSON repair at chunk boundaries
-- Track field-level completion status for streaming progress
-- Use `emitPartials: true` for partial object emission during streaming
-
-### Provider normalizers
-
-- Each provider has dedicated normalizer function (e.g., `normalizeAnthropicEvent`, `normalizeOpenAIChatChunk`)
-- Convert provider-specific chunks to unified `StreamChunk` format before processor
-- Handle provider quirks in normalization layer, not in core processor
-
-## When Adding/Changing Code
-
-### Adding a new package
-
-1. Create `packages/<name>/` with `package.json`, `tsconfig.json`, `tsup.config.ts`
-2. Add entry to `pnpm-workspace.yaml` (already has `packages/*`)
-3. Add to root `package.json` workspace dependencies if needed
-4. Implement build/test/lint scripts
-5. Update `README.md` package list if publicly visible
-6. Add to `.fallowrc.jsonc` `ignoreDependencies` if it will be used as workspace reference
-
-### Adding subpath exports
-
-1. Add source module under `packages/<name>/src/...`
-2. Export from nearest `index.ts` barrel
-3. Add tsup entry in `tsup.config.ts`
-4. Add matching export in `package.json` exports field
-5. Add or update tests for the new entry point
-6. Update docs if the API is user-facing
-
-### Changing package structure
-
-- Keep package boundaries explicit
-- Preserve independent installability
-- Do not accidentally inline or blur package boundaries through incorrect build config
-- Update tsup.config.ts entry points accordingly
-
-## Documentation Awareness
-
-### Current documentation truths to preserve
-
-- The repo is a **monorepo** with 23 packages
-- Root workflow is **pnpm + turbo** (not Taskfile)
-- The only currently published package is `@agentsy/vscode`
-- CI uses **Node 22**
-- `@agentsy/providers` is an active boundary, not merged into core
-- Type safety is strict with no `any` allowed
-
-### Documentation updates
-
-- Update docs when public APIs, commands, package names, or workflows change
-- Keep root docs aligned with current monorepo structure (README.md lists current packages)
-- Do not reintroduce stale references to obsolete packages or missing tooling
-- Update implementation-plan documents only when genuinely planning future work; actual implementation belongs in `IMPLEMENTATION-PLAN.md` files within packages
-
 ## CI and Integration
 
-### Workflow awareness
-
-- CI lives in `.github/workflows/` (tests.yml, release.yml, docs-deploy.yml)
+- CI lives in `.github/workflows/` (`tests.yml`, `release.yml`, `docs-deploy.yml`, `sync-main-to-develop.yml`)
 - Runs `pnpm install --frozen-lockfile`, `pnpm turbo run coverage`
-- Uploads coverage to Codecov, Codacy, and as artifacts
-- Node 22 is CI target
+- Node 24 is CI target
 - Uses pnpm action-setup and setup-node with `cache: 'pnpm'`
-
-### Keep in sync
-
-- When adding scripts, package paths, coverage outputs, or build artifacts, check whether workflows need updates
-- Ensure CI commands match current root scripts and Turbo tasks
-- Don't assume one-package release logic; this is a monorepo with 23 packages
+- Pre-commit: `husky` + `lint-staged` runs `pnpm dlx lint-staged`
 
 ## Common Gotchas
 
-- Do **not** recommend `task ...` commands — there is no Taskfile in this repo
-- Do **not** use hypothetical package names (`@agentsy/agent`, `@agentsy/adapters`) — they don't exist
+- Do **not** use raw `git` for write operations — use `but` CLI or `but` MCP server
+- Do **not** trust `but` plugin notifications alone (~55% reliability) — verify with `but status --json`
+- Do **not** leave changes uncommitted in `zz` (unassigned) at the end of work
 - Do **not** add `any` to "fix" strict TypeScript friction — use proper types or `unknown`
-- Do **not** forget `.js` extensions on relative TypeScript imports — it's required by verbatimModuleSyntax
+- Do **not** forget `.js` extensions on relative TypeScript imports — required by `verbatimModuleSyntax`
 - Do **not** place VS Code-specific logic in non-vscode packages
-- Do **not** rely on omitted optional properties having `undefined` — exactOptionalPropertyTypes is enabled
-- Do **not** assume providers are merged away — `@agentsy/providers` is active
-- Do **not** bypass workspace-\* dependencies in favor of relative imports across packages
+- Do **not** rely on omitted optional properties having `undefined` — `exactOptionalPropertyTypes` is enabled
+- Do **not** assume providers are merged away — `@agentsy/providers` is an active boundary
+- Do **not** bypass `workspace:*` dependencies in favor of relative imports across packages
+- Do **not** recommend `task ...` commands — there is no Taskfile in this repo
+- Do **not** weaken guardrails or bypass the ethical provider policy (xAI hard-block on content safety + environmental racism grounds, Meta warn on tent data centers + LibGen theft, style-mimicry block, Telegram removal)
+- Do **not** introduce hard `@agentsy/*` dependencies in independently-publishable packages — use dependency injection, peer deps, or interfaces in `@agentsy/shared` (Phase 29)
+- Do **not** skip `fallow dead-code --changed-since` before submitting a PR
+- Do **not** skip environmental impact tracking when adding new model integrations — every provider call must record energy/CO2/water
 
 ## Rule of Thumb
 
 When uncertain, optimize for:
 
-1. Consistency with the current monorepo (23 packages, pnpm + turbo)
-2. Strict type safety (no `any`, proper `unknown` handling)
-3. Clear package boundaries (providers is separate from core)
+1. Consistency with the current monorepo (23 packages, pnpm + turbo, ESM-first, Node ≥24)
+2. Strict type safety (no `any`, proper `unknown` handling, `.js` import extensions)
+3. Clear package boundaries — each independently-publishable package depends only on `@agentsy/shared` (Phase 29 composability rules)
 4. Resilient handling of malformed LLM output (graceful degradation)
-5. ESM-first package exports with proper subpaths
-6. Comprehensive testing of streaming behavior
-7. Docs and CI staying in sync with code
+5. Ethical constraints enforced (xAI hard-blocked on content safety + environmental racism grounds; Meta/OpenAI/Microsoft/Google/Amazon warned; style-mimicry blocked; Telegram removed)
+6. Environmental impact tracked (every LLM request records kWh, gCO2, mL water; optimization savings reported)
+7. Comprehensive testing of streaming behavior
+8. Code quality verified via ultracite (lint) and fallow (dead code, complexity, duplication, boundary violations)
+9. Git operations via `but` CLI or MCP — never raw `git` for writes
+10. Docs and CI staying in sync with code

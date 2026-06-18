@@ -1,4 +1,4 @@
-import type { JsonObject, NativeToolCallDelta, ToolCallState } from '@agentsy/types';
+import type { JsonObject, NativeToolCallDelta, ToolCallState } from '@agentsy/shared';
 
 import { parseJson } from '../structured/index.js';
 
@@ -65,27 +65,12 @@ export class ToolCallAccumulator {
    * Useful for emitting tool calls mid-stream when multiple parallel calls are in flight
    * and some complete before others.
    */
-  // fallow-ignore-next-line unused-class-member
   public getCompletedCalls(): NativeToolCall[] {
     const result: NativeToolCall[] = [];
     for (const pending of this.calls.values()) {
-      if (!pending.name) {
-        continue;
-      }
-      try {
-        const parsed = JSON.parse(pending.argumentsBuffer) as JsonObject;
-        if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
-          const call: NativeToolCall = {
-            arguments: parsed,
-            name: pending.name
-          };
-          if (pending.id !== undefined) {
-            call.id = pending.id;
-          }
-          result.push(call);
-        }
-      } catch {
-        // Arguments not yet complete.
+      const call = this.#tryBuildNativeToolCall(pending);
+      if (call) {
+        result.push(call);
       }
     }
     return result;
@@ -103,26 +88,34 @@ export class ToolCallAccumulator {
   }[] {
     const result: { index: number; call: NativeToolCall }[] = [];
     for (const [index, pending] of this.calls.entries()) {
-      if (!pending.name) {
-        continue;
-      }
-      try {
-        const parsed = JSON.parse(pending.argumentsBuffer) as JsonObject;
-        if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
-          const call: NativeToolCall = {
-            arguments: parsed,
-            name: pending.name
-          };
-          if (pending.id !== undefined) {
-            call.id = pending.id;
-          }
-          result.push({ call, index });
-        }
-      } catch {
-        // Not yet complete.
+      const call = this.#tryBuildNativeToolCall(pending);
+      if (call) {
+        result.push({ call, index });
       }
     }
     return result;
+  }
+
+  #tryBuildNativeToolCall(pending: PendingCall): NativeToolCall | null {
+    if (!pending.name) {
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(pending.argumentsBuffer) as JsonObject;
+      if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const call: NativeToolCall = {
+          arguments: parsed,
+          name: pending.name
+        };
+        if (pending.id !== undefined) {
+          call.id = pending.id;
+        }
+        return call;
+      }
+    } catch {
+      // Not yet complete.
+    }
+    return null;
   }
 
   /**
@@ -134,23 +127,31 @@ export class ToolCallAccumulator {
   }
 
   /**
+   * Returns the name accumulated so far for the call at the given `index`.
+   */
+  public getPendingName(index: number): string | undefined {
+    return this.calls.get(index)?.name;
+  }
+
+  /**
+   * Returns the id accumulated so far for the call at the given `index`.
+   */
+  public getPendingId(index: number): string | undefined {
+    return this.calls.get(index)?.id;
+  }
+
+  /**
    * Returns the `name` and `id` accumulated so far for the call at the given `index`.
    * Useful for building `tool_call_delta` OutputParts for deltas that arrive after
    * the initial header delta (which carries the name/id).
    */
   public getPendingCallInfo(index: number): { name?: string; id?: string } | undefined {
-    const pending = this.calls.get(index);
-    if (pending === undefined) {
+    const name = this.getPendingName(index);
+    const id = this.getPendingId(index);
+    if (name === undefined && id === undefined) {
       return;
     }
-    const result: { name?: string; id?: string } = {};
-    if (pending.name !== undefined) {
-      result.name = pending.name;
-    }
-    if (pending.id !== undefined) {
-      result.id = pending.id;
-    }
-    return result;
+    return { ...(name !== undefined && { name }), ...(id !== undefined && { id }) };
   }
 
   /**
@@ -226,7 +227,6 @@ export class ToolCallAccumulator {
    * Call this when the stream ends to capture any calls whose arguments never formed
    * complete JSON during streaming.
    */
-  // fallow-ignore-next-line unused-class-member
   public flush(): NativeToolCall[] {
     const result: NativeToolCall[] = [];
     for (const pending of this.calls.values()) {

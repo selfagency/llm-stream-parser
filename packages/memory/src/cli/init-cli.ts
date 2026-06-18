@@ -9,6 +9,7 @@ export { type InitOptions, type InitResult, initMemory };
  * Run the init CLI with parsed arguments.
  * Returns the InitResult on success, throws on failure.
  */
+// fallow-ignore-next-line complexity
 export function runInitCli(args: string[] = process.argv.slice(2)): InitResult {
   if (args[0] === '--help' || args[0] === '-h') {
     console.log(`

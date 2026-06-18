@@ -6,7 +6,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts'
   },
-  external: ['@agentsy/types'],
+  external: ['@agentsy/shared'],
   format: ['esm'],
   treeshake: true
 });

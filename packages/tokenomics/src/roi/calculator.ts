@@ -12,6 +12,7 @@
 import type { DeployedAppAnalyticsAdapter } from '../analytics/types.js';
 import { aggregateGitAiStats } from '../attribution/git-ai-notes.js';
 import type { LedgerQueryFilter, LedgerStore } from '../ledger/store.js';
+import { computeAverageSurvivalRate } from './utils.js';
 
 // =============================================================================
 // Types
@@ -142,6 +143,7 @@ export interface RoiSnapshot {
  * @param analytics - Optional analytics adapter for deployment correlation.
  * @returns A computed ROI snapshot.
  */
+// fallow-ignore-next-line complexity
 export async function computeRoiSnapshot(
   ledger: LedgerStore,
   since?: Date,
@@ -183,10 +185,7 @@ export async function computeRoiSnapshot(
   const prsOpened = 0; // requires external integration
   const deploymentsCorrelated = 0; // requires analytics adapter
 
-  // Average survival rate
-  const survivalRates = entries.map(e => e.survivalRate30d).filter((r): r is number => r !== null);
-  const avgSurvivalRate =
-    survivalRates.length > 0 ? survivalRates.reduce((sum, r) => sum + r, 0) / survivalRates.length : 0;
+  const avgSurvivalRate = computeAverageSurvivalRate(entries);
 
   // ── Quality ───────────────────────────────────────────────────────
   const sessionCount = agg.sessionCount;

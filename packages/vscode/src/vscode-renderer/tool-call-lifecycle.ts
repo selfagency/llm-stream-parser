@@ -79,7 +79,6 @@ export class ToolCallDeltaAccumulator {
     return parts;
   }
 
-  // fallow-ignore-next-line unused-class-member
   reset(): void {
     this.calls.clear();
   }

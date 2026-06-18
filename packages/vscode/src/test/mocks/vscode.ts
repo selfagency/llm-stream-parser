@@ -1,5 +1,3 @@
-// fallow-ignore-file unused-file
-
 /**
  * Mock for VS Code API.
  * This is used during testing when running outside the VS Code extension host context.

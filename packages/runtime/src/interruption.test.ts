@@ -1,5 +1,5 @@
 import type { SessionStore } from '@agentsy/session';
-import type { RuntimeSnapshot } from '@agentsy/types';
+import type { RuntimeSnapshot } from '@agentsy/shared';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { InterruptionCheckpoint } from './interruption.js';

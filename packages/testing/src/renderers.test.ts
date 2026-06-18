@@ -1,7 +1,7 @@
 import type { OutputPart } from '@agentsy/core/processor';
 import { LLMStreamProcessor } from '@agentsy/core/processor';
-import type { BaseRendererOptions } from '@agentsy/renderers';
-import { createPlainTextRenderer, createSharedRendererHandle } from '@agentsy/renderers';
+import type { BaseRendererOptions } from '@agentsy/ui';
+import { createPlainTextRenderer, createSharedRendererHandle } from '@agentsy/ui';
 /**
  * Integration: renderers + processor
  *

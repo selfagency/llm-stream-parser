@@ -104,6 +104,7 @@ export class OtlpExporter implements ObservabilitySink {
     }
   }
 
+  // fallow-ignore-next-line complexity
   async flush(): Promise<void> {
     if (this._buffer.length === 0 || this._shutdown) {
       return;

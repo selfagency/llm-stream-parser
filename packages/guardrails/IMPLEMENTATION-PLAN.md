@@ -33,9 +33,9 @@ This plan defines the production implementation order for `@agentsy/guardrails` 
 
 | Task                | Description                                                          | Completed | Date |
 | ------------------- | -------------------------------------------------------------------- | --------- | ---- |
-| TASK-GUARDRAILS-001 | Finalize policy schema, decision envelope, and reason code taxonomy. |           |      |
-| TASK-GUARDRAILS-002 | Add deterministic evaluation contract tests and fixture sets.        |           |      |
-| TASK-GUARDRAILS-003 | Align package boundaries with runtime/tools/retrieval consumers.     |           |      |
+| TASK-GUARDRAILS-001 | Finalize policy schema, decision envelope, and reason code taxonomy. | ✅        | 2026-06-17 |
+| TASK-GUARDRAILS-002 | Add deterministic evaluation contract tests and fixture sets.        | ✅        | 2026-06-17 |
+| TASK-GUARDRAILS-003 | Align package boundaries with runtime/tools/retrieval consumers.     | ✅        | 2026-06-17 |
 
 ### Implementation Phase 2
 
@@ -168,16 +168,19 @@ The guardrails package must treat the project policy docs as authoritative runti
 
 ### Ethical enforcement tasks
 
-- [ ] **P0 — TASK-G000** Load and version the project policy documents as canonical policy sources
+- [~] **P0 — TASK-G000** Load and version the project policy documents as canonical policy sources
   - Depends on: none
-- [ ] **P0 — TASK-G000A** Build a policy registry that maps ethical clauses to machine-enforceable rules
+  - **Status**: Clauses extracted into `DEFAULT_ETHICS_REGISTRY` (hardcoded). File-based loading deferred to Phase 12 (daemon integration).
+- [x] **P0 — TASK-G000A** Build a policy registry that maps ethical clauses to machine-enforceable rules
   - Depends on: TASK-G000
+  - **Status**: `EthicsRegistry` in `packages/guardrails/src/ethics/registry.ts` — 50+ clauses, queryable by scanner/source/gap.
 - [ ] **P0 — TASK-G000B** Define policy precedence and conflict resolution for contradictory instructions or requests
   - Depends on: TASK-G000, TASK-G000A
 - [ ] **P0 — TASK-G000C** Enforce ethical rules across all surfaces with deny/quarantine/escalate outcomes
   - Depends on: TASK-G000A, TASK-G000B
-- [ ] **P0 — TASK-G000D** Add policy-linked refusal explanations and audit receipts for ethical violations
+- [x] **P0 — TASK-G000D** Add policy-linked refusal explanations and audit receipts for ethical violations
   - Depends on: TASK-G000C
+  - **Status**: `GuardrailDecisionReceipt` type + `JsonlAuditLogger` + `ReceiptExporter` exist. Wired into `GuardrailPipeline.evaluate()` return.
 
 ## Priority legend
 

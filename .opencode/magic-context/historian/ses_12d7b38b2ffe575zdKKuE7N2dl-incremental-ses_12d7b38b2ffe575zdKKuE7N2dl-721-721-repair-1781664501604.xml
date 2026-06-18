@@ -1,0 +1,40 @@
+```xml
+<output>
+<compartments>
+<compartment start="718" end="721" title="Phase 11.8: Fallow duplication analysis; full extraction chosen over suppression" episode_type="investigation" importance="42">
+<p1>
+Fallow duplication analysis run for Phase 11.8. Found **19 clone groups** (vs the plan's estimate of 15). Categorized across three buckets:
+
+**8 extraction targets** (clean 2-instance clones, same-package or same-file, extractable):
+- agents loader (pattern in agents package)
+- session run (session package)
+- gateway client (gateway package)
+- memory entryImportance / getDiff (memory package)
+- wiki-manager nextPage / pageCreate / hybridSearch (memory package)
+- tokenomics cosineSimilarity (tokenomics package)
+
+**6 secrets provider clones** (intentionally structural pattern shared across doppler/infisical/dashlane/lastpass/bitwarden/1password) → marked for suppression
+
+**2 hybrid-retriever + MSW test clones** → marked for suppression, localized to tests
+
+Full extraction strategy chosen over suppression. Agent started reading source files systematically to plan each extraction: `packages/memory/src/agentfs/wiki-adapter.ts`, `packages/memory/src/wiki/wiki-manager.ts`, `packages/memory/src/entries/index.ts`, `packages/memory/src/unified-api.ts`, `packages/memory/src/retrieval/rag/hybrid-retriever.ts`, and `packages/core/src/tool-calls/tool-call-accumulator.ts`. Chunk ends mid-read.
+</p1>
+<p2>
+Phase 11.8: 19 clone groups found (Fallow count vs plan's 15). 8 extraction targets identified across agents/session/gateway/memory/tokenomics packages. 6 secrets provider clones and 2 hybrid-retriever/MSW clones suppressed. Full extraction chosen. Reading source files to plan each extraction.
+</p2>
+<p3>
+Phase 11.8 duplication analysis: 19 groups found; 8 extraction targets vs 11 suppressions; full extraction path chosen. Source file reading underway.
+</p3>
+<p4/>
+</compartment>
+</compartments>
+<facts>
+</facts>
+<events>
+</events>
+<meta>
+<messages_processed>718-721</messages_processed>
+<unprocessed_from>722</unprocessed_from>
+</meta>
+</output>
+```

@@ -121,35 +121,33 @@ export function createRuntimeHookRegistry(): HookRegistry {
     }
   }
 
+  // biome-ignore lint/suspicious/useAwait: async required by HookRegistry interface
   async function fire(event: RuntimeHookEvent): Promise<HookResult> {
     const handlers = handlersByEvent.get(event.type);
     if (!handlers || handlers.size === 0) {
       return { continue: true };
     }
 
-    // Sort by priority descending
     const sorted = [...handlers.values()].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+    return runPipeline(sorted, event);
+  }
 
+  async function runPipeline(sorted: HookHandler[], event: RuntimeHookEvent): Promise<HookResult> {
     let currentPayload: unknown = event;
     let hasTransform = false;
 
     for (const entry of sorted) {
-      const result = await entry.handler(event);
-
-      // If result is a transform, compose it
-      if ('transform' in result) {
-        const transform = result.transform as Record<string, unknown>;
-        if (hasTransform) {
-          // Multiple transforms: compose by merging into accumulated payload
-          currentPayload = { ...(currentPayload as Record<string, unknown>), ...transform };
-        } else {
-          currentPayload = { ...event, ...transform };
-          hasTransform = true;
-        }
+      const result = await callHandler(entry, event);
+      if (!result) {
         continue;
       }
 
-      // If result blocks, stop the chain immediately
+      if ('transform' in result) {
+        currentPayload = mergePayload(result.transform, currentPayload, event, hasTransform);
+        hasTransform = true;
+        continue;
+      }
+
       if (!result.continue) {
         return result;
       }
@@ -160,6 +158,29 @@ export function createRuntimeHookRegistry(): HookRegistry {
     }
 
     return { continue: true };
+  }
+
+  async function callHandler(entry: HookHandler, event: RuntimeHookEvent): Promise<HookResult | null> {
+    try {
+      return await entry.handler(event);
+    } catch {
+      return null;
+    }
+  }
+
+  function mergePayload(
+    transform: unknown,
+    currentPayload: unknown,
+    event: RuntimeHookEvent,
+    hasTransform: boolean
+  ): unknown {
+    if (typeof transform !== 'object' || transform === null) {
+      return currentPayload;
+    }
+    if (hasTransform) {
+      return { ...(currentPayload as Record<string, unknown>), ...transform };
+    }
+    return { ...event, ...transform };
   }
 
   function list(): { eventType: RuntimeHookEvent['type']; handlerId: string; priority: number }[] {

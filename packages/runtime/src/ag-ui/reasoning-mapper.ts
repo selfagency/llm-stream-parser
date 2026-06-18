@@ -5,14 +5,15 @@
  * This allows step-level reasoning to be streamed as REASONING_* events.
  */
 
+import { randomUUID } from 'node:crypto';
 import type {
   ReasoningEndEvent,
   ReasoningMessageContentEvent,
   ReasoningMessageEndEvent,
   ReasoningMessageStartEvent,
   ReasoningStartEvent
-} from '@agentsy/types';
-import { EventType } from '@agentsy/types';
+} from '@agentsy/shared';
+import { EventType } from '@agentsy/shared';
 
 export interface ReasoningMapperOptions {
   encryptReasoning?: boolean;
@@ -51,7 +52,7 @@ export function mapReasoningToEvents(
   }
 
   const { runId, threadId, encryptReasoning } = options;
-  const messageId = `msg_${Math.random().toString(36).slice(2, 11)}`;
+  const messageId = `msg_${randomUUID()}`;
   const timestamp = new Date().toISOString();
 
   // REASONING_START

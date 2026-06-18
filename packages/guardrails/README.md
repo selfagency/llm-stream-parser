@@ -2,12 +2,6 @@
 
 Standalone, pluggable safety and security guardrails for the `@agentsy` platform. Provides input/output moderation pipelines, PII redaction, intent classification, retrieval domain firewalling, token quota enforcement, streaming filters, and regulatory compliance audit trails.
 
-## Installation
-
-```bash
-pnpm add @agentsy/guardrails
-```
-
 ## Policy and governance
 
 Before enabling this package in an agent, review the policy documents that define its operating rules:
@@ -19,77 +13,91 @@ Before enabling this package in an agent, review the policy documents that defin
 
 These documents establish the human-rights, safety, privacy, accountability, and review requirements that the guardrails layer is expected to enforce.
 
+### Policy Enforcement Status
+
+| Document | Clauses | Enforced | Partially Enforced | Not Enforced |
+|---|---|---|---|---|
+| ETHICS.md | 23 | 0 | 0 | 23 |
+| SAFETY.md | 19 | 0 | 0 | 19 |
+| GOVERNANCE.md | 7 | 0 | 0 | 7 |
+| constitution.md | 11 | 0 | 0 | 11 |
+
+**Status**: The `EthicsRegistry` exists and catalogs all clauses, but no behavioral scanners are implemented yet. Enforcement is planned for Phases 9–11. See the [Unified Remediation Plan](../../plan/agentsy-unified-remediation-plan.md) for the implementation roadmap.
+
 ## Usage
 
 ```typescript
-import {
-  GuardrailsConfig,
-  GuardrailProvider,
-  PiiRedactionProvider,
-  RetryBlockedError,
-} from "@agentsy/guardrails";
+import { GuardrailPipeline } from "@agentsy/guardrails";
+import { createBuiltinScanners } from "@agentsy/guardrails";
 
-async function enforceGuardrails(userMessage: string, config: GuardrailsConfig) {
-  // PII redaction
-  const piiProvider = new PiiRedactionProvider();
-  const redactedMessage = await piiProvider.redact(userMessage, ["email", "phone"]);
+const pipeline = new GuardrailPipeline();
+pipeline.add(...createBuiltinScanners());
 
-  // Token quota enforcement
-  if (config.tokenQuota) {
-    const currentUsage = await getSessionTokenUsage();
-    if (currentUsage > config.tokenQuota.maxSessionTokens) {
-      throw new QuotaExceededError("Token quota exceeded for current session");
-    }
-  }
+const { result, receipt } = await pipeline.evaluate("user input", "input", {
+  sessionId: "sess_123"
+});
 
-  // ... additional guardrail enforcement
+if (result.status === "block") {
+  console.log(`Blocked: ${result.reason}`);
 }
 ```
 
-## Interfaces
+## Exports
 
-### `GuardrailsConfig`
+### Scanners
 
-```typescript
-interface GuardrailsConfig {
-  providers: string[];
-  allowedTopics?: string[];
-  blockedTopics?: string[];
-  piiRedaction?: boolean;
-  tokenQuota?: {
-    maxSessionTokens: number;
-  };
-  retrievalDomains?: string[];
-  trustHierarchy?: "system" | "user" | "retrieved";
-  egressAllowList?: string[];
-  crossUserDataAccess?: boolean;
-  stripUntrustedContext?: string;
-}
-```
+- `CommandValidationScanner` — Validates shell commands against allow/block lists
+- `PathSanitizationScanner` — Detects path traversal and unsafe file operations
+- `PIIScanner` — Detects and redacts personal information (email, phone, SSN, etc.)
+- `PromptInjectionScanner` — Detects prompt injection and jailbreak attempts
+- `RateLimiterScanner` — Enforces per-session token and request quotas
+- `SecretDetectionScanner` — Detects API keys, tokens, and credentials
+- `ToxicityScanner` — Detects toxic, abusive, or harmful content
+- `EntropyScanner` — Shannon entropy-based secret detection
+- `CredentialReferenceScanner` — Resolves known credentials via broker
 
-### `GuardrailProvider`
+### Pipeline
 
-Base interface for all guardrail providers. Implementations include:
+- `GuardrailPipeline` — Priority-sorted sequential evaluation pipeline
+- `GuardrailHub` — Local registry for `hub://` guardrail URI resolution
 
-- `PiiRedactionProvider` - Detects and redacts personal information
-- `RegexProvider` - Custom regex-based content filtering
-- `OpenAIModerationProvider` - OpenAI Moderation API integration
-- `LlamaGuardProvider` - Llama Guard content moderation
+### Policy Engine
 
-### `StreamingGuardrailFilter`
+- `DEFAULT_POLICY` — Default safety policy document
+- `evaluateCondition` — Evaluate a policy condition expression
+- `evaluatePolicy` — Evaluate a policy document against a context
 
-Streaming interface for real-time guardrail enforcement:
+### Ethics Registry
 
-```typescript
-interface StreamingGuardrailFilter {
-  filter(chunk: string): string | null;
-}
-```
+- `EthicsRegistry` — Maps policy document clauses to machine-enforceable rules
+- `DEFAULT_ETHICS_REGISTRY` — Static registry with all clauses from ETHICS.md, SAFETY.md, GOVERNANCE.md, and constitution.md
 
-## Error Types
+### Audit
 
-- **QuotaExceededError** - Thrown when session token quota is exceeded
-- **RetrievalBlockedError** - Thrown when retrieval domain is not in allowlist
+- `JsonlAuditLogger` — JSONL-based audit logger for decision receipts
+- `ReceiptExporter` — Export receipts as JSON or CSV
+- `redactReceipt` — Redact sensitive fields from a receipt before persistence
+
+### Configuration
+
+- `GuardrailsConfig` — Canonical guardrail configuration type
+
+### Message Scrubbing
+
+- `scrubPiiDeep` — Deep PII scrubbing for objects
+- `scrubMessage` — Scrub a single chat message
+- `scrubMessagesDetailed` — Scrub messages with detailed results
+- `scrubMessagesForModel` — Scrub messages for model consumption
+
+### Error Types
+
+- `QuotaExceededError` — Thrown when token quota is exceeded
+- `RetrievalBlockedError` — Thrown when retrieval domain is not in allowlist
+
+### Routing Constraints
+
+- `evaluateConstraints` — Evaluate routing constraints
+- `evaluateRoutingConstraints` — Evaluate routing constraints in batch
 
 ## Requirements
 

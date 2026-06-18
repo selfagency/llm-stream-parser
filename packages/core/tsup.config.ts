@@ -18,7 +18,7 @@ export default defineConfig({
     'tool-calls': 'src/tool-calls/index.ts',
     'xml-filter': 'src/xml-filter/index.ts'
   },
-  external: ['@agentsy/types', 'zod'],
+  external: ['@agentsy/shared', 'zod'],
   format: ['esm', 'cjs'],
   minify: false,
   sourcemap: true,

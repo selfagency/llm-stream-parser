@@ -1,4 +1,4 @@
-import type { NormalizedChunk } from '@agentsy/types';
+import type { NormalizedChunk } from '@agentsy/shared';
 
 /**
  * Typed runtime events emitted by the stream-to-events adapter.
@@ -309,43 +309,15 @@ export function createStreamEventAdapter(options: StreamEventAdapterOptions): {
         }
 
         options.onEvent?.(event);
-
-        switch (event.type) {
-          case 'text-delta':
-            options.onText?.(event.payload.delta);
-            break;
-          case 'thinking-delta':
-            options.onThinking?.(event.payload.delta);
-            break;
-          case 'tool-call-start':
-            options.onToolCallStart?.(event.payload.id, event.payload.name, event.payload.args);
-            break;
-          case 'tool-call-end':
-            options.onToolCallEnd?.(event.payload.id, event.payload.result);
-            break;
-          case 'done':
-            options.onDone?.(event.payload.finishReason, event.payload);
-            break;
-          case 'error':
-            options.onError?.(new Error(event.payload.message));
-            break;
-          default: {
-            break;
-          }
-        }
+        dispatchEvent(event, options);
       }
     } catch (err: unknown) {
       if (signal.aborted) {
         return;
       }
-      const error = err instanceof Error ? err : new Error(String(err));
-      options.onEvent?.({
-        type: 'error',
-        chunkIndex: -1,
-        timestamp: performance.now(),
-        payload: { message: error.message }
-      });
-      options.onError?.(error);
+      const errorEvent = buildErrorEvent(err);
+      options.onEvent?.(errorEvent);
+      options.onError?.(new Error(errorEvent.payload.message));
     }
   }
 
@@ -354,4 +326,42 @@ export function createStreamEventAdapter(options: StreamEventAdapterOptions): {
   }
 
   return { start, abort };
+}
+
+// ---------------------------------------------------------------------------
+// Internal dispatch helpers
+// ---------------------------------------------------------------------------
+
+function dispatchEvent(event: StreamRuntimeEvent, options: StreamEventAdapterOptions): void {
+  // biome-ignore lint/style/useDefaultSwitchClause: exhaustive over known event types
+  switch (event.type) {
+    case 'text-delta':
+      options.onText?.(event.payload.delta);
+      break;
+    case 'thinking-delta':
+      options.onThinking?.(event.payload.delta);
+      break;
+    case 'tool-call-start':
+      options.onToolCallStart?.(event.payload.id, event.payload.name, event.payload.args);
+      break;
+    case 'tool-call-end':
+      options.onToolCallEnd?.(event.payload.id, event.payload.result);
+      break;
+    case 'done':
+      options.onDone?.(event.payload.finishReason, event.payload);
+      break;
+    case 'error':
+      options.onError?.(new Error(event.payload.message));
+      break;
+  }
+}
+
+function buildErrorEvent(error: unknown): Extract<StreamRuntimeEvent, { type: 'error' }> {
+  const message = error instanceof Error ? error.message : String(error);
+  return {
+    type: 'error',
+    chunkIndex: -1,
+    timestamp: performance.now(),
+    payload: { message }
+  };
 }

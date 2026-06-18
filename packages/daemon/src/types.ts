@@ -12,7 +12,10 @@ export interface Logger {
 
 /**
  * Recursive partial type for deeply partial config objects.
+ * Correctly handles arrays (which extend object in TS).
  */
-export type DeepPartial<T> = {
-  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
-};
+export type DeepPartial<T> = T extends (infer U)[]
+  ? DeepPartial<U>[]
+  : T extends object
+    ? { [P in keyof T]?: DeepPartial<T[P]> }
+    : T;

@@ -4,7 +4,7 @@ Turborepo's core principle: **never do the same work twice**.
 
 ## The Cache Equation
 
-```text
+```
 fingerprint(inputs) → stored outputs
 ```
 
@@ -57,7 +57,7 @@ When `futureFlags.globalConfiguration` is enabled, `global.inputs` files are **n
 
 **With `globalDependencies` (default):**
 
-```text
+```
 task cache key = hash(global hash, task hash)
                       ↑ includes globalDependencies file hashes
 ```
@@ -66,7 +66,7 @@ Changing a `globalDependencies` file invalidates **every** task, regardless of t
 
 **With `global.inputs` (`futureFlags.globalConfiguration`):**
 
-```text
+```
 task cache key = hash(global hash, task hash)
                                    ↑ includes global.inputs file hashes (merged with task inputs)
 ```
@@ -113,7 +113,7 @@ In this example, changing `tsconfig.json` invalidates `build` (it's in the task'
 
 ## Local Cache Location
 
-```text
+```
 .turbo/cache/
 ├── <hash1>.tar.zst    # compressed outputs
 ├── <hash2>.tar.zst

@@ -19,10 +19,10 @@
  * ```
  */
 
-import { createCliStreamBridge } from '@agentsy/renderers/adapters';
-import { createInkAgentRenderer, createInkRuntimeController } from '@agentsy/renderers/ink';
 import type { TurnHandler } from '@agentsy/runtime/loop';
 import { createSimpleTurnLoop } from '@agentsy/runtime/loop';
+import { createCliStreamBridge } from '@agentsy/ui/adapters';
+import { createInkAgentRenderer, createInkRuntimeController } from '@agentsy/ui/ink';
 import { getFlagValue, hasFlag } from '../cli-args.js';
 import type { CliIO } from '../index.js';
 import { createMockClient } from '../providers/mock.js';

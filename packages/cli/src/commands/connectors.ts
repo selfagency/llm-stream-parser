@@ -26,9 +26,9 @@ async function handleConnectorsListCommand(_argv: readonly string[], io: CliIO):
   stdout('Available connectors:');
   stdout('');
 
-  const { isDiscordAdapterAvailable } = await import('@agentsy/connectors');
-  const { isSlackAdapterAvailable } = await import('@agentsy/connectors');
-  const { isTelegramAdapterAvailable } = await import('@agentsy/connectors');
+  const { isDiscordAdapterAvailable } = await import('@agentsy/daemon/connectors');
+  const { isSlackAdapterAvailable } = await import('@agentsy/daemon/connectors');
+  const { isTelegramAdapterAvailable } = await import('@agentsy/daemon/connectors');
 
   stdout(`  Discord:   ${isDiscordAdapterAvailable() ? '✅ available' : '❌ not available (install discord.js)'}`);
   stdout(`  Slack:     ${isSlackAdapterAvailable() ? '✅ available' : '❌ not available (install @slack/bolt)'}`);
@@ -43,7 +43,7 @@ async function handleConnectorsCheckCommand(_argv: readonly string[], io: CliIO)
   stdout('Checking connector availability...');
   stdout('');
 
-  const { getConnectorSetupGuide, runConnectorDiagnostics } = await import('@agentsy/connectors');
+  const { getConnectorSetupGuide, runConnectorDiagnostics } = await import('@agentsy/daemon/connectors');
 
   const report = runConnectorDiagnostics();
   let statusLabel: string;
@@ -87,7 +87,7 @@ async function handleSlackPostMessageCommand(argv: readonly string[], io: CliIO)
     return 1;
   }
 
-  const { isSlackAdapterAvailable } = await import('@agentsy/connectors');
+  const { isSlackAdapterAvailable } = await import('@agentsy/daemon/connectors');
   if (!isSlackAdapterAvailable()) {
     stderr('Slack adapter is not available. Install @slack/bolt to use this command.');
     return 1;
@@ -115,7 +115,7 @@ async function handleSlackReadThreadCommand(argv: readonly string[], io: CliIO):
     return 1;
   }
 
-  const { isSlackAdapterAvailable } = await import('@agentsy/connectors');
+  const { isSlackAdapterAvailable } = await import('@agentsy/daemon/connectors');
   if (!isSlackAdapterAvailable()) {
     stderr('Slack adapter is not available. Install @slack/bolt to use this command.');
     return 1;

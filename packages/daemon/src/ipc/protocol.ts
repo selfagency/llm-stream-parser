@@ -4,13 +4,13 @@ import { z } from 'zod';
 
 export const IPCRequestSchema = z.object({
   jsonrpc: z.literal('2.0'),
-  id: z.string(),
+  id: z.union([z.string(), z.number(), z.null()]).optional(),
   method: z.string(),
   params: z.record(z.string(), z.unknown()).optional()
 });
 
 export interface IPCRequest {
-  id: string;
+  id?: string | number | null;
   jsonrpc: '2.0';
   method: string;
   params?: Record<string, unknown>;
@@ -18,7 +18,7 @@ export interface IPCRequest {
 
 export const IPCResponseSchema = z.object({
   jsonrpc: z.literal('2.0'),
-  id: z.string(),
+  id: z.union([z.string(), z.number(), z.null()]).optional(),
   result: z.unknown().optional(),
   error: z
     .object({
@@ -35,7 +35,7 @@ export interface IPCResponse {
     message: string;
     data?: unknown;
   };
-  id: string;
+  id?: string | number | null;
   jsonrpc: '2.0';
   result?: unknown;
 }
@@ -123,19 +123,21 @@ export type IPCMethod =
   | 'memory.recall'
   | 'memory.capture'
   | 'memory.search'
-  // Jobs
-  | 'jobs.schedule'
+  // Jobs (Honker-backed)
+  | 'jobs.enqueue'
   | 'jobs.list'
   | 'jobs.cancel'
-  // Routing (delegated from gateway)
-  | 'route.select'
-  | 'route.health'
-  // RAG
-  | 'rag.index'
-  | 'rag.query'
+  | 'jobs.claim'
+  | 'jobs.ack'
+  // Scheduler
+  | 'scheduler.schedule'
+  | 'scheduler.list'
+  | 'scheduler.cancel'
   // Health
   | 'daemon.status'
   | 'daemon.shutdown'
+  // Pool (Piscina)
+  | 'pool.stats'
   // Display
   | 'display.render'
   // Subprocess management

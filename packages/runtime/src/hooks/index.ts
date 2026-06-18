@@ -39,6 +39,7 @@ export { createRuntimeHookRegistry } from './registry.js';
 export type { RetryContext, RetryContextOptions } from './retry-context.js';
 export { createRetryContext, incrementEscalation, markAttempt, shouldEscalate, shouldRetry } from './retry-context.js';
 export { emitRoutingDiagnostics } from './routing-diagnostics.js';
+export type { HookConfig, HookContext } from './schema.js';
 export type { ActiveSkill, SkillActivator, SkillDiscoverer, SkillMetadata } from './skills-hook.js';
 export { createSkillsHook } from './skills-hook.js';
 export type {

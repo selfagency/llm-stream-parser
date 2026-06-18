@@ -5,6 +5,7 @@ Default agents implementation with YAML specifications, hook system, and skill c
 ## Overview
 
 This package provides:
+
 - **4 Default Agents**: Coder, Researcher, Planner, and General agents
 - **YAML-first Definitions**: Introspectable, version-controlled agent specifications
 - **Hook-based Composition**: Decoupled orchestration lifecycle
@@ -50,6 +51,7 @@ const result = await executeAgent(agent, 'Write a React component', {
 ## Architecture
 
 See the implementation plans:
+
 - [Phase 15: Council Mode](../../plan/24-PHASE-15-COUNCIL-MODE.md)
 - [Executive Summary](../../plan/31-DEFAULT-AGENTS-EXECUTIVE-SUMMARY.md)
 - [Implementation Plan](../../plan/32-DEFAULT-AGENTS-IMPLEMENTATION-PLAN.md)

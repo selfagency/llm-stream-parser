@@ -44,7 +44,21 @@ function nonMatchingEvent(): RuntimeHookEvent {
 
 function createMockPipeline(result: GuardrailResult): GuardrailPipeline {
   return {
-    evaluate: vi.fn().mockResolvedValue(result)
+    evaluate: vi.fn().mockResolvedValue({
+      result,
+      receipt: {
+        policyId: 'test',
+        decision: result.status,
+        reasonCode: 'TEST',
+        riskTier: 'moderate',
+        surface: 'input',
+        phase: result.phase,
+        timestamp: new Date().toISOString(),
+        correlationId: 'test',
+        sessionId: 'test',
+        detections: []
+      }
+    })
   } as unknown as GuardrailPipeline;
 }
 
@@ -148,9 +162,9 @@ describe('createToolInputGuardrailHook', () => {
   it('calls evaluate with stringified args when args is an object', async () => {
     const pipeline = createMockPipeline({ status: 'pass', phase: 'tool-input' });
     const hook = createToolInputGuardrailHook(pipeline);
-    await hook.handler(preToolCallEvent('write_file', { path: '/tmp/test' }));
+    await hook.handler(preToolCallEvent('write_file', { path: '/nonexistent-test-path/test' }));
     expect(pipeline.evaluate).toHaveBeenCalledWith(
-      JSON.stringify({ path: '/tmp/test' }),
+      JSON.stringify({ path: '/nonexistent-test-path/test' }),
       'tool-input',
       expect.objectContaining({ toolName: 'write_file' })
     );

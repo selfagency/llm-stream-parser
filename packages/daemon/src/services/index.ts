@@ -6,4 +6,6 @@
  * @module
  */
 
+export { RoutingService, type RoutingServiceDeps } from './routing-service.js';
 export { ServiceHost, type ServiceHostDeps, type ServiceState } from './service-host.js';
+export { UnifiedDBPersistenceAdapter } from './unified-db-persistence-adapter.js';

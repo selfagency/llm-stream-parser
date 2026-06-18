@@ -31,7 +31,7 @@
     "format": "biome format"
   },
   "dependencies": {
-    "@agentsy/types": "workspace:*",
+    "@agentsy/shared": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

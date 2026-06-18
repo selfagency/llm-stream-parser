@@ -1,10 +1,9 @@
 import type { AgentExecutionContext } from '../specs/types.js';
-import type { AgentHookDefinition } from './types.js';
-import { AgentLifecycleHook } from './types.js';
-import { registerMemoryHooks } from './memory-hooks.js';
-import { registerBudgetHooks } from './budget-hooks.js';
 import { registerApprovalHooks } from './approval-hooks.js';
+import { registerBudgetHooks } from './budget-hooks.js';
 import { registerErrorRecoveryHooks } from './error-recovery-hooks.js';
+import { registerMemoryHooks } from './memory-hooks.js';
+import type { AgentHookDefinition, AgentLifecycleHook } from './types.js';
 
 /**
  * Hook registry for agent-specific hooks
@@ -52,7 +51,7 @@ export async function executeHooks(
  * Resolve hook names to actual hook definitions
  * Phase 3: Hook System Integration
  */
-export async function resolveAgentHooks(hookNames: string[], _agentName: string): Promise<AgentHookDefinition[]> {
+export function resolveAgentHooks(hookNames: string[], _agentName: string): AgentHookDefinition[] {
   const resolved: AgentHookDefinition[] = [];
   const defaultMap = createDefaultHookMap();
 

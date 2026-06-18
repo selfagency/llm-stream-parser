@@ -19,7 +19,7 @@ export default defineConfig({
     '@agentsy/runtime',
     '@agentsy/session',
     '@agentsy/tokenomics',
-    '@agentsy/types',
+    '@agentsy/shared',
     'yaml',
     'zod'
   ],

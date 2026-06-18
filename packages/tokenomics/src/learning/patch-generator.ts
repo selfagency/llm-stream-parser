@@ -10,6 +10,8 @@
  * @module learning/patch-generator
  */
 
+import { randomUUID } from 'node:crypto';
+
 import type { SessionLedgerEntry } from '../ledger/types.js';
 import type { FailureMode, PatchGenerationOptions, PromptPatch } from './types.js';
 
@@ -141,7 +143,7 @@ function buildPatch(failureMode: FailureMode, generated: string, autoApplyThresh
   const now = new Date();
 
   return {
-    id: `pp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+    id: `pp_${randomUUID()}`,
     failureModeId: failureMode.id,
     target: parsed.target ?? 'instructions',
     targetPath: parsed.targetPath ?? `agentsy/${failureMode.category}.md`,

@@ -6,7 +6,7 @@
  * and a session id, and returns a wrapper for gateway model calls.
  */
 
-import type { CompletionRequest, CompletionResponse } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse } from '@agentsy/shared';
 
 import type { HookRegistry } from './registry.js';
 import type { ModelCallFailedEvent, PostModelCallEvent, PreModelCallEvent } from './types.js';

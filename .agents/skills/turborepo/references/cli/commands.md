@@ -1,6 +1,6 @@
 # turbo run Flags Reference
 
-Full docs: <https://turborepo.dev/docs/reference/run>
+Full docs: https://turborepo.dev/docs/reference/run
 
 ## Package Selection
 
@@ -188,13 +188,13 @@ turbo build --ui=stream  # streaming logs (default in CI)
 
 ---
 
-## turbo-ignore
+# turbo-ignore
 
-Full docs: <https://turborepo.dev/docs/reference/turbo-ignore>
+Full docs: https://turborepo.dev/docs/reference/turbo-ignore
 
 Skip CI work when nothing relevant changed. Useful for skipping container setup.
 
-### Basic Usage
+## Basic Usage
 
 ```bash
 # Check if build is needed for current package (uses Automatic Package Scoping)
@@ -207,12 +207,12 @@ npx turbo-ignore web
 npx turbo-ignore --task=test
 ```
 
-### Exit Codes
+## Exit Codes
 
 - `0`: No changes detected - skip CI work
 - `1`: Changes detected - proceed with CI
 
-### CI Integration Example
+## CI Integration Example
 
 ```yaml
 # GitHub Actions
@@ -226,7 +226,7 @@ npx turbo-ignore --task=test
   run: pnpm build
 ```
 
-### Comparison Depth
+## Comparison Depth
 
 Default: compares to parent commit (`HEAD^1`).
 
@@ -240,9 +240,9 @@ npx turbo-ignore --fallback=main
 
 ---
 
-## Other Commands
+# Other Commands
 
-### turbo boundaries
+## turbo boundaries
 
 Check workspace violations (experimental).
 
@@ -252,7 +252,7 @@ turbo boundaries
 
 See `references/boundaries/` for configuration.
 
-### turbo watch
+## turbo watch
 
 Re-run tasks on file changes.
 
@@ -262,7 +262,7 @@ turbo watch build test
 
 See `references/watch/` for details.
 
-### turbo prune
+## turbo prune
 
 Create sparse checkout for Docker.
 
@@ -270,7 +270,7 @@ Create sparse checkout for Docker.
 turbo prune web --docker
 ```
 
-### turbo link / unlink
+## turbo link / unlink
 
 Connect/disconnect Remote Cache.
 
@@ -279,7 +279,7 @@ turbo link    # connect to Vercel Remote Cache
 turbo unlink  # disconnect
 ```
 
-### turbo login / logout
+## turbo login / logout
 
 Authenticate with Remote Cache provider.
 
@@ -288,7 +288,7 @@ turbo login   # authenticate
 turbo logout  # log out
 ```
 
-### turbo generate
+## turbo generate
 
 Scaffold new packages.
 

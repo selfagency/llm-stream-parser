@@ -1,15 +1,10 @@
-import type { Logger } from '../types.js';
-
-// fallow-ignore-next-line unused-type
-export interface JobQueueDeps {
-  logger: Logger;
-}
+import { randomUUID } from 'node:crypto';
 
 export class JobQueue {
   private queue: { id: string; payload: unknown; enqueuedAt: number }[] = [];
 
   enqueue(payload: unknown): string {
-    const id = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const id = `queue_${randomUUID()}`;
     this.queue.push({ id, payload, enqueuedAt: Date.now() });
     return id;
   }

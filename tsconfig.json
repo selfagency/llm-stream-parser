@@ -25,7 +25,6 @@
       "@agentsy/daemon": ["packages/daemon/src/index.ts"],
       "@agentsy/daemon/*": ["packages/daemon/src/*"],
       "@agentsy/context": ["packages/context/src/index.ts"],
-      "@agentsy/connectors": ["packages/connectors/src/index.ts"],
       "@agentsy/guardrails": ["packages/guardrails/src/index.ts"],
       "@agentsy/models": ["packages/models/src/index.ts"],
       "@agentsy/models/local-providers": [
@@ -36,7 +35,6 @@
       ],
       "@agentsy/observability": ["packages/observability/src/index.ts"],
       "@agentsy/observability/*": ["packages/observability/src/*"],
-      "@agentsy/mcp": ["packages/mcp/src/index.ts"],
       "@agentsy/memory": ["packages/memory/src/index.ts"],
       "@agentsy/memory/*": ["packages/memory/src/*"],
       "@agentsy/secrets": ["packages/secrets/src/index.ts"],
@@ -48,7 +46,8 @@
       "@agentsy/tokenomics/*": ["packages/tokenomics/src/*"],
       "@agentsy/tools": ["packages/tools/src/index.ts"],
       "@agentsy/tools/*": ["packages/tools/src/*"],
-      "@agentsy/types": ["packages/types/src/index.ts"]
+      "@agentsy/ui": ["packages/ui/src/index.ts"],
+      "@agentsy/ui/*": ["packages/ui/src/*"]
     },
     "rewriteRelativeImportExtensions": true,
     "allowImportingTsExtensions": true

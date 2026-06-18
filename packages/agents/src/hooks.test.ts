@@ -1,11 +1,11 @@
-import { describe, expect, it, vi } from 'vitest';
-import { createMemoryPreTurnHook, createMemoryPostTurnHook } from './hooks/memory-hooks.js';
-import { createBudgetCheckHook, createBudgetDeductionHook } from './hooks/budget-hooks.js';
+import { describe, expect, it } from 'vitest';
 import { createApprovalGateHook, createApprovalTrackingHook } from './hooks/approval-hooks.js';
+import { createBudgetCheckHook, createBudgetDeductionHook } from './hooks/budget-hooks.js';
 import { createErrorRecoveryHook, createRetryStrategyHook } from './hooks/error-recovery-hooks.js';
-import { createDefaultHookMap, resolveAgentHooks, executeHooks } from './hooks/resolver.js';
-import { AgentLifecycleHook } from './hooks/types.js';
-import type { AgentExecutionContext, LoadedAgent, AgentSpec } from './specs/types.js';
+import { createMemoryPostTurnHook, createMemoryPreTurnHook } from './hooks/memory-hooks.js';
+import { createDefaultHookMap, executeHooks, resolveAgentHooks } from './hooks/resolver.js';
+import { type AgentHookDefinition, AgentLifecycleHook } from './hooks/types.js';
+import type { AgentExecutionContext, AgentSpec, LoadedAgent } from './specs/types.js';
 
 function createMockContext(overrides?: Partial<AgentExecutionContext>): AgentExecutionContext {
   const spec: AgentSpec = {
@@ -101,7 +101,7 @@ describe('Approval Hooks', () => {
     await hook.handler(ctx);
     const audit = ctx.results.get('approvalAudit') as Array<{ step: string }>;
     expect(audit).toHaveLength(1);
-    expect(audit[0].step).toBe('read-file');
+    expect(audit?.[0].step).toBe('read-file');
   });
 });
 
@@ -154,8 +154,8 @@ describe('Hook Registry', () => {
   it('should resolve hook names to definitions', async () => {
     const hooks = await resolveAgentHooks(['memory-pre-turn', 'budget-check'], 'test');
     expect(hooks).toHaveLength(2);
-    expect(hooks[0].name).toBe('memory-pre-turn');
-    expect(hooks[1].name).toBe('budget-check');
+    expect(hooks?.[0].name).toBe('memory-pre-turn');
+    expect(hooks?.[1].name).toBe('budget-check');
   });
 
   it('should return empty for unknown hook names', async () => {
@@ -172,13 +172,14 @@ describe('Hook Registry', () => {
     const preTurnHooks = map.get(AgentLifecycleHook.PRE_TURN) ?? [];
     const originalHandler = preTurnHooks[0]?.handler;
     if (originalHandler) {
-      preTurnHooks[0] = {
+      const updatedHook = {
         ...preTurnHooks[0],
         handler: async (c: AgentExecutionContext) => {
           order.push('pre-turn');
           await originalHandler(c);
         }
-      };
+      } as AgentHookDefinition;
+      preTurnHooks[0] = updatedHook;
       map.set(AgentLifecycleHook.PRE_TURN, preTurnHooks);
     }
 

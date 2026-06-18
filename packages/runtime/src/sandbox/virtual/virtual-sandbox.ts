@@ -27,6 +27,26 @@ export interface VirtualSandbox {
 const DEFAULT_TIMEOUT_MS = 5000;
 const WORKER_PATH = join(process.cwd(), 'packages/runtime/dist/sandbox/virtual/sandbox-worker.js');
 
+/**
+ * Mark a handler as resolved and terminate the worker if provided.
+ * Returns true if this call claimed the resolution (first time), false if already resolved.
+ */
+function resolveOnce(
+  resolved: { value: boolean },
+  worker: Worker | undefined,
+  timeout: NodeJS.Timeout | undefined
+): boolean {
+  if (resolved.value) {
+    return false;
+  }
+  resolved.value = true;
+  if (timeout !== undefined) {
+    clearTimeout(timeout);
+  }
+  worker?.terminate().catch(() => undefined);
+  return true;
+}
+
 interface SandboxTimeoutHandlerOptions {
   resolve: (value: SandboxOutput) => void;
   resolved: { value: boolean };
@@ -73,12 +93,9 @@ function createMessageHandler(options: MessageHandlerOptions) {
       options.stderr.push(output);
 
       if (msg.type === 'runtime-error') {
-        if (options.resolved.value) {
+        if (!resolveOnce(options.resolved, options.worker, options.timeout)) {
           return;
         }
-        options.resolved.value = true;
-        clearTimeout(options.timeout);
-        options.worker.terminate().catch(() => undefined);
         options.resolve({
           durationMs: Date.now() - options.start,
           exitCode: 1,
@@ -88,12 +105,9 @@ function createMessageHandler(options: MessageHandlerOptions) {
         });
       }
     } else if (msg.type === 'result') {
-      if (options.resolved.value) {
+      if (!resolveOnce(options.resolved, options.worker, options.timeout)) {
         return;
       }
-      options.resolved.value = true;
-      clearTimeout(options.timeout);
-      options.worker.terminate().catch(() => undefined);
       options.resolve({
         durationMs: Date.now() - options.start,
         exitCode: 0,
@@ -117,12 +131,9 @@ interface ErrorHandlerOptions {
 
 function createErrorHandler(options: ErrorHandlerOptions) {
   return (err: Error) => {
-    if (options.resolved.value) {
+    if (!resolveOnce(options.resolved, options.worker, options.timeout)) {
       return;
     }
-    options.resolved.value = true;
-    clearTimeout(options.timeout);
-    options.worker.terminate().catch(() => undefined);
     options.resolve({
       durationMs: Date.now() - options.start,
       exitCode: 1,
@@ -144,11 +155,9 @@ interface ExitHandlerOptions {
 
 function createExitHandler(options: ExitHandlerOptions) {
   return (code: number) => {
-    if (options.resolved.value) {
+    if (!resolveOnce(options.resolved, undefined, options.timeout)) {
       return;
     }
-    options.resolved.value = true;
-    clearTimeout(options.timeout);
     if (code === 0) {
       options.resolve({
         durationMs: Date.now() - options.start,

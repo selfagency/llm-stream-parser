@@ -1,4 +1,4 @@
-import type { CompletionRequest } from '@agentsy/types';
+import type { CompletionRequest } from '@agentsy/shared';
 import { describe, expect, it } from 'vitest';
 
 import { createRequestHandler } from './request-path.js';

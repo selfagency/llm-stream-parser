@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@agentsy/core": "workspace:*",
-    "@agentsy/types": "workspace:*"
+    "@agentsy/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.9.0",

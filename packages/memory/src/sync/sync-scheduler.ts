@@ -14,6 +14,8 @@ export function createSyncScheduler(manager: SyncManagerLike, options: SyncSched
   let nextRunAt: Date | null = null;
   let consecutiveErrors = 0;
   const now = options.now ?? (() => new Date());
+  // nosemgrep: insecure-randomness -- Math.random is the default for scheduling jitter;
+  // callers can override with a seeded PRNG via options.random for test reproducibility.
   const random = options.random ?? Math.random;
 
   function clearScheduled(): void {

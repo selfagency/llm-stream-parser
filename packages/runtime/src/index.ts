@@ -12,7 +12,7 @@ import type {
   RuntimeTaskResult,
   RuntimeWorkflowExecutor,
   RuntimeWorkflowTask
-} from '@agentsy/types';
+} from '@agentsy/shared';
 
 export type {
   RuntimeExecutor,
@@ -24,7 +24,7 @@ export type {
   RuntimeTaskResult,
   RuntimeWorkflowExecutor,
   RuntimeWorkflowTask
-} from '@agentsy/types';
+} from '@agentsy/shared';
 export type { PolicyApprovalHookOptions, ToolPolicyRule } from './approval/approval-hook.js';
 export { createPolicyApprovalHook } from './approval/approval-hook.js';
 // Approval subpath — re-export so the ./approval entry point code is reachable

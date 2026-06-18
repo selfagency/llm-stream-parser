@@ -9,7 +9,7 @@
  * ```
  */
 
-import type { JsonObject } from '@agentsy/types';
+import type { JsonObject } from '@agentsy/shared';
 import type { ValidateJsonSchemaOptions } from './validate-json-schema.js';
 import { validateJsonSchema } from './validate-json-schema.js';
 

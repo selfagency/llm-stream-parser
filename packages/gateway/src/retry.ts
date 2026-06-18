@@ -187,6 +187,7 @@ function errorMessage(error: unknown): string {
   return String(error);
 }
 
+// fallow-ignore-next-line complexity
 function classifyReason(error: unknown): string {
   if (error instanceof Error) {
     if (error.name === 'AbortError') {

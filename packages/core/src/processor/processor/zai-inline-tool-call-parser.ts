@@ -1,4 +1,4 @@
-import type { NativeToolCallDelta } from '@agentsy/types';
+import type { NativeToolCallDelta } from '@agentsy/shared';
 
 import type { ToolCallParser, ToolCallParserContext, ToolCallParserResult } from './tool-call-parser.js';
 
@@ -45,7 +45,6 @@ export class ZAiInlineToolCallParser implements ToolCallParser {
   private currentArgsSeen = false;
   private headerEmitted = false;
 
-  // fallow-ignore-next-line unused-class-member
   parse(content: string, _context: ToolCallParserContext): ToolCallParserResult {
     if (content.length === 0 && this.residual.length === 0) {
       return { content };
@@ -72,7 +71,6 @@ export class ZAiInlineToolCallParser implements ToolCallParser {
     };
   }
 
-  // fallow-ignore-next-line unused-class-member
   reset(): void {
     this.residual = '';
     this.state = 'idle';

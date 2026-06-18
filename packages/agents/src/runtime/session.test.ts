@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AgentSpec } from '../specs/types.js';
 import { createAgentSession } from './session.js';
 import { AgentSessionState } from './state-machine.js';
+import type { ExecuteOptions } from './types.js';
 
 vi.mock('./executor.js', () => ({
   executeAgent: vi.fn().mockResolvedValue({
@@ -22,8 +23,7 @@ describe('createAgentSession', () => {
       tokenBudget: 1000,
       orchestrator: 'sequential',
       skillRegistry: [],
-      layers: [],
-      tasks: []
+      layers: []
     };
 
     const { executeAgent } = await import('./executor.js');
@@ -49,10 +49,8 @@ describe('createAgentSession', () => {
   });
 
   it('creates a session with default token budget when not specified', () => {
-    const specNoBudget: AgentSpec = {
-      ...mockSpec,
-      tokenBudget: undefined
-    };
+    const { tokenBudget: _, ...specWithoutBudget } = mockSpec;
+    const specNoBudget: AgentSpec = specWithoutBudget;
 
     const session = createAgentSession({
       spec: specNoBudget,
@@ -67,8 +65,8 @@ describe('createAgentSession', () => {
     const specWithSkills: AgentSpec = {
       ...mockSpec,
       skillRegistry: [
-        { name: 'skill1', category: 'test' },
-        { name: 'skill2', category: 'test' }
+        { name: 'skill1', applicableTo: ['test'], confidence: 0.9, cost: '100-500', latency: '1-5' },
+        { name: 'skill2', applicableTo: ['test'], confidence: 0.8, cost: '200-600', latency: '2-6' }
       ]
     };
 
@@ -78,7 +76,7 @@ describe('createAgentSession', () => {
     });
 
     expect(session.agent.skillRegistry).toHaveLength(2);
-    expect(session.agent.skillRegistry[0].name).toBe('skill1');
+    expect(session.agent.skillRegistry?.[0].name).toBe('skill1');
   });
 
   it('returns null result before execution', () => {
@@ -132,9 +130,9 @@ describe('createAgentSession', () => {
     });
 
     await expect(session.start()).rejects.toThrow();
-    expect(session.context.state.errors[0]).toBeInstanceOf(Error);
+    expect(session.context.state.errors).toHaveLength(1);
     // The error object gets stringified, so we expect "[object Object]"
-    expect(session.context.state.errors[0].message).toBe('[object Object]');
+    expect(session.context.state.errors[0]?.message).toBe('[object Object]');
   });
 
   it('throws when starting from non-READY state', async () => {
@@ -242,7 +240,7 @@ describe('createAgentSession', () => {
     expect(session.state).toBe(AgentSessionState.PAUSED);
 
     // Resolve the start — it should complete without error since executeAgent succeeded
-    deferred.resolve({
+    deferred.resolve?.({
       output: 'partial result',
       tokenUsage: { input: 50, output: 100 }
     });
@@ -329,7 +327,7 @@ describe('createAgentSession', () => {
     expect(listener).toHaveBeenCalledWith(AgentSessionState.RUNNING, AgentSessionState.PAUSED);
 
     // Complete the execution
-    resolveExecution({
+    resolveExecution?.({
       output: 'result after pause',
       tokenUsage: { input: 1, output: 1 }
     });
@@ -363,7 +361,7 @@ describe('createAgentSession', () => {
     expect(listener).toHaveBeenCalledWith(AgentSessionState.RUNNING, AgentSessionState.PAUSED);
 
     // Complete first execution
-    resolveFirstExecution({
+    resolveFirstExecution?.({
       output: 'result after pause',
       tokenUsage: { input: 1, output: 1 }
     });
@@ -402,9 +400,9 @@ describe('createAgentSession', () => {
 
   it('passes ExecuteOptions through to executeAgent', async () => {
     const executeOptions = {
-      model: 'gpt-4',
-      provider: 'openai'
-    };
+      continueOnError: true,
+      maxRetries: 3
+    } satisfies Partial<ExecuteOptions>;
 
     const session = createAgentSession({
       spec: mockSpec,

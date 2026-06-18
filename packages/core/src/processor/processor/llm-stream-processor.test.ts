@@ -1,4 +1,4 @@
-import type { FinishReason, UsageInfo } from '@agentsy/types';
+import type { FinishReason, UsageInfo } from '@agentsy/shared';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import type { XmlToolCall } from '../../tool-calls/index.js';

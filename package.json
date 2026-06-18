@@ -26,7 +26,7 @@
   "author": "Daniel Sieradski <daniel@self.agency>",
   "type": "module",
   "scripts": {
-    "bootstrap-release": "pnpm -C packages/scripts run bootstrap-release",
+    "bootstrap-release": "pnpm -C scripts run bootstrap-release",
     "build": "turbo run build",
     "check": "ultracite check",
     "check-types": "turbo run check-types",
@@ -41,10 +41,10 @@
     "postinstall": "node scripts/postinstall-aft.mjs",
     "precommit": "turbo run precommit",
     "prepare": "husky",
-    "release": "pnpm -C packages/scripts run release",
+    "release": "pnpm -C scripts run release",
     "test": "turbo run test",
     "test:coverage": "turbo run coverage",
-    "test:release": "pnpm -C packages/scripts run release-test"
+    "test:release": "pnpm -C scripts run release-test"
   },
   "lint-staged": {
     "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,cjs,mjs,css,scss,jsonc,mdx}": [

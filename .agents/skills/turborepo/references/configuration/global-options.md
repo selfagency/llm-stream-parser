@@ -1,6 +1,6 @@
 # Global Options Reference
 
-Options that affect all tasks. Full docs: <https://turborepo.dev/docs/reference/configuration>
+Options that affect all tasks. Full docs: https://turborepo.dev/docs/reference/configuration
 
 ## globalEnv
 
@@ -107,7 +107,7 @@ Configure remote caching.
 | `teamId`        | -                      | Team ID (must start with `team_`)                      |
 | `teamSlug`      | -                      | Team slug for querystring                              |
 
-See <https://turborepo.dev/docs/core-concepts/remote-caching> for setup.
+See https://turborepo.dev/docs/core-concepts/remote-caching for setup.
 
 ## concurrency
 

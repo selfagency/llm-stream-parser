@@ -38,34 +38,21 @@ export interface HonkerQueueConfig {
  */
 export class HonkerQueueAdapter {
   private readonly config: HonkerQueueConfig;
-  private started = false;
 
   constructor(config: HonkerQueueConfig) {
     this.config = config;
   }
 
-  start(): Promise<void> {
-    // Ensure DB is open before using queues
+  async start(): Promise<void> {
     if (!this.config.db.isOpen) {
-      return this.config.db.open().then(() => {
-        for (const queueName of this.config.queues) {
-          this.config.db.queue(queueName);
-        }
-        this.started = true;
-        this.config.logger.info('Honker queue started', {
-          queues: this.config.queues
-        });
-      });
+      await this.config.db.open();
     }
-
     for (const queueName of this.config.queues) {
       this.config.db.queue(queueName);
     }
-    this.started = true;
     this.config.logger.info('Honker queue started', {
       queues: this.config.queues
     });
-    return Promise.resolve();
   }
 
   enqueue(payload: unknown, options: EnqueueOptions = {}): Promise<string> {
@@ -105,16 +92,34 @@ export class HonkerQueueAdapter {
     return Promise.resolve(this.mapJob(job, queueName));
   }
 
-  ack(_jobId: string): Promise<void> {
+  ack(jobId: string, queueName = 'default'): Promise<void> {
+    this.config.db.queue(queueName);
+    const numericId = Number.parseInt(jobId.replace(/^job_/, ''), 10);
+    if (!Number.isNaN(numericId)) {
+      return this.config.db.execute(`UPDATE honker_jobs_${queueName} SET status = 'completed' WHERE id = ?`, [
+        numericId
+      ]);
+    }
     return Promise.resolve();
   }
 
-  cancel(_jobId: string): Promise<void> {
+  cancel(jobId: string, queueName = 'default'): Promise<void> {
+    // Validate queue exists
+    this.config.db.queue(queueName);
+    const numericId = Number.parseInt(jobId.replace(/^job_/, ''), 10);
+    if (!Number.isNaN(numericId)) {
+      // Direct SQL via UnifiedDB query API
+      this.config.db.execute(`UPDATE honker_jobs_${queueName} SET status = 'cancelled' WHERE id = ?`, [numericId]);
+    }
     return Promise.resolve();
   }
 
-  list(_queueName = 'default'): Promise<Job[]> {
-    return Promise.resolve([]);
+  list(queueName = 'default'): Promise<Job[]> {
+    // Validate queue exists
+    this.config.db.queue(queueName);
+    return this.config.db
+      .query(`SELECT * FROM honker_jobs_${queueName} WHERE status IN ('pending', 'claimed') ORDER BY id ASC LIMIT 100`)
+      .then(rows => rows.map(r => this.mapJob(r, queueName)));
   }
 
   count(): number {
@@ -122,35 +127,44 @@ export class HonkerQueueAdapter {
   }
 
   stop(): Promise<void> {
-    this.started = false;
     this.config.logger.info('Honker queue stopping');
     return Promise.resolve();
   }
 
-  // fallow-ignore-next-line complexity
   private mapJob(raw: unknown, queue: string): Job {
-    const r = raw as {
-      id: string;
-      payload: string;
-      opts?: string;
-      priority?: number;
-      retries?: number;
-      retryCount?: number;
-      claimed_by?: string;
-      created_at?: number;
-    };
-    const opts = r.opts ? (JSON.parse(r.opts) as Record<string, unknown>) : {};
+    const r = raw as Record<string, unknown>;
+
+    // Safely parse opts
+    let opts: Record<string, unknown> = {};
+    if (typeof r.opts === 'string') {
+      try {
+        opts = JSON.parse(r.opts) as Record<string, unknown>;
+      } catch {
+        opts = {};
+      }
+    }
+
+    // Safely parse payload
+    let payload: unknown = r.payload;
+    if (typeof payload === 'string') {
+      try {
+        payload = JSON.parse(payload);
+      } catch {
+        payload = r.payload;
+      }
+    }
+
     return {
-      id: String(r.id),
+      id: typeof r.id === 'string' || typeof r.id === 'number' ? String(r.id) : '',
       queue,
-      payload: typeof r.payload === 'string' ? JSON.parse(r.payload) : r.payload,
+      payload,
       priority: (opts.priority as number) ?? 0,
       retries: (opts.retries as number) ?? 3,
-      retryCount: r.retryCount ?? 0,
+      retryCount: (r.retryCount as number) ?? 0,
       runAt: opts.runAt ? new Date(opts.runAt as number) : null,
       expiresAt: opts.expiresAt ? new Date(opts.expiresAt as number) : null,
-      claimedBy: r.claimed_by ?? null,
-      createdAt: new Date((r.created_at ?? Date.now()) * 1000)
+      claimedBy: typeof r.claimed_by === 'string' ? r.claimed_by : null,
+      createdAt: r.created_at ? new Date((r.created_at as number) * 1000) : new Date()
     };
   }
 }

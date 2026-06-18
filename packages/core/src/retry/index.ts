@@ -27,6 +27,8 @@ function createAbortError(): Error {
  * Prevents thundering herd when multiple retries fire concurrently.
  */
 function jitteredDelay(baseDelay: number): number {
+  // nosemgrep: insecure-randomness -- Math.random() is used for retry-backoff jitter (full-jitter strategy).
+  // Predictability of jitter confers no advantage; jitter exists to prevent thundering-herd retries.
   return Math.random() * baseDelay;
 }
 

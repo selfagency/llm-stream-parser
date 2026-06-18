@@ -1,5 +1,5 @@
-import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { restartDaemon } from './restart.js';
 import { startDaemon } from './start.js';

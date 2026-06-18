@@ -1,4 +1,4 @@
-import type { StreamChunk } from '@agentsy/types';
+import type { StreamChunk } from '@agentsy/shared';
 
 import { estimateChunkSize } from './chunk-utils.js';
 import type { ProcessedOutput } from './llm-stream-processor.types.js';

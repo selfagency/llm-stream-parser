@@ -30,13 +30,14 @@ describe('Agent Specs', () => {
     expect(validated.success).toBe(true);
   });
 
+  // biome-ignore lint/suspicious/useAwait: test function signature required by framework
   it('should reject invalid agent specs', async () => {
     const yaml = `
       name: "test"
       description: "Missing required role field"
     `;
 
-    await expect(parseAgentSpec(yaml)).rejects.toThrow();
+    expect(() => parseAgentSpec(yaml)).toThrow();
   });
 });
 
@@ -102,9 +103,9 @@ describe('Agent Loader', () => {
     const agent = await createLoadedAgent(spec);
 
     expect(agent.skillRegistry).toHaveLength(1);
-    expect(agent.skillRegistry[0].name).toBe('skill1');
-    expect(agent.skillRegistry[0].cost).toBe('1000-2000');
-    expect(agent.skillRegistry[0].confidence).toBe(0.9);
+    expect(agent.skillRegistry?.[0].name).toBe('skill1');
+    expect(agent.skillRegistry?.[0].cost).toBe('1000-2000');
+    expect(agent.skillRegistry?.[0].confidence).toBe(0.9);
   });
 
   it('should load agent with hooks', async () => {

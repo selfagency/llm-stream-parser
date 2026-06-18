@@ -9,6 +9,7 @@
  */
 
 import { execSync } from 'node:child_process';
+import { safePathEnv } from '@agentsy/shared/safe-path';
 
 // =============================================================================
 // Types
@@ -57,6 +58,7 @@ export function readDiffStats(repoRoot: string, since?: string): DiffStats {
 
   const output = execSync(['git', 'diff', '--stat', range].join(' '), {
     cwd: repoRoot,
+    env: safePathEnv(),
     stdio: 'pipe',
     encoding: 'utf-8'
   });
@@ -82,6 +84,7 @@ export function readDiffStats(repoRoot: string, since?: string): DiffStats {
 export function readWorkingTreeDiff(repoRoot: string): DiffStats {
   const output = execSync('git diff --stat HEAD', {
     cwd: repoRoot,
+    env: safePathEnv(),
     stdio: 'pipe',
     encoding: 'utf-8'
   });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SkillCostTracker, selectSkills } from './skills/index.js';
-import type { LoadedAgent, SkillMetadata } from '../specs/types.js';
+import type { AgentExecutionContext, LoadedAgent, SkillMetadata } from './specs/types.js';
 
 describe('Skill Selector', () => {
   it('should select applicable skills for a task', () => {
@@ -38,22 +38,28 @@ describe('Skill Selector', () => {
       }
     };
 
-    const context = {
+    const context: AgentExecutionContext = {
       agent,
+      results: new Map(),
+      spec: agent.spec,
       state: {
         completedSteps: [],
-        failedSteps: []
+        failedSteps: [],
+        errors: []
       },
+      task: '',
       tokens: {
-        used: 0
+        total: agent.budget.total,
+        used: 0,
+        remaining: agent.budget.total
       }
     };
 
     const skills = selectSkills(context, skillRegistry, agent.budget);
 
     expect(skills).toHaveLength(2);
-    expect(skills[0].name).toBe('coding');
-    expect(skills[1].name).toBe('research');
+    expect(skills?.[0].name).toBe('coding');
+    expect(skills?.[1].name).toBe('research');
   });
 
   it('should respect budget constraints', () => {
@@ -91,21 +97,27 @@ describe('Skill Selector', () => {
       }
     };
 
-    const context = {
+    const context: AgentExecutionContext = {
       agent,
+      results: new Map(),
+      spec: agent.spec,
       state: {
         completedSteps: [],
-        failedSteps: []
+        failedSteps: [],
+        errors: []
       },
+      task: '',
       tokens: {
-        used: 0
+        total: agent.budget.total,
+        used: 0,
+        remaining: agent.budget.total
       }
     };
 
     const skills = selectSkills(context, skillRegistry, agent.budget);
 
     expect(skills).toHaveLength(1);
-    expect(skills[0].name).toBe('cheap');
+    expect(skills?.[0].name).toBe('cheap');
   });
 
   it('should return empty array when no applicable skills', () => {
@@ -136,14 +148,20 @@ describe('Skill Selector', () => {
       }
     };
 
-    const context = {
+    const context: AgentExecutionContext = {
       agent,
+      results: new Map(),
+      spec: agent.spec,
       state: {
         completedSteps: [],
-        failedSteps: []
+        failedSteps: [],
+        errors: []
       },
+      task: '',
       tokens: {
-        used: 0
+        total: agent.budget.total,
+        used: 0,
+        remaining: agent.budget.total
       }
     };
     const skills = selectSkills(context, [], agent.budget);

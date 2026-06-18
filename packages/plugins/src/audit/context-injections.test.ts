@@ -44,14 +44,14 @@ describe('ContextInjectionAuditor', () => {
 
   it('never stores raw content', () => {
     const auditor = new ContextInjectionAuditor();
-    const secret = 'test-secret-key-12345'; // Not a real credential — test fixture only
+    const TEST_INPUT = 'plain-text-input-for-hash-test';
 
-    auditor.record(plugin, makeInjection({ content: secret }));
+    auditor.record(plugin, makeInjection({ content: TEST_INPUT }));
 
     const trail = auditor.auditTrail(sessionId);
     expect(trail).toHaveLength(1);
     const record = expectDefined(trail[0]);
-    expect(record.contentHash).not.toBe(secret);
+    expect(record.contentHash).not.toBe(TEST_INPUT);
     expect(record.contentHash).toMatch(/^[a-f0-9]{64}$/);
   });
 

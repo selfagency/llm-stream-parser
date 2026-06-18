@@ -288,7 +288,7 @@ describe('runGuardrailsCommand', () => {
       'version: "1.0"\ndescription: "test"\nrules:\n  - name: block-it\n    condition: tool.name == "rm"\n    action: deny\n'
     );
     const io = createIoSpy();
-    const exitCode = await runGuardrailsCommand(['policy', '/tmp/test-policy.yaml'], io);
+    const exitCode = await runGuardrailsCommand(['policy', '/nonexistent-test-path/test-policy.yaml'], io);
     expect(exitCode).toBe(0);
     expect(io.stdout).toHaveBeenCalledWith(expect.stringContaining('Policy:'));
     expect(io.stdout).toHaveBeenCalledWith(expect.stringContaining('block-it'));
@@ -301,7 +301,7 @@ describe('runGuardrailsCommand', () => {
       'version: "1.0"\nrules:\n  - name: test-rule\n    condition: "true"\n    action: allow\n'
     );
     const io = createIoSpy();
-    const exitCode = await runGuardrailsCommand(['policy', '--json', '/tmp/test-policy.json'], io);
+    const exitCode = await runGuardrailsCommand(['policy', '--json', '/nonexistent-test-path/test-policy.json'], io);
     expect(exitCode).toBe(0);
     // Should output parseable JSON
     const jsonCall = io.stdout.mock.calls.find(call => (call[0] as string).startsWith('{'));
@@ -317,7 +317,7 @@ describe('runGuardrailsCommand', () => {
     // Content that actually triggers a parse error: rule without a name is unnamed
     vi.mocked(readFile).mockResolvedValue('version: "1.0"\nrules:\n  - name: "test"\n    action: invalid_action\n');
     const io = createIoSpy();
-    const exitCode = await runGuardrailsCommand(['policy', '/tmp/bad-policy.yaml'], io);
+    const exitCode = await runGuardrailsCommand(['policy', '/nonexistent-test-path/bad-policy.yaml'], io);
     // invalid_action defaults to deny, so parsing itself succeeds
     // The "invalid" YAML (bare - on its own) parses as 0 rules
     expect(exitCode).toBe(0);

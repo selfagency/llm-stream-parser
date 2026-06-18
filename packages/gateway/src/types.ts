@@ -1,5 +1,5 @@
 import type { NormalizerProvider, UniversalClient } from '@agentsy/providers';
-import type { CompletionRequest, CompletionResponse, ProviderRetryPolicy } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse, ProviderRetryPolicy } from '@agentsy/shared';
 import { z } from 'zod';
 
 export const StrategyNameSchema = z.enum([

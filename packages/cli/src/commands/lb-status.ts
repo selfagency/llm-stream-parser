@@ -11,7 +11,7 @@ const defaultIo = {
   }
 };
 
-export interface LbStatusOptions {
+interface LbStatusOptions {
   apiKey?: string;
   baseUrl?: string;
   model?: string;

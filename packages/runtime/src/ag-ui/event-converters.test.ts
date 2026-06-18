@@ -15,8 +15,8 @@ import type {
   ToolCallArgsEvent,
   ToolCallEndEvent,
   ToolCallStartEvent
-} from '@agentsy/types';
-import { EventType } from '@agentsy/types';
+} from '@agentsy/shared';
+import { EventType } from '@agentsy/shared';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { CopilotKitEvent, CustomUIEvent } from './event-converters.js';
 import { convertEventStream, createEventConverter, toCopilotKitEvent, toCustomUIEvent } from './event-converters.js';
