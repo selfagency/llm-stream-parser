@@ -216,7 +216,7 @@ function checkUnredactedWarnings(text: string): boolean {
     /\b(?:bearer|Bearer)\s+[\w.-]{10,}/g, // Bearer tokens
     /\b(?:eyJ[\w-]{10,}\.[\w-]{10,}\.[\w-]{10,})/g, // JWT tokens
     /\b(?:-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----)/g, // Private keys
-    /\b(?:gh[opusr]_)[\w]{36,}/g, // GitHub tokens
+    /\b(?:gh[opusr]_)\w{36,}/g, // GitHub tokens
     /\b(?:xox[abprs]-[\w-]{10,})/g // Slack tokens
   ];
 

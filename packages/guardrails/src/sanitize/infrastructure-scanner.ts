@@ -81,19 +81,13 @@ const FS_ROOTS = [
  */
 // nosemgrep: tld values are compile-time constants from INTERNAL_TLDS
 function hostnameForTld(tld: string): RegExp {
-  return new RegExp(`\\b(?:[a-zA-Z][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])\\.${tld}\\b`, 'gi');
+  return new RegExp(String.raw`\b(?:[a-zA-Z][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])\.` + tld + String.raw`\b`, 'gi');
 }
 
 /** Build a k8s resource regex for a given resource type. */
 // nosemgrep: kind values are compile-time constants from K8S_RESOURCE_TYPES
 function k8sForType(kind: string): RegExp {
-  return new RegExp(`\\b${kind}\\/[a-z][a-z0-9-]{0,61}[a-z0-9]\\b`, 'gi');
-}
-
-/** Build a label regex for a given pattern prefix. */
-// nosemgrep: pattern values are compile-time constants
-function labelForPattern(pattern: string): RegExp {
-  return new RegExp(`\\b${pattern}\\s*[:=]\\s*['"]?[a-zA-Z0-9_.\\-/]+['"]?`, 'gi');
+  return new RegExp(String.raw`\b` + kind + String.raw`\/[a-z][a-z0-9-]{0,61}[a-z0-9]\b`, 'gi');
 }
 
 // Pre-computed pattern arrays — build once at module load
@@ -104,35 +98,37 @@ const HOSTNAME_PATTERNS: readonly RegExp[] = INTERNAL_TLDS.map(tld => hostnameFo
 const K8S_RESOURCE_PATTERNS: readonly RegExp[] = K8S_RESOURCE_TYPES.map(kind => k8sForType(kind));
 
 // nosemgrep: root values are compile-time constants from FS_ROOTS
+const BACKTICK = '\x60';
 const PATH_PATTERNS: readonly RegExp[] = FS_ROOTS.map(
-  root => new RegExp(`(?:/(?:${root})(?:/[^\\s"'\\x60)\\]},;:]{1,255})?)`, 'gi')
+  root => new RegExp(`(?:/(?:${root})(?:/[^\\s"'${BACKTICK})\\]},;:]{1,255})?)`, 'gi')
 );
 
+// nosemgrep: all LABEL_PATTERNS are hardcoded regex literals
 const LABEL_PATTERNS: readonly RegExp[] = [
   // service.* labels
-  labelForPattern('service\\.name'),
-  labelForPattern('service\\.type'),
-  labelForPattern('service\\.account'),
-  labelForPattern('service\\.port'),
-  labelForPattern('service\\.cluster'),
-  labelForPattern('service\\.namespace'),
-  labelForPattern('service\\.selector'),
-  labelForPattern('service\\.label'),
+  /\bservice\.name\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\bservice\.type\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\bservice\.account\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\bservice\.port\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\bservice\.cluster\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\bservice\.namespace\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\bservice\.selector\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\bservice\.label\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
   // app.* labels
-  labelForPattern('app\\.kubernetes\\.io'),
-  labelForPattern('app\\.instance'),
-  labelForPattern('app\\.name'),
-  labelForPattern('app\\.version'),
+  /\bapp\.kubernetes\.io\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\bapp\.instance\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\bapp\.name\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\bapp\.version\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
   // helm labels
-  labelForPattern('helm\\.sh/chart'),
+  /\bhelm\.sh\/chart\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
   // traefik labels
-  labelForPattern('traefik\\.frontend'),
-  labelForPattern('traefik\\.backend'),
-  labelForPattern('traefik\\.service'),
+  /\btraefik\.frontend\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\btraefik\.backend\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\btraefik\.service\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
   // envoy labels
-  labelForPattern('envoy\\.cluster'),
-  labelForPattern('envoy\\.service'),
-  labelForPattern('envoy\\.route')
+  /\benvoy\.cluster\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\benvoy\.service\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi,
+  /\benvoy\.route\s*[:=]\s*['"]?[a-zA-Z0-9_.\-/]+['"]?/gi
 ];
 
 // ── Scanner ────────────────────────────────────────────
