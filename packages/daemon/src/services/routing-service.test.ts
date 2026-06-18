@@ -2,9 +2,8 @@
  * Tests for RoutingService.
  */
 
-import { describe, expect, it, vi } from 'vitest';
-
 import type { RoutingDecision } from '@agentsy/gateway';
+import { describe, expect, it, vi } from 'vitest';
 import type { UnifiedDB } from '../db/unified-db.js';
 import { RoutingService } from './routing-service.js';
 

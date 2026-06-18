@@ -94,7 +94,7 @@ describe('ACPSessionBridge', () => {
 describe('ACPNotificationAdapter', () => {
   it('should wire and unwire sessions', () => {
     const adapter = new ACPNotificationAdapter({ logger: createMockLogger() });
-    expect(() => adapter.wireAgentToSession('agent-1', 'sess-1')).not.toThrow();
+    expect(() => adapter.wireAgentToSession('agent-1', 'sess-1', () => {})).not.toThrow();
     expect(() => adapter.unwireSession('sess-1')).not.toThrow();
   });
 });

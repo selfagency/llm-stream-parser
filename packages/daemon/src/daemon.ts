@@ -1,5 +1,6 @@
 import type { MemoryEngine } from '@agentsy/memory';
 import { z } from 'zod';
+import { ACPNotificationAdapter } from './acp/acp-notification-adapter.js';
 import { ACPServer } from './acp/acp-server.js';
 import { AgentHost } from './agents/agent-host.js';
 import { ScopeManager } from './agents/scope-manager.js';
@@ -16,6 +17,8 @@ import { AgentPool } from './pool/agent-pool.js';
 import { SubprocessManager } from './processes/subprocess-manager.js';
 import { RoutingService } from './services/routing-service.js';
 import { ServiceHost } from './services/service-host.js';
+import type { StreamProvider } from './services/stream-manager.js';
+import { StreamManager } from './services/stream-manager.js';
 import type { DeepPartial, Logger } from './types.js';
 
 /**
@@ -153,6 +156,8 @@ export class Daemon {
   readonly supervisor: Supervisor;
   readonly sleeper: Sleeper;
   readonly routing: RoutingService;
+  readonly streamManager: StreamManager;
+  readonly acpNotificationAdapter: ACPNotificationAdapter;
 
   private readonly config: DaemonConfig;
   private readonly logger: Logger;
@@ -256,6 +261,18 @@ export class Daemon {
     this.routing = new RoutingService({
       db: this.db
     });
+
+    this.acpNotificationAdapter = new ACPNotificationAdapter({
+      logger: this.logger.child('acp-notification')
+    });
+
+    this.streamManager = new StreamManager({
+      logger: this.logger.child('stream'),
+      ipc: this.ipc,
+      routing: this.routing,
+      idleTimeoutMs: this.config.streaming.idleTimeoutMs,
+      secretsFilterEnabled: this.config.streaming.secretsFilterEnabled
+    });
   }
 
   async start(): Promise<void> {
@@ -299,6 +316,10 @@ export class Daemon {
       // 8a. Start routing service (gateway)
       await this.routing.start();
       this.services.register('routing', this.routing);
+
+      // 8b. Start stream manager
+      await this.streamManager.start();
+      this.services.register('stream', this.streamManager);
 
       // 9. Start IPC server
       await this.ipc.start();
@@ -423,13 +444,24 @@ export class Daemon {
     this.ipc.handle('memory.capture', () => Promise.resolve({ captured: true }));
     this.ipc.handle('memory.search', () => Promise.resolve({ searched: true }));
 
-    this.ipc.handle('stream.start', req => this.agents.startStream(req));
+    this.ipc.handle('stream.start', (req, _context) => {
+      // Streaming is now managed by StreamManager.
+      // The client receives notifications via `context.sendNotification`.
+      // For now, we delegate to the stream manager which will broadcast
+      // chunks to all connected clients via IPC broadcast.
+      //
+      // TODO: Wire per-client notification delivery so chunks go only
+      // to the requesting client instead of broadcast.
+      return Promise.resolve(
+        this.streamManager.startStream(req as never, this.createDefaultStreamProvider(), undefined)
+      );
+    });
     this.ipc.handle('stream.cancel', req => {
       const parsed = StreamIdSchema.safeParse(req);
       if (!parsed.success) {
         return Promise.reject(Object.assign(new Error('Invalid streamId'), { code: -32_602 }));
       }
-      this.agents.cancelStream(parsed.data.streamId);
+      this.streamManager.cancelStream(parsed.data.streamId);
       return Promise.resolve({ cancelled: true });
     });
 
@@ -504,6 +536,35 @@ export class Daemon {
       }
       return Promise.resolve(this.processes.getOutput(parsed.data.processId));
     });
+  }
+
+  /**
+   * Create a default stream provider that routes through the daemon's
+   * provider infrastructure. Used by IPC handler `stream.start`.
+   */
+  createDefaultStreamProvider(): StreamProvider {
+    const logger = this.logger.child('stream-provider');
+
+    return {
+      stream(request) {
+        logger.debug('Stream request', {
+          model: request.model,
+          messages: request.messages.length
+        });
+
+        // TODO: Wire through LoadBalancedClient.stream() once
+        // the streaming provider path is fully connected.
+        return {
+          [Symbol.asyncIterator]() {
+            return {
+              next() {
+                return Promise.resolve({ done: true, value: undefined });
+              }
+            };
+          }
+        };
+      }
+    };
   }
 
   getStatus(): Record<string, unknown> {

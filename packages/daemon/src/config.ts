@@ -130,6 +130,13 @@ export const DaemonConfigSchema = z.object({
     })
     .default({}),
 
+  streaming: z
+    .object({
+      idleTimeoutMs: z.number().int().positive().default(30_000),
+      secretsFilterEnabled: z.boolean().default(true)
+    })
+    .default({}),
+
   connectors: z
     .object({
       discord: z.object({ token: z.string() }).optional(),
