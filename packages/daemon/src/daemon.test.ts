@@ -69,6 +69,10 @@ describe('Daemon', () => {
     const daemon = new Daemon({ config: testConfig('4'), db: createTestDB(), pool: createMockPool() });
     await daemon.start();
     expect(daemon.state).toBe('running');
+    const status = daemon.getStatus();
+    expect(status).toHaveProperty('state', 'running');
+    expect(status).toHaveProperty('pid');
+    expect(status).toHaveProperty('services');
     await daemon.stop();
   });
 
