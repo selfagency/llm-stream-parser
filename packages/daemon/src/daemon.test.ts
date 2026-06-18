@@ -83,6 +83,7 @@ describe('Daemon', () => {
     expect(provider).toBeDefined();
     expect(typeof provider.stream).toBe('function');
     const iterable = provider.stream({ model: 'test', messages: [{ role: 'user', content: 'hi' }] });
+    // nosemgrep: detect-object-injection — Symbol.asyncIterator is a well-known symbol, not user input
     const iterator = iterable[Symbol.asyncIterator]();
     const result = await iterator.next();
     expect(result.done).toBe(true);

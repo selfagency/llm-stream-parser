@@ -22,14 +22,15 @@ afterAll(() => {
 });
 
 describe('AgentPool', () => {
-  it('should create a pool with config', () => {
+  it('should create a pool with config', async () => {
     const pool = new AgentPool({ filename: TEST_FILENAME, minThreads: 1, maxThreads: 1 });
     expect(pool).toBeDefined();
     expect(typeof pool.stats).toBe('function');
     expect(typeof pool.destroy).toBe('function');
+    await pool.destroy();
   });
 
-  it('should return stats structure', () => {
+  it('should return stats structure', async () => {
     const pool = new AgentPool({ filename: TEST_FILENAME, minThreads: 1, maxThreads: 1 });
     const stats = pool.stats();
     expect(stats).toHaveProperty('threads');
@@ -39,6 +40,7 @@ describe('AgentPool', () => {
     expect(stats).toHaveProperty('runTime');
     expect(stats).toHaveProperty('waitTime');
     expect(stats).toHaveProperty('duration');
+    await pool.destroy();
   });
 
   it('should destroy cleanly', async () => {
