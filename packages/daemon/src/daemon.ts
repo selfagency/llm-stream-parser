@@ -3,6 +3,7 @@ import { isProviderBlocked, requiresAcknowledgement } from '@agentsy/guardrails'
 import type { MemoryEngine } from '@agentsy/memory';
 import type { ObservabilityEngine } from '@agentsy/observability';
 import { createObservabilityFromEnv } from '@agentsy/observability';
+import { ApprovalManager } from '@agentsy/runtime';
 import { z } from 'zod';
 import { ACPNotificationAdapter } from './acp/acp-notification-adapter.js';
 import { ACPServer } from './acp/acp-server.js';
@@ -171,6 +172,7 @@ export class Daemon {
   readonly observability: ObservabilityEngine;
   readonly eventBus: HonkerEventBus;
   readonly learningJob: LearningJob;
+  readonly approvalManager: ApprovalManager;
   private readonly _observabilitySinks: Array<{ type: string; enabled: boolean; reason: string }>;
 
   private readonly config: DaemonConfig;
@@ -339,6 +341,13 @@ export class Daemon {
       retrieval: this.retrieval,
       eventBus: this.eventBus,
       logger: this.logger.child('learning')
+    });
+
+    // Approval manager — coordinates tool-approval prompts
+    this.approvalManager = new ApprovalManager({
+      onPending: approval => {
+        this.ipc.broadcast('approval.pending', approval);
+      }
     });
   }
 
@@ -628,6 +637,22 @@ export class Daemon {
       }
       return Promise.resolve(this.processes.getOutput(parsed.data.processId));
     });
+
+    // Approval IPC handlers
+    this.ipc.handle('approval.resolve', req => {
+      const parsed = z
+        .object({
+          approvalId: z.string().min(1),
+          approved: z.boolean()
+        })
+        .safeParse(req);
+      if (!parsed.success) {
+        return Promise.reject(Object.assign(new Error('Invalid approvalId or approved'), { code: -32_602 }));
+      }
+      const ok = this.approvalManager.resolve(parsed.data.approvalId, parsed.data.approved);
+      return Promise.resolve({ resolved: ok });
+    });
+    this.ipc.handle('approval.list', () => Promise.resolve({ pending: this.approvalManager.listPending() }));
 
     // RAG / retrieval IPC handlers
     this.ipc.handle('retrieval.retrieve', req => {

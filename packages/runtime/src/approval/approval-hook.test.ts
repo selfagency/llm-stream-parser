@@ -79,7 +79,9 @@ describe('createPolicyApprovalHook', () => {
       toolName: 'shell-exec'
     });
     // resolve the pending approval
-    const resolved = manager.resolve('shell-exec', true);
+    const pending = manager.listPending();
+    const first = pending[0] as { approvalId: string };
+    const resolved = manager.resolve(first.approvalId, true);
     expect(resolved).toBe(true);
     const result = await promise;
     expect(result).toEqual({ continue: true });
@@ -96,7 +98,9 @@ describe('createPolicyApprovalHook', () => {
       sessionId: 'test',
       toolName: 'shell-exec'
     });
-    manager.resolve('shell-exec', false);
+    const pending = manager.listPending();
+    const first = pending[0] as { approvalId: string };
+    manager.resolve(first.approvalId, false);
     const result = await promise;
     expect('continue' in result && !result.continue).toBe(true);
   });

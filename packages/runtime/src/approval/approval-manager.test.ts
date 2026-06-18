@@ -13,16 +13,24 @@ describe('ApprovalManager', () => {
     vi.useRealTimers();
   });
 
+  function resolveFirst(approved: boolean): void {
+    const pending = manager.listPending();
+    const first = pending[0];
+    if (first) {
+      manager.resolve(first.approvalId, approved);
+    }
+  }
+
   describe('requestApproval', () => {
     it('returns a promise that resolves when approved', async () => {
       const promise = manager.requestApproval('fs-write', { path: '/safe' });
-      manager.resolve('fs-write', true);
+      resolveFirst(true);
       await expect(promise).resolves.toBe(true);
     });
 
     it('returns a promise that resolves when denied', async () => {
       const promise = manager.requestApproval('fs-write', { path: '/bad' });
-      manager.resolve('fs-write', false);
+      resolveFirst(false);
       await expect(promise).resolves.toBe(false);
     });
 
@@ -38,35 +46,38 @@ describe('ApprovalManager', () => {
       expect(manager.pendingCount).toBe(2);
       expect(manager.listPending()).toHaveLength(2);
       // Clean up — resolve both to avoid unhandled rejections
-      manager.resolve('tool-a', true);
-      manager.resolve('tool-b', true);
+      manager.rejectAll();
     });
   });
 
   describe('resolve', () => {
-    it('resolves by tool name (first match)', async () => {
+    it('resolves by approval ID', async () => {
       const promise = manager.requestApproval('fs-write', { path: '/a' });
-      const resolved = manager.resolve('fs-write', true);
+      const pending = manager.listPending();
+      const first = pending[0] as { approvalId: string };
+      const resolved = manager.resolve(first.approvalId, true);
       expect(resolved).toBe(true);
       await expect(promise).resolves.toBe(true);
     });
 
-    it('returns false for unknown tool name', () => {
+    it('returns false for unknown approval ID', () => {
       expect(manager.resolve('nonexistent', true)).toBe(false);
     });
 
-    it('resolves only the first pending match', async () => {
+    it('resolves only the matching approval', async () => {
       const p1 = manager.requestApproval('fs-write', { path: '/a' });
       const p2 = manager.requestApproval('fs-write', { path: '/b' });
 
       expect(manager.pendingCount).toBe(2);
-      manager.resolve('fs-write', true);
+      const pending = manager.listPending();
+      const first = pending[0] as { approvalId: string };
+      manager.resolve(first.approvalId, true);
       expect(manager.pendingCount).toBe(1);
 
       await expect(p1).resolves.toBe(true);
       // Clean up remaining
-      manager.resolve('fs-write', true);
-      await expect(p2).resolves.toBe(true);
+      manager.rejectAll();
+      await expect(p2).resolves.toBe(false);
     });
   });
 
@@ -117,7 +128,9 @@ describe('ApprovalManager', () => {
     it('increments on requestApproval and decrements on resolve', () => {
       manager.requestApproval('tool-a', {});
       expect(manager.pendingCount).toBe(1);
-      manager.resolve('tool-a', true);
+      const pending = manager.listPending();
+      const first = pending[0] as { approvalId: string };
+      manager.resolve(first.approvalId, true);
       expect(manager.pendingCount).toBe(0);
     });
   });

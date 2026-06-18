@@ -44,7 +44,6 @@ export class IPCClient {
           const hmac = computeClientHandshake(nonce, token);
           this.request('auth.respond', { hmac })
             .then(() => {
-              this.authenticated = true;
               resolve();
             })
             .catch(reject);

@@ -201,7 +201,11 @@ export type IPCMethod =
   | 'process.spawn'
   | 'process.list'
   | 'process.kill'
-  | 'process.output';
+  | 'process.output'
+  // Approval
+  | 'approval.pending'
+  | 'approval.resolve'
+  | 'approval.list';
 
 // ── Standard JSON-RPC Error Codes ──────────────────
 

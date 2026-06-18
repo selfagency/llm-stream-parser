@@ -4,6 +4,7 @@
  * @internal
  */
 export interface PendingApproval {
+  approvalId: string;
   args: unknown;
   resolve: (approved: boolean) => void;
   startedAt: number;
@@ -17,6 +18,8 @@ export interface PendingApproval {
 export interface ApprovalManagerOptions {
   /** How long (ms) to wait for user approval before auto-denying. */
   approvalTimeout?: number;
+  /** Callback fired when a new approval request is pending. */
+  onPending?: (approval: { approvalId: string; toolName: string; args: unknown; timeoutMs: number }) => void;
 }
 
 /**
@@ -47,12 +50,19 @@ const DEFAULT_TIMEOUT_MS = 30_000;
  */
 export class ApprovalManager {
   readonly #pending: PendingApproval[] = [];
-  readonly #options: Required<ApprovalManagerOptions>;
+  readonly #options: {
+    approvalTimeout: number;
+    onPending?: (approval: { approvalId: string; toolName: string; args: unknown; timeoutMs: number }) => void;
+  };
+  #nextId = 0;
 
   constructor(options?: ApprovalManagerOptions) {
     this.#options = {
       approvalTimeout: options?.approvalTimeout ?? DEFAULT_TIMEOUT_MS
     };
+    if (options?.onPending) {
+      this.#options.onPending = options.onPending;
+    }
   }
 
   /**
@@ -63,8 +73,10 @@ export class ApprovalManager {
    * after {@link ApprovalManagerOptions.approvalTimeout} ms.
    */
   requestApproval(toolName: string, args: unknown): Promise<boolean> {
+    const approvalId = `approval_${++this.#nextId}`;
     return new Promise<boolean>(resolve => {
       const entry: PendingApproval = {
+        approvalId,
         args,
         resolve,
         startedAt: Date.now(),
@@ -72,6 +84,14 @@ export class ApprovalManager {
         toolName
       };
       this.#pending.push(entry);
+
+      // Fire onPending callback
+      this.#options.onPending?.({
+        approvalId,
+        toolName,
+        args,
+        timeoutMs: this.#options.approvalTimeout
+      });
 
       // Auto-deny after timeout
       setTimeout(() => {
@@ -92,12 +112,12 @@ export class ApprovalManager {
   }
 
   /**
-   * Resolve a pending approval by tool name (first pending match).
+   * Resolve a pending approval by approval ID.
    *
    * Returns `true` if a matching pending request was resolved.
    */
-  resolve(toolName: string, approved: boolean): boolean {
-    const idx = this.#pending.findIndex(p => p.toolName === toolName);
+  resolve(approvalId: string, approved: boolean): boolean {
+    const idx = this.#pending.findIndex(p => p.approvalId === approvalId);
     if (idx === -1) {
       return false;
     }

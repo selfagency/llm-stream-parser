@@ -201,6 +201,9 @@ importers:
       '@agentsy/retrieval':
         specifier: workspace:*
         version: link:../retrieval
+      '@agentsy/runtime':
+        specifier: workspace:*
+        version: link:../runtime
       '@agentsy/shared':
         specifier: workspace:*
         version: link:../shared
