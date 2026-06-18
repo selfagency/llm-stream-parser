@@ -183,6 +183,9 @@ importers:
 
   packages/daemon:
     dependencies:
+      '@agentsy/gateway':
+        specifier: workspace:*
+        version: link:../gateway
       '@agentsy/memory':
         specifier: workspace:*
         version: link:../memory

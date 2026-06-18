@@ -133,6 +133,24 @@ export class ProviderHealthRegistry {
     return [...this.#entries.keys()];
   }
 
+  /**
+   * Restore circuit breaker state for a provider from persistence.
+   *
+   * Used by the daemon's RoutingService on restart to preserve
+   * circuit-breaker state across restarts.
+   *
+   * @param providerId - Provider entry id.
+   * @param state - Circuit breaker state to restore.
+   * @param openedAt - Optional timestamp when the circuit was opened.
+   */
+  restoreCircuitBreakerState(providerId: string, state: CircuitBreakerState, openedAt?: number): void {
+    const entry = this.#entryFor(providerId);
+    entry.tracker.restoreCircuitBreakerState(state, openedAt);
+    if (state === 'open') {
+      entry.failures = this.#config.breaker?.failureThreshold ?? 5;
+    }
+  }
+
   #entryFor(providerId: string): HealthTrackerEntry {
     let entry = this.#entries.get(providerId);
     if (entry === undefined) {
@@ -163,5 +181,9 @@ function deriveStatus(state: CircuitBreakerState, uptimeRatio: number): HealthSt
   return 'healthy';
 }
 
-export { CircuitBreaker, type CircuitBreakerConfig } from './circuit-breaker.js';
+export {
+  CircuitBreaker,
+  type CircuitBreakerConfig,
+  type CircuitBreakerState
+} from './circuit-breaker.js';
 export type { HealthSnapshot } from './health-tracker.js';

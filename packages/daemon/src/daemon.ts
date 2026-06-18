@@ -14,6 +14,7 @@ import { Sleeper } from './lifecycle/sleeper.js';
 import { Supervisor } from './lifecycle/supervisor.js';
 import { AgentPool } from './pool/agent-pool.js';
 import { SubprocessManager } from './processes/subprocess-manager.js';
+import { RoutingService } from './services/routing-service.js';
 import { ServiceHost } from './services/service-host.js';
 import type { DeepPartial, Logger } from './types.js';
 
@@ -151,6 +152,7 @@ export class Daemon {
   readonly connectors: ConnectorHost;
   readonly supervisor: Supervisor;
   readonly sleeper: Sleeper;
+  readonly routing: RoutingService;
 
   private readonly config: DaemonConfig;
   private readonly logger: Logger;
@@ -250,6 +252,10 @@ export class Daemon {
       policy: this.config.sleep,
       logger: this.logger
     });
+
+    this.routing = new RoutingService({
+      db: this.db
+    });
   }
 
   async start(): Promise<void> {
@@ -289,6 +295,10 @@ export class Daemon {
 
       // 8. Start connectors
       await this.connectors.initialize();
+
+      // 8a. Start routing service (gateway)
+      await this.routing.start();
+      this.services.register('routing', this.routing);
 
       // 9. Start IPC server
       await this.ipc.start();

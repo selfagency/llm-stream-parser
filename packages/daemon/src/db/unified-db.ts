@@ -335,6 +335,22 @@ export class UnifiedDB {
       {
         name: '006_acp_sessions',
         sql: "CREATE TABLE IF NOT EXISTS acp_sessions (id TEXT PRIMARY KEY, agent_id TEXT, cwd TEXT, mode TEXT DEFAULT 'code', created_at INTEGER DEFAULT (unixepoch()), closed_at INTEGER)"
+      },
+      {
+        name: '007_gateway_quota_state',
+        sql: 'CREATE TABLE IF NOT EXISTS daemon_quota_state (provider_id TEXT PRIMARY KEY, state_json TEXT NOT NULL, updated_at TEXT NOT NULL)'
+      },
+      {
+        name: '008_gateway_routing_decisions',
+        sql: 'CREATE TABLE IF NOT EXISTS daemon_routing_decisions (id TEXT PRIMARY KEY, decision_json TEXT NOT NULL, timestamp TEXT NOT NULL)'
+      },
+      {
+        name: '009_gateway_circuit_breaker_state',
+        sql: 'CREATE TABLE IF NOT EXISTS daemon_circuit_breaker_state (provider_id TEXT PRIMARY KEY, state TEXT NOT NULL, updated_at TEXT NOT NULL)'
+      },
+      {
+        name: '010_gateway_health_history',
+        sql: 'CREATE TABLE IF NOT EXISTS daemon_health_history (id INTEGER PRIMARY KEY AUTOINCREMENT, provider_id TEXT NOT NULL, record_json TEXT NOT NULL, timestamp TEXT NOT NULL)'
       }
     ];
 
