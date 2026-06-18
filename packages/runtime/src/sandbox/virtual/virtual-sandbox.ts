@@ -1,7 +1,11 @@
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Worker } from 'node:worker_threads';
 
 import type { WorkerMessage } from './worker-messages.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export type SandboxExecutionStatus = 'ok' | 'error' | 'timeout' | 'blocked';
 
@@ -25,7 +29,7 @@ export interface VirtualSandbox {
 }
 
 const DEFAULT_TIMEOUT_MS = 5000;
-const WORKER_PATH = join(process.cwd(), 'packages/runtime/dist/sandbox/virtual/sandbox-worker.js');
+const WORKER_PATH = join(__dirname, 'sandbox-worker.js');
 
 /**
  * Mark a handler as resolved and terminate the worker if provided.

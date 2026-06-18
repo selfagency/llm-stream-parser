@@ -26,8 +26,11 @@ export type RequestHandler = (
 export class IPCServer {
   private server: ReturnType<typeof createServer> | null = null;
   private readonly clients = new Map<string, Socket>();
+  private readonly clientNonces = new Map<string, string>();
+  private readonly authenticated = new Set<string>();
   private readonly handlers = new Map<string, RequestHandler>();
   private readonly config: Required<IPCServerConfig>;
+  private daemonToken: string | null = null;
 
   constructor(config: IPCServerConfig) {
     this.config = {
@@ -44,6 +47,9 @@ export class IPCServer {
       // doesn't exist, fine
     }
 
+    // Generate auth token
+    this.daemonToken = generateDaemonToken(this.config.socketPath);
+
     this.server = createServer(socket => {
       const clientId = randomUUID();
 
@@ -55,6 +61,11 @@ export class IPCServer {
 
       this.clients.set(clientId, socket);
       this.setupClient(clientId, socket);
+
+      // Send auth challenge as notification
+      const nonce = randomUUID().replaceAll('-', '');
+      this.clientNonces.set(clientId, nonce);
+      this.sendNotification(socket, { jsonrpc: '2.0', method: 'auth.challenge', params: { nonce } });
     });
 
     await new Promise<void>((resolve, reject) => {
@@ -136,6 +147,22 @@ export class IPCServer {
 
     const request = result.data;
 
+    // Handle auth.respond specially
+    if (request.method === 'auth.respond') {
+      this.handleAuthRespond(clientId, request.params ?? {}, socket);
+      return;
+    }
+
+    // Check authentication for all other methods
+    if (this.#isUnauthenticated(clientId, request.method)) {
+      this.sendResponse(socket, {
+        jsonrpc: '2.0',
+        id: request.id ?? null,
+        error: { code: -32_001, message: 'Unauthorized — authenticate via auth.respond first' }
+      });
+      return;
+    }
+
     // Notifications (no id) must not receive a response
     const isNotification = request.id === undefined || request.id === null;
 
@@ -191,8 +218,42 @@ export class IPCServer {
     }
   }
 
+  /** Check if a client is unauthenticated for a given method. */
+  #isUnauthenticated(clientId: string, method: string): boolean {
+    return !(this.authenticated.has(clientId) || UNAUTHENTICATED_ALLOWLIST.has(method));
+  }
+
   handle(method: string, handler: RequestHandler): void {
     this.handlers.set(method, handler);
+  }
+
+  /**
+   * Handle an auth.respond request from a client.
+   * Validates the HMAC and marks the client as authenticated.
+   */
+  private handleAuthRespond(clientId: string, params: Record<string, unknown>, socket: Socket): void {
+    const hmac = typeof params.hmac === 'string' ? params.hmac : '';
+    const nonce = this.clientNonces.get(clientId);
+    if (!(nonce && this.daemonToken)) {
+      this.sendResponse(socket, {
+        jsonrpc: '2.0',
+        error: { code: -32_001, message: 'No challenge issued for this connection' }
+      });
+      return;
+    }
+    if (verifyClientHandshake(nonce, hmac, this.daemonToken)) {
+      this.authenticated.add(clientId);
+      this.clientNonces.delete(clientId);
+      this.sendResponse(socket, {
+        jsonrpc: '2.0',
+        result: { authenticated: true }
+      });
+    } else {
+      this.sendResponse(socket, {
+        jsonrpc: '2.0',
+        error: { code: -32_001, message: 'Authentication failed — invalid HMAC' }
+      });
+    }
   }
 
   private sendResponse(socket: Socket, response: IPCResponse): void {

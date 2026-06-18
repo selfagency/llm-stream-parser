@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { connect, type Socket } from 'node:net';
+import { computeClientHandshake, loadDaemonToken } from './auth.js';
 import type { IPCRequest } from './protocol.js';
 
 export class IPCClient {
@@ -14,7 +15,8 @@ export class IPCClient {
   connect(socketPath: string): Promise<void> {
     return new Promise((resolve, reject) => {
       this.socket = connect(socketPath, () => {
-        resolve();
+        // After connecting, perform auth handshake
+        this.performAuthHandshake(socketPath).then(resolve).catch(reject);
       });
 
       this.socket.on('data', (data: Buffer) => {
@@ -28,6 +30,29 @@ export class IPCClient {
       this.socket.on('connect_error', () => {
         /* connect_error not emitted by regular sockets; here for safety */
       });
+    });
+  }
+
+  private async performAuthHandshake(socketPath: string): Promise<void> {
+    const token = loadDaemonToken(socketPath);
+    // Wait for the auth.challenge notification
+    await new Promise<void>((resolve, reject) => {
+      const checkBuffer = (): void => {
+        const challengeMatch = this.buffer.match(/"method":"auth\.challenge","params":\{"nonce":"([^"]+)"\}/);
+        if (challengeMatch) {
+          const nonce = challengeMatch[1] as string;
+          const hmac = computeClientHandshake(nonce, token);
+          this.request('auth.respond', { hmac })
+            .then(() => {
+              this.authenticated = true;
+              resolve();
+            })
+            .catch(reject);
+        } else {
+          setTimeout(checkBuffer, 50);
+        }
+      };
+      checkBuffer();
     });
   }
 
