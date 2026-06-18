@@ -58,6 +58,9 @@ function createMockStreamProvider(chunks: StreamChunk[] = []): StreamProvider {
               if (i < chunks.length) {
                 // nosemgrep: detect-object-injection — chunks is a local array, not user input
                 const chunk = chunks[i];
+                if (!chunk) {
+                  return Promise.resolve({ done: true, value: undefined });
+                }
                 i++;
                 return Promise.resolve({ done: false, value: chunk });
               }
