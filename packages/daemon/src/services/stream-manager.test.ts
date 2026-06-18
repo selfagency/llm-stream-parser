@@ -280,29 +280,29 @@ describe('StreamManager error handling', () => {
 // Secrets filter
 // =============================================================================
 
+async function runFilterTest(
+  ipc: ReturnType<typeof createMockIPCServer>,
+  opts: { secretsFilterEnabled: boolean; filterFactory?: () => StreamingSecretsFilter }
+): Promise<string | undefined> {
+  const manager = new StreamManager({
+    logger: createMockLogger(),
+    ipc,
+    routing: createMockRoutingService(),
+    ...opts
+  });
+  await manager.start();
+
+  const provider = createMockStreamProvider([{ content: 'My key is sk-proj-abc123def456ghi789jkl012' }]);
+  manager.startStream({ messages: [{ role: 'user', content: 'Hi' }] }, provider);
+  await new Promise(resolve => setTimeout(resolve, 50));
+
+  const calls = (ipc.broadcast as ReturnType<typeof vi.fn>).mock.calls;
+  const chunkCall = calls.find((c: unknown[]) => c[0] === 'stream.chunk');
+  if (!chunkCall) return undefined;
+  return (chunkCall as [string, { chunk: { content: string } }])[1].chunk.content;
+}
+
 describe('StreamManager secrets filter', () => {
-  async function runFilterTest(
-    ipc: ReturnType<typeof createMockIPCServer>,
-    opts: { secretsFilterEnabled: boolean; filterFactory?: () => StreamingSecretsFilter }
-  ): Promise<string | undefined> {
-    const manager = new StreamManager({
-      logger: createMockLogger(),
-      ipc,
-      routing: createMockRoutingService(),
-      ...opts
-    });
-    await manager.start();
-
-    const provider = createMockStreamProvider([{ content: 'My key is sk-proj-abc123def456ghi789jkl012' }]);
-    manager.startStream({ messages: [{ role: 'user', content: 'Hi' }] }, provider);
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    const calls = (ipc.broadcast as ReturnType<typeof vi.fn>).mock.calls;
-    const chunkCall = calls.find((c: unknown[]) => c[0] === 'stream.chunk');
-    if (!chunkCall) return undefined;
-    return (chunkCall as [string, { chunk: { content: string } }])[1].chunk.content;
-  }
-
   it('masks secrets when filter is enabled', async () => {
     const ipc = createMockIPCServer();
     const content = await runFilterTest(ipc, {
