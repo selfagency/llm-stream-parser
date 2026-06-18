@@ -8,7 +8,8 @@ export default defineConfig({
     instrumentation: 'src/instrumentation/index.ts',
     exporters: 'src/exporters/index.ts',
     spans: 'src/spans/agent-span.ts',
-    'cortexkit/health-bridge': 'src/cortexkit/health-bridge.ts'
+    'cortexkit/health-bridge': 'src/cortexkit/health-bridge.ts',
+    'auto-init': 'src/auto-init.ts'
   },
   external: ['@agentsy/shared'],
   format: ['esm', 'cjs'],

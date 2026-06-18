@@ -41,6 +41,11 @@
       "types": "./dist/cortexkit/health-bridge.d.ts",
       "import": "./dist/cortexkit/health-bridge.js",
       "require": "./dist/cortexkit/health-bridge.cjs"
+    },
+    "./auto-init": {
+      "types": "./dist/auto-init.d.ts",
+      "import": "./dist/auto-init.js",
+      "require": "./dist/auto-init.cjs"
     }
   },
   "scripts": {

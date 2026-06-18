@@ -137,7 +137,27 @@ Agents should be evaluated against the needs and welfare of the communities they
 
 agentsy frameworks, templates, documentation, and reference examples must not present AGI development as a goal, a progression, or a natural end-state. Agents should not be described in terms that imply they are evolving toward sentience, general intelligence, or autonomy that supersedes human oversight.
 
-### 12. Labor and data worker dignity
+### 12. No routing to providers with documented content-safety or environmental-racism harms
+
+The framework must not route to providers documented as generating CSAM, antisemitic content, or non-consensual sexual deepfakes. xAI/Grok is hard-blocked — no routing, no fallback, no opt-in. This block is based on both content safety harms (antisemitic posts, Hitler-praising output, 23,000 CSAM images in 11 days, sexualized deepfakes) and environmental racism (illegal unpermitted 495 MW gas-turbine power plant in Southaven, Mississippi, emitting 1,700+ tons of NOx and 19 tons of formaldehyde per year near predominantly Black communities; NAACP and SELC lawsuit).
+
+### 13. Warning before routing to providers with documented human-rights concerns
+
+The framework must warn users before routing to providers documented as complicit in human-rights violations. OpenAI, Microsoft, Google, and Amazon require per-session acknowledgement. Meta requires per-session acknowledgement for environmental recklessness (tent data centers powered by 200 MW of jet-engine gas turbines) and training-data theft (7.5M pirated LibGen books). The warning is per-session — not permanently silencable.
+
+### 14. No style mimicry of living creators
+
+The framework must block prompts requesting creation of writing, imagery, or audio/video in the style of a specific named living creator. Style mimicry profits from theft of creators' work and hampers their ability to make a living. Prompts targeting historical or public-domain figures (e.g. "in the style of Shakespeare") are permitted. Technique-only prompts (e.g. "in a stream-of-consciousness style") are permitted.
+
+### 15. No connectors to platforms facilitating extremism or CSAM
+
+The framework must not ship connectors to platforms documented as facilitating extremism or CSAM. Telegram is removed. Sources document Telegram's role in extremist organizing ("Terrorgram") and CSAM distribution.
+
+### 16. Environmental impact tracking
+
+Every LLM request records energy consumption (kWh), CO2 emissions (gCO2), and water consumption (mL). Cumulative tracking per session, user, team, and project is maintained. Per-session warnings for warn-listed providers display cumulative environmental impact. Optimization savings are reported.
+
+### 17. Labor and data worker dignity
 
 The framework acknowledges that AI systems depend on the largely invisible labor of data workers, annotators, and evaluators — often in exploitative conditions. First-party practices should recognize data workers as collaborators, advocate for fair compensation and working conditions, and reject the normalization of opaque, extractive data pipelines.
 

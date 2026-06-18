@@ -24,5 +24,13 @@ export const DEFAULT_JOB_DEFINITIONS: JobDefinition[] = [
     handler: './jobs/stale-cleanup.js',
     timeout: 15_000,
     scope: 'maintenance'
+  },
+  {
+    name: 'rag-index',
+    type: 'interval',
+    schedule: '900000',
+    handler: './jobs/rag-index.js',
+    timeout: 60_000,
+    scope: 'maintenance'
   }
 ];

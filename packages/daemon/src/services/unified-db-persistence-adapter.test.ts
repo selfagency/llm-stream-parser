@@ -68,7 +68,7 @@ describe('quota state', () => {
     const result = await adapter.loadQuotaState('openai');
 
     expect(result).not.toBeNull();
-    expect(result!.rpmLimit).toBe(100);
+    expect(result?.rpmLimit).toBe(100);
   });
 
   it('returns null when no quota state exists', async () => {

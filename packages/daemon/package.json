@@ -98,7 +98,11 @@
   },
   "dependencies": {
     "@agentsy/gateway": "workspace:*",
+    "@agentsy/guardrails": "workspace:*",
     "@agentsy/memory": "workspace:*",
+    "@agentsy/observability": "workspace:*",
+    "@agentsy/providers": "workspace:*",
+    "@agentsy/retrieval": "workspace:*",
     "@agentsy/shared": "workspace:*",
     "better-sqlite3": "^11.10.0",
     "bree": "^9.2.3",

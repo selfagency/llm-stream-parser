@@ -130,6 +130,27 @@ export const DaemonConfigSchema = z.object({
     })
     .default({}),
 
+  observability: z
+    .object({
+      enabled: z.boolean().default(true),
+      serviceName: z.string().default('agentsy-daemon'),
+      serviceVersion: z.string().default('0.0.0'),
+      langfuse: z
+        .object({
+          enabled: z.boolean().default(true),
+          endpoint: z.string().optional(),
+          publicKey: z.string().optional(),
+          secretKey: z.string().optional(),
+          projectId: z.string().optional(),
+          flushIntervalMs: z.number().int().positive().optional(),
+          maxBatchSize: z.number().int().positive().optional(),
+          headers: z.record(z.string()).optional()
+        })
+        .default({}),
+      envFiles: z.array(z.string()).default(['.env.local', '.env'])
+    })
+    .default({}),
+
   streaming: z
     .object({
       idleTimeoutMs: z.number().int().positive().default(30_000),
@@ -140,8 +161,7 @@ export const DaemonConfigSchema = z.object({
   connectors: z
     .object({
       discord: z.object({ token: z.string() }).optional(),
-      slack: z.object({ token: z.string() }).optional(),
-      telegram: z.object({ token: z.string() }).optional()
+      slack: z.object({ token: z.string() }).optional()
     })
     .default({}),
 
