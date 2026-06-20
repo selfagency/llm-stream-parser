@@ -88,7 +88,7 @@ This plan merges three independent audits of the `selfagency/agentsy` codebase i
 | 7 | RAG as Daemon Service | v2.3 §9 | 4 | 3 | P2 | Phase 1 ✅ | (supports E-20, E-35) | Pending |
 | 8 | Learning Loop & Background Jobs | v2.3 §10 | 3 | 4 | P2 | Phase 7 | — | Pending |
 | 9 | Guardrails Behavioral Detectors (9 of 9) | gap §Phase 3 | 10 | 4–5 | P0 | Phase 4, Phase 10(SessionState) | E-6, E-7, E-8, E-9, E-10, E-11, E-12, E-13, E-14 | Pending |
-| 10 | Guardrails Missing Surfaces & Interaction Safeguards + Ingress Scanning | gap §Phase 4 + §15.7 extension | 9 | 5 | P0 | Phase 4 | E-16, E-20, E-35, E-22(full) + ingress/MCP network-policy plumbing | Pending |
+| 10 | Guardrails Missing Surfaces, Interaction Safeguards, Ingress Scanning + Write-Time Safety | gap §Phase 4 + §15.7–§15.15 expansion | 9 | 5 | P0 | Phase 4 | E-16, E-20, E-35, E-22(full) + ingress/MCP network-policy plumbing + untrusted content ingress + code/file write safety | Pending |
 | 11 | Scope Accountability, Request Classification & High-Risk Domains | gap §Phase 5 | 5 | 6 | P1 | Phase 10 | E-15, E-19, E-28 | Pending |
 | 12 | Guardrails Daemon Integration | gap §Phase 6 | 5 | 6 | P0 | Phase 1 ✅, Phase 4 | E-21 | Pending |
 | 13 | Guardrails Metrics, Benchmark Suite, Release Gate + langeval Integration | gap §Phase 7 + §18.7 (langeval) | 11.5 | 7 | P0 | Phase 9, Phase 12, Phase 19, Phase 21 | E-25, E-26, E-27, E-14(full) + behavioral evals via langeval | Pending |

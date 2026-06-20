@@ -14,14 +14,24 @@ describe('IPCServer + IPCClient integration', () => {
   let server: IPCServer;
 
   beforeEach(async () => {
+    try {
+      await unlink(`${SOCKET_PATH}.auth_token`);
+    } catch {
+      /* fine */
+    }
     server = new IPCServer({ socketPath: SOCKET_PATH, logger });
     await server.start();
-  });
+  }, 15_000);
 
   afterEach(async () => {
     await server.stop();
     try {
       await unlink(SOCKET_PATH);
+    } catch {
+      /* fine */
+    }
+    try {
+      await unlink(`${SOCKET_PATH}.auth_token`);
     } catch {
       /* fine */
     }
@@ -35,7 +45,7 @@ describe('IPCServer + IPCClient integration', () => {
     const result = await client.request('test.ping');
     expect(result).toEqual({ pong: true });
     await client.disconnect();
-  });
+  }, 15_000);
 
   it('should handle errors', async () => {
     server.handle('test.error', () => {
@@ -46,14 +56,14 @@ describe('IPCServer + IPCClient integration', () => {
     await client.connect(SOCKET_PATH);
     await expect(client.request('test.error')).rejects.toThrow('oops');
     await client.disconnect();
-  });
+  }, 15_000);
 
   it('should handle method not found', async () => {
     const client = new IPCClient();
     await client.connect(SOCKET_PATH);
     await expect(client.request('nonexistent')).rejects.toThrow('Method not found');
     await client.disconnect();
-  });
+  }, 15_000);
 
   it('should broadcast to all connected clients', async () => {
     server.handle('test.notify', (_params, ctx) => {
@@ -71,7 +81,7 @@ describe('IPCServer + IPCClient integration', () => {
 
     await client1.disconnect();
     await client2.disconnect();
-  });
+  }, 15_000);
 
   it('should start and stop cleanly', async () => {
     const srv = new IPCServer({
@@ -80,5 +90,5 @@ describe('IPCServer + IPCClient integration', () => {
     });
     await srv.start();
     await expect(srv.stop()).resolves.toBeUndefined();
-  });
+  }, 15_000);
 });

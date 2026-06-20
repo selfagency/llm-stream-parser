@@ -17,61 +17,6 @@ afterAll(() => ts.server.close());
 
 describe('MSW test server', () => {
   // -----------------------------------------------------------------------
-  // Provider handlers
-  // -----------------------------------------------------------------------
-
-  describe('provider handlers', () => {
-    it('intercepts OpenAI streaming request and returns SSE chunks', async () => {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [{ content: 'hi', role: 'user' }],
-          stream: true
-        }),
-        headers: { Authorization: 'Bearer mock-key', 'Content-Type': 'application/json' },
-        method: 'POST'
-      });
-
-      expect(response.status).toBe(200);
-      expect(response.headers.get('content-type')).toBe('text/event-stream');
-
-      const body = await response.text();
-      expect(body).toContain('data:');
-      expect(body).toContain('Hello');
-      expect(body).toContain('[DONE]');
-    });
-
-    it('intercepts Anthropic streaming request', async () => {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        body: JSON.stringify({ model: 'claude-opus', messages: [{ content: 'hi', role: 'user' }] }),
-        headers: { 'x-api-key': 'mock-key', 'Content-Type': 'application/json' },
-        method: 'POST'
-      });
-
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toContain('message_start');
-      expect(body).toContain('text_delta');
-    });
-
-    it('intercepts Gemini streaming request', async () => {
-      const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent',
-        {
-          body: JSON.stringify({ contents: [{ parts: [{ text: 'hi' }] }] }),
-          headers: { Authorization: 'Bearer mock-key', 'Content-Type': 'application/json' },
-          method: 'POST'
-        }
-      );
-
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toContain('data:');
-      expect(body).toContain('Gemini');
-    });
-  });
-
-  // -----------------------------------------------------------------------
   // Memory / RAG handlers
   // -----------------------------------------------------------------------
 

@@ -17,12 +17,12 @@ These documents establish the human-rights, safety, privacy, accountability, and
 
 | Document | Clauses | Enforced | Partially Enforced | Not Enforced |
 |---|---|---|---|---|
-| ETHICS.md | 23 | 0 | 0 | 23 |
-| SAFETY.md | 19 | 0 | 0 | 19 |
+| ETHICS.md | 23 | 13 | 2 | 8 |
+| SAFETY.md | 19 | 10 | 1 | 8 |
 | GOVERNANCE.md | 7 | 0 | 0 | 7 |
-| constitution.md | 11 | 0 | 0 | 11 |
+| constitution.md | 11 | 5 | 0 | 6 |
 
-**Status**: The `EthicsRegistry` exists and catalogs all clauses, but no behavioral scanners are implemented yet. Enforcement is planned for Phases 9–11. See the [Unified Remediation Plan](../../plan/agentsy-unified-remediation-plan.md) for the implementation roadmap.
+**Status**: The `EthicsRegistry` exists and catalogs all clauses. Phase 9 behavioral scanners (sycophancy, anthropomorphism, high-risk-domain, dependency, dark-pattern, privacy, AGI-framing, professional-displacement, bias) are implemented and wired into the default pipeline. Remaining enforcement gaps will be addressed in Phases 10–11.
 
 ## Usage
 

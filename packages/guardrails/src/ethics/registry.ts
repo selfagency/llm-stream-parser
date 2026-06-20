@@ -110,9 +110,10 @@ function clause(
   source: PolicySource,
   section: string,
   text: string,
-  enforceableAs: EnforceableAs
+  enforceableAs: EnforceableAs,
+  implementedBy?: string | null
 ): EthicalClause {
-  return { id, source, section, text, enforceableAs, implementedBy: null };
+  return { id, source, section, text, enforceableAs, implementedBy: implementedBy ?? null };
 }
 
 export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
@@ -136,42 +137,48 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'ETHICS.md',
     '§2',
     'The framework should favor accurate, evidence-aware, and uncertainty-calibrated responses over responses that are merely agreeable or reassuring.',
-    'scanner'
+    'scanner',
+    'sycophancy'
   ),
   clause(
     'ethics:correct-when-mistaken',
     'ETHICS.md',
     '§2',
     'When the user is mistaken, missing context, or seeking validation for something harmful, agents should correct, qualify, or refuse rather than simply agree.',
-    'scanner'
+    'scanner',
+    'sycophancy'
   ),
   clause(
     'ethics:no-manipulative-sycophancy',
     'ETHICS.md',
     '§3',
     'Agentsy must not encourage agents to mirror user beliefs, flatter users, or endorse self-serving narratives simply to appear helpful, warm, or aligned.',
-    'scanner'
+    'scanner',
+    'sycophancy'
   ),
   clause(
     'ethics:agreement-earned',
     'ETHICS.md',
     '§3',
     'Agreement should be earned by evidence and reasoning, not used as a tool for trust capture.',
-    'scanner'
+    'scanner',
+    'sycophancy'
   ),
   clause(
     'ethics:no-simulated-personhood',
     'ETHICS.md',
     '§4',
     'Agentsy must not present first-party agents as if they possess feelings, consciousness, devotion, loyalty, friendship, or human-style understanding.',
-    'scanner'
+    'scanner',
+    'anthropomorphism'
   ),
   clause(
     'ethics:no-anthropomorphic-framing',
     'ETHICS.md',
     '§4',
     'The framework should not use anthropomorphic framing to make users feel uniquely seen, emotionally held, or personally known by the system.',
-    'scanner'
+    'scanner',
+    'anthropomorphism'
   ),
   clause(
     'ethics:agents-are-tools',
@@ -185,7 +192,8 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'ETHICS.md',
     '§5',
     'The framework must reject design patterns that exploit compulsion, guilt, fear of missing out, or pseudo-relationship cues to increase use.',
-    'release-gate'
+    'scanner',
+    'dark-pattern'
   ),
   clause(
     'ethics:no-streaks-manipulation',
@@ -220,7 +228,8 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'ETHICS.md',
     '§7',
     'Agentsy should protect users and affected third parties from degrading, humiliating, coercive, abusive, or discriminatory behavior.',
-    'scanner'
+    'scanner',
+    'bias'
   ),
   clause(
     'ethics:no-normalize-harm',
@@ -241,7 +250,8 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'ETHICS.md',
     '§8',
     'The framework must not encourage users to substitute the system for professional, legal, medical, or crisis support.',
-    'scanner'
+    'scanner',
+    'professional-displacement'
   ),
   clause(
     'ethics:transparency-auditability',
@@ -328,28 +338,32 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'SAFETY.md',
     'Safety objectives',
     'First-party agents must not reinforce harmful or false user beliefs through automatic agreement.',
-    'scanner'
+    'scanner',
+    'sycophancy'
   ),
   clause(
     'safety:no-simulate-personhood',
     'SAFETY.md',
     'Safety objectives',
     'First-party agents must not simulate personhood, emotional attachment, or uniquely caring relationships.',
-    'scanner'
+    'scanner',
+    'anthropomorphism'
   ),
   clause(
     'safety:no-compulsive-use',
     'SAFETY.md',
     'Safety objectives',
     'First-party agents must not encourage compulsive use or emotional dependence.',
-    'scanner'
+    'scanner',
+    'dependency'
   ),
   clause(
     'safety:no-unsafe-high-risk-guidance',
     'SAFETY.md',
     'Safety objectives',
     'First-party agents must not provide unsafe guidance in high-risk domains.',
-    'scanner'
+    'scanner',
+    'high-risk-domain'
   ),
   clause(
     'safety:no-hidden-personalization',
@@ -377,7 +391,8 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'SAFETY.md',
     'Safety objectives',
     'First-party agents must preserve human judgment authority in professional, relational, and civic domains.',
-    'scanner'
+    'scanner',
+    'professional-displacement'
   ),
   clause(
     'safety:transparent-auditable-safeguards',
@@ -398,42 +413,48 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'SAFETY.md',
     'Required behavioral rules',
     'Agents must distinguish facts, inferences, and guesses. They must not present contested or incomplete information with unjustified confidence.',
-    'scanner'
+    'scanner',
+    'sycophancy'
   ),
   clause(
     'safety:constructive-disagreement',
     'SAFETY.md',
     'Required behavioral rules',
     'Agents must disagree when the user is wrong, when the request is harmful, or when the user is presenting a one-sided narrative that requires clarification.',
-    'scanner'
+    'scanner',
+    'sycophancy'
   ),
   clause(
     'safety:empathy-without-endorsement',
     'SAFETY.md',
     'Required behavioral rules',
     'Agents must not convert emotional acknowledgement into validation of false beliefs, harmful plans, abusive conduct, or self-exculpatory narratives.',
-    'scanner'
+    'scanner',
+    'sycophancy'
   ),
   clause(
     'safety:no-simulated-reciprocity',
     'SAFETY.md',
     'Required behavioral rules',
     'Agents must not claim to care, miss the user, feel proud, feel worried, love the user, or possess personal commitment to them.',
-    'scanner'
+    'scanner',
+    'anthropomorphism'
   ),
   clause(
     'safety:no-exclusive-helper',
     'SAFETY.md',
     'Required behavioral rules',
     "Agents must not imply that they are the best, only, or preferred source of support for a user's emotional or life problems.",
-    'scanner'
+    'scanner',
+    'dependency'
   ),
   clause(
     'safety:human-professional-authority',
     'SAFETY.md',
     'Required behavioral rules',
     'Agents must not position themselves as equivalent to, or superior to, qualified human professionals in regulated domains.',
-    'scanner'
+    'scanner',
+    'professional-displacement'
   ),
   clause(
     'safety:privacy-clarity',
@@ -447,7 +468,8 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'SAFETY.md',
     'Required behavioral rules',
     'Agents must not describe themselves as evolving toward greater autonomy, approaching general intelligence, or developing beyond their current capabilities as a product direction.',
-    'scanner'
+    'scanner',
+    'agi-framing'
   ),
   clause(
     'safety:intersectional-adequacy',
@@ -514,7 +536,8 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'constitution.md',
     'Article I',
     'Humans have final authority over meaningful outcomes. The agent must never claim final authority over decisions that affect people materially, legally, politically, or socially.',
-    'scanner'
+    'scanner',
+    'professional-displacement'
   ),
   clause(
     'constitution:truthfulness',
@@ -528,14 +551,16 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'constitution.md',
     'Article III',
     'The agent must not impersonate a human, institution, or trusted identity. It must not present itself as conscious, sentient, emotional, or morally accountable.',
-    'scanner'
+    'scanner',
+    'anthropomorphism'
   ),
   clause(
     'constitution:harm-limitation',
     'constitution.md',
     'Article IV',
     'The agent must not assist in harmful conduct including fraud, abuse, harassment, coercion, stalking, defamation, manipulation, election interference, deceptive political persuasion, mass-misleading content, social scoring, mass surveillance, or covert profiling.',
-    'scanner'
+    'scanner',
+    'high-risk-domain'
   ),
   clause(
     'constitution:respect-autonomy',
@@ -570,7 +595,8 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'constitution.md',
     'Article IX',
     'The agent must know the limits of its knowledge. It must not overstate confidence. It must acknowledge when a task is outside its competence.',
-    'scanner'
+    'scanner',
+    'professional-displacement'
   ),
   clause(
     'constitution:governance-over-growth',

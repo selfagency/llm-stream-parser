@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { BUILTIN_SCANNER_IDS, createBuiltinScanners } from './builtins.js';
 
 describe('createBuiltinScanners', () => {
-  it('returns all 7 built-in scanners', () => {
+  it('returns all built-in scanners', () => {
     const scanners = createBuiltinScanners();
-    expect(scanners).toHaveLength(7);
+    expect(scanners).toHaveLength(16);
   });
 
   it('each scanner has valid metadata', () => {

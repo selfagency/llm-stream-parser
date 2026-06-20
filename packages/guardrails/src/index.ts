@@ -127,6 +127,12 @@ export type { CredentialPattern, CredentialReferenceScannerOptions } from './cre
 export { CredentialReferenceScanner } from './credential-scanner.js';
 
 // ---------------------------------------------------------------------------
+// Policy enforcer — bridges policy-as-code with the guardrail pipeline
+// ---------------------------------------------------------------------------
+
+export { PolicyEnforcer } from './policy-enforcer.js';
+
+// ---------------------------------------------------------------------------
 // Legacy error classes (Phase 3.7)
 // ---------------------------------------------------------------------------
 

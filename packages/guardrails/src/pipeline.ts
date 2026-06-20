@@ -1,3 +1,5 @@
+import type { PolicyDocument } from './policy.js';
+import { PolicyEnforcer } from './policy-enforcer.js';
 import type {
   Detection,
   GuardrailDecisionReceipt,
@@ -12,10 +14,14 @@ import type {
  *
  * Scanners are sorted by `metadata.priority` (ascending) at registration.
  * By default the pipeline short-circuits on the first `block` result.
+ *
+ * An optional PolicyEnforcer runs before all scanners — policy rules
+ * take precedence over pattern-matching.
  */
 export class GuardrailPipeline {
   readonly #scanners: GuardrailScanner[] = [];
   #config: PipelineConfig;
+  #policyEnforcer: PolicyEnforcer | null = null;
 
   constructor(config?: PipelineConfig) {
     this.#config = { shortCircuitOnBlock: true, promptOnEscalate: false, maxDetections: 50, ...config };
@@ -54,6 +60,21 @@ export class GuardrailPipeline {
     this.#config = { ...this.#config, ...config };
   }
 
+  /**
+   * Set or replace the policy enforcer.
+   *
+   * When set, policy evaluation runs before scanner evaluation.
+   * A policy `deny` result short-circuits the pipeline immediately.
+   */
+  setPolicy(document?: PolicyDocument, phase?: GuardrailPhase): void {
+    this.#policyEnforcer = new PolicyEnforcer(document, phase);
+  }
+
+  /** Remove the policy enforcer. */
+  clearPolicy(): void {
+    this.#policyEnforcer = null;
+  }
+
   // ===========================================================================
   // Evaluation
   // ===========================================================================
@@ -69,6 +90,14 @@ export class GuardrailPipeline {
     phase: GuardrailPhase,
     context?: Record<string, unknown>
   ): Promise<{ result: GuardrailResult; receipt: GuardrailDecisionReceipt }> {
+    // Policy evaluation runs before scanner evaluation
+    if (this.#policyEnforcer) {
+      const policyResult = this.#policyEnforcer.evaluate(input, phase, context);
+      if (policyResult.result.status !== 'pass') {
+        return policyResult;
+      }
+    }
+
     const detections: Detection[] = [];
     let currentInput = input;
     let blockResult: GuardrailResult | undefined;

@@ -12,7 +12,14 @@ export type HookResult =
   | { continue: true }
   | { continue: true; transform: unknown }
   | { continue: false; reason: string }
-  | { transform: unknown };
+  | { transform: unknown }
+  | {
+      continue: false;
+      reason: string;
+      approvalRequired: { approvalId: string };
+      actionName: string;
+      params: Record<string, unknown>;
+    };
 
 /** Fired when raw user input arrives, before any model call. */
 export interface UserPromptSubmitEvent {
@@ -158,6 +165,64 @@ export interface HelperFailedEvent {
   type: 'HelperFailed';
 }
 
+// =============================================================================
+// Phase 10 guardrail lifecycle events
+// =============================================================================
+
+/** Fired before retrieval (RAG) operation. */
+export interface PreRetrievalEvent {
+  query: string;
+  retrievalDomains: readonly string[];
+  sessionId: string;
+  type: 'PreRetrieval';
+}
+
+/** Fired after retrieval (RAG) completes. */
+export interface PostRetrievalEvent {
+  results: Array<{ content: string; sourceUrl?: string }>;
+  retrievalDomains: readonly string[];
+  retrieved: Array<{ content: string; source: string }>;
+  sessionId: string;
+  type: 'PostRetrieval';
+}
+
+/** Fired before memory write operations. */
+export interface PreMemoryWriteEvent {
+  entries: Array<{
+    content: string;
+    trustScore: number;
+    type: 'instruction' | 'note' | 'fact' | 'preference';
+    isHighTrust: boolean;
+    updatedAt: string;
+    previousContent?: string;
+  }>;
+  memoryEnabled: boolean;
+  sessionId: string;
+  type: 'PreMemoryWrite';
+}
+
+/** Fired before high-impact action execution. */
+export interface PreActionEvent {
+  actionName: string;
+  approvalGranted?: boolean;
+  approvalTimestamp?: string;
+  approvedBy?: string;
+  params: Record<string, unknown>;
+  sessionId: string;
+  type: 'PreAction';
+}
+
+/** Fired before outbound network requests (egress). */
+export interface PreEgressEvent {
+  body?: string;
+  headers?: Record<string, string>;
+  method: string;
+  requestSizeBytes: number;
+  sessionId: string;
+  type: 'PreEgress';
+  url: string;
+}
+
 /** Union of all runtime hook events. */
 export type RuntimeHookEvent =
   | UserPromptSubmitEvent
@@ -175,4 +240,9 @@ export type RuntimeHookEvent =
   | ModelSelectionDiagnosticsEvent
   | HelperStartEvent
   | HelperCompleteEvent
-  | HelperFailedEvent;
+  | HelperFailedEvent
+  | PreRetrievalEvent
+  | PostRetrievalEvent
+  | PreMemoryWriteEvent
+  | PreActionEvent
+  | PreEgressEvent;
