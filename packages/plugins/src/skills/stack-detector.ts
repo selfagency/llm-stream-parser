@@ -35,6 +35,8 @@ interface FileChecks {
 
 // ── File check helper ──────────────────────────────────
 
+// ── File check helpers ────────────────────────────────
+
 async function fileExists(...parts: string[]): Promise<boolean> {
   try {
     await access(join(...parts));
@@ -42,6 +44,10 @@ async function fileExists(...parts: string[]): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+function anyFile(...paths: string[][]): Promise<boolean> {
+  return Promise.all(paths.map(p => fileExists(...p))).then(results => results.some(Boolean));
 }
 
 // ── File checks ─────────────────────────────────────────
@@ -61,13 +67,11 @@ async function checkFiles(projectDir: string): Promise<FileChecks> {
     hasPackageJson
   ] = await Promise.all([
     fileExists(projectDir, 'pnpm-workspace.yaml'),
-    fileExists(projectDir, 'vite.config.ts') || fileExists(projectDir, 'vite.config.js'),
-    fileExists(projectDir, 'next.config.ts') ||
-      fileExists(projectDir, 'next.config.js') ||
-      fileExists(projectDir, 'next.config.mjs'),
-    fileExists(projectDir, 'svelte.config.js') || fileExists(projectDir, 'svelte.config.ts'),
-    fileExists(projectDir, 'astro.config.mjs') || fileExists(projectDir, 'astro.config.ts'),
-    fileExists(projectDir, 'tailwind.config.ts') || fileExists(projectDir, 'tailwind.config.js'),
+    anyFile([projectDir, 'vite.config.ts'], [projectDir, 'vite.config.js']),
+    anyFile([projectDir, 'next.config.ts'], [projectDir, 'next.config.js'], [projectDir, 'next.config.mjs']),
+    anyFile([projectDir, 'svelte.config.js'], [projectDir, 'svelte.config.ts']),
+    anyFile([projectDir, 'astro.config.mjs'], [projectDir, 'astro.config.ts']),
+    anyFile([projectDir, 'tailwind.config.ts'], [projectDir, 'tailwind.config.js']),
     fileExists(projectDir, 'turbo.json'),
     fileExists(projectDir, 'Dockerfile'),
     fileExists(projectDir, 'go.mod'),
