@@ -1,3 +1,4 @@
+// fallow-ignore-file unused-file — loaded by vitest globalSetup, not imported
 /**
  * AIMock record/replay global setup.
  *

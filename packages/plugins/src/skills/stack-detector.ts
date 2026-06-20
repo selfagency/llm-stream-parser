@@ -142,41 +142,26 @@ function collectLanguages(checks: FileChecks): string[] {
   return languages;
 }
 
+interface SkillRule {
+  readonly condition: (c: FileChecks) => boolean;
+  readonly skills: readonly string[];
+}
+
+const SKILL_RULES: readonly SkillRule[] = [
+  { condition: c => c.hasPackageJson || c.hasPnpmWorkspace, skills: ['typescript', 'testing', 'code-quality'] },
+  { condition: c => c.hasPnpmWorkspace || c.hasTurboJson, skills: ['pnpm', 'turborepo'] },
+  { condition: c => c.hasViteConfig, skills: ['vite'] },
+  { condition: c => c.hasNextConfig, skills: ['nextjs'] },
+  { condition: c => c.hasSvelteConfig, skills: ['sveltekit'] },
+  { condition: c => c.hasAstroConfig, skills: ['astro'] },
+  { condition: c => c.hasTailwindConfig, skills: ['tailwind-css'] },
+  { condition: c => c.hasDockerfile, skills: ['docker'] },
+  { condition: c => c.hasGoMod, skills: ['go-development'] },
+  { condition: c => c.hasCargoToml, skills: ['rust-development'] }
+];
+
 function collectSkills(checks: FileChecks): string[] {
-  const skills: string[] = [];
-
-  if (checks.hasPackageJson || checks.hasPnpmWorkspace) {
-    skills.push('typescript', 'testing', 'code-quality');
-  }
-  if (checks.hasPnpmWorkspace || checks.hasTurboJson) {
-    skills.push('pnpm', 'turborepo');
-  }
-  if (checks.hasViteConfig) {
-    skills.push('vite');
-  }
-  if (checks.hasNextConfig) {
-    skills.push('nextjs');
-  }
-  if (checks.hasSvelteConfig) {
-    skills.push('sveltekit');
-  }
-  if (checks.hasAstroConfig) {
-    skills.push('astro');
-  }
-  if (checks.hasTailwindConfig) {
-    skills.push('tailwind-css');
-  }
-  if (checks.hasDockerfile) {
-    skills.push('docker');
-  }
-  if (checks.hasGoMod) {
-    skills.push('go-development');
-  }
-  if (checks.hasCargoToml) {
-    skills.push('rust-development');
-  }
-
-  return skills;
+  return SKILL_RULES.flatMap(rule => (rule.condition(checks) ? rule.skills : []));
 }
 
 // ── Detector ────────────────────────────────────────────
