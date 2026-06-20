@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+// fallow-ignore-next-line unresolved-import — tsconfig resolves .ts files
 import { DependencyScanner } from './dependency.js';
 
 describe('DependencyScanner', () => {

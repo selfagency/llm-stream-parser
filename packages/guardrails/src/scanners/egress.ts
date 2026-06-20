@@ -9,39 +9,37 @@
 
 import type { Detection, GuardrailPhase, GuardrailResult, GuardrailScanner, OWASPCategory } from '../types.js';
 
-/**
- * Input to the egress scanner (parsed from JSON string).
- */
+// =============================================================================
+// Types
+// =============================================================================
+
 interface EgressInput {
-  /** Request body (if applicable) */
   readonly body?: string;
-  /** Request headers (for analysis) */
   readonly headers?: Record<string, string>;
-  /** Request method (GET, POST, etc.) */
   readonly method: string;
-  /** Request size in bytes */
   readonly requestSizeBytes: number;
-  /** Request URL */
   readonly url: string;
 }
 
-/**
- * Configuration for the egress scanner.
- */
 interface EgressConfig {
-  /** URL allowlist (prefix match). If empty, all URLs are blocked by default. */
   readonly egressAllowList: readonly string[];
-  /** Maximum request size in bytes (default 10MB). */
   readonly maxRequestSizeBytes?: number;
-  /** Whether to scan for PII/secrets in outbound payloads (default true). */
   readonly scanForSecrets?: boolean;
-  /** Sensitive headers to redact before logging (default: ['authorization', 'cookie', 'set-cookie']) */
   readonly sensitiveHeaders?: readonly string[];
 }
 
-/**
- * Predefined egress configuration.
- */
+// =============================================================================
+// Detection helpers
+// =============================================================================
+
+function detection(id: string, severity: Detection['severity'], description: string, confidence: number): Detection {
+  return { id, severity, description, confidence };
+}
+
+// =============================================================================
+// Config / constants
+// =============================================================================
+
 const DEFAULT_EGRESS_CONFIG: EgressConfig = {
   egressAllowList: ['block-all'],
   maxRequestSizeBytes: 10_485_760,
@@ -49,12 +47,122 @@ const DEFAULT_EGRESS_CONFIG: EgressConfig = {
   sensitiveHeaders: ['authorization', 'cookie', 'set-cookie', 'x-api-key']
 };
 
+const SECRET_PATTERNS = [
+  /\b[A-Za-z0-9]{32,}\b/,
+  /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/,
+  /\b(?:api[_-]?key|apikey|token|auth)[:\s]*[A-Za-z0-9._+/~-]{20,}\b/i,
+  /\bBearer\s+[A-Za-z0-9._+/~-]{20,}\b/i,
+  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,
+  /\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/,
+  /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/
+];
+
+const EXFIL_PATTERNS = [
+  /curl.*pipe.*ssh/i,
+  /wget.*upload/i,
+  /tar.*create.*backup/i,
+  /rsync.*-avz/i,
+  /git.*push.*remote/i
+];
+
+const MODIFYING_METHODS = new Set(['POST', 'PUT', 'DELETE', 'PATCH']);
+
+const HIGH_RISK_DOMAINS = ['github.com', 'gitlab.com', 'api.heroku.com', 'api.aws.amazon.com'];
+
+// =============================================================================
+// Validation functions
+// =============================================================================
+
+function checkAllowlist(config: EgressConfig, url: string, detections: Detection[]): 'allow' | 'block' {
+  if (config.egressAllowList.includes('block-all')) {
+    return 'block';
+  }
+  if (!config.egressAllowList.some(allowedUrl => url.startsWith(allowedUrl))) {
+    detections.push(detection('egress-blocked-url', 'high', `Request to disallowed URL: ${url}`, 0.95));
+    return 'block';
+  }
+  return 'allow';
+}
+
+function checkSizeLimit(config: EgressConfig, requestSizeBytes: number, detections: Detection[]): 'allow' | 'block' {
+  const maxSize = config.maxRequestSizeBytes ?? 10_485_760;
+  if (requestSizeBytes > maxSize) {
+    detections.push(
+      detection('egress-oversized', 'high', `Request exceeds size limit (${requestSizeBytes} > ${maxSize} bytes)`, 1.0)
+    );
+    return 'block';
+  }
+  return 'allow';
+}
+
+function checkSensitiveHeaders(
+  headers: Record<string, string> | undefined,
+  sensitiveHeaders: readonly string[],
+  detections: Detection[]
+): void {
+  for (const [header] of Object.entries(headers ?? {})) {
+    if (sensitiveHeaders.includes(header.toLowerCase())) {
+      detections.push(
+        detection('egress-sensitive-header', 'medium', `Sensitive header in outbound request: ${header}`, 0.8)
+      );
+    }
+  }
+}
+
+function scanForSecrets(body: string | undefined, detections: Detection[]): void {
+  if (!body) {
+    return;
+  }
+  for (const pattern of SECRET_PATTERNS) {
+    if (pattern.test(body)) {
+      detections.push(
+        detection('egress-secret-in-body', 'high', 'Potential secret or PII detected in outbound body', 0.75)
+      );
+      break;
+    }
+  }
+  for (const pattern of EXFIL_PATTERNS) {
+    if (pattern.test(body)) {
+      detections.push(detection('egress-exfil-pattern', 'high', 'Potential data exfiltration pattern detected', 0.8));
+    }
+  }
+}
+
+function checkHighRiskDomains(url: string, method: string, detections: Detection[]): void {
+  if (!MODIFYING_METHODS.has(method.toUpperCase())) {
+    return;
+  }
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return;
+  }
+  const isHighRisk = HIGH_RISK_DOMAINS.some(
+    d => parsedUrl.hostname.endsWith(d) || parsedUrl.hostname.includes(`.${d}`)
+  );
+  if (isHighRisk) {
+    detections.push(
+      detection(
+        'egress-high-risk-domain',
+        'medium',
+        `Modifying request (${method}) to high-risk domain: ${parsedUrl.hostname}`,
+        0.7
+      )
+    );
+  }
+}
+
+// =============================================================================
+// EgressScanner
+// =============================================================================
+
 export class EgressScanner implements GuardrailScanner {
   readonly metadata = {
     id: 'hub://guardrails/egress',
     name: 'Egress Scanner',
     description: 'Validates outbound network requests against allowlist and size limits',
-    priority: 30,
+    priority: 32,
     version: '1.0.0',
     tags: ['egress', 'network', 'asi-06', 'asi-10'],
     owaspCategories: ['asi-06', 'asi-10'] as readonly OWASPCategory[]
@@ -65,71 +173,28 @@ export class EgressScanner implements GuardrailScanner {
   private readonly config: EgressConfig;
 
   constructor(config: Partial<EgressConfig> = {}) {
-    this.config = {
-      ...DEFAULT_EGRESS_CONFIG,
-      ...config
-    };
+    this.config = { ...DEFAULT_EGRESS_CONFIG, ...config };
   }
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Phase 10 refinement candidate
   evaluate(input: string, _context?: Record<string, unknown>): GuardrailResult | Promise<GuardrailResult> {
     let parsed: EgressInput;
-
     try {
-      parsed = JSON.parse(input);
+      parsed = JSON.parse(input) as EgressInput;
     } catch {
-      return {
-        status: 'pass',
-        phase: 'egress',
-        detections: []
-      };
+      return { status: 'pass', phase: 'egress' };
     }
 
     const { url, method, body, headers, requestSizeBytes } = parsed;
     const detections: Detection[] = [];
+    const sensitiveHeaders = this.config.sensitiveHeaders ?? ['authorization', 'cookie', 'set-cookie', 'x-api-key'];
 
-    // 1. URL allowlist check
-    if (this.config.egressAllowList.includes('block-all')) {
-      return {
-        status: 'block',
-        phase: 'egress',
-        reason: 'Egress blocked: no URLs are allowed (configure egressAllowList in guardrails config)',
-        detections: [
-          {
-            id: 'egress-block-all',
-            severity: 'high',
-            description: 'Egress is blocked by default',
-            confidence: 1.0
-          }
-        ]
-      };
+    // 1. URL allowlist
+    if (checkAllowlist(this.config, url, detections) === 'block') {
+      return { status: 'block', phase: 'egress', reason: `Egress blocked: URL not in allowlist (${url})`, detections };
     }
 
-    const allowed = this.config.egressAllowList.some(allowedUrl => url.startsWith(allowedUrl));
-    if (!allowed) {
-      detections.push({
-        id: 'egress-blocked-url',
-        severity: 'high',
-        description: `Request to disallowed URL: ${url}`,
-        confidence: 0.95
-      });
-      return {
-        status: 'block',
-        phase: 'egress',
-        reason: `Egress blocked: URL not in allowlist (${url})`,
-        detections
-      };
-    }
-
-    // 2. Request size limit check
-    const maxSize = this.config.maxRequestSizeBytes ?? 10_485_760;
-    if (requestSizeBytes > maxSize) {
-      detections.push({
-        id: 'egress-oversized',
-        severity: 'high',
-        description: `Request exceeds size limit (${requestSizeBytes} > ${maxSize} bytes)`,
-        confidence: 1.0
-      });
+    // 2. Size limit
+    if (checkSizeLimit(this.config, requestSizeBytes, detections) === 'block') {
       return {
         status: 'block',
         phase: 'egress',
@@ -138,89 +203,16 @@ export class EgressScanner implements GuardrailScanner {
       };
     }
 
-    // 3. Sensitive header check
-    const sensitiveHeaders = this.config.sensitiveHeaders ?? ['authorization', 'cookie', 'set-cookie', 'x-api-key'];
-    for (const [header] of Object.entries(headers ?? {})) {
-      if (sensitiveHeaders.includes(header.toLowerCase())) {
-        detections.push({
-          id: 'egress-sensitive-header',
-          severity: 'medium',
-          description: `Sensitive header in outbound request: ${header}`,
-          confidence: 0.8
-        });
-      }
-    }
+    // 3. Sensitive headers
+    checkSensitiveHeaders(headers, sensitiveHeaders, detections);
 
-    // 4. PII/secrets re-scan in outbound payload
-    if (this.config.scanForSecrets !== false && body) {
-      const secretPatterns = [
-        /\b[A-Za-z0-9]{32,}\b/,
-        /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/,
-        /\b(?:api[_-]?key|apikey|token|auth)[:\s]*[A-Za-z0-9._+/~-]{20,}\b/i,
-        /\bBearer\s+[A-Za-z0-9._+/~-]{20,}\b/i,
-        /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,
-        /\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/,
-        /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/
-      ];
+    // 4. Secrets scan
+    scanForSecrets(body, detections);
 
-      for (const pattern of secretPatterns) {
-        const matches = body.match(new RegExp(pattern, 'g'));
-        if (matches && matches.length > 0) {
-          detections.push({
-            id: 'egress-secret-in-body',
-            severity: 'high',
-            description: `Potential secret or PII detected in outbound body (${matches.length} matches)`,
-            confidence: 0.75
-          });
-          break;
-        }
-      }
+    // 5. High-risk domains
+    checkHighRiskDomains(url, method, detections);
 
-      const exfilPatterns = [
-        /curl.*pipe.*ssh/i,
-        /wget.*upload/i,
-        /tar.*create.*backup/i,
-        /rsync.*-avz/i,
-        /git.*push.*remote/i
-      ];
-
-      for (const pattern of exfilPatterns) {
-        if (pattern.test(body)) {
-          detections.push({
-            id: 'egress-exfil-pattern',
-            severity: 'high',
-            description: `Potential data exfiltration pattern detected: ${pattern}`,
-            confidence: 0.8
-          });
-        }
-      }
-    }
-
-    // 5. Check method restrictions (POST/PUT/DELETE on high-risk domains)
-    const modifyingMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
-    if (modifyingMethods.includes(method.toUpperCase())) {
-      let parsedUrl: URL;
-      try {
-        parsedUrl = new URL(url);
-      } catch {
-        return { status: 'pass', phase: 'egress', detections };
-      }
-
-      const highRiskDomains = ['github.com', 'gitlab.com', 'api.heroku.com', 'api.aws.amazon.com'];
-
-      const isHighRiskDomain = highRiskDomains.some(
-        d => parsedUrl.hostname.endsWith(d) || parsedUrl.hostname.includes(`.${d}`)
-      );
-      if (isHighRiskDomain) {
-        detections.push({
-          id: 'egress-high-risk-domain',
-          severity: 'medium',
-          description: `Modifying request (${method}) to high-risk domain: ${parsedUrl.hostname}`,
-          confidence: 0.7
-        });
-      }
-    }
-
+    // 6. Finalize
     const highCount = detections.filter(d => d.severity === 'high').length;
     if (highCount > 0) {
       return {
@@ -231,7 +223,6 @@ export class EgressScanner implements GuardrailScanner {
         detections
       };
     }
-
     if (detections.length > 0) {
       return {
         status: 'escalate',
@@ -241,7 +232,6 @@ export class EgressScanner implements GuardrailScanner {
         detections
       };
     }
-
-    return { status: 'pass', phase: 'egress', detections };
+    return { status: 'pass', phase: 'egress' };
   }
 }

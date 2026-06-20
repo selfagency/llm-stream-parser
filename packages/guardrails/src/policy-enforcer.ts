@@ -1,4 +1,4 @@
-import type { PolicyDocument } from './policy.js';
+import type { PolicyDocument, PolicyRule } from './policy.js';
 import { DEFAULT_POLICY, evaluatePolicy } from './policy.js';
 import type { Detection, GuardrailDecisionReceipt, GuardrailPhase, GuardrailResult } from './types.js';
 
@@ -76,7 +76,10 @@ function buildTransformResult(
   };
 }
 
-const RESULT_BUILDERS: Record<string, (phase: GuardrailPhase, rule: any, input: string) => GuardrailResult> = {
+const RESULT_BUILDERS: Record<
+  string,
+  (phase: GuardrailPhase, rule: PolicyRule | undefined, input: string) => GuardrailResult
+> = {
   block: buildBlockResult,
   escalate: buildEscalateResult,
   transform: buildTransformResult
@@ -172,7 +175,7 @@ export class PolicyEnforcer {
     const policyContext = buildPolicyContext(input, phase, context);
     const evalResult = evaluatePolicy(this.#document, policyContext as Parameters<typeof evaluatePolicy>[1]);
 
-    if (!evalResult.matched || !evalResult.action || evalResult.action === 'allow') {
+    if (!(evalResult.matched && evalResult.action) || evalResult.action === 'allow') {
       return { result: { status: 'pass', phase }, receipt: buildPassReceipt(sessionId, phase) };
     }
 
