@@ -153,6 +153,19 @@ function buildPolicyContext(
 }
 
 // =============================================================================
+// Safe lookup helper (Semgrep object-injection safe)
+// =============================================================================
+
+function safeLookup<T>(map: Record<string, T>, key: string, fallback: T): T {
+  // nosemgrep: key is from evaluatePolicy's typed return, not user input
+  if (Object.hasOwn(map, key)) {
+    // nosemgrep
+    return map[key] as T;
+  }
+  return fallback;
+}
+
+// =============================================================================
 // PolicyEnforcer
 // =============================================================================
 
@@ -179,20 +192,29 @@ export class PolicyEnforcer {
       return { result: { status: 'pass', phase }, receipt: buildPassReceipt(sessionId, phase) };
     }
 
-    const status = ACTION_TO_STATUS[evalResult.action] ?? 'pass';
-    const riskTier = ACTION_TO_RISK_TIER[evalResult.action] ?? 'low';
+    return this.#buildPolicyResult(evalResult.action, phase, sessionId, evalResult.rule, input);
+  }
+
+  #buildPolicyResult(
+    action: string,
+    phase: GuardrailPhase,
+    sessionId: string,
+    rule: PolicyRule | undefined,
+    input: string
+  ): { result: GuardrailResult; receipt: GuardrailDecisionReceipt } {
+    const status = safeLookup(ACTION_TO_STATUS, action, 'pass');
+    const riskTier = safeLookup(ACTION_TO_RISK_TIER, action, 'low');
     const builder = RESULT_BUILDERS[status];
-    const result = builder ? builder(phase, evalResult.rule, input) : { status: 'pass' as const, phase };
+    const result = builder ? builder(phase, rule, input) : { status: 'pass' as const, phase };
     const receipt = buildReceipt(
       result.status,
-      evalResult.action,
+      action,
       riskTier,
       phase,
       sessionId,
-      evalResult.rule?.name,
+      rule?.name,
       result.detections ?? []
     );
-
     return { result, receipt };
   }
 }
