@@ -65,32 +65,25 @@ export function resolveScopedSkills(
   projectRoot?: string,
   globalRoot?: string
 ): ScopedSkill[] {
-  const globalNames = new Set(globalSkills.map(s => s.name));
-  const result: ScopedSkill[] = [];
+  const projectNames = new Set(projectSkills.map(s => s.name));
 
-  for (const skill of projectSkills) {
-    result.push({
-      ...skill,
-      scope: 'project',
-      source: 'local',
-      filePath: projectRoot ?? ''
-    });
-    globalNames.delete(skill.name);
-  }
+  const projectScoped: ScopedSkill[] = projectSkills.map(skill => ({
+    ...skill,
+    scope: 'project' as const,
+    source: 'local' as const,
+    filePath: projectRoot ?? ''
+  }));
 
-  for (const skill of globalSkills) {
-    if (!globalNames.has(skill.name)) {
-      continue;
-    }
-    result.push({
+  const globalScoped: ScopedSkill[] = globalSkills
+    .filter(skill => !projectNames.has(skill.name))
+    .map(skill => ({
       ...skill,
-      scope: 'global',
-      source: 'local',
+      scope: 'global' as const,
+      source: 'local' as const,
       filePath: globalRoot ?? ''
-    });
-  }
+    }));
 
-  return result;
+  return [...projectScoped, ...globalScoped];
 }
 
 /**

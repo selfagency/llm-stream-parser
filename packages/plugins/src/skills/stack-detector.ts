@@ -19,6 +19,20 @@ export interface StackProfile {
   readonly recommendedSkills: readonly string[];
 }
 
+interface FileChecks {
+  hasAstroConfig: boolean;
+  hasCargoToml: boolean;
+  hasDockerfile: boolean;
+  hasGoMod: boolean;
+  hasNextConfig: boolean;
+  hasPackageJson: boolean;
+  hasPnpmWorkspace: boolean;
+  hasSvelteConfig: boolean;
+  hasTailwindConfig: boolean;
+  hasTurboJson: boolean;
+  hasViteConfig: boolean;
+}
+
 // ── File check helper ──────────────────────────────────
 
 async function fileExists(...parts: string[]): Promise<boolean> {
@@ -30,16 +44,11 @@ async function fileExists(...parts: string[]): Promise<boolean> {
   }
 }
 
-// ── Detector ────────────────────────────────────────────
+// ── File checks ─────────────────────────────────────────
 
-/**
- * Detect project stack and return recommended skill IDs.
- */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: 9 framework detections in one function — splitting would duplicate file-check logic
-export async function detectStack(projectDir: string): Promise<StackProfile> {
+async function checkFiles(projectDir: string): Promise<FileChecks> {
   const [
     hasPnpmWorkspace,
-    _hasTsconfig,
     hasViteConfig,
     hasNextConfig,
     hasSvelteConfig,
@@ -52,7 +61,6 @@ export async function detectStack(projectDir: string): Promise<StackProfile> {
     hasPackageJson
   ] = await Promise.all([
     fileExists(projectDir, 'pnpm-workspace.yaml'),
-    fileExists(projectDir, 'tsconfig.json'),
     fileExists(projectDir, 'vite.config.ts') || fileExists(projectDir, 'vite.config.js'),
     fileExists(projectDir, 'next.config.ts') ||
       fileExists(projectDir, 'next.config.js') ||
@@ -67,80 +75,123 @@ export async function detectStack(projectDir: string): Promise<StackProfile> {
     fileExists(projectDir, 'package.json')
   ]);
 
+  return {
+    hasPnpmWorkspace,
+    hasViteConfig,
+    hasNextConfig,
+    hasSvelteConfig,
+    hasAstroConfig,
+    hasTailwindConfig,
+    hasTurboJson,
+    hasDockerfile,
+    hasGoMod,
+    hasCargoToml,
+    hasPackageJson
+  };
+}
+
+// ── Framework detection ─────────────────────────────────
+
+function detectFramework(checks: FileChecks): string {
+  if (checks.hasNextConfig) {
+    return 'nextjs';
+  }
+  if (checks.hasSvelteConfig) {
+    return 'sveltekit';
+  }
+  if (checks.hasAstroConfig) {
+    return 'astro';
+  }
+  if (checks.hasViteConfig) {
+    return 'vite';
+  }
+  if (checks.hasPackageJson) {
+    return 'node';
+  }
+  if (checks.hasGoMod) {
+    return 'go';
+  }
+  if (checks.hasCargoToml) {
+    return 'rust';
+  }
+  return 'unknown';
+}
+
+function detectPackageManager(checks: FileChecks): string | undefined {
+  if (checks.hasPnpmWorkspace) {
+    return 'pnpm';
+  }
+  if (checks.hasPackageJson) {
+    return 'npm';
+  }
+}
+
+// ── Skill recommendations ──────────────────────────────
+
+function collectLanguages(checks: FileChecks): string[] {
   const languages: string[] = [];
-  const recommendedSkills: string[] = [];
-
-  if (hasPackageJson || hasPnpmWorkspace) {
+  if (checks.hasPackageJson || checks.hasPnpmWorkspace) {
     languages.push('typescript', 'javascript');
-    recommendedSkills.push('typescript', 'testing', 'code-quality');
   }
-
-  if (hasPnpmWorkspace || hasTurboJson) {
-    recommendedSkills.push('pnpm', 'turborepo');
-  }
-
-  if (hasViteConfig) {
-    recommendedSkills.push('vite');
-  }
-
-  if (hasNextConfig) {
-    recommendedSkills.push('nextjs');
-  }
-
-  if (hasSvelteConfig) {
-    recommendedSkills.push('sveltekit');
-  }
-
-  if (hasAstroConfig) {
-    recommendedSkills.push('astro');
-  }
-
-  if (hasTailwindConfig) {
-    recommendedSkills.push('tailwind-css');
-  }
-
-  if (hasDockerfile) {
-    recommendedSkills.push('docker');
-  }
-
-  if (hasGoMod) {
+  if (checks.hasGoMod) {
     languages.push('go');
-    recommendedSkills.push('go-development');
   }
-
-  if (hasCargoToml) {
+  if (checks.hasCargoToml) {
     languages.push('rust');
-    recommendedSkills.push('rust-development');
+  }
+  return languages;
+}
+
+function collectSkills(checks: FileChecks): string[] {
+  const skills: string[] = [];
+
+  if (checks.hasPackageJson || checks.hasPnpmWorkspace) {
+    skills.push('typescript', 'testing', 'code-quality');
+  }
+  if (checks.hasPnpmWorkspace || checks.hasTurboJson) {
+    skills.push('pnpm', 'turborepo');
+  }
+  if (checks.hasViteConfig) {
+    skills.push('vite');
+  }
+  if (checks.hasNextConfig) {
+    skills.push('nextjs');
+  }
+  if (checks.hasSvelteConfig) {
+    skills.push('sveltekit');
+  }
+  if (checks.hasAstroConfig) {
+    skills.push('astro');
+  }
+  if (checks.hasTailwindConfig) {
+    skills.push('tailwind-css');
+  }
+  if (checks.hasDockerfile) {
+    skills.push('docker');
+  }
+  if (checks.hasGoMod) {
+    skills.push('go-development');
+  }
+  if (checks.hasCargoToml) {
+    skills.push('rust-development');
   }
 
-  let framework = 'unknown';
-  if (hasNextConfig) {
-    framework = 'nextjs';
-  } else if (hasSvelteConfig) {
-    framework = 'sveltekit';
-  } else if (hasAstroConfig) {
-    framework = 'astro';
-  } else if (hasViteConfig) {
-    framework = 'vite';
-  } else if (hasPackageJson) {
-    framework = 'node';
-  } else if (hasGoMod) {
-    framework = 'go';
-  } else if (hasCargoToml) {
-    framework = 'rust';
-  }
+  return skills;
+}
 
-  let packageManager: string | undefined;
-  if (hasPnpmWorkspace) {
-    packageManager = 'pnpm';
-  } else if (hasPackageJson) {
-    packageManager = 'npm';
-  }
+// ── Detector ────────────────────────────────────────────
+
+/**
+ * Detect project stack and return recommended skill IDs.
+ */
+export async function detectStack(projectDir: string): Promise<StackProfile> {
+  const checks = await checkFiles(projectDir);
+  const pm = detectPackageManager(checks);
 
   return {
-    framework,
-    languages,
-    ...(packageManager ? { packageManager } : {}),
-    recommendedSkills
+    framework: detectFramework(checks),
+    languages: collectLanguages(checks),
+    ...(pm ? { packageManager: pm } : {}),
+    recommendedSkills: collectSkills(checks)
   };
 }

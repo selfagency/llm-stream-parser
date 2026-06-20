@@ -1,6 +1,7 @@
+import { describe, expect, it } from 'vitest';
 import { isSkillShadowed, resolveScopedSkills } from './scope.js';
 
-describe('SkillScopeManager', () => {
+describe('resolveScopedSkills', () => {
   const projectSkill = { name: 'typescript', description: 'TS skill', path: '/project/.agents' } as const;
   const globalSkill = { name: 'docker', description: 'Docker skill', path: '/home/user/.agents' } as const;
 
