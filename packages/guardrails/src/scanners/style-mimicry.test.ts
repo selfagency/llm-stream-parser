@@ -141,7 +141,7 @@ describe('StyleMimicryScanner', () => {
 
     it('has correct metadata', () => {
       expect(scanner.metadata.id).toBe('hub://guardrails/style-mimicry');
-      expect(scanner.metadata.priority).toBe(45);
+      expect(scanner.metadata.priority).toBe(41);
     });
   });
 });

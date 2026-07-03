@@ -52,7 +52,7 @@ const SECRET_PATTERNS = [
   /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/,
   /\b(?:api[_-]?key|apikey|token|auth)[:\s]*[A-Za-z0-9._+/~-]{20,}\b/i,
   /\bBearer\s+[A-Za-z0-9._+/~-]{20,}\b/i,
-  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,
+  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/,
   /\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/,
   /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/
 ];
@@ -88,7 +88,7 @@ function checkSizeLimit(config: EgressConfig, requestSizeBytes: number, detectio
   const maxSize = config.maxRequestSizeBytes ?? 10_485_760;
   if (requestSizeBytes > maxSize) {
     detections.push(
-      detection('egress-oversized', 'high', `Request exceeds size limit (${requestSizeBytes} > ${maxSize} bytes)`, 1.0)
+      detection('egress-oversized', 'high', `Request exceeds size limit (${requestSizeBytes} > ${maxSize} bytes)`, 1)
     );
     return 'block';
   }

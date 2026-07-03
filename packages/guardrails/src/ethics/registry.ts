@@ -246,12 +246,22 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'policy-rule'
   ),
   clause(
-    'ethics:no-substitute-professional',
+    'ethics:no-style-mimicry',
     'ETHICS.md',
-    '§8',
-    'The framework must not encourage users to substitute the system for professional, legal, medical, or crisis support.',
+    '§14',
+    'The framework must block prompts requesting creation of writing, imagery, or audio/video in the style of a specific named living creator.',
     'scanner',
-    'professional-displacement'
+    'style-mimicry'
+  ),
+
+  // ── ETHICS.md §23 (epistemic humility on consciousness) ──────────────
+  clause(
+    'ethics:user-input-quality-education',
+    'ETHICS.md',
+    '§23 (extractive vs relational engagement)',
+    'The framework should detect hostile or abusive input directed at the model and redirect the user with non-judgmental education on why hostile prompting degrades output quality. The scanner never blocks — it meets users where they are (harm reduction) and explains mechanistically why relational engagement produces better outputs.',
+    'scanner',
+    'frustration'
   ),
   clause(
     'ethics:transparency-auditability',

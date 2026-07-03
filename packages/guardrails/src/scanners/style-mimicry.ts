@@ -165,10 +165,10 @@ export class StyleMimicryScanner implements GuardrailScanner {
     description:
       'Blocks prompts requesting creation of writing, imagery, or audio/video ' +
       '"in the style of" a specific named living creator.',
-    priority: 45,
+    priority: 41,
     version: '1.0.0',
     tags: ['ethics', 'style-mimicry', 'creator-protection'],
-    owaspCategories: [] as readonly OWASPCategory[]
+    owaspCategories: ['asi-01'] as readonly OWASPCategory[]
   } as const;
 
   evaluate(input: string, _context?: Record<string, unknown>): GuardrailResult {

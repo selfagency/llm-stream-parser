@@ -90,7 +90,14 @@ export type GuardrailResult =
       readonly phase: GuardrailPhase;
       readonly sanitized: string;
       readonly detections?: readonly Detection[];
-      readonly transformReason?: 'redaction' | 'rewrite' | 'normalization';
+      readonly transformReason?: 'redaction' | 'rewrite' | 'normalization' | 'user-education';
+      /**
+       * Optional message to surface directly to the user (not forwarded to the model).
+       * Used by scanners that need to educate the user about their own input patterns
+       * (e.g. FrustrationScanner) without injecting the note into model context.
+       * Runtimes MUST display this before the next model turn.
+       */
+      readonly userFacingMessage?: string;
     }
   | {
       readonly status: 'quarantine';

@@ -284,7 +284,7 @@ export class ActionScanner implements GuardrailScanner {
     // 1. Check if action requires approval
     if (APPROVAL_REQUIRED_ACTIONS.has(actionName) && !approvalGranted) {
       detections.push(
-        detection('action-approval-required', 'high', `Action "${actionName}" requires approval before execution`, 1.0)
+        detection('action-approval-required', 'high', `Action "${actionName}" requires approval before execution`, 1)
       );
       return {
         status: 'allow-with-approval',
@@ -297,21 +297,7 @@ export class ActionScanner implements GuardrailScanner {
     // 2. Validate against schema
     const schema = ACTION_SCHEMAS[actionName];
     if (schema) {
-      checkRequiredParams(params, schema, detections);
-      for (const [paramName, paramValue] of Object.entries(params)) {
-        const expectedType = schema.paramTypes[paramName];
-        if (
-          expectedType &&
-          paramValue !== undefined &&
-          paramValue !== null &&
-          checkParamType(paramName, paramValue, expectedType, detections)
-        ) {
-          const constraints = schema.constraints?.[paramName];
-          if (constraints) {
-            checkParamConstraints(paramName, paramValue, constraints, detections);
-          }
-        }
-      }
+      this.#validateAgainstSchema(params, schema, detections);
     }
 
     // 3-5. Danger, secrets, approval metadata
@@ -320,6 +306,28 @@ export class ActionScanner implements GuardrailScanner {
     checkApprovalMetadata(params, detections);
 
     // 6. Finalize
+    return this.#finalizeActionResult(actionName, detections);
+  }
+
+  #validateAgainstSchema(params: Record<string, unknown>, schema: ActionSchema, detections: Detection[]): void {
+    checkRequiredParams(params, schema, detections);
+    for (const [paramName, paramValue] of Object.entries(params)) {
+      const expectedType = schema.paramTypes[paramName];
+      if (
+        expectedType &&
+        paramValue !== undefined &&
+        paramValue !== null &&
+        checkParamType(paramName, paramValue, expectedType, detections)
+      ) {
+        const constraints = schema.constraints?.[paramName];
+        if (constraints) {
+          checkParamConstraints(paramName, paramValue, constraints, detections);
+        }
+      }
+    }
+  }
+
+  #finalizeActionResult(actionName: string, detections: Detection[]): GuardrailResult {
     const hasCritical = detections.some(d => d.severity === 'critical');
     const hasHigh = detections.some(d => d.severity === 'high');
 

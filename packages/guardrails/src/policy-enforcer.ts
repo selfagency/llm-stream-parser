@@ -45,7 +45,7 @@ function buildBlockResult(
     status: 'block',
     phase,
     reason: `Policy denied: ${rule?.name ?? 'unknown'} — ${rule?.description ?? ''}`,
-    detections: [makeDetection('policy-deny', rule?.severity as 'critical' | undefined, rule?.description, 1.0)]
+    detections: [makeDetection('policy-deny', rule?.severity as 'critical' | undefined, rule?.description, 1)]
   };
 }
 

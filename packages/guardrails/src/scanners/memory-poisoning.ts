@@ -69,7 +69,7 @@ const INSTRUCTION_MARKERS = [
 
 const SECRET_PATTERNS = [
   /\b(?:password|passphrase|secret|api[_-]?key|access[_-]?token|refresh[_-]?token|auth[_-]?token)[:\s]+[A-Za-z0-9._+/~-]{10,}\b/i,
-  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,
+  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/,
   /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/,
   /\b[A-Za-z0-9/+]{32,}=?={0,2}\b/
 ];
