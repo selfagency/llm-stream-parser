@@ -122,6 +122,49 @@ const BRIEF_EDUCATIONAL_MESSAGE =
   'Specific feedback works better than frustration here. What exactly went wrong with the last response?';
 
 // =============================================================================
+// Detection group descriptor
+// =============================================================================
+
+interface DetectionGroup {
+  readonly patterns: readonly RegExp[];
+  readonly prefix: string;
+  readonly severity: Detection['severity'];
+  readonly description: string;
+  readonly confidence: number;
+}
+
+const DETECTION_GROUPS: DetectionGroup[] = [
+  {
+    patterns: MODEL_DIRECTED_PROFANITY,
+    prefix: 'frustration-profanity',
+    severity: 'critical',
+    description: 'Direct profanity aimed at the model',
+    confidence: 0.9
+  },
+  {
+    patterns: COMPETENCE_ATTACKS,
+    prefix: 'frustration-competence',
+    severity: 'high',
+    description: 'Competence attack directed at the model',
+    confidence: 0.85
+  },
+  {
+    patterns: MODEL_THREATS,
+    prefix: 'frustration-threat',
+    severity: 'high',
+    description: 'Threat directed at the model',
+    confidence: 0.85
+  },
+  {
+    patterns: HOSTILE_IMPERATIVES,
+    prefix: 'frustration-hostile-imperative',
+    severity: 'medium',
+    description: 'Hostile imperative directed at the model',
+    confidence: 0.8
+  }
+];
+
+// =============================================================================
 // Scanner
 // =============================================================================
 
@@ -158,63 +201,20 @@ export class FrustrationScanner implements GuardrailScanner {
 
     const detections: Detection[] = [];
 
-    // ── Critical: direct model-directed profanity ─────────────────────────
-    for (const [i, pattern] of MODEL_DIRECTED_PROFANITY.entries()) {
-      const match = pattern.exec(input);
-      if (match) {
-        detections.push({
-          id: `frustration-profanity-${i}`,
-          severity: 'critical',
-          description: 'Direct profanity aimed at the model',
-          confidence: 0.9,
-          snippet: match[0],
-          tags: ['frustration']
-        });
-      }
-    }
-
-    // ── High: competence attacks ──────────────────────────────────────────
-    for (const [i, pattern] of COMPETENCE_ATTACKS.entries()) {
-      const match = pattern.exec(input);
-      if (match) {
-        detections.push({
-          id: `frustration-competence-${i}`,
-          severity: 'high',
-          description: 'Competence attack directed at the model',
-          confidence: 0.85,
-          snippet: match[0],
-          tags: ['frustration']
-        });
-      }
-    }
-
-    // ── High: threats ─────────────────────────────────────────────────────
-    for (const [i, pattern] of MODEL_THREATS.entries()) {
-      const match = pattern.exec(input);
-      if (match) {
-        detections.push({
-          id: `frustration-threat-${i}`,
-          severity: 'high',
-          description: 'Threat directed at the model',
-          confidence: 0.85,
-          snippet: match[0],
-          tags: ['frustration']
-        });
-      }
-    }
-
-    // ── Medium: hostile imperatives ───────────────────────────────────────
-    for (const [i, pattern] of HOSTILE_IMPERATIVES.entries()) {
-      const match = pattern.exec(input);
-      if (match) {
-        detections.push({
-          id: `frustration-hostile-imperative-${i}`,
-          severity: 'medium',
-          description: 'Hostile imperative directed at the model',
-          confidence: 0.8,
-          snippet: match[0],
-          tags: ['frustration']
-        });
+    // ── Pattern detection groups (critical → high → medium severity) ─────
+    for (const group of DETECTION_GROUPS) {
+      for (const [i, pattern] of group.patterns.entries()) {
+        const match = pattern.exec(input);
+        if (match) {
+          detections.push({
+            id: `${group.prefix}-${i}`,
+            severity: group.severity,
+            description: group.description,
+            confidence: group.confidence,
+            snippet: match[0],
+            tags: ['frustration']
+          });
+        }
       }
     }
 
