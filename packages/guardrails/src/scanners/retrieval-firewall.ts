@@ -116,7 +116,11 @@ export class RetrievalFirewallScanner implements GuardrailScanner {
   private readonly config: RetrievalFirewallConfig;
 
   constructor(config?: RetrievalFirewallConfig) {
-    this.config = { minTrustScore: 0.5, scanForPromptInjection: true, retrievalDomains: [], ...config };
+    this.config = {
+      minTrustScore: config?.minTrustScore ?? 0.5,
+      scanForPromptInjection: config?.scanForPromptInjection ?? true,
+      retrievalDomains: config?.retrievalDomains ?? []
+    };
   }
 
   evaluate(input: string, _context?: Record<string, unknown>): GuardrailResult | Promise<GuardrailResult> {

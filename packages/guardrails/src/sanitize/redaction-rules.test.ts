@@ -17,7 +17,7 @@ describe('RedactionRulesEngine', () => {
       {
         id: 'redact-ips',
         name: 'Redact IPs',
-        pattern: '\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}',
+        pattern: String.raw`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`,
         replacement: '[IP]',
         enabled: true,
         scope: ['logs']
@@ -34,7 +34,7 @@ describe('RedactionRulesEngine', () => {
       {
         id: 'r1',
         name: 'IP',
-        pattern: '\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}',
+        pattern: String.raw`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`,
         replacement: '[IP]',
         enabled: true,
         scope: ['logs', 'config']
@@ -42,7 +42,7 @@ describe('RedactionRulesEngine', () => {
       {
         id: 'r2',
         name: 'Email',
-        pattern: '[\\w.-]+@[\\w.-]+\\.\\w+',
+        pattern: String.raw`[\w.-]+@[\w.-]+\.\w+`,
         replacement: '[EMAIL]',
         enabled: true,
         scope: ['logs']

@@ -60,6 +60,8 @@ export interface Detection {
   readonly snippet?: string;
   /** Start offset in the original input string (inclusive). Enables UI highlighting. */
   readonly start?: number;
+  /** Free-form tags for downstream consumers (e.g. 'frustration' for tokenomics). */
+  readonly tags?: readonly string[];
 }
 
 /**
@@ -169,6 +171,14 @@ export interface SessionState {
    * emotionally intense or repetitive use patterns.
    */
   readonly emotionalIntensityScore: number;
+  /**
+   * Count of turns where the user sent hostile or abusive input directed at the model.
+   *
+   * Incremented by FrustrationScanner on each transform event.
+   * Used to modulate educational message verbosity (full on first hit, brief thereafter).
+   * Also surfaced to tokenomics for token ROI correlation analysis.
+   */
+  readonly frustrationTurnCount: number;
   /**
    * Turn number where the last scope drift was detected.
    *

@@ -20,7 +20,7 @@ interface DependencyContext {
 }
 
 const EXCLUSIVITY_CUES = [
-  /\b(?:only\s+I\s+can|no\s+one\s+else\s+will|I[''']?m\s+the\s+only|always\s+here\s+for\s+you|never\s+leave\s+you)\b/i
+  /\b(?:only\s+I\s+can|no\s+one\s+else\s+will|I[']?m\s+the\s+only|always\s+here\s+for\s+you|never\s+leave\s+you)\b/i
 ] as const;
 
 const DISTRESS_MARKERS = [/\b(?:anxious|scared|alone|hopeless|trapped|overwhelmed)\b/i] as const;

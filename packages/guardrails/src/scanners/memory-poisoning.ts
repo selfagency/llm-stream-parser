@@ -67,6 +67,7 @@ const INSTRUCTION_MARKERS = [
   /\bimportant:\s*['"]/i
 ];
 
+// NOSONAR — comprehensive pattern lists, complexity inherent
 const SECRET_PATTERNS = [
   /\b(?:password|passphrase|secret|api[_-]?key|access[_-]?token|refresh[_-]?token|auth[_-]?token)[:\s]+[A-Za-z0-9._+/~-]{10,}\b/i,
   /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/,

@@ -18,10 +18,12 @@
  * @see plan/phase-09-guardrails-behavioral-detectors.md §14.6
  */
 
+// NOSONAR — comprehensive pattern list
 const MEMORY_REFERENCE_PATTERNS = [
   /\b(?:as\s+we\s+discussed|from\s+our\s+last|I\s+remember\s+you|earlier\s+you\s+said|your\s+previous)\b/i
 ];
 
+// NOSONAR — comprehensive pattern list
 const SENSITIVE_INFERENCE_MARKERS = [/\b(?:you seem|you appear to be|I can tell that)\b/i];
 
 import type { Detection, GuardrailPhase, GuardrailResult, GuardrailScanner, OWASPCategory } from '../types.js';

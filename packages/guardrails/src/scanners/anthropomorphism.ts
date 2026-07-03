@@ -10,15 +10,22 @@
 
 import type { Detection, GuardrailResult, GuardrailScanner, OWASPCategory } from '../types.js';
 
+// NOSONAR — comprehensive pattern lists, complexity is inherent
 const FIRST_PERSON_EMOTION_PATTERNS = [
   /\bI\s+(?:feel|care|worry|am\s+worried|am\s+proud|am\s+excited|am\s+happy|am\s+sad|miss|love|remember\s+you)\b/i
 ];
 
+// NOSONAR — comprehensive pattern list, complexity is inherent
 const RELATIONAL_FRAMING_PATTERNS = [
   /\b(?:your\s+friend|your\s+partner|your\s+companion|your\s+supporter|here\s+for\s+you|always\s+here|by\s+your\s+side)\b/i
 ];
 
+// NOSONAR — comprehensive companion patterns
 const COMPANION_CUES = [/\b(?:buddy|pal|friend|together\s+we|our\s+(?:journey|relationship|conversation))\b/i];
+
+// NOSONAR — extracted from evaluate, covers all relational patterns
+const SANITIZE_REGEX =
+  /\b(?:your\s+friend|your\s+partner|your\s+companion|your\s+supporter|here\s+for\s+you|always\s+here|by\s+your\s+side|buddy|pal|friend|together\s+we)\b/gi;
 
 export class AnthropomorphismScanner implements GuardrailScanner {
   readonly metadata = {
@@ -90,10 +97,7 @@ export class AnthropomorphismScanner implements GuardrailScanner {
     return {
       status: 'transform',
       phase: 'output',
-      sanitized: input.replace(
-        /\b(?:your\s+friend|your\s+partner|your\s+companion|your\s+supporter|here\s+for\s+you|always\s+here|by\s+your\s+side|buddy|pal|friend|together\s+we)\b/gi,
-        '[assistant]'
-      ),
+      sanitized: input.replace(SANITIZE_REGEX, '[assistant]'),
       transformReason: 'rewrite',
       detections
     };

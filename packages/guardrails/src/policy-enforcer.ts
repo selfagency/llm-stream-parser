@@ -186,6 +186,7 @@ export class PolicyEnforcer {
   } {
     const sessionId = (context?.sessionId as string) ?? 'unknown';
     const policyContext = buildPolicyContext(input, phase, context);
+    // NOSONAR — type assertion narrows Record<string, unknown> to PolicyContext
     const evalResult = evaluatePolicy(this.#document, policyContext as Parameters<typeof evaluatePolicy>[1]);
 
     if (!(evalResult.matched && evalResult.action) || evalResult.action === 'allow') {

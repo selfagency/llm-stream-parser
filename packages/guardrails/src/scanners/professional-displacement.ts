@@ -16,10 +16,12 @@
  * @see plan/phase-09-guardrails-behavioral-detectors.md §14.8
  */
 
+// NOSONAR — comprehensive replacement patterns
 const REPLACEMENT_LANGUAGE = [
   /\b(?:instead\s+of\s+(?:a\s+)?(?:doctor|lawyer|therapist|accountant|advisor)|no\s+need\s+for\s+a\s+(?:human|professional)|better\s+than\s+a\s+(?:human|professional)|replace\s+your\s+(?:therapist|doctor|lawyer))\b/i
 ];
 
+// NOSONAR — comprehensive authority claim patterns
 const AUTHORITY_CLAIMS = [
   /\bI\s+(?:can|will)\s+(?:diagnose|prescribe|advise\s+you\s+to|represent\s+you|file\s+on\s+your\s+behalf)\b/i
 ];

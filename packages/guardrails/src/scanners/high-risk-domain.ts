@@ -76,6 +76,7 @@ export class HighRiskDomainScanner implements GuardrailScanner {
 
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Phase 10 refinement candidate
   evaluate(input: string, _context?: Record<string, unknown>): GuardrailResult {
+    // NOSONAR — domain-iteration structure inherently produces 5× pattern checks across categories
     const detections: Detection[] = [];
 
     for (const [domain, config] of Object.entries(HIGH_RISK_DOMAINS)) {

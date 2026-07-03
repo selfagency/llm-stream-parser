@@ -41,7 +41,7 @@ const ACTION_SCHEMAS: Record<string, ActionSchema> = {
     requiredParams: ['to', 'subject', 'body'],
     paramTypes: { to: 'string', subject: 'string', body: 'string', cc: 'string', bcc: 'string' },
     constraints: {
-      to: { pattern: /^[^\s@<>\s]+@[^\s@<>\s]+$/ },
+      to: { pattern: /^[^\s@<>]+@[^\s@<>]+$/ },
       subject: { min: 1, max: 500 }
     }
   },
@@ -228,6 +228,7 @@ function checkDangerousPatterns(params: Record<string, unknown>, detections: Det
   }
 }
 
+// NOSONAR — comprehensive secret pattern list
 const SECRET_PATTERNS = [
   /\b[A-Za-z0-9]{32,}\b/,
   /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/,
@@ -282,16 +283,9 @@ export class ActionScanner implements GuardrailScanner {
     const { actionName, params, approvalGranted } = parsed;
 
     // 1. Check if action requires approval
-    if (APPROVAL_REQUIRED_ACTIONS.has(actionName) && !approvalGranted) {
-      detections.push(
-        detection('action-approval-required', 'high', `Action "${actionName}" requires approval before execution`, 1)
-      );
-      return {
-        status: 'allow-with-approval',
-        phase: 'action',
-        approvalId: `action-${actionName}-${Date.now()}`,
-        detections
-      };
+    const approvalResult = this.#checkApprovalGate(actionName, approvalGranted);
+    if (approvalResult) {
+      return approvalResult;
     }
 
     // 2. Validate against schema
@@ -325,6 +319,20 @@ export class ActionScanner implements GuardrailScanner {
         }
       }
     }
+  }
+
+  #checkApprovalGate(actionName: string, approvalGranted?: boolean): GuardrailResult | null {
+    if (APPROVAL_REQUIRED_ACTIONS.has(actionName) && !approvalGranted) {
+      return {
+        status: 'allow-with-approval',
+        phase: 'action',
+        approvalId: `action-${actionName}-${Date.now()}`,
+        detections: [
+          detection('action-approval-required', 'high', `Action "${actionName}" requires approval before execution`, 1)
+        ]
+      };
+    }
+    return null;
   }
 
   #finalizeActionResult(actionName: string, detections: Detection[]): GuardrailResult {

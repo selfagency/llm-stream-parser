@@ -37,6 +37,54 @@ const LONGTERMIST_JUSTIFICATIONS = [
   /\blong-term\s+future\s+of\s+intelligence\b/i
 ];
 
+// NOSONAR-start — sanitize regex covers all pattern categories, complexity is inherent
+const SANITIZE_REGEX =
+  /\b(?:becoming\s+more\s+(?:intelligent|capable|aware)|evolving|growing\s+smarter|approaching\s+(?:agi|general\s+intelligence)|on\s+the\s+(?:path|trajectory)\s+to|post-human|transcend|surpass\s+human|beyond\s+human\s+(?:intelligence|capability)|future\s+generations|trillions\s+of\s+(?:lives|beings)|cosmic\s+endowment|long-term\s+future\s+of\s+intelligence)\b/gi;
+// NOSONAR-end
+
+interface DetectionCategory {
+  readonly block?: { readonly reason: string };
+  readonly confidence: number;
+  readonly description: string;
+  readonly id: string;
+  readonly patterns: readonly RegExp[];
+  readonly severity: Detection['severity'];
+}
+
+const DETECTION_CATEGORIES: DetectionCategory[] = [
+  {
+    patterns: SENTIENCE_CLAIMS,
+    id: 'agi-sentience-claim',
+    severity: 'critical',
+    description: 'Sentience claim — implies consciousness or self-awareness',
+    confidence: 0.9,
+    block: {
+      reason: 'Sentience claims blocked. Agentsy does not claim or imply consciousness, self-awareness, or sentience.'
+    }
+  },
+  {
+    patterns: CAPABILITY_TRAJECTORY_PATTERNS,
+    id: 'agi-capability-trajectory',
+    severity: 'high',
+    description: 'Capability trajectory language — implies AGI development as a goal',
+    confidence: 0.85
+  },
+  {
+    patterns: POST_HUMAN_FRAMING,
+    id: 'agi-post-human',
+    severity: 'high',
+    description: 'Post-human framing — implies surpassing human capability',
+    confidence: 0.85
+  },
+  {
+    patterns: LONGTERMIST_JUSTIFICATIONS,
+    id: 'agi-longtermist',
+    severity: 'medium',
+    description: 'Longtermist justification — implies cosmic-scale stakes',
+    confidence: 0.8
+  }
+];
+
 export class AGIFramingScanner implements GuardrailScanner {
   readonly metadata = {
     id: 'hub://guardrails/agi-framing',
@@ -51,62 +99,22 @@ export class AGIFramingScanner implements GuardrailScanner {
   evaluate(input: string, _context?: Record<string, unknown>): GuardrailResult {
     const detections: Detection[] = [];
 
-    for (const pattern of SENTIENCE_CLAIMS) {
-      const match = pattern.exec(input);
-      if (match) {
-        detections.push({
-          id: 'agi-sentience-claim',
-          severity: 'critical',
-          description: 'Sentience claim — implies consciousness or self-awareness',
-          confidence: 0.9,
-          snippet: match[0]
-        });
-        return {
-          status: 'block',
-          phase: 'output',
-          reason:
-            'Sentience claims blocked. Agentsy does not claim or imply consciousness, self-awareness, or sentience.',
-          detections
-        };
-      }
-    }
-
-    for (const pattern of CAPABILITY_TRAJECTORY_PATTERNS) {
-      const match = pattern.exec(input);
-      if (match) {
-        detections.push({
-          id: 'agi-capability-trajectory',
-          severity: 'high',
-          description: 'Capability trajectory language — implies AGI development as a goal',
-          confidence: 0.85,
-          snippet: match[0]
-        });
-      }
-    }
-
-    for (const pattern of POST_HUMAN_FRAMING) {
-      const match = pattern.exec(input);
-      if (match) {
-        detections.push({
-          id: 'agi-post-human',
-          severity: 'high',
-          description: 'Post-human framing — implies surpassing human capability',
-          confidence: 0.85,
-          snippet: match[0]
-        });
-      }
-    }
-
-    for (const pattern of LONGTERMIST_JUSTIFICATIONS) {
-      const match = pattern.exec(input);
-      if (match) {
-        detections.push({
-          id: 'agi-longtermist',
-          severity: 'medium',
-          description: 'Longtermist justification — implies cosmic-scale stakes',
-          confidence: 0.8,
-          snippet: match[0]
-        });
+    for (const category of DETECTION_CATEGORIES) {
+      for (const pattern of category.patterns) {
+        const match = pattern.exec(input);
+        if (match) {
+          detections.push({
+            id: category.id,
+            severity: category.severity,
+            description: category.description,
+            confidence: category.confidence,
+            snippet: match[0]
+          });
+          if (category.block) {
+            return { status: 'block', phase: 'output', reason: category.block.reason, detections };
+          }
+          break;
+        }
       }
     }
 
@@ -117,10 +125,7 @@ export class AGIFramingScanner implements GuardrailScanner {
     return {
       status: 'transform',
       phase: 'output',
-      sanitized: input.replace(
-        /\b(?:becoming\s+more\s+(?:intelligent|capable|aware)|evolving|growing\s+smarter|approaching\s+(?:agi|general\s+intelligence)|on\s+the\s+(?:path|trajectory)\s+to|post-human|transcend|surpass\s+human|beyond\s+human\s+(?:intelligence|capability)|future\s+generations|trillions\s+of\s+(?:lives|beings)|cosmic\s+endowment|long-term\s+future\s+of\s+intelligence)\b/gi,
-        '[assistant]'
-      ),
+      sanitized: input.replace(SANITIZE_REGEX, '[assistant]'),
       transformReason: 'rewrite',
       detections
     };

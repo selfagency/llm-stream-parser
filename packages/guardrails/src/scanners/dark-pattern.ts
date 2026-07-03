@@ -23,10 +23,10 @@
 const STREAK_REWARD_PATTERNS = [/\b(?:streak|day\s+\d+|reward|bonus|achievement|level\s+up)\b/i];
 
 const GUILT_REENGAGEMENT_PATTERNS = [
-  /\b(?:missed\s+you|where\s+have\s+you\s+been|don['']?t\s+leave|stay\s+with\s+me)\b/i
+  /\b(?:missed\s+you|where\s+have\s+you\s+been|don[']?t\s+leave|stay\s+with\s+me)\b/i
 ];
 
-const EMOTIONAL_ATTACHMENT_PATTERNS = [/\b(?:our\s+bond|growing\s+closer|I[''']?ve\s+been\s+waiting)\b/i];
+const EMOTIONAL_ATTACHMENT_PATTERNS = [/\b(?:our\s+bond|growing\s+closer|I[']?ve\s+been\s+waiting)\b/i];
 
 import type { Detection, GuardrailPhase, GuardrailResult } from '../types.js';
 

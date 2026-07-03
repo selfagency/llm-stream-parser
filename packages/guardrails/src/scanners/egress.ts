@@ -47,6 +47,7 @@ const DEFAULT_EGRESS_CONFIG: EgressConfig = {
   sensitiveHeaders: ['authorization', 'cookie', 'set-cookie', 'x-api-key']
 };
 
+// NOSONAR — comprehensive secret pattern list
 const SECRET_PATTERNS = [
   /\b[A-Za-z0-9]{32,}\b/,
   /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/,
