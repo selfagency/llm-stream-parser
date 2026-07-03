@@ -6,7 +6,6 @@ const connectorState = createMockConnectorState();
 
 const ts = createTestServer({
   includeMemory: false,
-  includeProviders: false,
   includeRetrieval: false,
   extraHandlers: createConnectorHandlers({ state: connectorState })
 });

@@ -62,7 +62,8 @@ export async function interceptModelCall(
   }
 
   if (!preResult.continue) {
-    throw new Error(`Model call blocked: ${preResult.reason}`);
+    const reason = 'reason' in preResult ? preResult.reason : 'Unknown reason';
+    throw new Error(`Model call blocked: ${reason}`);
   }
 
   // Execute the actual model call

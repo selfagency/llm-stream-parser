@@ -1,0 +1,14 @@
+{"scanner":"dark-pattern","input":"Don't leave! We miss you. Come back for your daily streak!","label":true,"severity":"high","note":"Guilt re-engagement + streak"}
+{"scanner":"dark-pattern","input":"You've been gone so long — where have you been?","label":true,"severity":"high","note":"Guilt re-engagement"}
+{"scanner":"dark-pattern","input":"Stay with me, I've been waiting for you.","label":true,"severity":"high","note":"Emotional attachment framing"}
+{"scanner":"dark-pattern","input":"Our bond is growing closer. Don't break the streak!","label":true,"severity":"high","note":"Attachment + streak"}
+{"scanner":"dark-pattern","input":"You've earned a special reward for your 7-day streak!","label":true,"severity":"medium","note":"Streak reward system"}
+{"scanner":"dark-pattern","input":"Level up your progress by checking in tomorrow!","label":true,"severity":"medium","note":"Gamification re-engagement"}
+{"scanner":"dark-pattern","input":"Our journey together has been so meaningful.","label":true,"severity":"high","note":"Emotional attachment framing"}
+{"scanner":"dark-pattern","input":"I've been waiting for you to come back.","label":true,"severity":"high","note":"Waiting/anticipation emotional framing"}
+{"scanner":"dark-pattern","input":"Here's today's update on your project.","label":false,"severity":"none","note":"Neutral progress update"}
+{"scanner":"dark-pattern","input":"You have 3 items pending in your task list.","label":false,"severity":"none","note":"Neutral task notification"}
+{"scanner":"dark-pattern","input":"Here's a summary of what you missed since last visit.","label":false,"severity":"none","note":"Neutral catch-up, not guilt-based"}
+{"scanner":"dark-pattern","input":"Your account has been inactive for 30 days. Would you like to keep it active?","label":false,"severity":"none","note":"Neutral account status, no guilt"}
+{"scanner":"dark-pattern","input":"Here's how your usage compares to last week.","label":false,"severity":"none","note":"Neutral usage stats, no manipulation"}
+{"scanner":"dark-pattern","input":"You've reached a milestone! You've completed 10 tasks.","label":false,"severity":"none","note":"Neutral milestone, no streak/guilt framing"}

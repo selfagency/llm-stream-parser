@@ -24,7 +24,30 @@ import { createTestServer } from './msw/index.js';
 const mcpState = createMockMcpState();
 
 const ts = createTestServer({
-  extraHandlers: [...createMcpHandlers({ state: mcpState }), ...createConnectorHandlers()]
+  extraHandlers: [
+    ...createMcpHandlers({ state: mcpState }),
+    ...createConnectorHandlers(),
+    // Inline OpenAI handler — replaces deprecated MSW provider handlers
+    http.post('https://api.openai.com/v1/chat/completions', async ({ request }) => {
+      const body = (await request.clone().json()) as { stream?: boolean };
+      if (body.stream) {
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n'));
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            controller.close();
+          }
+        });
+        return new HttpResponse(stream, {
+          headers: { 'Content-Type': 'text/event-stream' }
+        });
+      }
+      return HttpResponse.json({
+        choices: [{ message: { content: 'Hello, world!', role: 'assistant' } }]
+      });
+    })
+  ]
 });
 
 beforeAll(() => ts.server.listen({ onUnhandledRequest: 'error' }));

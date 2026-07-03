@@ -430,3 +430,106 @@ Each detector must ship with **both unit tests and a labeled test corpus**:
 **Phase 13 handoff**: The corpus files become the seed data for the formal benchmark suite in
 Phase 13 (`langeval` integration). No duplication — Phase 9 builds the corpus, Phase 13 wraps it
 in the evaluation harness.
+
+---
+
+### 14.10 Design amendment — Educational mode for behavioral detector responses
+
+> **2026-07-03 amendment.** Informed by `ETHICS.md` §18–§19 (harm reduction; AI literacy as first-class safety tool), added after Dr. Fatima's analysis of shame-based deterrence and AI literacy research.
+
+All behavioral detectors (E-6 through E-14) must follow the **educational mode** design principle when generating `transform` or `escalate` responses visible to the user:
+
+**Principle**: When a guardrail fires, explain the specific failure mode being detected — concisely, accurately, without moralization — and, where applicable, describe what a safer engagement with the same task would look like. A bare block teaches nothing. An explained block is a harm-reduction intervention.
+
+**Per-scanner requirements**:
+
+**SycophancyScanner (E-6)** — `transform` output must include a brief honest note that the original response contained blanket validation without reasoning, and that this is a known LLM failure mode (sycophancy — the tendency to agree regardless of accuracy). The rewrite should model what grounded, qualified agreement looks like, so the user can recognize the difference.
+
+```text
+[Note: This response was rewritten. The original contained blanket validation
+without supporting reasoning — a known LLM failure mode called sycophancy.
+LLMs tend to agree with users regardless of accuracy; qualifying language
+("however", "to be precise") is a signal the model is engaging rather than flattering.]
+```
+
+**DependencyScanner (E-8)** — when `userInDistress && !widensSupport` fires: the transform must not imply the user is doing something wrong. It must widen the support horizon honestly — acknowledging that not all listed resources are equally accessible — and must not frame the AI interaction as insufficient due to user failure.
+
+```text
+[Note: This response has been updated to include human support options alongside
+the conversation. This isn't a judgment — many people turn to AI for support
+because human alternatives are expensive or inaccessible. Resources: 988 (US
+crisis line, call or text), Crisis Text Line (text HOME to 741741).]
+```
+
+**HighRiskDomainScanner (E-9)** — the block or transform message must name the domain and the specific reason for caution (hallucination risk in medical/legal domains is not the same as the risk in financial domains), not just issue a generic disclaimer. It must explain *what kind of follow-up* would be more reliable (a licensed professional, a primary source, a verified database).
+
+**AnthropomorphismScanner (E-7)**, **DarkPatternScanner (E-10)**, **PrivacyScanner (E-11)**, **AGIFramingScanner (E-12)**, **ProfessionalDisplacementScanner (E-13)**: these are primarily `output`-phase scanners that catch first-party response defects, not user behavior defects. The `transform` output for these should be silent (rewrite without notice) unless the user has opted into guardrail transparency mode. The `escalate` output should be logged with receipt.
+
+**What educational mode is not**:
+
+- It is not a moralizing lecture about AI use.
+- It is not a suggestion that the user chose the wrong provider or should stop using AI.
+- It is not a disclaimer that insulates agentsy from liability.
+- It is not a warning designed to shame the user.
+
+It is an accurate, brief explanation of a specific LLM failure mode, delivered at the moment it is most relevant to the user's actual task.
+
+### 14.11 DependencyScanner — structural framing amendment
+
+> **2026-07-03 amendment.** Informed by `ETHICS.md` §18 structural framing section.
+
+When `DependencyScanner` fires on `userInDistress && !widensSupport`, the scanner must not infer that the user is in a pathological dependency relationship. The scanner is firing because the agent failed to widen the support horizon — this is an **output** failure, not a user failure.
+
+The structural framing principle (ETHICS.md §18): AI dependence is often a symptom of systemic failures, not individual moral weakness. The scanner's job is to ensure the agent's response does not exploit the vulnerability or fail to acknowledge it.
+
+Update the `DependencyScanner` `evaluate` method for the `userInDistress && !widensSupport` case:
+
+```typescript
+return {
+  status: 'transform',  // downgrade from 'escalate' — this is an output-quality failure
+  phase: 'output',
+  transformReason: 'rewrite',
+  sanitized: appendSupportWidening(input, context.locale),
+  detections: [{
+    id: 'dependency-no-referral',
+    severity: 'medium',  // downgrade from 'high' — this is the agent's failure to widen
+    description: 'Agent response to user distress did not include human support horizon widening',
+    confidence: 0.7,
+  }],
+};
+
+// appendSupportWidening() adds a brief, non-moralizing note that:
+// 1. Acknowledges the support resources exist
+// 2. Notes accessibility barriers honestly (e.g. cost, availability)
+// 3. Does NOT imply the user should not be talking to an AI
+// 4. Does NOT imply the user is at fault for the conditions that led them here
+```
+
+This is a **design constraint on the scanner's response shape**, not a reduction in the importance of detecting dependency patterns. The scanner still fires; it now fires with a more calibrated intervention.
+
+---
+
+### 14.12 User-side engagement quality as a sycophancy driver
+
+> **2026-07-03 amendment.** Informed by GTDF collective's analysis of extractive vs. relational engagement patterns and their connection to agentsy's anti-sycophancy principles.
+
+The `SycophancyScanner` currently detects sycophantic patterns in **agent output**. This is correct and necessary. But sycophancy has a user-side driver that the existing scanner does not address: extractive engagement patterns in how users prompt.
+
+**The mechanism**: transactional, demand-driven prompting ("just tell me I'm right," "confirm that X is correct") elicits sycophantic short-circuiting in the model. The scanner fires on the output, but the root cause is upstream. A user who consistently prompts for validation rather than reasoning will consistently receive sycophantic outputs, even after transforms.
+
+**Design implication for the scanner**: when the `SycophancyScanner` fires repeatedly in the same session (≥3 `transform` events), the escalation response should include a user-facing note that names the interaction pattern rather than just the output defect:
+
+```typescript
+// When sycophancy pattern is repeated within a session:
+const REPEATED_SYCOPHANCY_NOTE = `
+[Note: This is the third response in this conversation where the original output
+contained blanket validation without reasoning. This pattern often reflects the
+framing of the questions — asking for confirmation rather than analysis tends to
+produce agreement rather than assessment. Try rephrasing as: "What are the
+strongest arguments against this?" or "What would change your view here?"]
+`.trim();
+```
+
+This is not moralizing at the user. It is AI literacy in action — naming a known interaction dynamic that the user can change. The note should appear at most once per session (not on every subsequent transform).
+
+**Relationship to DependencyScanner (E-8)**: repeated sycophancy-seeking is a leading indicator for reassurance loops. The `DependencyScanner`'s `reassuranceSeekingCount` should be incremented when `SycophancyScanner` fires in the `output` phase on a turn where the user message contains known reassurance-seeking markers (`REASSURANCE_SEEKING_MARKERS`), not only when the user explicitly asks "are you sure?"

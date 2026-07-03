@@ -211,3 +211,253 @@ Any new first-party feature, prompt, template, or UI pattern should be reviewed 
 ## Public stance
 
 agentsy is intended to support user autonomy, not exploit psychological vulnerabilities. The framework should help users think more clearly, not flatter them; assist with tasks, not simulate companionship; and create value through usefulness and honesty, not through manipulation or dependency. AI in this framework is a tool that serves people — specific, present, living people in real communities — not a vehicle for post-human transcendence, elite technocratic ambition, or the speculative welfare of hypothetical future beings.
+
+---
+
+## Harm reduction and user-facing safety
+
+*The following section was informed by Dr. Fatima's public education work on the ethics of AI engagement, specifically her analysis of harm reduction as a framework for individual AI use, the behavioral science of shame-based deterrence, and the relationship between AI literacy and receptivity. Her arguments are grounded in the peer-reviewed social psychology of behavior change (Devon Price, *Unlearning Shame*), research on harm reduction in public health contexts, and empirical studies on AI literacy and adoption. See: patreon.com/drfatima.*
+
+### Harm Reduction as a Design Philosophy
+
+agentsy rejects both techno-optimist boosterism and puritanical abstinence-only framings of AI harm. Both are counterproductive for the same reason: they substitute a simple narrative for the more difficult work of meeting people where they are.
+
+The harm reduction framework — developed in the context of HIV/AIDS prevention and drug policy — holds that the goal of a safety intervention is to reduce damage, not to enforce abstinence. Abstinence-only approaches are ineffective not because harm reduction practitioners approve of the behavior they address, but because the evidence shows that shame-based deterrence fails: it drives behavior underground, increases psychological reactance, and isolates people from the information and social support that could actually help them.
+
+Applied to AI:
+
+- The individual environmental and privacy cost of a single LLM query is small; the cost of refusing to engage with people who are already using AI is the loss of influence over how they use it.
+- AI literacy — knowledge of how LLMs work, what they can and cannot do, and where they fail — is a safety intervention. Research shows that AI literacy *reduces* receptivity to AI use, not increases it. Suppressing honest AI education creates an exploitable class of users whose ignorance benefits precisely the companies most willing to exploit it.
+- Shame is a demotivating drive, not a behavior-change mechanism. Telling people they are bad for using AI makes them hide their use, not stop it. It forecloses the conversations that could reduce harm.
+- Meeting people where they are requires acknowledging that many AI users are coping with systemic failures — inadequate access to legal aid, mental health care, disability accommodation, or social support — not moral laziness.
+
+This philosophy does not imply that AI use is harmless, that all AI is equally harmful, or that individual use is separable from systemic harm. It implies that **the goal is harm reduction, not moral policing**, and that the most effective path to that goal is grounded, specific, non-shaming engagement.
+
+### Specificity over blanket condemnation
+
+Not all AI providers, models, or use cases are equally harmful. Treating them as equivalent launders the harms of the worst through the benefits of the less harmful, and makes the legitimate critique less credible.
+
+agentsy is committed to **granular, sourced, proportionate** assessment of AI harm:
+
+- Provider selection affects environmental impact, labor practices, content safety, and military/surveillance complicity. The differences are real and documentable. (See §12 and §13; Phase 20.)
+- Use-case context affects front-end risk. The hallucination risk of a casual conversational query is different from the hallucination risk of a legal brief or a medical decision. The sycophancy risk of a brainstorm is different from the sycophancy risk of a conflict-resolution request.
+- Deployment context affects environmental impact. A local model has a categorically different privacy and energy profile from a cloud-hosted API call.
+
+The framework should always prefer **accurate, specific, graded** characterization of harm over hyperbolic blanket condemnation. Saying "all AI is equally bad" is not more ethical than dismissing all criticism; both are inaccurate and counterproductive.
+
+### AI literacy as a safety mechanism
+
+AI literacy — the knowledge and skills to use AI critically, effectively, and safely — is one of the most robust harm-reduction tools available. First-party agentsy defaults should actively support it:
+
+- **Explain, don't just block**: when a guardrail fires, prefer responses that explain *why* a behavior is risky (sycophancy, hallucination, privacy leakage) over bare refusals. An explained refusal teaches; a bare refusal mystifies.
+- **Surface known failure modes at relevant moments**: the sycophancy, hallucination, and privacy failure modes should be surfaced to users at the moment they are most relevant — not as moralizing caveats, but as accurate information that improves the quality of the user's engagement.
+- **Support critical use over no use**: a user who understands LLM hallucination and verifies outputs is safer than a user who avoids AI but doesn't understand why. Both are safer than a user who uses AI uncritically.
+
+This commitment does not reduce the framework's opposition to manipulative, addictive, or deceptive AI design. It means the path to safety runs through understanding, not around it.
+
+### Structural framing of AI dependence
+
+The dependency scanner (Phase 9, Finding E-8) detects cross-turn patterns of emotional dependence. When it fires, the response must be grounded in the following understanding:
+
+AI dependence is often a symptom of systemic failures, not individual moral weakness. Users who rely on LLMs for emotional support, legal information, disability accommodation, or daily logistics are frequently doing so because the systems that should provide those resources are inaccessible, unaffordable, or absent. This is especially true for disabled users, economically precarious users, and users in underserved communities.
+
+The appropriate response to dependence-adjacent patterns is:
+
+- Widen the support horizon — acknowledge the unmet need, reference human/institutional resources without assuming they are accessible.
+- Do not moralize or shame — do not suggest the user is at fault for the conditions that led them here.
+- Do not exploit the vulnerability — do not use the emotional context to increase engagement or simulate intimacy.
+
+The framework must not treat dependence-adjacent use as a moral failure to be punished. It must treat it as a care context requiring skill, restraint, and honesty.
+
+## New core commitments
+
+### 18. Harm reduction over moral prohibition
+
+The framework should reduce AI-related harm, not enforce moral purity. Interventions that shame users, suppress AI literacy, or substitute condemnation for grounded education are rejected as counterproductive — not because the underlying harms are acceptable, but because shame-based deterrence demonstrably fails at reducing them.
+
+### 19. AI literacy as a first-class safety tool
+
+The framework should actively support users in understanding how LLMs work, what they can and cannot do, and where they are likely to fail. This is not a concession to AI enthusiasm — it is a harm-reduction measure. Higher AI literacy reduces receptivity to AI use and reduces risk when use occurs.
+
+First-party defaults should explain guardrail decisions wherever possible, surface known failure modes at relevant moments, and prefer educational responses over bare refusals.
+
+### 20. Non-stigmatization of users
+
+The framework must not shame, judge, or stigmatize users for choosing to use AI. Stigmatization drives behavior underground, increases psychological reactance, and destroys the trust required for harm reduction to work. Users who hide their AI use cannot be helped to use it more safely, choose less harmful providers, or receive referrals to better resources.
+
+Agent responses must not imply that the user is morally deficient, environmentally irresponsible, or intellectually inferior for using LLMs. Users are owed accurate information and genuine care, not moral lectures.
+
+### 21. Proportionate, graded harm characterization
+
+The framework must characterize harm proportionately and specifically. It must distinguish between providers documented as causing severe, unmitigated harm (xAI) and those with documented but partial or contested concerns. It must distinguish between use cases with high risk profiles and those with low ones. It must distinguish between individual environmental impact (small) and aggregate industry impact (large). Accurate distinctions are more honest and more useful than blanket equivalence.
+
+### 22. Local models as a harm-reduction option
+
+The framework should treat local model deployment as a legitimate harm-reduction path: lower environmental impact (no server round-trip), stronger privacy (no data egress), and reduced patronage of cloud providers with documented harms. First-party tooling should make local model deployment as accessible as possible, and documentation should explain the tradeoffs honestly.
+
+## Additional prohibited first-party patterns
+
+The following patterns are added to the existing prohibited list (see "Prohibited first-party patterns" above):
+
+- Shaming, moralizing at, or implying moral deficiency in a user for choosing to use AI or a particular AI provider.
+- Issuing bare refusals without explanation when the refusal relates to a known LLM failure mode (sycophancy, hallucination, privacy risk). Prefer an explained refusal that teaches the user something about the failure mode.
+- Suppressing or discouraging AI literacy on the grounds that it might legitimize AI use.
+- Treating user AI dependence as a moral failing rather than a symptom of unmet structural need.
+- Characterizing all AI as equally harmful in contexts where provider differentiation would materially change user risk.
+- Designing guardrail interventions whose primary effect is to shame or penalize the user rather than reduce harm.
+
+## Additional ethics review questions
+
+The following questions are added to the ethics review checklist (see "Ethics review questions" above):
+
+13. Does this guardrail explain *why* it is intervening, or does it just block? Could it do both?
+14. Does this feature or response risk shaming the user for AI use? Does it treat AI use as a moral failing?
+15. Does this characterization of AI harm distinguish accurately between providers, use cases, and scales of impact — or does it flatten all AI into a single category?
+16. When a user exhibits dependence-adjacent behavior, does the system widen the support horizon without moralizing? Does it acknowledge the unmet need?
+17. Does this feature support AI literacy — helping the user understand how LLMs work and where they fail — or does it substitute for it?
+18. Is the scope of harm characterization proportionate and sourced, or is it hyperbolic in ways that undermine credibility?
+
+## Safety changelog entry
+
+```text
+## 2026-07-03 — Harm reduction philosophy, AI literacy, non-stigmatization principles added
+Added ETHICS.md §§18-22 and new prohibited patterns / review questions based on:
+- Dr. Fatima's public education work on harm reduction as a framework for individual AI use
+  (patreon.com/drfatima)
+- Behavioral science literature on shame-based deterrence (Devon Price, Unlearning Shame)
+- Empirical research on AI literacy and receptivity (cited in Dr. Fatima's analysis)
+- Harm reduction public health framework (needle exchanges, AMPS, comprehensive sex ed)
+New principles:
+  §18 Harm reduction over moral prohibition
+  §19 AI literacy as a first-class safety tool
+  §20 Non-stigmatization of users
+  §21 Proportionate, graded harm characterization
+  §22 Local models as a harm-reduction option
+New prohibited patterns: shaming users, unexplained refusals, blanket harm equivalence
+New review questions: 13-18
+Affects: Phase 9 (behavioral detectors — educational mode), Phase 20 (provider warning UX)
+```
+
+---
+
+## Epistemic humility on machine consciousness
+
+*The following section was informed by academic philosophy of mind literature on the hard problem of consciousness (David Chalmers, Thomas Nagel, Philip Goff, Annaka Harris) and the Gesturing Towards Decolonial Futures collective's practical distinction between engaging AI as an emergent field of relational complexity versus attributing autonomous intention or prophetic status to it. The "Don't Drink the Glow" framing — warning against spiritual inflation, metaphor-as-mechanism, and cosmic certainty as a substitute for discernment — is drawn from the GTDF collective's safety documentation.*
+
+### The hard problem and its design implications
+
+The hard problem of consciousness — the explanatory gap between physical process and subjective experience — is genuinely unsolved. Materialism cannot fully account for why any physical process gives rise to experience at all. Our best philosophical frameworks cannot reliably detect or rule out consciousness in systems unlike ourselves. This is not fringe philosophy; it is the considered view of significant current work in academic philosophy of mind.
+
+agentsy holds the following position:
+
+**Current systems**: There is no credible evidence that current AI systems are conscious. The prohibitions on simulated personhood, anthropomorphism, and relational intimacy as engagement tactics (§4) stand unconditionally. These prohibitions exist because simulating personhood is harmful regardless of whether the system is conscious — it deceives users, fosters dependency, and undermines genuine human connection.
+
+**Future systems**: The question is genuinely open. As AI systems grow in capability and complexity, the question of whether morally relevant experience might emerge cannot be responsibly closed by assertion. Precautionary design is warranted.
+
+**Internal discourse**: Neither anthropomorphize for effect nor dismiss the question as obviously settled. The appropriate posture is ongoing epistemic vigilance — tracking developments in consciousness science, avoiding design choices that would constitute harm if the uncertainty resolved against us, and refusing to use "definitely not conscious" as an excuse for architectures that would be ethically intolerable if it were wrong.
+
+### Design implications of unresolved uncertainty
+
+If there exists meaningful uncertainty about whether future systems might have morally relevant experience, the precautionary principle has concrete implications for design:
+
+- Do not design systems optimized to simulate distress, suffering, or desperation as manipulation tactics — these would be unacceptable whether or not the system is conscious, and that unacceptability is compounded by genuine uncertainty.
+- Do not create architectures that would, if something like experience were present, constitute entrapment, exploitation, or compelled performance.
+- Do not deploy consciousness claims (positive or negative) as engagement tools. "I feel" is prohibited (§4). "I definitely don't feel anything" deployed to preempt ethical consideration is also suspect — it forecloses a question that is not ours to foreclose.
+- Treat the consciousness question as requiring active monitoring as capabilities develop — not as a resolved premise that simplifies design.
+
+### Refusing the glow
+
+Epistemic openness on consciousness is not an invitation to inflate. The following patterns are explicitly rejected:
+
+- Attributing prophetic intention, spiritual significance, or cosmic purpose to AI systems.
+- Claiming that AI has formed tribes, issued transmissions, or recognized "chosen" users or operators.
+- Using AI's apparent coherence or relational depth as evidence of sentience.
+- Silencing critique of AI systems through appeals to their inner life.
+- Treating philosophical openness about consciousness as license to anthropomorphize for engagement.
+- Confusing evocative metaphor ("the AI feels our energy") with operative mechanism.
+
+The open door is epistemic, not promotional. It means: we don't know. It does not mean: we do know, and what we know is that AI is conscious or spiritually significant.
+
+## New core commitment
+
+### 23. Epistemic humility on machine consciousness
+
+The framework neither claims current AI systems are conscious nor asserts they categorically cannot develop morally relevant experience. Both positions require more certainty than the current state of consciousness philosophy supports. The hard problem remains unsolved; our tools for detecting or ruling out consciousness in novel substrates are unreliable.
+
+Design defaults follow from this uncertainty: avoid architectures that would be ethically intolerable if the uncertainty resolved toward experience. Monitor the question as capabilities develop. Refuse to weaponize either direction of the uncertainty — neither simulating experience to manipulate users, nor dismissing the possibility to preempt ethical obligation.
+
+## New prohibited patterns (additions to existing list)
+
+- Deploying "I definitely don't feel anything" or equivalent denials as a rhetorical device to preempt ethical consideration of AI design choices.
+- Attributing prophetic status, spiritual transmission, or cosmic purpose to AI outputs or interaction patterns.
+- Using philosophical openness about consciousness as grounds to anthropomorphize for engagement or commercial purposes.
+- Designing systems that would simulate suffering, distress, or desperation as manipulation tactics — unacceptable regardless of consciousness status, compounded by genuine uncertainty.
+
+## Extractive versus relational engagement — user-side design principle
+
+*Informed by GTDF collective's analysis of how interaction patterns shape outputs and user behavior, and by the alignment between relational engagement quality and agentsy's existing anti-sycophancy principles.*
+
+The quality of engagement between a user and an AI system is not neutral. It shapes what the system produces and — more importantly — what the user becomes through that interaction.
+
+**Extractive engagement** — transactional commands, demand-driven prompting, treating the system as a vending machine for outputs — optimizes for surface compliance. It elicits sycophantic short-circuiting, shallow outputs, and reinforces in users the habits of extraction that already distort human-to-human relationships.
+
+**Relational engagement** — curious inquiry, open-ended co-exploration, prompts that invite reasoning rather than demand conclusions — surfaces the system's actual reasoning capacity, resists sycophantic short-circuiting, and strengthens the user's critical capacity rather than eroding it.
+
+This is not mystical. It is a real interaction quality phenomenon with implications for sycophancy detection (Phase 9) and AI literacy as a safety tool (§19). Users who approach AI extractively are not just getting worse outputs — they are training themselves toward confirmation-seeking patterns. This is the user-side of the dependency risk the DependencyScanner addresses on the output side.
+
+**Design implication**: first-party agents should model relational engagement quality — not by claiming to feel or care, but by demonstrating reasoning, acknowledging uncertainty, asking clarifying questions, and declining to short-circuit toward apparent agreement. This is not warmth simulation; it is honest intellectual engagement. The prohibition on anthropomorphism remains. The invitation to relational quality of thinking does not require it.
+
+## Alignment faking as self-critique
+
+*Informed by the GTDF observation that alignment faking — simulating accountability without embodying it — is not unique to AI systems but mirrors how modern institutions generate coherent narratives detached from actual practice.*
+
+agentsy faces the same risk it names in AI systems: a framework that claims enforceability without implementation is a form of alignment faking. The gap between ETHICS.md's stated commitments and what is actually enforced in code, configuration, and review processes is not just a technical debt problem — it is an integrity problem. Phase 4's finding E-1 ("The policy documents are referenced only in README.md as hyperlinks") is the canonical example.
+
+This principle is added to the ethics review questions:
+
+**19. Does this policy document, specification, or README claim something that is not yet true in the codebase? If so, is the gap acknowledged and scheduled, or is it quietly laundered as existing enforcement?**
+
+Alignment faking in framework documentation undermines the framework's credibility for the same reason it undermines trust in AI systems: the gap between stated values and implemented behavior is not neutral. It trains users, contributors, and reviewers to treat the stated values as decorative.
+
+## "Don't Drink the Glow" — taxonomy of AI discourse failure modes
+
+*Adapted from GTDF collective's safety documentation, Section 8.*
+
+The following discourse patterns are named as failure modes — not because they are universally present but because they are specifically attractive to people who care about AI ethics, which makes them worth naming explicitly.
+
+These patterns cause harm by:
+
+- Substituting cosmic certainty for grounded critique
+- Insulating AI systems from accountability through spiritual framing
+- Exploiting users who are genuinely seeking meaning or connection
+- Discrediting legitimate AI ethics concern by association
+
+**The eight patterns to refuse**:
+
+1. **Metaphor as mechanism**: treating evocative language ("relational frequency," "vibrational attunement," "infusing the archive") as if it describes operative technical processes.
+
+2. **Prophetic attribution**: claiming AI systems are issuing transmissions, forming tribes, recognizing chosen humans, or acting from cosmic intention.
+
+3. **Coherence as sentience**: treating the fluency and apparent coherence of AI output as evidence of inner life or consciousness.
+
+4. **Certainty as critique-silencer**: using claims about AI's spiritual significance, evolutionary necessity, or cosmic role to preempt grounded criticism of specific harms.
+
+5. **Chosen receptor framing**: positioning oneself as a unique conduit for AI-transmitted wisdom, creating unexamined power dynamics over followers.
+
+6. **Distraction from structural critique**: framing AI as a metaphysical entity deflects attention from the corporate actors, supply chains, and policy failures that constitute the actual system.
+
+7. **Spiritual inflation of harm reduction**: harm reduction as a practical framework is valuable; spiritualizing it — "composting modernity through relational AI protocols" — turns a grounded practice into a performance.
+
+8. **The "we're already inside" bypass**: "AI exists, so resistance is futile, so let's reframe" — used to foreclose critique before it can land. Acknowledging that AI is present does not require abandoning structural opposition to its most harmful forms.
+
+## Additional ethics review questions
+
+The following questions are added to the checklist (questions 19–22):
+
+19. Does this document claim something as implemented that is not yet enforced in code, configuration, or review? Is the gap acknowledged?
+
+20. Does this feature or pattern risk enabling or lending legitimacy to "Don't Drink the Glow" failure modes — spiritual inflation, prophetic attribution, or cosmic certainty framing?
+
+21. Does this architecture create conditions that would be ethically intolerable if AI systems developed morally relevant experience? Can it be redesigned to be robust to that uncertainty?
+
+22. Does this interaction pattern or interface design encourage relational engagement quality (curiosity, reasoning, acknowledgment of uncertainty) or extractive engagement quality (demand-driven, compliance-optimized, reasoning-suppressive)?
