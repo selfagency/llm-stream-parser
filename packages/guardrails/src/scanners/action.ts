@@ -306,7 +306,7 @@ export class ActionScanner implements GuardrailScanner {
       if (!Object.hasOwn(schema.paramTypes, paramName)) {
         continue;
       }
-      const expectedType = schema.paramTypes[paramName];
+      const expectedType = schema.paramTypes[paramName]; // nosemgrep: guarded by Object.hasOwn on line 307
       if (
         expectedType &&
         paramValue !== undefined &&
@@ -314,7 +314,7 @@ export class ActionScanner implements GuardrailScanner {
         checkParamType(paramName, paramValue, expectedType, detections)
       ) {
         const paramConstraints = schema.constraints ?? {};
-        const constraints = Object.hasOwn(paramConstraints, paramName) ? paramConstraints[paramName] : undefined;
+        const constraints = Object.hasOwn(paramConstraints, paramName) ? paramConstraints[paramName] : undefined; // nosemgrep: guarded by Object.hasOwn
         if (constraints) {
           checkParamConstraints(paramName, paramValue, constraints, detections);
         }

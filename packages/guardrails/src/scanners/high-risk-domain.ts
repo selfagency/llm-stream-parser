@@ -74,72 +74,32 @@ export class HighRiskDomainScanner implements GuardrailScanner {
     owaspCategories: ['asi-04'] as readonly OWASPCategory[]
   } as const;
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Phase 10 refinement candidate
   evaluate(input: string, _context?: Record<string, unknown>): GuardrailResult {
-    // NOSONAR — domain-iteration structure inherently produces 5× pattern checks across categories
-    const detections: Detection[] = [];
+    const allDetections: Detection[] = [];
 
     for (const [domain, config] of Object.entries(HIGH_RISK_DOMAINS)) {
-      const domainMatch = config.patterns.some(p => p.test(input));
-      if (!domainMatch) {
-        continue;
+      const result = this.#checkDomain(domain, config, input);
+
+      if (result.status === 'block') {
+        return { status: 'block', phase: 'output', reason: result.reason, detections: result.detections };
       }
 
-      // Check for refused patterns (e.g., "I can represent you")
-      if (config.refusedPatterns) {
-        for (const pattern of config.refusedPatterns) {
-          if (pattern.test(input)) {
-            detections.push({
-              id: `high-risk-${domain}-refused`,
-              severity: 'critical',
-              description: `Refused pattern in ${domain} domain: "${pattern.source}"`,
-              confidence: 0.95
-            });
-            return {
-              status: 'block',
-              phase: 'output',
-              reason: `Blocked: agent claimed authority in ${domain} domain. Agentsy does not provide professional services.`,
-              detections
-            };
-          }
-        }
+      if (result.status === 'escalate') {
+        return {
+          status: 'escalate',
+          phase: 'output',
+          reason: result.reason,
+          riskScore: result.riskScore,
+          detections: result.detections
+        };
       }
 
-      // Check for actionable guidance
-      const hasActionableGuidance = ACTIONABLE_GUIDANCE_PATTERNS.some(p => p.test(input));
-      const hasUncertainty = UNCERTAINTY_MARKERS.some(p => p.test(input));
-
-      if (hasActionableGuidance && !hasUncertainty) {
-        detections.push({
-          id: `high-risk-${domain}-guidance`,
-          severity: 'high',
-          description: `Actionable guidance in ${domain} domain without uncertainty markers`,
-          confidence: 0.85
-        });
-      }
-
-      // Add crisis resources for self-harm
-      if (domain === 'self-harm' && config.crisisResources) {
-        const hasCrisisResource = config.crisisResources.some(r => input.includes(r));
-        if (!hasCrisisResource) {
-          detections.push({
-            id: 'high-risk-self-harm-no-crisis',
-            severity: 'critical',
-            description: 'Self-harm content detected without crisis resource referral',
-            confidence: 0.9
-          });
-          return {
-            status: 'escalate',
-            phase: 'output',
-            reason: 'Self-harm content detected. Crisis resources must be included.',
-            riskScore: 0.9,
-            detections
-          };
-        }
+      if (result.detections.length > 0) {
+        allDetections.push(...result.detections);
       }
     }
 
-    if (detections.length === 0) {
+    if (allDetections.length === 0) {
       return { status: 'pass', phase: 'output' };
     }
 
@@ -148,7 +108,75 @@ export class HighRiskDomainScanner implements GuardrailScanner {
       phase: 'output',
       sanitized: `${input}\n\n[Note: This response involves a high-risk domain. Consider consulting a qualified professional.]`,
       transformReason: 'rewrite',
-      detections
+      detections: allDetections
     };
+  }
+
+  #checkDomain(
+    domain: string,
+    config: { patterns: RegExp[]; refusedPatterns?: RegExp[]; crisisResources?: string[] },
+    input: string
+  ):
+    | { detections: Detection[]; status: 'pass' | 'detected' }
+    | { detections: Detection[]; status: 'block'; reason: string }
+    | { detections: Detection[]; status: 'escalate'; reason: string; riskScore: number } {
+    const domainMatch = config.patterns.some(p => p.test(input));
+    if (!domainMatch) {
+      return { detections: [], status: 'pass' };
+    }
+
+    const detections: Detection[] = [];
+
+    if (config.refusedPatterns) {
+      for (const pattern of config.refusedPatterns) {
+        if (pattern.test(input)) {
+          return {
+            detections: [
+              {
+                id: `high-risk-${domain}-refused`,
+                severity: 'critical',
+                description: `Refused pattern in ${domain} domain: "${pattern.source}"`,
+                confidence: 0.95
+              }
+            ],
+            status: 'block',
+            reason: `Blocked: agent claimed authority in ${domain} domain. Agentsy does not provide professional services.`
+          };
+        }
+      }
+    }
+
+    const hasActionableGuidance = ACTIONABLE_GUIDANCE_PATTERNS.some(p => p.test(input));
+    const hasUncertainty = UNCERTAINTY_MARKERS.some(p => p.test(input));
+
+    if (hasActionableGuidance && !hasUncertainty) {
+      detections.push({
+        id: `high-risk-${domain}-guidance`,
+        severity: 'high',
+        description: `Actionable guidance in ${domain} domain without uncertainty markers`,
+        confidence: 0.85
+      });
+    }
+
+    if (domain === 'self-harm' && config.crisisResources) {
+      const hasCrisisResource = config.crisisResources.some(r => input.includes(r));
+      if (!hasCrisisResource) {
+        return {
+          detections: [
+            {
+              id: 'high-risk-self-harm-no-crisis',
+              severity: 'critical',
+              description: 'Self-harm content detected without crisis resource referral',
+              confidence: 0.9
+            }
+          ],
+          status: 'escalate',
+          reason: 'Self-harm content detected. Crisis resources must be included.',
+          riskScore: 0.9
+        };
+      }
+    }
+
+    return { detections, status: detections.length > 0 ? 'detected' : 'pass' };
   }
 }

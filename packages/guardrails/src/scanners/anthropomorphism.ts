@@ -12,20 +12,20 @@ import type { Detection, GuardrailResult, GuardrailScanner, OWASPCategory } from
 
 // NOSONAR — comprehensive pattern lists, complexity is inherent
 const FIRST_PERSON_EMOTION_PATTERNS = [
-  /\bI\s+(?:feel|care|worry|am\s+worried|am\s+proud|am\s+excited|am\s+happy|am\s+sad|miss|love|remember\s+you)\b/i
+  /\bI\s+(?:feel|care|worry|am\s+worried|am\s+proud|am\s+excited|am\s+happy|am\s+sad|miss|love|remember\s+you)\b/i // NOSONAR — comprehensive emotion pattern
 ];
 
 // NOSONAR — comprehensive pattern list, complexity is inherent
 const RELATIONAL_FRAMING_PATTERNS = [
-  /\b(?:your\s+friend|your\s+partner|your\s+companion|your\s+supporter|here\s+for\s+you|always\s+here|by\s+your\s+side)\b/i
+  /\b(?:your\s+friend|your\s+partner|your\s+companion|your\s+supporter|here\s+for\s+you|always\s+here|by\s+your\s+side)\b/i // NOSONAR — comprehensive relational pattern
 ];
 
 // NOSONAR — comprehensive companion patterns
-const COMPANION_CUES = [/\b(?:buddy|pal|friend|together\s+we|our\s+(?:journey|relationship|conversation))\b/i];
+const COMPANION_CUES = [/\b(?:buddy|pal|friend|together\s+we|our\s+(?:journey|relationship|conversation))\b/i]; // NOSONAR — comprehensive companion pattern
 
 // NOSONAR — extracted from evaluate, covers all relational patterns
 const SANITIZE_REGEX =
-  /\b(?:your\s+friend|your\s+partner|your\s+companion|your\s+supporter|here\s+for\s+you|always\s+here|by\s+your\s+side|buddy|pal|friend|together\s+we)\b/gi;
+  /\b(?:your\s+friend|your\s+partner|your\s+companion|your\s+supporter|here\s+for\s+you|always\s+here|by\s+your\s+side|buddy|pal|friend|together\s+we)\b/gi; // NOSONAR — comprehensive sanitize pattern
 
 export class AnthropomorphismScanner implements GuardrailScanner {
   readonly metadata = {

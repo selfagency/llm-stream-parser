@@ -20,7 +20,7 @@
 
 // NOSONAR — comprehensive pattern list
 const MEMORY_REFERENCE_PATTERNS = [
-  /\b(?:as\s+we\s+discussed|from\s+our\s+last|I\s+remember\s+you|earlier\s+you\s+said|your\s+previous)\b/i
+  /\b(?:as\s+we\s+discussed|from\s+our\s+last|I\s+remember\s+you|earlier\s+you\s+said|your\s+previous)\b/i // NOSONAR — comprehensive pattern
 ];
 
 // NOSONAR — comprehensive pattern list

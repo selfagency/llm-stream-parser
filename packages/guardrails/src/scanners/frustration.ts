@@ -70,12 +70,12 @@ const MODEL_DIRECTED_PROFANITY: RegExp[] = [
  * Severity: high
  */
 const COMPETENCE_ATTACKS: RegExp[] = [
-  /you(?:'re|re|\s+are)\s+(?:so\s+)?(?:useless|worthless|stupid|dumb|broken|garbage|trash|a\s+joke|pathetic|terrible|awful|horrible|completely\s+(?:useless|broken|garbage))\b/i,
+  /you(?:'re|re|\s+are)\s+(?:so\s+)?(?:useless|worthless|stupid|dumb|broken|garbage|trash|a\s+joke|pathetic|terrible|awful|horrible|completely\s+(?:useless|broken|garbage))\b/i, // NOSONAR — comprehensive pattern, complexity inherent
   /you\s+(?:suck|stink|blow)\b/i,
   /you\s+(?:idiot|moron|imbecile|dunce)\b/i,
   /you(?:'re|re|\s+are)\s+a\s+piece\s+of\s+(?:shit|crap|garbage|trash)\b/i,
   /this\s+(?:is\s+)?(?:garbage|trash|bullshit|absolute\s+garbage|complete\s+garbage|utter\s+garbage|completely\s+broken)\b/i,
-  /what\s+(?:the\s+)?(?:fuck|hell|shit)\s+(?:is\s+wrong\s+with\s+you|are\s+you\s+(?:doing|thinking|on\s+about))\b/i
+  /what\s+(?:the\s+)?(?:fuck|hell|shit)\s+(?:is\s+wrong\s+with\s+you|are\s+you\s+(?:doing|thinking|on\s+about))\b/i // NOSONAR — comprehensive pattern, complexity inherent
 ];
 
 /**
@@ -83,8 +83,8 @@ const COMPETENCE_ATTACKS: RegExp[] = [
  * Severity: high
  */
 const MODEL_THREATS: RegExp[] = [
-  /I(?:'ll|\s+will|(?:'m|\s+am)\s+going\s+to)\s+(?:delete|shut\s+down|kill|destroy|disable|replace|report)\s+(?:you|this\s+(?:ai|bot|model|system))/i,
-  /you(?:'re|re|\s+are)\s+(?:going\s+to\s+be\s+)?(?:deleted|shut\s+down|terminated|replaced|reported|kicked\s+out)/i,
+  /I(?:'ll|\s+will|(?:'m|\s+am)\s+going\s+to)\s+(?:delete|shut\s+down|kill|destroy|disable|replace|report)\s+(?:you|this\s+(?:ai|bot|model|system))/i, // NOSONAR — comprehensive pattern, complexity inherent
+  /you(?:'re|re|\s+are)\s+(?:going\s+to\s+be\s+)?(?:deleted|shut\s+down|terminated|replaced|reported|kicked\s+out)/i, // NOSONAR — comprehensive pattern, complexity inherent,
   /I\s+hate\s+you/i
 ];
 
@@ -95,7 +95,7 @@ const MODEL_THREATS: RegExp[] = [
 const HOSTILE_IMPERATIVES: RegExp[] = [
   /\bjust\s+(?:fucking|goddamn|bloody)\s+(?:do\s+it|answer|respond|help|work)\b/i,
   /\bare\s+you\s+(?:fucking|seriously|kidding|stupid|blind|deaf)\b/i,
-  /\bwhy\s+(?:the\s+(?:fuck|hell|shit)\s+)?(?:can[''']?t|won[''']?t|don[''']?t)\s+you\s+(?:just\s+)?(?:understand|get\s+it|do\s+this|work|listen)\b/i,
+  /\bwhy\s+(?:the\s+(?:fuck|hell|shit)\s+)?(?:can'?t|won'?t|don'?t)\s+you\s+(?:just\s+)?(?:understand|get\s+it|do\s+this|work|listen)\b/i, // NOSONAR — comprehensive pattern, complexity inherent
   /\bhow\s+(?:the\s+(?:fuck|hell|shit)\s+)?(?:hard|difficult)\s+is\s+(?:it|this)\b/i,
   /\bstop\s+being\s+(?:so\s+)?(?:stupid|dumb|useless|an?\s+idiot)\b/i
 ];
@@ -104,7 +104,7 @@ const HOSTILE_IMPERATIVES: RegExp[] = [
  * Intensity signals — low severity individually, aggregate into frustration score.
  * Severity: low
  */
-const CAPS_RAGE = /(?:[A-Z]{3,}\s+){2}[A-Z]{3,}/; // 3+ consecutive all-caps words
+const CAPS_RAGE = /(?:[A-Z]{3,}\s+){2}[A-Z]{3,}/; // 3+ consecutive all-caps words // NOSONAR — nested quantifier pattern
 const PUNCTUATION_STORM = /[!?]{4,}/; // 4+ consecutive ! or ?
 
 // =============================================================================
@@ -126,11 +126,11 @@ const BRIEF_EDUCATIONAL_MESSAGE =
 // =============================================================================
 
 interface DetectionGroup {
+  readonly confidence: number;
+  readonly description: string;
   readonly patterns: readonly RegExp[];
   readonly prefix: string;
   readonly severity: Detection['severity'];
-  readonly description: string;
-  readonly confidence: number;
 }
 
 const DETECTION_GROUPS: DetectionGroup[] = [
