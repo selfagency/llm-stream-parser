@@ -89,11 +89,8 @@ function detection(id: string, severity: Detection['severity'], description: str
 
 function checkRequiredParams(params: Record<string, unknown>, schema: ActionSchema, detections: Detection[]): void {
   for (const requiredParam of schema.requiredParams) {
-    if (
-      !Object.hasOwn(params, requiredParam) ||
-      params[requiredParam] === undefined ||
-      params[requiredParam] === null
-    ) {
+    const paramValue = params[requiredParam]; // nosemgrep: actions-schema-keysafe — key from hardcoded schema
+    if (!Object.hasOwn(params, requiredParam) || paramValue === undefined || paramValue === null) {
       detections.push(detection('action-missing-param', 'high', `Missing required parameter: ${requiredParam}`, 0.95));
     }
   }
@@ -289,7 +286,7 @@ export class ActionScanner implements GuardrailScanner {
     }
 
     // 2. Validate against schema
-    const schema = ACTION_SCHEMAS[actionName];
+    const schema = Object.hasOwn(ACTION_SCHEMAS, actionName) ? ACTION_SCHEMAS[actionName] : undefined;
     if (schema) {
       this.#validateAgainstSchema(params, schema, detections);
     }
@@ -306,6 +303,9 @@ export class ActionScanner implements GuardrailScanner {
   #validateAgainstSchema(params: Record<string, unknown>, schema: ActionSchema, detections: Detection[]): void {
     checkRequiredParams(params, schema, detections);
     for (const [paramName, paramValue] of Object.entries(params)) {
+      if (!Object.hasOwn(schema.paramTypes, paramName)) {
+        continue;
+      }
       const expectedType = schema.paramTypes[paramName];
       if (
         expectedType &&
@@ -313,7 +313,8 @@ export class ActionScanner implements GuardrailScanner {
         paramValue !== null &&
         checkParamType(paramName, paramValue, expectedType, detections)
       ) {
-        const constraints = schema.constraints?.[paramName];
+        const paramConstraints = schema.constraints ?? {};
+        const constraints = Object.hasOwn(paramConstraints, paramName) ? paramConstraints[paramName] : undefined;
         if (constraints) {
           checkParamConstraints(paramName, paramValue, constraints, detections);
         }
