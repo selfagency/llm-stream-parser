@@ -126,3 +126,26 @@ CACHE HIT:
 - [ ] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
+
+---
+
+### Amendment — Metabolic/material embeddedness framing
+
+> **2026-07-03 amendment.** Informed by GTDF collective's observation that AI systems are materially embedded in extractive supply chains, not merely consuming energy — and the distinction between carbon accounting and material entanglement.
+
+The environmental impact tracking implemented in Phase 30 should reflect a more complete picture of material harm than per-query energy/water figures alone convey:
+
+**Carbon accounting vs. material embeddedness**: per-query CO2 and water estimates are accurate but partial. AI systems are also embedded in:
+
+- Rare earth mineral extraction (cobalt, lithium, rare earth elements for compute hardware)
+- Manufacturing supply chains with their own ecological and labor costs
+- Infrastructure buildout that consumes land, water, and community resources in ways that don't show up in runtime accounting
+- Hardware refresh cycles driven by competitive scale-maximalism rather than functional obsolescence
+
+**Display principle**: where environmental impact data is surfaced to users (CLI, provider warnings, documentation), it should distinguish between:
+
+- **Runtime costs**: per-query energy and water (small for individual use, per Dr. Fatima §21)
+- **Embedded costs**: supply chain, hardware manufacture, infrastructure buildout (not attributable per-query, but real and localized)
+- **Localized vs. aggregate harm**: the Boxtown/Memphis case (Phase 20) illustrates that aggregate carbon accounting obscures localized ecological damage that cannot be offset elsewhere
+
+This does not change the per-query environmental impact numbers. It changes how those numbers are contextualised in user-facing copy — ensuring they do not create the false impression that the only environmental cost of AI is what happens during inference.

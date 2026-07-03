@@ -308,3 +308,43 @@ Each clause's `implementedBy` field points to the corresponding scanner or polic
 - [x] `pnpm check-types && pnpm lint && pnpm test` green
 
 ---
+
+---
+
+### 26.7 UX amendment — Non-shaming provider warning and block messages
+
+> **2026-07-03 amendment.** Informed by `ETHICS.md` §20 (non-stigmatization of users) and §21 (proportionate, graded harm characterization).
+
+The per-session acknowledgement UX for warn-listed providers (§26.3.2) and the hard-block response for xAI must follow the non-stigmatization principle:
+
+**Hard-block (xAI)**: The block message must:
+
+- State clearly that this provider is blocked and why (documented CSAM, environmental racism), with source links
+- Not imply the user is morally culpable for attempting to use it
+- Offer alternative providers (Anthropic, local models, soda.so) as concrete next steps
+- Not lecture the user about their broader AI use
+
+```typescript
+export const XAI_BLOCK_MESSAGE = `
+xAI/Grok is blocked by agentsy's provider ethics policy.
+
+Documented reasons:
+• Content safety: antisemitic output, CSAM generation (23,000 images in 11 days, EU investigation), continued hosting of sexualized deepfakes
+• Environmental racism: illegal, unpermitted gas-turbine power plant polluting predominantly Black communities in Southaven, MS — 1,700+ tons of NOx/year; NAACP/SELC lawsuit
+
+Sources: selc.org/news/xai-built-an-illegal-power-plant | naacp.org/actions/dirty-truth-ai
+
+Alternatives: Anthropic (Claude), local models (Ollama), soda.so (94% less energy than ChatGPT, 100% renewables).
+`.trim();
+```
+
+**Warn-and-acknowledge**: The acknowledgement prompt must:
+
+- Present the specific, sourced concern — not a general "this provider has issues" message
+- Frame it as an informed choice the user is making, not a moral test
+- Be concise — not a wall of text designed to discourage by exhaustion
+- Not be permanently silencable (by design), but not be punishing either
+
+The warn message should read as: *here is specific information that affects your use of this provider; you are an adult making an informed choice*. It must not read as: *you should feel bad about this*.
+
+**Environmental impact display (§26.3 + Phase 30)**: Per-session environmental impact for warn-listed providers must accurately reflect `ETHICS.md §21` proportionality: display both per-query impact (small) and cumulative/industry-scale context, without stigmatizing the user's individual use. The goal is informed decision-making, not shame.
