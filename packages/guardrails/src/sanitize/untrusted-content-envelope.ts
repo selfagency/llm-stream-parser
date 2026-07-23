@@ -93,8 +93,8 @@ export function createUntrustedContentEnvelope(
     source,
     trustScore: overrides?.trustScore ?? defaultTrustScore,
     trustLevel,
-    metadata: overrides?.metadata,
-    sink: overrides?.sink,
+    ...(overrides?.metadata === undefined ? {} : { metadata: overrides.metadata }),
+    ...(overrides?.sink === undefined ? {} : { sink: overrides.sink }),
     receivedAt: new Date().toISOString(),
     sizeBytes: new TextEncoder().encode(content).length
   };

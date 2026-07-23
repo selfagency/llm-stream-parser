@@ -1,4 +1,4 @@
-import type { PolicyDocument } from '../policy.js';
+import type { PolicyDocument, PolicyRule } from '../policy.js';
 import type { PolicyEnforcer } from '../policy-enforcer.js';
 import type { GuardrailPhase } from '../types.js';
 
@@ -62,29 +62,30 @@ export function evaluateSurfacePolicy(
 
 /**
  * Create a policy document scoped to a specific Phase 10 surface.
- * This allows defining surface-specific policy rules.
  *
  * @param surface — The surface phase.
- * @param rules — Policy rules for that surface.
+ * @param rules — Simplified policy rules for that surface.
  * @returns A PolicyDocument scoped to the surface.
  */
 export function createSurfacePolicy(
   surface: GuardrailPhase,
   rules: Array<{
-    action: string;
-    effect: 'allow' | 'deny' | 'escalate';
-    reason: string;
+    action: 'allow' | 'deny' | 'require_approval';
+    condition: string;
+    name: string;
+    description?: string;
+    severity?: 'low' | 'medium' | 'high' | 'critical';
   }>
 ): PolicyDocument {
   return {
-    policyVersion: '1.0.0',
+    version: '1.0.0',
     description: `Phase 10 policy rules for ${surface} surface`,
     rules: rules.map(rule => ({
-      id: `policy-${surface}-${rule.action}`,
-      effect: rule.effect as 'allow' | 'deny',
-      escalate: rule.effect === 'escalate',
-      reason: rule.reason,
-      actionPattern: rule.action
-    }))
+      action: rule.action as 'deny' | 'require_approval',
+      condition: rule.condition,
+      name: rule.name,
+      ...(rule.description ? { description: rule.description } : {}),
+      ...(rule.severity ? { severity: rule.severity } : {})
+    })) as readonly PolicyRule[]
   };
 }
