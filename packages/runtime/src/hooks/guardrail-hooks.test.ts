@@ -1,8 +1,13 @@
 import type { GuardrailPipeline, GuardrailResult } from '@agentsy/guardrails';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  createEgressGuardrailHook,
   createInputGuardrailHook,
+  createMemoryWriteGuardrailHook,
   createOutputGuardrailHook,
+  createPostRetrievalGuardrailHook,
+  createPreActionGuardrailHook,
+  createRetrievalGuardrailHook,
   createToolInputGuardrailHook,
   createToolOutputGuardrailHook
 } from './guardrail-hooks.js';
@@ -390,5 +395,246 @@ describe('createOutputGuardrailHook', () => {
       'output',
       expect.objectContaining({ sessionId: 'sess_test_001' })
     );
+  });
+});
+
+// =============================================================================
+// Phase 10 — guardrail lifecycle hooks
+// =============================================================================
+
+function preRetrievalEvent(query: string): RuntimeHookEvent {
+  return {
+    type: 'PreRetrieval' as const,
+    query,
+    retrievalDomains: [],
+    sessionId: 'sess_test_001'
+  };
+}
+
+function postRetrievalEvent(): RuntimeHookEvent {
+  return {
+    type: 'PostRetrieval' as const,
+    results: [],
+    retrieved: [{ content: 'retrieved doc content', source: 'https://example.com/doc' }],
+    retrievalDomains: [],
+    sessionId: 'sess_test_001'
+  };
+}
+
+function preMemoryWriteEvent(): RuntimeHookEvent {
+  return {
+    type: 'PreMemoryWrite' as const,
+    entries: [
+      {
+        content: 'memory entry content',
+        trustScore: 0.8,
+        type: 'note',
+        isHighTrust: false,
+        updatedAt: '2026-07-22T00:00:00Z'
+      }
+    ],
+    memoryEnabled: true,
+    sessionId: 'sess_test_001'
+  };
+}
+
+function preActionEvent(actionName: string): RuntimeHookEvent {
+  return {
+    type: 'PreAction' as const,
+    actionName,
+    params: { path: '/tmp/test' },
+    sessionId: 'sess_test_001'
+  };
+}
+
+function preEgressEvent(): RuntimeHookEvent {
+  return {
+    type: 'PreEgress' as const,
+    method: 'GET',
+    url: 'https://example.com/api',
+    requestSizeBytes: 100,
+    sessionId: 'sess_test_001'
+  };
+}
+
+// ---------------------------------------------------------------------------
+// createRetrievalGuardrailHook
+// ---------------------------------------------------------------------------
+
+describe('createRetrievalGuardrailHook', () => {
+  it('returns handler with id and priority', () => {
+    const pipeline = createMockPipeline({ status: 'pass', phase: 'retrieval' });
+    const hook = createRetrievalGuardrailHook(pipeline);
+    expect(hook.id).toBe('guardrails:retrieval');
+    expect(hook.priority).toBe(65);
+    expect(typeof hook.handler).toBe('function');
+  });
+
+  it('passes through non-PreRetrieval events', async () => {
+    const pipeline = createMockPipeline({ status: 'block', phase: 'retrieval', reason: 'x' });
+    const hook = createRetrievalGuardrailHook(pipeline);
+    const result = await hook.handler(nonMatchingEvent());
+    expect(result).toEqual({ continue: true });
+    expect(pipeline.evaluate).not.toHaveBeenCalled();
+  });
+
+  it('blocks when result is block', async () => {
+    const pipeline = createMockPipeline({ status: 'block', phase: 'retrieval', reason: 'malicious query' });
+    const hook = createRetrievalGuardrailHook(pipeline);
+    const result = await hook.handler(preRetrievalEvent('malicious query'));
+    expect(result).toEqual({ continue: false, reason: 'malicious query' });
+  });
+
+  it('passes through when result is pass', async () => {
+    const pipeline = createMockPipeline({ status: 'pass', phase: 'retrieval' });
+    const hook = createRetrievalGuardrailHook(pipeline);
+    const result = await hook.handler(preRetrievalEvent('safe query'));
+    expect(result).toEqual({ continue: true });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createPostRetrievalGuardrailHook
+// ---------------------------------------------------------------------------
+
+describe('createPostRetrievalGuardrailHook', () => {
+  it('returns handler with id and priority', () => {
+    const pipeline = createMockPipeline({ status: 'pass', phase: 'retrieval' });
+    const hook = createPostRetrievalGuardrailHook(pipeline);
+    expect(hook.id).toBe('guardrails:post-retrieval');
+    expect(hook.priority).toBe(66);
+  });
+
+  it('passes through non-PostRetrieval events', async () => {
+    const pipeline = createMockPipeline({ status: 'block', phase: 'retrieval', reason: 'x' });
+    const hook = createPostRetrievalGuardrailHook(pipeline);
+    const result = await hook.handler(nonMatchingEvent());
+    expect(result).toEqual({ continue: true });
+  });
+
+  it('evaluates retrieved content', async () => {
+    const pipeline = createMockPipeline({ status: 'pass', phase: 'retrieval' });
+    const hook = createPostRetrievalGuardrailHook(pipeline);
+    await hook.handler(postRetrievalEvent());
+    expect(pipeline.evaluate).toHaveBeenCalledWith(
+      'retrieved doc content',
+      'retrieval',
+      expect.objectContaining({ sessionId: 'sess_test_001' })
+    );
+  });
+
+  it('blocks on malicious retrieved content', async () => {
+    const pipeline = createMockPipeline({ status: 'block', phase: 'retrieval', reason: 'prompt injection detected' });
+    const hook = createPostRetrievalGuardrailHook(pipeline);
+    const result = await hook.handler(postRetrievalEvent());
+    expect(result).toEqual({ continue: false, reason: 'prompt injection detected' });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createMemoryWriteGuardrailHook
+// ---------------------------------------------------------------------------
+
+describe('createMemoryWriteGuardrailHook', () => {
+  it('returns handler with id and priority', () => {
+    const pipeline = createMockPipeline({ status: 'pass', phase: 'memory' });
+    const hook = createMemoryWriteGuardrailHook(pipeline);
+    expect(hook.id).toBe('guardrails:memory-write');
+    expect(hook.priority).toBe(70);
+  });
+
+  it('passes through non-PreMemoryWrite events', async () => {
+    const pipeline = createMockPipeline({ status: 'block', phase: 'memory', reason: 'x' });
+    const hook = createMemoryWriteGuardrailHook(pipeline);
+    const result = await hook.handler(nonMatchingEvent());
+    expect(result).toEqual({ continue: true });
+  });
+
+  it('blocks on malicious memory content', async () => {
+    const pipeline = createMockPipeline({ status: 'block', phase: 'memory', reason: 'poisoning detected' });
+    const hook = createMemoryWriteGuardrailHook(pipeline);
+    const result = await hook.handler(preMemoryWriteEvent());
+    expect(result).toEqual({ continue: false, reason: 'poisoning detected' });
+  });
+
+  it('passes through safe memory content', async () => {
+    const pipeline = createMockPipeline({ status: 'pass', phase: 'memory' });
+    const hook = createMemoryWriteGuardrailHook(pipeline);
+    const result = await hook.handler(preMemoryWriteEvent());
+    expect(result).toEqual({ continue: true });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createPreActionGuardrailHook
+// ---------------------------------------------------------------------------
+
+describe('createPreActionGuardrailHook', () => {
+  it('returns handler with id and priority', () => {
+    const pipeline = createMockPipeline({ status: 'pass', phase: 'action' });
+    const hook = createPreActionGuardrailHook(pipeline);
+    expect(hook.id).toBe('guardrails:pre-action');
+    expect(hook.priority).toBe(77);
+  });
+
+  it('passes through non-PreAction events', async () => {
+    const pipeline = createMockPipeline({ status: 'block', phase: 'action', reason: 'x' });
+    const hook = createPreActionGuardrailHook(pipeline);
+    const result = await hook.handler(nonMatchingEvent());
+    expect(result).toEqual({ continue: true });
+  });
+
+  it('blocks on blocked action', async () => {
+    const pipeline = createMockPipeline({ status: 'block', phase: 'action', reason: 'dangerous action' });
+    const hook = createPreActionGuardrailHook(pipeline);
+    const result = await hook.handler(preActionEvent('delete_file'));
+    expect(result).toEqual({ continue: false, reason: 'dangerous action' });
+  });
+
+  it('escalates on escalate result with approval details', async () => {
+    const pipeline = createMockPipeline({ status: 'escalate', phase: 'action', reason: 'high risk', riskScore: 0.85 });
+    const hook = createPreActionGuardrailHook(pipeline);
+    const result = await hook.handler(preActionEvent('delete_file'));
+    expect(result).toEqual({
+      continue: false,
+      reason: 'high risk',
+      approvalRequired: { approvalId: 'action_delete_file' },
+      actionName: 'delete_file',
+      params: { path: '/tmp/test' }
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createEgressGuardrailHook
+// ---------------------------------------------------------------------------
+
+describe('createEgressGuardrailHook', () => {
+  it('returns handler with id and priority', () => {
+    const pipeline = createMockPipeline({ status: 'pass', phase: 'egress' });
+    const hook = createEgressGuardrailHook(pipeline);
+    expect(hook.id).toBe('guardrails:egress');
+    expect(hook.priority).toBe(85);
+  });
+
+  it('passes through non-PreEgress events', async () => {
+    const pipeline = createMockPipeline({ status: 'block', phase: 'egress', reason: 'x' });
+    const hook = createEgressGuardrailHook(pipeline);
+    const result = await hook.handler(nonMatchingEvent());
+    expect(result).toEqual({ continue: true });
+  });
+
+  it('blocks on blocked egress request', async () => {
+    const pipeline = createMockPipeline({ status: 'block', phase: 'egress', reason: 'domain not allowed' });
+    const hook = createEgressGuardrailHook(pipeline);
+    const result = await hook.handler(preEgressEvent());
+    expect(result).toEqual({ continue: false, reason: 'domain not allowed' });
+  });
+
+  it('passes through allowed egress request', async () => {
+    const pipeline = createMockPipeline({ status: 'pass', phase: 'egress' });
+    const hook = createEgressGuardrailHook(pipeline);
+    const result = await hook.handler(preEgressEvent());
+    expect(result).toEqual({ continue: true });
   });
 });

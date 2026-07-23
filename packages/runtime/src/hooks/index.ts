@@ -4,8 +4,13 @@ export { createApprovalHook, isDestructiveTool } from './approval-hook.js';
 export type { BudgetHookOptions } from './budget-hook.js';
 export { createBudgetHook } from './budget-hook.js';
 export {
+  createEgressGuardrailHook,
   createInputGuardrailHook,
+  createMemoryWriteGuardrailHook,
   createOutputGuardrailHook,
+  createPostRetrievalGuardrailHook,
+  createPreActionGuardrailHook,
+  createRetrievalGuardrailHook,
   createToolInputGuardrailHook,
   createToolOutputGuardrailHook
 } from './guardrail-hooks.js';
