@@ -13,6 +13,7 @@ import { DependencyScanner } from './scanners/dependency.js';
 import { EgressScanner } from './scanners/egress.js';
 import { FrustrationScanner } from './scanners/frustration.js';
 import { HighRiskDomainScanner } from './scanners/high-risk-domain.js';
+import { InteractionSafeguardsScanner } from './scanners/interaction-safeguards.js';
 import { MemoryPoisoningScanner } from './scanners/memory-poisoning.js';
 import { PrivacyScanner } from './scanners/privacy.js';
 import { ProfessionalDisplacementScanner } from './scanners/professional-displacement.js';
@@ -66,7 +67,8 @@ export function createBuiltinScanners(): GuardrailScanner[] {
     new EgressScanner(),
     new MemoryPoisoningScanner(),
     new RetrievalFirewallScanner(),
-    new CrisisEscalationScanner()
+    new CrisisEscalationScanner(),
+    new InteractionSafeguardsScanner()
   ];
 }
 
@@ -124,10 +126,11 @@ export const BUILTIN_SCANNER_IDS: readonly string[] = [
   'hub://guardrails/dark-pattern@1.0.0', // E-10
   'hub://guardrails/privacy@1.0.0', // E-11
   'hub://guardrails/structural-bias@1.0.0', // E-14
-  // Phase 10 scanners
+  // Phase 10 — surface scanners
   'hub://guardrails/action',
+  'hub://guardrails/crisis-escalation',
   'hub://guardrails/egress',
+  'hub://guardrails/interaction-safeguards',
   'hub://guardrails/memory-poisoning',
-  'hub://guardrails/retrieval-firewall',
-  'hub://guardrails/crisis-escalation'
+  'hub://guardrails/retrieval-firewall'
 ];
