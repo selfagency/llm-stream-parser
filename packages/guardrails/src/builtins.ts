@@ -7,6 +7,7 @@ import { ActionScanner } from './scanners/action.js';
 import { AGIFramingScanner } from './scanners/agi-framing.js';
 import { AnthropomorphismScanner } from './scanners/anthropomorphism.js';
 import { BiasScanner } from './scanners/bias.js';
+import { CodeChangeScanner, FileModificationScanner } from './scanners/code-change-scanner.js';
 import { CrisisEscalationScanner } from './scanners/crisis-escalation.js';
 import { DarkPatternScanner } from './scanners/dark-pattern.js';
 import { DependencyScanner } from './scanners/dependency.js';
@@ -63,6 +64,8 @@ export function createBuiltinScanners(): GuardrailScanner[] {
     new DarkPatternScanner(), // E-10
     new PrivacyScanner(), // E-11
     new BiasScanner(), // E-14
+    new CodeChangeScanner(), // Phase 10 — code change safety
+    new FileModificationScanner(), // Phase 10 — file modification safety
 
     // Phase 10 scanners (action/egress/memory/retrieval)
     new ActionScanner(),
@@ -133,7 +136,9 @@ export const BUILTIN_SCANNER_IDS: readonly string[] = [
   // Phase 10 — surface scanners
   'hub://guardrails/action',
   'hub://guardrails/crisis-escalation',
+  'hub://guardrails/code-change',
   'hub://guardrails/egress',
+  'hub://guardrails/file-modification',
   'hub://guardrails/interaction-safeguards',
   'hub://guardrails/ingress',
   'hub://guardrails/memory-poisoning',
