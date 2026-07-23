@@ -28,6 +28,7 @@ import { Sleeper } from './lifecycle/sleeper.js';
 import { Supervisor } from './lifecycle/supervisor.js';
 import { AgentPool } from './pool/agent-pool.js';
 import { SubprocessManager } from './processes/subprocess-manager.js';
+import { AGUIService } from './services/ag-ui-service.js';
 import { RetrievalService } from './services/retrieval-service.js';
 import { RoutingService } from './services/routing-service.js';
 import { ServiceHost } from './services/service-host.js';
@@ -172,6 +173,7 @@ export class Daemon {
   readonly routing: RoutingService;
   readonly retrieval: RetrievalService;
   readonly streamManager: StreamManager;
+  readonly agui: AGUIService;
   readonly acpNotificationAdapter: ACPNotificationAdapter;
   readonly observability: ObservabilityEngine;
   readonly eventBus: HonkerEventBus;
@@ -332,6 +334,9 @@ export class Daemon {
       logger: this.logger.child('retrieval'),
       scheduler: this.scheduler
     });
+
+    // AG-UI service — CopilotKit-compatible protocol adapter
+    this.agui = new AGUIService(this.logger);
 
     // Event bus for cross-process communication
     this.eventBus = new HonkerEventBus({
