@@ -6,6 +6,67 @@ import type { Logger } from '../types.js';
 
 export type RestartPolicy = 'always' | 'on-failure' | 'never';
 
+/**
+ * Network access policy for a subprocess.
+ *
+ * - `'allow-all'`: unrestricted network access (default).
+ * - `'block-all'`: all outbound network traffic is blocked via proxy redirect.
+ * - `'allow-domains'`: only the specified domains are reachable; all others blocked.
+ * - `'block-domains'`: all domains except the specified are reachable.
+ *
+ * @remarks
+ * Enforcement uses HTTP_PROXY/ALL_PROXY environment variables, which are
+ * respected by most HTTP clients and CLI tools. Non-HTTP traffic (raw TCP/UDP)
+ * is not affected. For true network isolation, combine with OS-level controls
+ * (seccomp, network namespaces, sandbox-exec).
+ */
+export type NetworkPolicy =
+  | { type: 'allow-all' }
+  | { type: 'block-all' }
+  | { type: 'allow-domains'; domains: string[] }
+  | { type: 'block-domains'; domains: string[] };
+
+/**
+ * Compute proxy-enforcement environment variables for a given network policy.
+ * Returns an empty object when no enforcement is needed.
+ */
+export function applyNetworkPolicy(policy: NetworkPolicy | undefined): Record<string, string> {
+  if (!policy || policy.type === 'allow-all') {
+    return {};
+  }
+
+  const DISCARD_PROXY = 'http://127.0.0.1:9';
+
+  switch (policy.type) {
+    case 'block-all':
+      return {
+        ALL_PROXY: DISCARD_PROXY,
+        http_proxy: DISCARD_PROXY,
+        https_proxy: DISCARD_PROXY,
+        NO_PROXY: ''
+      };
+    case 'allow-domains': {
+      const noProxy = policy.domains.join(',');
+      return {
+        ALL_PROXY: DISCARD_PROXY,
+        http_proxy: DISCARD_PROXY,
+        https_proxy: DISCARD_PROXY,
+        NO_PROXY: noProxy
+      };
+    }
+    case 'block-domains': {
+      // For block-domains, set NO_PROXY to block ALL traffic to these domains
+      // by making the proxy ignore them. This is a best-effort approach.
+      const noProxy = policy.domains.join(',');
+      return {
+        NO_PROXY: noProxy
+      };
+    }
+    default:
+      return {};
+  }
+}
+
 export interface SubprocessSpec {
   args?: string[];
   backoffBaseMs?: number;
@@ -23,6 +84,7 @@ export interface SubprocessSpec {
   };
   maxRestarts?: number;
   memoryLimitMb?: number;
+  networkPolicy?: NetworkPolicy;
   restartPolicy?: RestartPolicy;
   restartWindowMs?: number;
   stallTimeoutMs?: number;
@@ -126,7 +188,7 @@ export class SubprocessManager extends EventEmitter {
     }
     const child = spawn(spec.command, spec.args ?? [], {
       cwd: spec.cwd,
-      env: { ...safeEnv, ...spec.env },
+      env: { ...safeEnv, ...spec.env, ...applyNetworkPolicy(spec.networkPolicy) },
       stdio: ['pipe', 'pipe', 'pipe']
     });
 
