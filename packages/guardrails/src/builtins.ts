@@ -10,6 +10,7 @@ import { BiasScanner } from './scanners/bias.js';
 import { CodeChangeScanner, FileModificationScanner } from './scanners/code-change-scanner.js';
 import { CrisisEscalationScanner } from './scanners/crisis-escalation.js';
 import { DarkPatternScanner } from './scanners/dark-pattern.js';
+import { DelayedExfiltrationScanner } from './scanners/delayed-exfiltration.js';
 import { DependencyScanner } from './scanners/dependency.js';
 import { EgressScanner } from './scanners/egress.js';
 import { FrustrationScanner } from './scanners/frustration.js';
@@ -70,6 +71,7 @@ export function createBuiltinScanners(): GuardrailScanner[] {
     // Phase 10 scanners (action/egress/memory/retrieval)
     new ActionScanner(),
     new EgressScanner(),
+    new DelayedExfiltrationScanner(),
     new MemoryPoisoningScanner(),
     new RetrievalFirewallScanner(),
     new CrisisEscalationScanner(),
@@ -137,6 +139,7 @@ export const BUILTIN_SCANNER_IDS: readonly string[] = [
   'hub://guardrails/action',
   'hub://guardrails/crisis-escalation',
   'hub://guardrails/code-change',
+  'hub://guardrails/delayed-exfiltration',
   'hub://guardrails/egress',
   'hub://guardrails/file-modification',
   'hub://guardrails/interaction-safeguards',
