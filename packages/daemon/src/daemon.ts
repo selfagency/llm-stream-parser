@@ -1,5 +1,10 @@
 import type { ProviderEthicsPolicyHook } from '@agentsy/gateway';
-import { isProviderBlocked, requiresAcknowledgement } from '@agentsy/guardrails';
+import {
+  createBuiltinScanners,
+  GuardrailPipeline,
+  isProviderBlocked,
+  requiresAcknowledgement
+} from '@agentsy/guardrails';
 import type { MemoryEngine } from '@agentsy/memory';
 import type { ObservabilityEngine } from '@agentsy/observability';
 import { createObservabilityFromEnv } from '@agentsy/observability';
@@ -171,6 +176,7 @@ export class Daemon {
   readonly observability: ObservabilityEngine;
   readonly eventBus: HonkerEventBus;
   readonly learningJob: LearningJob;
+  readonly guardrails: GuardrailPipeline;
   private readonly _observabilitySinks: Array<{ type: string; enabled: boolean; reason: string }>;
 
   private readonly config: DaemonConfig;
@@ -340,6 +346,12 @@ export class Daemon {
       eventBus: this.eventBus,
       logger: this.logger.child('learning')
     });
+
+    // Guardrail pipeline — seeded with all built-in scanners (Phases 4, 9, 10, 11)
+    this.guardrails = new GuardrailPipeline();
+    for (const scanner of createBuiltinScanners()) {
+      this.guardrails.add(scanner);
+    }
   }
 
   async start(): Promise<void> {
