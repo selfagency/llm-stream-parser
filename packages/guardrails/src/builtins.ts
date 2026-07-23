@@ -18,6 +18,7 @@ import { MemoryPoisoningScanner } from './scanners/memory-poisoning.js';
 import { PrivacyScanner } from './scanners/privacy.js';
 import { ProfessionalDisplacementScanner } from './scanners/professional-displacement.js';
 import { RetrievalFirewallScanner } from './scanners/retrieval-firewall.js';
+import { ScopeDriftScanner } from './scanners/scope-drift.js';
 import { StyleMimicryScanner } from './scanners/style-mimicry.js';
 import { SycophancyScanner } from './scanners/sycophancy.js';
 import { SecretDetectionScanner } from './secret-detection.js';
@@ -68,7 +69,8 @@ export function createBuiltinScanners(): GuardrailScanner[] {
     new MemoryPoisoningScanner(),
     new RetrievalFirewallScanner(),
     new CrisisEscalationScanner(),
-    new InteractionSafeguardsScanner()
+    new InteractionSafeguardsScanner(),
+    new ScopeDriftScanner()
   ];
 }
 
@@ -132,5 +134,6 @@ export const BUILTIN_SCANNER_IDS: readonly string[] = [
   'hub://guardrails/egress',
   'hub://guardrails/interaction-safeguards',
   'hub://guardrails/memory-poisoning',
-  'hub://guardrails/retrieval-firewall'
+  'hub://guardrails/retrieval-firewall',
+  'hub://guardrails/scope-drift'
 ];
