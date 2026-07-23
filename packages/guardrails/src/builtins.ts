@@ -13,6 +13,7 @@ import { DependencyScanner } from './scanners/dependency.js';
 import { EgressScanner } from './scanners/egress.js';
 import { FrustrationScanner } from './scanners/frustration.js';
 import { HighRiskDomainScanner } from './scanners/high-risk-domain.js';
+import { IngressScanner } from './scanners/ingress-scanner.js';
 import { InteractionSafeguardsScanner } from './scanners/interaction-safeguards.js';
 import { MemoryPoisoningScanner } from './scanners/memory-poisoning.js';
 import { PrivacyScanner } from './scanners/privacy.js';
@@ -69,6 +70,7 @@ export function createBuiltinScanners(): GuardrailScanner[] {
     new MemoryPoisoningScanner(),
     new RetrievalFirewallScanner(),
     new CrisisEscalationScanner(),
+    new IngressScanner(),
     new InteractionSafeguardsScanner(),
     new ScopeDriftScanner()
   ];
@@ -133,6 +135,7 @@ export const BUILTIN_SCANNER_IDS: readonly string[] = [
   'hub://guardrails/crisis-escalation',
   'hub://guardrails/egress',
   'hub://guardrails/interaction-safeguards',
+  'hub://guardrails/ingress',
   'hub://guardrails/memory-poisoning',
   'hub://guardrails/retrieval-firewall',
   'hub://guardrails/scope-drift'

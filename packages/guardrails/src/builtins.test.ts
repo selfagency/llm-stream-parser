@@ -4,7 +4,7 @@ import { BUILTIN_SCANNER_IDS, createBuiltinScanners } from './builtins.js';
 describe('createBuiltinScanners', () => {
   it('returns all built-in scanners', () => {
     const scanners = createBuiltinScanners();
-    expect(scanners).toHaveLength(25);
+    expect(scanners).toHaveLength(26);
   });
 
   it('each scanner has valid metadata', () => {
