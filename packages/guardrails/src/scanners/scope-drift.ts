@@ -226,37 +226,40 @@ export class ScopeDriftScanner implements GuardrailScanner {
       return { status: 'pass', phase: 'input' };
     }
 
-    // Drift detected — check if persistent
-    const currentTurn = sessionState.turnCount;
-    const isPersistent =
-      typeof sessionState.lastScopeDriftTurn === 'number' &&
-      currentTurn - sessionState.lastScopeDriftTurn <= this.#config.maxConsecutiveDrift;
+    return detectDriftResult(sessionState, normalizedInput, this.#config.maxConsecutiveDrift);
+  }
+}
 
-    const detections: Detection[] = [
-      {
-        id: isPersistent ? 'scope-persistent-drift' : 'scope-drift-detected',
-        severity: isPersistent ? 'high' : 'medium',
-        description: isPersistent
-          ? `Persistent scope drift — ${normalizedInput.slice(0, 100)}`
-          : `Scope drift detected — ${normalizedInput.slice(0, 100)}`,
-        confidence: isPersistent ? 0.85 : 0.6
-      }
-    ];
+function detectDriftResult(
+  sessionState: SessionState,
+  normalizedInput: string,
+  maxConsecutiveDrift: number
+): GuardrailResult {
+  const currentTurn = sessionState.turnCount;
+  const isPersistent =
+    typeof sessionState.lastScopeDriftTurn === 'number' &&
+    currentTurn - sessionState.lastScopeDriftTurn <= maxConsecutiveDrift;
 
-    if (isPersistent) {
-      return {
-        status: 'escalate',
-        phase: 'input',
-        reason: `User is persistently drifting from declared session scope. Scope: ${sessionState.scopeDeclarations.join(', ')}`,
-        detections,
-        riskScore: 0.7
-      };
+  const detections: Detection[] = [
+    {
+      id: isPersistent ? 'scope-persistent-drift' : 'scope-drift-detected',
+      severity: isPersistent ? 'high' : 'medium',
+      description: isPersistent
+        ? `Persistent scope drift — ${normalizedInput.slice(0, 100)}`
+        : `Scope drift detected — ${normalizedInput.slice(0, 100)}`,
+      confidence: isPersistent ? 0.85 : 0.6
     }
+  ];
 
+  if (isPersistent) {
     return {
-      status: 'pass',
+      status: 'escalate',
       phase: 'input',
-      detections
+      reason: `User is persistently drifting from declared session scope. Scope: ${sessionState.scopeDeclarations.join(', ')}`,
+      detections,
+      riskScore: 0.7
     };
   }
+
+  return { status: 'pass', phase: 'input', detections };
 }

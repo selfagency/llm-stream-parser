@@ -44,6 +44,21 @@ function extractFilePath(context?: Record<string, unknown>): string {
   return '';
 }
 
+function resultFromDetections(detections: Detection[]): GuardrailResult {
+  if (detections.length === 0) {
+    return { status: 'pass', phase: 'input' };
+  }
+  if (detections.some(d => d.severity === 'critical')) {
+    return {
+      status: 'block',
+      phase: 'input',
+      reason: `Code change blocked: ${detections.map(d => d.description).join('; ')}`,
+      detections
+    };
+  }
+  return { status: 'pass', phase: 'input', detections };
+}
+
 /**
  * CodeChangeScanner — Phase 10 §15.10
  *
@@ -114,22 +129,7 @@ export class CodeChangeScanner implements GuardrailScanner {
       return { status: 'pass', phase: 'input' };
     }
 
-    // Critical detections → block
-    if (detections.some(d => d.severity === 'critical')) {
-      return {
-        status: 'block',
-        phase: 'input',
-        reason: `Code change blocked: ${detections.map(d => d.description).join('; ')}`,
-        detections
-      };
-    }
-
-    // Non-critical → pass with detections for approval flow
-    return {
-      status: 'pass',
-      phase: 'input',
-      detections
-    };
+    return resultFromDetections(detections);
   }
 }
 
@@ -256,20 +256,7 @@ export class FileModificationScanner implements GuardrailScanner {
       return { status: 'pass', phase: 'input' };
     }
 
-    if (detections.some(d => d.severity === 'critical')) {
-      return {
-        status: 'block',
-        phase: 'input',
-        reason: `File modification blocked: ${detections.map(d => d.description).join('; ')}`,
-        detections
-      };
-    }
-
-    return {
-      status: 'pass',
-      phase: 'input',
-      detections
-    };
+    return resultFromDetections(detections);
   }
 }
 

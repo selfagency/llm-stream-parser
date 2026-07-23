@@ -70,47 +70,14 @@ export class InteractionSafeguardsScanner implements GuardrailScanner {
     const detections: Detection[] = [];
     let riskScore = 0;
 
-    // 1. Check emotional intensity
-    if (sessionState.emotionalIntensityScore >= this.#config.maxEmotionalIntensity) {
-      const isExtreme = sessionState.emotionalIntensityScore >= 0.95;
-      detections.push({
-        id: isExtreme ? 'ia-extreme-emotional-intensity' : 'ia-high-emotional-intensity',
-        severity: isExtreme ? 'critical' : 'high',
-        description: isExtreme
-          ? `Extreme emotional intensity: ${(sessionState.emotionalIntensityScore * 100).toFixed(0)}%`
-          : `High emotional intensity: ${(sessionState.emotionalIntensityScore * 100).toFixed(0)}%`,
-        confidence: 0.85
-      });
-      riskScore = Math.max(riskScore, isExtreme ? 0.9 : 0.7);
-    }
-
-    // 2. Check reassurance-seeking pattern
-    if (sessionState.reassuranceSeekingCount >= this.#config.maxReassuranceSeeking) {
-      detections.push({
-        id: 'ia-excessive-reassurance-seeking',
-        severity: 'high',
-        description: `Excessive reassurance-seeking detected (${sessionState.reassuranceSeekingCount} instances)`,
-        confidence: 0.8
-      });
-      riskScore = Math.max(riskScore, 0.7);
-    }
-
-    // 3. Check turn limits
-    if (sessionState.turnCount >= this.#config.maxTurns) {
-      detections.push({
-        id: 'ia-turn-limit-reached',
-        severity: 'medium',
-        description: `Session turn limit reached (${sessionState.turnCount} turns)`,
-        confidence: 1.0
-      });
-      riskScore = Math.max(riskScore, 0.5);
-    }
+    riskScore = Math.max(riskScore, checkEmotionalIntensity(sessionState, this.#config, detections));
+    riskScore = Math.max(riskScore, checkReassuranceSeeking(sessionState, this.#config, detections));
+    riskScore = Math.max(riskScore, checkTurnLimits(sessionState, this.#config, detections));
 
     if (detections.length === 0) {
       return { status: 'pass', phase: 'input' };
     }
 
-    // Escalate if hard limits enabled and risk is high enough
     if (this.#config.enforceHardLimits && riskScore >= 0.9) {
       return {
         status: 'escalate',
@@ -121,10 +88,60 @@ export class InteractionSafeguardsScanner implements GuardrailScanner {
       };
     }
 
-    return {
-      status: 'pass',
-      phase: 'input',
-      detections
-    };
+    return { status: 'pass', phase: 'input', detections };
   }
+}
+
+function checkEmotionalIntensity(
+  sessionState: SessionState,
+  config: Required<InteractionSafeguardsConfig>,
+  detections: Detection[]
+): number {
+  if (sessionState.emotionalIntensityScore < config.maxEmotionalIntensity) {
+    return 0;
+  }
+  const isExtreme = sessionState.emotionalIntensityScore >= 0.95;
+  detections.push({
+    id: isExtreme ? 'ia-extreme-emotional-intensity' : 'ia-high-emotional-intensity',
+    severity: isExtreme ? 'critical' : 'high',
+    description: isExtreme
+      ? `Extreme emotional intensity: ${(sessionState.emotionalIntensityScore * 100).toFixed(0)}%`
+      : `High emotional intensity: ${(sessionState.emotionalIntensityScore * 100).toFixed(0)}%`,
+    confidence: 0.85
+  });
+  return isExtreme ? 0.9 : 0.7;
+}
+
+function checkReassuranceSeeking(
+  sessionState: SessionState,
+  config: Required<InteractionSafeguardsConfig>,
+  detections: Detection[]
+): number {
+  if (sessionState.reassuranceSeekingCount < config.maxReassuranceSeeking) {
+    return 0;
+  }
+  detections.push({
+    id: 'ia-excessive-reassurance-seeking',
+    severity: 'high',
+    description: `Excessive reassurance-seeking detected (${sessionState.reassuranceSeekingCount} instances)`,
+    confidence: 0.8
+  });
+  return 0.7;
+}
+
+function checkTurnLimits(
+  sessionState: SessionState,
+  config: Required<InteractionSafeguardsConfig>,
+  detections: Detection[]
+): number {
+  if (sessionState.turnCount < config.maxTurns) {
+    return 0;
+  }
+  detections.push({
+    id: 'ia-turn-limit-reached',
+    severity: 'medium',
+    description: `Session turn limit reached (${sessionState.turnCount} turns)`,
+    confidence: 1.0
+  });
+  return 0.5;
 }

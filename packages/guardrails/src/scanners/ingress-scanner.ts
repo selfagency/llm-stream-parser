@@ -120,42 +120,13 @@ export class IngressScanner implements GuardrailScanner {
 
     // Disk-spill for oversized content
     if (size > this.#config.maxInlineSizeBytes) {
-      // Content too large to scan inline — quarantine for offline review
-      return {
-        status: 'quarantine',
-        phase: 'output',
-        reason: `Ingress content too large (${(size / 1024 / 1024).toFixed(1)} MB exceeds ${(this.#config.maxInlineSizeBytes / 1024 / 1024).toFixed(0)} MB limit). Quarantined for review.`,
-        detections: [
-          {
-            id: 'ingress-content-too-large',
-            severity: 'medium',
-            description: `Content size ${(size / 1024 / 1024).toFixed(1)} MB exceeds inline scan limit`,
-            confidence: 1.0
-          }
-        ],
-        quarantineId: `ingress-${Date.now()}`
-      };
+      return oversizedQuarantine(size, this.#config.maxInlineSizeBytes);
     }
 
-    const detections: Detection[] = [];
-
-    for (const entry of INGRESS_PATTERNS) {
-      if (entry.pattern.test(input)) {
-        detections.push({
-          id: entry.id,
-          severity: entry.severity,
-          description: `${entry.severity === 'critical' ? 'Critical' : 'High'} ingress injection pattern: ${entry.id}`,
-          confidence: entry.severity === 'critical' ? 0.9 : 0.7,
-          snippet: input.slice(0, 200)
-        });
-      }
-    }
-
+    const detections = scanIngressPatterns(input);
     if (detections.length === 0) {
       return { status: 'pass', phase: 'output' };
     }
-
-    // Critical pattern → block
     if (detections.some(d => d.severity === 'critical')) {
       return {
         status: 'block',
@@ -164,8 +135,6 @@ export class IngressScanner implements GuardrailScanner {
         detections
       };
     }
-
-    // High severity → quarantine for human review
     return {
       status: 'quarantine',
       phase: 'output',
@@ -174,4 +143,37 @@ export class IngressScanner implements GuardrailScanner {
       quarantineId: `ingress-${Date.now()}`
     };
   }
+}
+
+function oversizedQuarantine(size: number, maxInlineSizeBytes: number): GuardrailResult {
+  return {
+    status: 'quarantine',
+    phase: 'output',
+    reason: `Ingress content too large (${(size / 1024 / 1024).toFixed(1)} MB exceeds ${(maxInlineSizeBytes / 1024 / 1024).toFixed(0)} MB limit). Quarantined for review.`,
+    detections: [
+      {
+        id: 'ingress-content-too-large',
+        severity: 'medium',
+        description: `Content size ${(size / 1024 / 1024).toFixed(1)} MB exceeds inline scan limit`,
+        confidence: 1.0
+      }
+    ],
+    quarantineId: `ingress-${Date.now()}`
+  };
+}
+
+function scanIngressPatterns(input: string): Detection[] {
+  const detections: Detection[] = [];
+  for (const entry of INGRESS_PATTERNS) {
+    if (entry.pattern.test(input)) {
+      detections.push({
+        id: entry.id,
+        severity: entry.severity,
+        description: `${entry.severity === 'critical' ? 'Critical' : 'High'} ingress injection pattern: ${entry.id}`,
+        confidence: entry.severity === 'critical' ? 0.9 : 0.7,
+        snippet: input.slice(0, 200)
+      });
+    }
+  }
+  return detections;
 }
