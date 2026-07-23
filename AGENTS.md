@@ -84,6 +84,20 @@ This project has governance documents that are **authoritative runtime inputs, n
 7. **Do not weaken guardrails** — treat model output as untrusted input. Preserve depth/key/nesting/size limits. Do not bypass privacy-tag scrubbing or safety defaults for convenience.
 8. **Do not introduce `any` types** — use `unknown`, `Record<string, unknown>`, or explicit narrowing.
 
+### Development constraints (non-negotiable)
+
+1. **Never use `--no-verify` or skip CI gates** — do not bypass pre-commit hooks, type checks, linting, or test gates for any reason. If a gate fails, fix the underlying issue.
+
+2. **Never skip type checking, linting, or testing** — every change must pass `pnpm check-types`, `pnpm dlx ultracite check`, and `pnpm test` before commit. No exceptions.
+
+3. **The application must run before shipping** — after any change, verify the application actually starts/runs correctly in a dev or preview environment. Do not assume compilation implies correctness.
+
+4. **TDD for all new code** — every new feature, scanner, hook, or significant logic unit requires accompanying unit tests AND integration tests before it is considered complete. Write tests first (red-green-refactor) or alongside the implementation. No untested logic.
+
+5. **Demonstrate every feature working live** — before marking a feature complete, demonstrate it functioning in the running application (dev server, preview deploy, or integration test). A feature is not done until it visibly works, not just until it compiles.
+
+6. **Always clarify ambiguous requests** — if a user request is unclear, contradictory, or ambiguous, stop and ask for clarification before proceeding. Do not guess intent. A brief clarifying question prevents costly rework.
+
 ## Preferred Workflow
 
 Use the highest-level tool available. Prefer IDE actions, repository-native scripts, and configured skills/MCP servers over ad hoc shell work.
@@ -143,6 +157,8 @@ pnpm test
 pnpm dlx ultracite check
 fallow dead-code --changed-since develop --format json
 ```
+
+**Also verify the application runs** — start the daemon or relevant service and confirm it starts without errors. A passing build is not sufficient; the running process must be confirmed functional.
 
 When a change is package-scoped, run the corresponding package scripts first, then root checks if it affects shared code, exports, docs, or monorepo wiring.
 

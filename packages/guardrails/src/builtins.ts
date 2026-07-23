@@ -7,6 +7,7 @@ import { ActionScanner } from './scanners/action.js';
 import { AGIFramingScanner } from './scanners/agi-framing.js';
 import { AnthropomorphismScanner } from './scanners/anthropomorphism.js';
 import { BiasScanner } from './scanners/bias.js';
+import { CrisisEscalationScanner } from './scanners/crisis-escalation.js';
 import { DarkPatternScanner } from './scanners/dark-pattern.js';
 import { DependencyScanner } from './scanners/dependency.js';
 import { EgressScanner } from './scanners/egress.js';
@@ -64,7 +65,8 @@ export function createBuiltinScanners(): GuardrailScanner[] {
     new ActionScanner(),
     new EgressScanner(),
     new MemoryPoisoningScanner(),
-    new RetrievalFirewallScanner()
+    new RetrievalFirewallScanner(),
+    new CrisisEscalationScanner()
   ];
 }
 
@@ -74,6 +76,7 @@ export {
   AnthropomorphismScanner,
   BiasScanner,
   CommandValidationScanner,
+  CrisisEscalationScanner,
   DarkPatternScanner,
   DependencyScanner,
   EgressScanner,
@@ -125,5 +128,6 @@ export const BUILTIN_SCANNER_IDS: readonly string[] = [
   'hub://guardrails/action',
   'hub://guardrails/egress',
   'hub://guardrails/memory-poisoning',
-  'hub://guardrails/retrieval-firewall'
+  'hub://guardrails/retrieval-firewall',
+  'hub://guardrails/crisis-escalation'
 ];
