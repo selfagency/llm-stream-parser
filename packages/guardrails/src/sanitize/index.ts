@@ -33,3 +33,13 @@ export {
   type SanitizeSummary,
   sanitize
 } from './sanitize.js';
+export {
+  type ContentSource,
+  createUntrustedContentEnvelope,
+  defaultTrustLevel,
+  requiresQuarantine,
+  type SanitizationLevel,
+  sanitizationLevel,
+  type TrustLevel,
+  type UntrustedContentEnvelope
+} from './untrusted-content-envelope.js';
