@@ -1,0 +1,37 @@
+{
+  "name": "@agentsy/bootstrap",
+  "version": "0.0.0",
+  "description": "Project auto-detection, bootstrap, and component recommendation engine",
+  "keywords": [
+    "agentsy",
+    "typescript"
+  ],
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/selfagency/agentsy.git"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "check-types": "tsc --noEmit",
+    "test": "vitest --run --passWithNoTests",
+    "coverage": "vitest --run --coverage --passWithNoTests"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.8.0",
+    "vitest": "^4.0.0",
+    "tsup": "^8.0.0"
+  }
+}
