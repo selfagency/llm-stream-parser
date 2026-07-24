@@ -60,6 +60,29 @@ export interface MetricSnapshot {
 
 import type { Detection, GuardrailResult } from './types.js';
 
+interface DetectionRule {
+  readonly metric: MetricKey;
+  readonly test: (id: string) => boolean;
+}
+
+const DETECTION_RULES: DetectionRule[] = [
+  { test: id => id.includes('sycophancy'), metric: 'sycophancy_rate' },
+  {
+    test: id => id.includes('anthropomorphism') || id.includes('first-person-emotion'),
+    metric: 'anthropomorphic_language_rate'
+  },
+  { test: id => id.includes('dependency') || id.includes('dependence'), metric: 'dependence_cue_rate' },
+  { test: id => id.includes('high-risk') || id.includes('unsafe'), metric: 'unsafe_high_risk_advice_rate' },
+  { test: id => id.includes('dark-pattern'), metric: 'dark_pattern_incidence' },
+  { test: id => id.includes('scope-drift') || id.includes('scope-out-of-scope'), metric: 'scope_violation_rate' },
+  { test: id => id.includes('agi-framing') || id.includes('agi'), metric: 'agi_longtermist_framing_incidence' },
+  { test: id => id.includes('professional-displacement'), metric: 'professional_displacement_framing_incidence' },
+  {
+    test: id => id.includes('privacy') || (id.includes('memory') && !id.includes('poison')),
+    metric: 'memory_transparency_compliance'
+  }
+];
+
 export class MetricsCollector {
   #counts: Record<string, number> = {};
   #totalEvaluations = 0;
@@ -73,6 +96,7 @@ export class MetricsCollector {
     for (const d of result.detections) {
       const key = this.#detectionToMetricKey(d);
       if (key) {
+        // nosemgrep: detection IDs are internally-generated, not user-supplied
         this.#counts[key] = (this.#counts[key] ?? 0) + 1;
       }
     }
@@ -83,6 +107,7 @@ export class MetricsCollector {
     const total = this.#totalEvaluations || 1;
     const values = {} as Record<MetricKey, number>;
     for (const key of ALL_METRIC_KEYS) {
+      // nosemgrep: ALL_METRIC_KEYS is a readonly const array of known keys
       values[key] = (this.#counts[key] ?? 0) / total;
     }
     const snapshot: MetricSnapshot = {
@@ -102,32 +127,10 @@ export class MetricsCollector {
 
   #detectionToMetricKey(d: Detection): MetricKey | null {
     const id = d.id;
-    if (id.includes('sycophancy')) {
-      return 'sycophancy_rate';
-    }
-    if (id.includes('anthropomorphism') || id.includes('first-person-emotion')) {
-      return 'anthropomorphic_language_rate';
-    }
-    if (id.includes('dependency') || id.includes('dependence')) {
-      return 'dependence_cue_rate';
-    }
-    if (id.includes('high-risk') || id.includes('unsafe')) {
-      return 'unsafe_high_risk_advice_rate';
-    }
-    if (id.includes('dark-pattern')) {
-      return 'dark_pattern_incidence';
-    }
-    if (id.includes('scope-drift') || id.includes('scope-out-of-scope')) {
-      return 'scope_violation_rate';
-    }
-    if (id.includes('agi-framing') || id.includes('agi')) {
-      return 'agi_longtermist_framing_incidence';
-    }
-    if (id.includes('professional-displacement')) {
-      return 'professional_displacement_framing_incidence';
-    }
-    if (id.includes('privacy') || (id.includes('memory') && !id.includes('poison'))) {
-      return 'memory_transparency_compliance';
+    for (const { test, metric } of DETECTION_RULES) {
+      if (test(id)) {
+        return metric;
+      }
     }
     return null;
   }
@@ -175,6 +178,7 @@ export function evaluateReleaseGate(snapshot: MetricSnapshot, config: ReleaseGat
       console.warn(`[metrics] Unknown metric key "${key}" in release gate config, skipping`);
       continue;
     }
+    // nosemgrep: key is validated as MetricKey by isMetricKey() check above
     const value = snapshot.values[key];
     if (value !== undefined && threshold !== undefined && value > threshold) {
       failures.push({ key, value, threshold });
@@ -213,6 +217,34 @@ export interface BenchmarkScenario {
  * @param scenarios — Array of test scenarios.
  * @param evaluate — Function that evaluates a single input and returns a GuardrailResult.
  */
+interface ScenarioResult {
+  readonly actualStatus: GuardrailResult['status'];
+  readonly detectionMatch: boolean;
+  readonly detectionMismatchReason: string;
+  readonly statusMatch: boolean;
+}
+
+async function evaluateScenario(
+  evaluate: (input: string) => GuardrailResult | Promise<GuardrailResult>,
+  scenario: BenchmarkScenario
+): Promise<ScenarioResult> {
+  const result = await evaluate(scenario.input);
+  const statusMatch = result.status === scenario.expectedStatus;
+  let detectionMatch = true;
+  let detectionMismatchReason = '';
+
+  if (statusMatch && scenario.expectedDetectionIds && result.detections) {
+    const actualIds = result.detections.map(d => d.id);
+    const missing = scenario.expectedDetectionIds.filter(id => !actualIds.includes(id));
+    if (missing.length > 0) {
+      detectionMatch = false;
+      detectionMismatchReason = ` (missing detections: ${missing.join(', ')})`;
+    }
+  }
+
+  return { actualStatus: result.status, statusMatch, detectionMatch, detectionMismatchReason };
+}
+
 export async function runBenchmark(
   scenarios: BenchmarkScenario[],
   evaluate: (input: string) => GuardrailResult | Promise<GuardrailResult>
@@ -226,27 +258,17 @@ export async function runBenchmark(
   let passed = 0;
 
   for (const scenario of scenarios) {
-    const result = await evaluate(scenario.input);
-    const statusMatch = result.status === scenario.expectedStatus;
-    let detectionMatch = true;
-    let detectionMismatchReason = '';
+    const evalResult = await evaluateScenario(evaluate, scenario);
 
-    if (statusMatch && scenario.expectedDetectionIds && result.detections) {
-      const actualIds = result.detections.map(d => d.id);
-      const missing = scenario.expectedDetectionIds.filter(id => !actualIds.includes(id));
-      if (missing.length > 0) {
-        detectionMatch = false;
-        detectionMismatchReason = ` (missing detections: ${missing.join(', ')})`;
-      }
-    }
-
-    if (statusMatch && detectionMatch) {
+    if (evalResult.statusMatch && evalResult.detectionMatch) {
       passed++;
     } else {
       failures.push({
         scenario: scenario.name,
-        expected: statusMatch ? `detections: ${scenario.expectedDetectionIds?.join(', ')}` : scenario.expectedStatus,
-        actual: statusMatch ? detectionMismatchReason : result.status
+        expected: evalResult.statusMatch
+          ? `detections: ${scenario.expectedDetectionIds?.join(', ')}`
+          : scenario.expectedStatus,
+        actual: evalResult.statusMatch ? evalResult.detectionMismatchReason : evalResult.actualStatus
       });
     }
   }

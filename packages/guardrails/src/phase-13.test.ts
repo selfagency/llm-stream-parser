@@ -19,6 +19,7 @@ describe('MetricsCollector', () => {
     const snapshot = collector.snapshot();
     expect(snapshot.totalEvaluations).toBe(0);
     for (const key of ALL_METRIC_KEYS) {
+      // nosemgrep: ALL_METRIC_KEYS is a readonly const array of known keys
       expect(typeof snapshot.values[key]).toBe('number');
     }
   });
