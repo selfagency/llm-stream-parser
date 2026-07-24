@@ -7,11 +7,9 @@
  * @module
  */
 
-export interface Message {
-  readonly content: string;
-  readonly role: string;
-}
+import type { Message } from './reflection.js';
 
+export type { Message };
 export type QueueMode = 'all' | 'one-at-a-time';
 
 export class SteeringQueue {

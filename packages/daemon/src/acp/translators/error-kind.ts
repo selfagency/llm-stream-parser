@@ -30,25 +30,21 @@ export interface ErrorKindResult {
 }
 
 /** Map an error message to its structured kind. */
+const ERROR_PATTERNS: Array<{ kind: ErrorKind; patterns: string[] }> = [
+  { kind: 'rate_limit', patterns: ['rate limit', 'rate_limit', 'too many requests'] },
+  { kind: 'guardrail_block', patterns: ['guardrail', 'blocked', 'ethics'] },
+  { kind: 'budget_exceeded', patterns: ['budget', 'quota', 'exceeded'] },
+  { kind: 'timeout', patterns: ['timeout', 'timed out'] },
+  { kind: 'scope_denied', patterns: ['scope', 'outside', 'denied'] },
+  { kind: 'tool_error', patterns: ['tool', 'execution failed', 'handler error'] }
+];
+
 function classifyError(error: string): ErrorKind {
   const lower = error.toLowerCase();
-  if (lower.includes('rate limit') || lower.includes('rate_limit') || lower.includes('too many requests')) {
-    return 'rate_limit';
-  }
-  if (lower.includes('guardrail') || lower.includes('blocked') || lower.includes('ethics')) {
-    return 'guardrail_block';
-  }
-  if (lower.includes('budget') || lower.includes('quota') || lower.includes('exceeded')) {
-    return 'budget_exceeded';
-  }
-  if (lower.includes('timeout') || lower.includes('timed out')) {
-    return 'timeout';
-  }
-  if (lower.includes('scope') || lower.includes('outside') || lower.includes('denied')) {
-    return 'scope_denied';
-  }
-  if (lower.includes('tool') || lower.includes('execution failed') || lower.includes('handler error')) {
-    return 'tool_error';
+  for (const { kind, patterns } of ERROR_PATTERNS) {
+    if (patterns.some(p => lower.includes(p))) {
+      return kind;
+    }
   }
   return 'unknown';
 }

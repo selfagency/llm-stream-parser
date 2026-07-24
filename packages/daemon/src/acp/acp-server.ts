@@ -49,6 +49,7 @@ interface ACPResponse {
 }
 
 type NotificationHandler = (method: string, params: unknown) => void;
+type SendFn = (result: unknown, error?: { code: number; message: string }) => void;
 
 // ── Helpers ─────────────────────────────────────────────
 
@@ -142,55 +143,47 @@ export class ACPServer {
     };
 
     try {
-      switch (method) {
-        case 'initialize':
-          return send(await this.#handleInitialize(params));
-        case 'authenticate':
-          return send(await this.#handleAuthenticate(params));
-        case 'session/new':
-          return send(await this.#handleSessionNew(params));
-        case 'session/prompt':
-          return this.#handleSessionPrompt(params, send);
-        case 'session/load':
-          return send(await this.#handleSessionLoad(params));
-        case 'session/list':
-          return send(this.#handleSessionList());
-        case 'session/close':
-          return send(await this.#handleSessionClose(params));
-        case 'session/delete':
-          return send(await this.#handleSessionDelete(params));
-        case 'session/resume':
-          return send(await this.#handleSessionResume(params));
-        case 'session/cancel':
-          return send(this.#handleSessionCancel(params));
-        case 'session/set_mode':
-          return send(await this.#handleSessionSetMode(params));
-        case 'session/set_config_option':
-          return send(await this.#handleSessionSetConfigOption(params));
-        case 'fs/readTextFile':
-          return send(await this.#handleFsReadTextFile(params));
-        case 'fs/writeTextFile':
-          return send(await this.#handleFsWriteTextFile(params));
-        case 'requestPermission':
-          return send(this.#handleRequestPermission(params));
-        case 'terminal/create':
-          return send(await this.#handleTerminalCreate(params));
-        case 'terminal/output':
-          return send(await this.#handleTerminalOutput(params));
-        case 'terminal/wait_for_exit':
-          return send(await this.#handleTerminalWaitForExit(params));
-        case 'terminal/kill':
-          return send(await this.#handleTerminalKill(params));
-        case 'terminal/release':
-          return send(await this.#handleTerminalRelease(params));
-        default:
-          send(undefined, { code: -32_601, message: `Method not found: ${method}` });
+      const handler = this.#methodHandlers().get(method);
+      if (handler) {
+        if (method === 'session/prompt') {
+          await handler(params, send);
+        } else {
+          const result = await handler(params);
+          send(result);
+        }
+      } else {
+        send(undefined, { code: -32_601, message: `Method not found: ${method}` });
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       this.#deps.logger.error('ACP handler error', { method, error: message });
       send(undefined, { code: -32_603, message: `Internal error: ${message}` });
     }
+  }
+
+  #methodHandlers(): Map<string, (params?: Record<string, unknown>, send?: SendFn) => unknown | Promise<unknown>> {
+    return new Map([
+      ['initialize', this.#handleInitialize.bind(this)],
+      ['authenticate', this.#handleAuthenticate.bind(this)],
+      ['session/new', this.#handleSessionNew.bind(this)],
+      ['session/prompt', this.#handleSessionPrompt.bind(this)],
+      ['session/load', this.#handleSessionLoad.bind(this)],
+      ['session/list', this.#handleSessionList.bind(this)],
+      ['session/close', this.#handleSessionClose.bind(this)],
+      ['session/delete', this.#handleSessionDelete.bind(this)],
+      ['session/resume', this.#handleSessionResume.bind(this)],
+      ['session/cancel', this.#handleSessionCancel.bind(this)],
+      ['session/set_mode', this.#handleSessionSetMode.bind(this)],
+      ['session/set_config_option', this.#handleSessionSetConfigOption.bind(this)],
+      ['fs/readTextFile', this.#handleFsReadTextFile.bind(this)],
+      ['fs/writeTextFile', this.#handleFsWriteTextFile.bind(this)],
+      ['requestPermission', this.#handleRequestPermission.bind(this)],
+      ['terminal/create', this.#handleTerminalCreate.bind(this)],
+      ['terminal/output', this.#handleTerminalOutput.bind(this)],
+      ['terminal/wait_for_exit', this.#handleTerminalWaitForExit.bind(this)],
+      ['terminal/kill', this.#handleTerminalKill.bind(this)],
+      ['terminal/release', this.#handleTerminalRelease.bind(this)]
+    ]);
   }
 
   // ── Handler: initialize ─────────────────────────
@@ -539,10 +532,7 @@ export class ACPServer {
 
   async #handleTerminalKill(params?: Record<string, unknown>): Promise<unknown> {
     const terminalId = params?.terminalId as string;
-    const term = this.#terminals.get(terminalId);
-    if (!term) {
-      return { error: { code: -32_006, message: 'Terminal not found' } };
-    }
+    const term = this.#requireTerminal(terminalId);
 
     try {
       await this.#deps.subprocessManager.killProcess(term.processId);
@@ -576,6 +566,15 @@ export class ACPServer {
   }
 
   // ── Helpers ───────────────────────────────────
+
+  /** Get a terminal by ID or throw a not-found error. */
+  #requireTerminal(terminalId: string): { processId: string; dirs: string[] } {
+    const term = this.#terminals.get(terminalId);
+    if (!term) {
+      throw new ACPError(-32_006, 'Terminal not found');
+    }
+    return term;
+  }
 
   /** Spawn MCP servers provided by the ACP client. */
   async #spawnMcpServers(

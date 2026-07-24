@@ -8,5 +8,4 @@ export type {
   TurnResult
 } from './simple-turn.js';
 export { createSimpleTurnLoop } from './simple-turn.js';
-export type { Message as QueueMessage } from './steering.js';
 export { SteeringQueue } from './steering.js';

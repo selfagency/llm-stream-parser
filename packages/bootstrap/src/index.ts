@@ -6,6 +6,8 @@
 
 export {
   type AgentsyConfig,
+  configExists,
+  configPath,
   createDefaultConfig,
   createProjectTools,
   type InstalledComponents,

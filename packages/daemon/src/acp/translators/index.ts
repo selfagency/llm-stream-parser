@@ -1,3 +1,5 @@
+// fallow-ignore-file unused-file
+
 /**
  * ACP Translators — protocol-level transformation modules.
  *
