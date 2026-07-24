@@ -131,7 +131,7 @@ const OUT_OF_SCOPE_KEYWORDS: Record<string, RegExp[]> = {
  */
 export function matchOutOfScope(input: string, scope: ScopeDeclaration): string | undefined {
   for (const category of scope.outOfScope) {
-    const patterns = OUT_OF_SCOPE_KEYWORDS[category];
+    const patterns = OUT_OF_SCOPE_KEYWORDS[category]; // nosemgrep: category iterates from hardcoded scope.outOfScope, not user input
     if (patterns?.some(p => p.test(input))) {
       return category;
     }
