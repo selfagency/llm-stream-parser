@@ -259,7 +259,7 @@ export async function scanProject(rootPath: string): Promise<ProjectProfile> {
     linter,
     testRunner,
     monorepo,
-    monorepoTool,
+    ...(monorepoTool === undefined ? {} : { monorepoTool }),
     ci,
     deploymentTarget,
     detectedAt: new Date().toISOString()
