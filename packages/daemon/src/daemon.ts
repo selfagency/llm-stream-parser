@@ -1,5 +1,10 @@
 import type { ProviderEthicsPolicyHook } from '@agentsy/gateway';
-import { isProviderBlocked, requiresAcknowledgement } from '@agentsy/guardrails';
+import {
+  createBuiltinScanners,
+  GuardrailPipeline,
+  isProviderBlocked,
+  requiresAcknowledgement
+} from '@agentsy/guardrails';
 import type { MemoryEngine } from '@agentsy/memory';
 import type { ObservabilityEngine } from '@agentsy/observability';
 import { createObservabilityFromEnv } from '@agentsy/observability';
@@ -23,6 +28,7 @@ import { Sleeper } from './lifecycle/sleeper.js';
 import { Supervisor } from './lifecycle/supervisor.js';
 import { AgentPool } from './pool/agent-pool.js';
 import { SubprocessManager } from './processes/subprocess-manager.js';
+import { AGUIService } from './services/ag-ui-service.js';
 import { RetrievalService } from './services/retrieval-service.js';
 import { RoutingService } from './services/routing-service.js';
 import { ServiceHost } from './services/service-host.js';
@@ -167,10 +173,12 @@ export class Daemon {
   readonly routing: RoutingService;
   readonly retrieval: RetrievalService;
   readonly streamManager: StreamManager;
+  readonly agui: AGUIService;
   readonly acpNotificationAdapter: ACPNotificationAdapter;
   readonly observability: ObservabilityEngine;
   readonly eventBus: HonkerEventBus;
   readonly learningJob: LearningJob;
+  readonly guardrails: GuardrailPipeline;
   private readonly _observabilitySinks: Array<{ type: string; enabled: boolean; reason: string }>;
 
   private readonly config: DaemonConfig;
@@ -327,6 +335,9 @@ export class Daemon {
       scheduler: this.scheduler
     });
 
+    // AG-UI service — CopilotKit-compatible protocol adapter
+    this.agui = new AGUIService(this.logger);
+
     // Event bus for cross-process communication
     this.eventBus = new HonkerEventBus({
       logger: this.logger.child('event-bus'),
@@ -340,6 +351,12 @@ export class Daemon {
       eventBus: this.eventBus,
       logger: this.logger.child('learning')
     });
+
+    // Guardrail pipeline — seeded with all built-in scanners (Phases 4, 9, 10, 11)
+    this.guardrails = new GuardrailPipeline();
+    for (const scanner of createBuiltinScanners()) {
+      this.guardrails.add(scanner);
+    }
   }
 
   async start(): Promise<void> {
@@ -410,6 +427,9 @@ export class Daemon {
       // 10. Start ACP server
       await this.acp.start(this.config.acp);
 
+      // 10a. Start AG-UI service
+      this.agui.start();
+
       // 11. Enable supervisor
       this.supervisor.watch(this);
 
@@ -473,6 +493,7 @@ export class Daemon {
       await withTimeout(this.agents.shutdown(), timeout);
       await withTimeout(this.retrieval.stop(), timeout);
       await withTimeout(this.jobs.stop(), timeout);
+      this.agui.stop();
       if (this.memory?.shutdown) {
         await withTimeout(this.memory.shutdown(), timeout);
       }
