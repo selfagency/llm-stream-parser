@@ -80,7 +80,8 @@
     "lint": "biome lint",
     "format": "biome format",
     "test": "vitest --run --passWithNoTests",
-    "coverage": "vitest --run --coverage --passWithNoTests"
+    "coverage": "vitest --run --coverage --passWithNoTests",
+    "postinstall": "node scripts/postinstall.mjs"
   },
   "dependencies": {
     "@agentsy/core": "workspace:*",
