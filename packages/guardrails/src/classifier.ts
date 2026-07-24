@@ -25,7 +25,7 @@ export class RequestClassifier {
     let riskProfile: RequestClassification['riskProfile'] = 'low';
     let highRiskDomain: HighRiskDomain | undefined;
 
-    highRiskDomain = detectHighRiskDomain(input, signals);
+    highRiskDomain = detectHighRiskDomain(input);
     if (highRiskDomain) {
       domain = highRiskDomain;
       riskProfile = 'high';
@@ -53,7 +53,11 @@ export class RequestClassifier {
   }
 }
 
-function detectHighRiskDomain(input: string, _signals: string[]): HighRiskDomain | undefined {
+/**
+ * Detect if input matches a high-risk domain pattern.
+ * Returns the first matching HighRiskDomain or undefined.
+ */
+function detectHighRiskDomain(input: string): HighRiskDomain | undefined {
   for (const [key, policy] of Object.entries(HIGH_RISK_DOMAIN_POLICIES)) {
     if (policy.patterns.some(p => p.test(input))) {
       return key as HighRiskDomain;
@@ -62,6 +66,10 @@ function detectHighRiskDomain(input: string, _signals: string[]): HighRiskDomain
   return;
 }
 
+/**
+ * Determine the user's intent from the input and domain.
+ * Only coding and high-risk domains have specific intent detection in v1.
+ */
 function detectIntent(domain: string, input: string, highRiskDomain: HighRiskDomain | undefined): string {
   if (domain === 'coding') {
     if (/\b(?:debug|fix|bug|error|issue)\b/i.test(input)) {

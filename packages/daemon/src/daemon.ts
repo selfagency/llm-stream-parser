@@ -427,6 +427,9 @@ export class Daemon {
       // 10. Start ACP server
       await this.acp.start(this.config.acp);
 
+      // 10a. Start AG-UI service
+      this.agui.start();
+
       // 11. Enable supervisor
       this.supervisor.watch(this);
 
@@ -490,6 +493,7 @@ export class Daemon {
       await withTimeout(this.agents.shutdown(), timeout);
       await withTimeout(this.retrieval.stop(), timeout);
       await withTimeout(this.jobs.stop(), timeout);
+      this.agui.stop();
       if (this.memory?.shutdown) {
         await withTimeout(this.memory.shutdown(), timeout);
       }

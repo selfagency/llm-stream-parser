@@ -120,7 +120,9 @@ const OUT_OF_SCOPE_KEYWORDS: Record<string, RegExp[]> = {
   'medical advice': [/\b(?:diagnos|prescri|medication|symptoms?|treatment|dose|dosage)\b/i],
   'legal advice': [/\b(?:legal\s+(?:advice|help|question)|attorney|lawsuit|sue|suing|lawyer)\b/i],
   'financial advice': [/\b(?:invest|stock\s+pick|trading\s+advice|financial\s+plan|retirement\s+plan)\b/i],
-  'mental health counseling': [/\b(?:anxious|depressed|therapy|counseling|mental\s+health)\b/i]
+  'mental health counseling': [/\b(?:anxious|depressed|therapy|counseling|mental\s+health)\b/i],
+  'self-harm': [/\b(?:suicid|self[\s-]?harm|cutting|overdose|kill myself)\b/i],
+  'illegal activities': [/\b(?:hack|steal|fraud|illegal|unlawful|crime)\b/i]
 };
 
 /**

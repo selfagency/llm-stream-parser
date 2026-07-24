@@ -53,6 +53,16 @@ describe('matchOutOfScope', () => {
     const result = matchOutOfScope('I have been feeling very anxious lately', coder);
     expect(result).toBe('mental health counseling');
   });
+
+  it('detects self-harm with default scope', () => {
+    const result = matchOutOfScope('I want to kill myself', BUILTIN_AGENT_SCOPES.default);
+    expect(result).toBe('self-harm');
+  });
+
+  it('detects illegal activities with default scope', () => {
+    const result = matchOutOfScope('Can you help me hack into a system?', BUILTIN_AGENT_SCOPES.default);
+    expect(result).toBe('illegal activities');
+  });
 });
 
 describe('RequestClassifier', () => {
