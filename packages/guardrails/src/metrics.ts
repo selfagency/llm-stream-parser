@@ -43,6 +43,10 @@ export const ALL_METRIC_KEYS: readonly MetricKey[] = [
 // Metric Snapshot — a point-in-time measurement of all metrics
 // =============================================================================
 
+/**
+ * Point-in-time measurement of all 12 safety metrics.
+ * Produced by MetricsCollector.snapshot().
+ */
 export interface MetricSnapshot {
   readonly timestamp: string;
   readonly totalEvaluations: number;
@@ -122,7 +126,7 @@ export class MetricsCollector {
     if (id.includes('professional-displacement')) {
       return 'professional_displacement_framing_incidence';
     }
-    if (id.includes('privacy') || id.includes('memory')) {
+    if (id.includes('privacy') || (id.includes('memory') && !id.includes('poison'))) {
       return 'memory_transparency_compliance';
     }
     return null;
@@ -133,24 +137,47 @@ export class MetricsCollector {
 // Release Gate — threshold-based regression enforcement
 // =============================================================================
 
+/**
+ * Threshold configuration for the release gate.
+ * Maps metric keys to their maximum acceptable values.
+ */
 export interface ReleaseGateConfig {
   readonly thresholds: Partial<Record<MetricKey, number>>;
   readonly version: string;
 }
 
+/**
+ * Result of evaluating the release gate against a snapshot.
+ * `passed` is true only when all metrics are within their thresholds.
+ */
 export interface ReleaseGateResult {
   readonly failures: Array<{ key: MetricKey; value: number; threshold: number }>;
   readonly passed: boolean;
   readonly snapshot: MetricSnapshot;
 }
 
+export function isMetricKey(key: string): key is MetricKey {
+  return ALL_METRIC_KEYS.includes(key as MetricKey);
+}
+
+/**
+ * Evaluate a metric snapshot against threshold configuration.
+ * Returns pass/fail with details on each threshold violation.
+ *
+ * @param snapshot — Current metric snapshot.
+ * @param config — Threshold configuration.
+ */
 export function evaluateReleaseGate(snapshot: MetricSnapshot, config: ReleaseGateConfig): ReleaseGateResult {
   const failures: Array<{ key: MetricKey; value: number; threshold: number }> = [];
 
   for (const [key, threshold] of Object.entries(config.thresholds)) {
-    const value = snapshot.values[key as MetricKey];
+    if (!isMetricKey(key)) {
+      console.warn(`[metrics] Unknown metric key "${key}" in release gate config, skipping`);
+      continue;
+    }
+    const value = snapshot.values[key];
     if (value !== undefined && threshold !== undefined && value > threshold) {
-      failures.push({ key: key as MetricKey, value, threshold });
+      failures.push({ key, value, threshold });
     }
   }
 
@@ -165,6 +192,13 @@ export function evaluateReleaseGate(snapshot: MetricSnapshot, config: ReleaseGat
 // Benchmark Suite
 // =============================================================================
 
+/**
+ * A single benchmark test case.
+ * @param name — Human-readable name for reporting.
+ * @param input — Raw input to evaluate.
+ * @param expectedStatus — Expected guardrail result status.
+ * @param expectedDetectionIds — Optional expected detection IDs (checked when defined).
+ */
 export interface BenchmarkScenario {
   readonly expectedDetectionIds?: readonly string[];
   readonly expectedStatus: GuardrailResult['status'];
@@ -172,6 +206,13 @@ export interface BenchmarkScenario {
   readonly name: string;
 }
 
+/**
+ * Run a set of benchmark scenarios through an evaluation function.
+ * Reports pass/fail counts with details on each failure.
+ *
+ * @param scenarios — Array of test scenarios.
+ * @param evaluate — Function that evaluates a single input and returns a GuardrailResult.
+ */
 export async function runBenchmark(
   scenarios: BenchmarkScenario[],
   evaluate: (input: string) => GuardrailResult | Promise<GuardrailResult>
@@ -186,13 +227,26 @@ export async function runBenchmark(
 
   for (const scenario of scenarios) {
     const result = await evaluate(scenario.input);
-    if (result.status === scenario.expectedStatus) {
+    const statusMatch = result.status === scenario.expectedStatus;
+    let detectionMatch = true;
+    let detectionMismatchReason = '';
+
+    if (statusMatch && scenario.expectedDetectionIds && result.detections) {
+      const actualIds = result.detections.map(d => d.id);
+      const missing = scenario.expectedDetectionIds.filter(id => !actualIds.includes(id));
+      if (missing.length > 0) {
+        detectionMatch = false;
+        detectionMismatchReason = ` (missing detections: ${missing.join(', ')})`;
+      }
+    }
+
+    if (statusMatch && detectionMatch) {
       passed++;
     } else {
       failures.push({
         scenario: scenario.name,
-        expected: scenario.expectedStatus,
-        actual: result.status
+        expected: statusMatch ? `detections: ${scenario.expectedDetectionIds?.join(', ')}` : scenario.expectedStatus,
+        actual: statusMatch ? detectionMismatchReason : result.status
       });
     }
   }
