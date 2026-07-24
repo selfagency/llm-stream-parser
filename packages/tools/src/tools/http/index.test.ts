@@ -63,16 +63,16 @@ describe('http_fetch tool', () => {
 
   it('returns bodyFormat as content-type for non-HTML content', async () => {
     const tool = createHttpTool();
-    // Use a URL that returns JSON
-    const result = await tool.handler({ url: 'https://httpbin.org/headers' });
+    // Use a URL that returns JSON (jsonplaceholder is fast and reliable)
+    const result = await tool.handler({ url: 'https://jsonplaceholder.typicode.com/posts/1' });
     expect(result.ok).toBe(true);
     if (result.ok) {
       const data = result.data as HttpFetchData;
-      // httpbin returns application/json
+      // jsonplaceholder returns application/json
       expect(data.bodyFormat).not.toBe('markdown');
       expect(typeof data.bodyFormat).toBe('string');
     }
-  });
+  }, 15_000);
 
   it('handles fetch errors gracefully', async () => {
     const tool = createHttpTool();
