@@ -56,10 +56,12 @@
     "@agentsy/core": "workspace:*",
     "@agentsy/runtime": "workspace:*",
     "@agentsy/shared": "workspace:*",
+    "js-yaml": "^5.2.2",
     "yaml": "^2.6.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^25.9.2",
     "tsup": "^8.3.5",
     "typescript": "^6.0.3",
