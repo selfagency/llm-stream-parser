@@ -81,9 +81,7 @@
       "es5-ext",
       "esbuild",
       "fallow",
-      "isolated-vm",
       "msw",
-      "node-pty",
       "vite",
       "vitest"
     ],
