@@ -28,10 +28,9 @@
     "test": "vitest --run --passWithNoTests",
     "coverage": "vitest --run --coverage --passWithNoTests"
   },
-  "dependencies": {},
   "devDependencies": {
-    "typescript": "^5.8.0",
-    "vitest": "^4.0.0",
-    "tsup": "^8.0.0"
+    "tsup": "^8.5.1",
+    "typescript": "~6.0.0",
+    "vitest": "^4.1.8"
   }
 }
