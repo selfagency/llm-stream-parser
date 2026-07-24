@@ -36,7 +36,7 @@
     "lint": "biome lint",
     "format": "biome format",
     "test": "vitest --run --passWithNoTests",
-    "coverage": "vitest --run --coverage"
+    "coverage": "vitest --run --coverage --passWithNoTests"
   },
   "dependencies": {
     "@agentsy/shared": "workspace:*",
