@@ -112,6 +112,7 @@ function mergeDeps(pkgJson: Record<string, unknown>): Record<string, string> {
 
 function detectFrameworks(deps: Record<string, string>, frameworks: Framework[]): void {
   for (const [key, fw] of FRAMEWORK_DEPS) {
+    // nosemgrep: key comes from the constant FRAMEWORK_DEPS array, not user input
     if (deps[key] && !frameworks.includes(fw)) {
       frameworks.push(fw);
     }
@@ -120,6 +121,7 @@ function detectFrameworks(deps: Record<string, string>, frameworks: Framework[])
 
 function detectLinters(deps: Record<string, string>, linter: string[]): void {
   for (const [key, name] of Object.entries(LINTER_DEPS)) {
+    // nosemgrep: key comes from the constant LINTER_DEPS object, not user input
     if (deps[key] && !linter.includes(name)) {
       linter.push(name);
     }
@@ -128,6 +130,7 @@ function detectLinters(deps: Record<string, string>, linter: string[]): void {
 
 function detectTestRunners(deps: Record<string, string>, testRunner: string[]): void {
   for (const [key, name] of TEST_DEPS) {
+    // nosemgrep: key comes from the constant TEST_DEPS array, not user input
     if (deps[key]) {
       testRunner.push(name);
     }
@@ -144,6 +147,7 @@ function detectBuildSystem(
     return 'node';
   }
   for (const [scriptKey, system] of BUILD_FROM_SCRIPTS) {
+    // nosemgrep: scriptKey comes from the constant BUILD_FROM_SCRIPTS array, not user input
     if (scripts[scriptKey] || deps[scriptKey]) {
       if (system === 'next') {
         frameworks.push('next.js');
