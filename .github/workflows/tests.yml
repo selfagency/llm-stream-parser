@@ -106,6 +106,8 @@ jobs:
           CI: true
 
       - name: Run unit tests with coverage and JUNIT
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
         run: |
           pnpm turbo run coverage -- \
             --coverage.reporter=json \
