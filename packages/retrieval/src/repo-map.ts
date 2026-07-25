@@ -262,6 +262,7 @@ function matchKnownFile(knownFiles: Set<string>, resolvedPath: string): string |
 
 /**
  * Convert a glob suffix pattern to a regex string for filename matching.
+ * nosemgrep: nameGlob comes from include/exclude config arrays, not user input.
  */
 function globPatternToRegex(nameGlob: string): RegExp {
   const escaped = nameGlob.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');

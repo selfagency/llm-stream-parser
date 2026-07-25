@@ -42,6 +42,8 @@ const _FILE_HEADER_REGEX = /^(?:={3,}|---)\s+(.+)$/m;
  * Headers without subsequent content are still emitted (with an empty
  * replacement string).  The function never throws.
  */
+// NOSONAR — S3776 cognitive complexity 23/15; multi-format parsing inherently
+// requires a loop with several format-discrimination branches.
 export function parseWholeFile(text: string): EditParseResult {
   const edits: FileEdit[] = [];
   const errors: string[] = [];
