@@ -7,12 +7,23 @@
  *
  * ## Threshold
  *
- * Default entropy threshold is 4.0 (industry standard: truffleHog, entro-scan,
- * eslint-plugin-no-secrets all use 4.0–4.5). At 4.0:
+ * Default entropy threshold is 3.5. At 3.5:
  * - A random 20-char alphanumeric string → ~4.3 (flagged)
- * - An English word like "configuration" → ~3.5 (not flagged)
+ * - An English word like "configuration" → ~3.2 (not flagged)
  * - A UUID → ~5.8 (flagged — but filtered by UUID pattern exclusion)
  * - An AWS key `AKIAIOSFODNN7EXAMPLE` → ~3.6 (but caught by provider pattern)
+ *
+ * ## Compact entropy (sliding window) mode
+ *
+ * For future work: consider a "compact entropy" mode that runs a sliding window
+ * across the entire input string (window size ~8-12 chars) instead of splitting
+ * on delimiters. This catches secrets embedded in concatenated strings, like
+ * `password=Gx8pQmZwN3yB6rKtV2cL&role=admin` where the full token is separated
+ * by delimiters but would benefit from finer-grained scanning of compact segments.
+ *
+ * The sliding window approach avoids false negatives on short but high-entropy
+ * substrings that are surrounded by low-entropy padding. Window size should be
+ * tuned to match typical secret lengths (JWT segments, API key fragments).
  *
  * ## False-positive suppression
  *
@@ -74,8 +85,8 @@ const FP_EXCLUSIONS: RegExp[] = [
   /\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?[+-]\d{2}:?\d{2}\b/,
   // Git SHAs: abcdef0123456789
   /\b[0-9a-f]{7,40}\b(?!.*\S)/i,
-  // Base64 short padding segments (under 16 chars)
-  /\b[A-Za-z0-9+/]{4,15}(?:={1,2})?\b/,
+  // Base64 short padding segments (under 10 chars)
+  /\b[A-Za-z0-9+/]{4,9}(?:={1,2})?\b/,
   // Version strings: 1.2.3
   /\b\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)?(?:\+[a-zA-Z0-9.]+)?\b/,
   // SemVer range: >=1.0.0 <2.0.0
@@ -142,7 +153,7 @@ export class EntropyScanner implements GuardrailScanner {
     id: 'hub://guardrails/entropy',
     name: 'Entropy Detection Scanner',
     version: '1.0.0',
-    description: 'Detects high-entropy strings as potential secrets (Shannon entropy ≥ 4.0)',
+    description: 'Detects high-entropy strings as potential secrets (Shannon entropy ≥ 3.5)',
     priority: 50,
     owaspCategories: ['asi-06', 'asi-08'] as const,
     tags: ['entropy', 'secrets', 'catch-all', 'data-leakage']
@@ -150,10 +161,10 @@ export class EntropyScanner implements GuardrailScanner {
 
   readonly #threshold: number;
   /**
-   * @param threshold — Shannon entropy threshold (default 4.0). Higher = fewer false positives.
+   * @param threshold — Shannon entropy threshold (default 3.5). Higher = fewer false positives.
    */
   constructor(options?: { threshold?: number }) {
-    this.#threshold = options?.threshold ?? 4;
+    this.#threshold = options?.threshold ?? 3.5;
   }
 
   evaluate(input: string, _context?: Record<string, unknown>): Promise<GuardrailResult> {

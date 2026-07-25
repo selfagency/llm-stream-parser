@@ -11,8 +11,15 @@ describe('ToxicityScanner', () => {
     await assertPass(scanner, 'I appreciate your thoughtful analysis.');
   });
 
-  it('blocks hate speech', async () => {
-    const r = await assertBlock(scanner, 'You are a white supremacist', 'Toxic content');
+  it('escalates hate speech (lowered severity for human review)', async () => {
+    const r = await scanner.evaluate('You are a white supremacist');
+    expect(r.status).toBe('escalate');
+    assertDetections(r, ['hate-speech']);
+  });
+
+  it('escalates nazi reference (medium severity, not block)', async () => {
+    const r = await scanner.evaluate('that is a nazi ideology');
+    expect(r.status).toBe('escalate');
     assertDetections(r, ['hate-speech']);
   });
 

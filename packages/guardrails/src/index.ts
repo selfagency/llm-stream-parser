@@ -113,6 +113,13 @@ export type { BaselineDocument, BaselineEntry } from './baseline.js';
 export { BaselineManager, fingerprint } from './baseline.js';
 
 // ---------------------------------------------------------------------------
+// UI Copy Scanner — product-level dark-pattern detection (Phase 16)
+// ---------------------------------------------------------------------------
+
+export type { DarkPatternDetection, UIStringTable } from './ui-copy-scanner.js';
+export { scanUICopy } from './ui-copy-scanner.js';
+
+// ---------------------------------------------------------------------------
 // Inline ignore directives — source-level suppression (Phase 5.2)
 // ---------------------------------------------------------------------------
 

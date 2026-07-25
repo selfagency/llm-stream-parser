@@ -20,6 +20,16 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./install": {
+      "types": "./dist/install.d.ts",
+      "import": "./dist/install.js",
+      "require": "./dist/install.cjs"
+    },
+    "./generators": {
+      "types": "./dist/generators.d.ts",
+      "import": "./dist/generators.js",
+      "require": "./dist/generators.cjs"
     }
   },
   "scripts": {

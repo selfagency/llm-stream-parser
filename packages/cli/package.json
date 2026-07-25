@@ -60,7 +60,9 @@
     "@agentsy/secrets": "workspace:*",
     "@agentsy/session": "workspace:*",
     "@agentsy/tokenomics": "workspace:*",
+    "@agentsy/bootstrap": "workspace:*",
     "@agentsy/shared": "workspace:*",
+    "js-yaml": "^4.1.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

@@ -69,6 +69,96 @@ describe('evaluateCondition', () => {
   });
 });
 
+describe('nested path resolution (dot-notation)', () => {
+  it('resolves deeply nested dot-notation through evaluateCondition', () => {
+    const ctx: PolicyContext = {
+      tool: { name: 'test', annotations: { destructiveHint: true } }
+    };
+    expect(evaluateCondition('tool.annotations.destructiveHint == true', ctx)).toBe(true);
+  });
+
+  it('resolves path through input object', () => {
+    const ctx: PolicyContext = {
+      input: { path: '/home/user/test.txt' }
+    };
+    expect(evaluateCondition("input.path starts_with '/home/'", ctx)).toBe(true);
+    expect(evaluateCondition("input.path starts_with '/tmp/'", ctx)).toBe(false);
+  });
+});
+
+describe('array index path resolution', () => {
+  it('resolves array index notation tool.parameters[0].name', () => {
+    const ctx: PolicyContext = {
+      tool: {
+        name: 'test',
+        parameters: [
+          { name: 'filePath', type: 'string' },
+          { name: 'recursive', type: 'boolean' }
+        ]
+      }
+    };
+    expect(evaluateCondition("tool.parameters[0].name == 'filePath'", ctx)).toBe(true);
+    expect(evaluateCondition("tool.parameters[1].name == 'recursive'", ctx)).toBe(true);
+    expect(evaluateCondition("tool.parameters[0].type == 'string'", ctx)).toBe(true);
+  });
+
+  it('returns false for out-of-bounds array index', () => {
+    const ctx: PolicyContext = {
+      tool: {
+        name: 'test',
+        parameters: [{ name: 'filePath', type: 'string' }]
+      }
+    };
+    expect(evaluateCondition("tool.parameters[5] == 'filePath'", ctx)).toBe(false);
+  });
+
+  it('returns false for negative array index', () => {
+    const ctx: PolicyContext = {
+      tool: {
+        name: 'test',
+        parameters: [{ name: 'filePath', type: 'string' }]
+      }
+    };
+    expect(evaluateCondition("tool.parameters[-1] == 'filePath'", ctx)).toBe(false);
+  });
+
+  it('returns false when tool has no parameters', () => {
+    const ctx: PolicyContext = {
+      tool: { name: 'test', annotations: {} }
+    };
+    expect(evaluateCondition("tool.parameters[0] == 'filePath'", ctx)).toBe(false);
+  });
+});
+
+describe('regex safety (matches operator)', () => {
+  it('accepts safe regex patterns', () => {
+    const ctx: PolicyContext = { tool: { name: 'testtool', annotations: {} } };
+    expect(evaluateCondition("tool.name matches '^[a-z]+$'", ctx)).toBe(true);
+    expect(evaluateCondition("tool.name matches '^[a-z-]+$'", ctx)).toBe(true);
+  });
+
+  it('rejects patterns with nested quantifiers (catastrophic backtracking)', () => {
+    const ctx: PolicyContext = { input: { path: '/tmp/test' } };
+    // (a+)+ is a classic catastrophic backtracking pattern
+    expect(evaluateCondition("input.path matches '(a+)+'", ctx)).toBe(false);
+    expect(evaluateCondition("input.path matches '(a*)*'", ctx)).toBe(false);
+  });
+
+  it('rejects non-capturing group nested quantifiers', () => {
+    const ctx: PolicyContext = { input: { path: '/tmp/test' } };
+    expect(evaluateCondition("input.path matches '(?:a+)+'", ctx)).toBe(false);
+    expect(evaluateCondition("input.path matches '(?:[a-z]+)+'", ctx)).toBe(false);
+  });
+
+  it('accepts regex patterns with quantifiers at safe depth', () => {
+    const ctx: PolicyContext = { tool: { name: 'exec_shell', annotations: {} } };
+    // Simple character class with + is fine (no nested quantifier)
+    expect(evaluateCondition("tool.name matches '^[a-z_]+$'", ctx)).toBe(true);
+    // Alternation without nested quantifiers
+    expect(evaluateCondition("tool.name matches '^(cmd|exec)_'", ctx)).toBe(true);
+  });
+});
+
 describe('evaluatePolicy', () => {
   const policy: PolicyDocument = {
     version: '1.0',
@@ -145,18 +235,34 @@ describe('DEFAULT_POLICY', () => {
   it('has 3 rules with expected structure', () => {
     expect(DEFAULT_POLICY.version).toBe('1.0');
     expect(DEFAULT_POLICY.rules).toHaveLength(3);
-    expect(DEFAULT_POLICY.rules[0]?.name).toBe('deny-destructive-open-world-writes');
+    expect(DEFAULT_POLICY.rules[0]?.name).toBe('require-approval-destructive-open-world');
     expect(DEFAULT_POLICY.rules[1]?.name).toBe('require-approval-code-execution');
     expect(DEFAULT_POLICY.rules[2]?.name).toBe('allow-read-only-tools');
   });
 
-  it('deny-destructive-open-world-writes blocks dangerous tools', () => {
+  it('require-approval-destructive-open-world with destructiveHint && openWorldHint', () => {
     const ctx: PolicyContext = {
-      tool: { name: 'shell_exec', annotations: { destructiveHint: true, openWorldHint: true, requiresApproval: true } }
+      tool: { name: 'shell_exec', annotations: { destructiveHint: true, openWorldHint: true } }
     };
     const result = evaluatePolicy(DEFAULT_POLICY, ctx);
     expect(result.matched).toBe(true);
-    expect(result.action).toBe('deny');
+    expect(result.action).toBe('require_approval');
+  });
+
+  it('does not require approval when only destructiveHint is set', () => {
+    const ctx: PolicyContext = {
+      tool: { name: 'test', annotations: { destructiveHint: true } }
+    };
+    const result = evaluatePolicy(DEFAULT_POLICY, ctx);
+    expect(result.matched).toBe(false);
+  });
+
+  it('does not require approval when only openWorldHint is set', () => {
+    const ctx: PolicyContext = {
+      tool: { name: 'test', annotations: { openWorldHint: true } }
+    };
+    const result = evaluatePolicy(DEFAULT_POLICY, ctx);
+    expect(result.matched).toBe(false);
   });
 
   it('allow-read-only-tools permits read-only tools', () => {

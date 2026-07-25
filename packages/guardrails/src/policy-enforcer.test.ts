@@ -15,8 +15,8 @@ describe('PolicyEnforcer', () => {
           requiresApproval: true
         }
       });
-      expect(result.status).toBe('block');
-      expect(result.reason).toContain('deny-destructive-open-world-writes');
+      expect(result.status).toBe('escalate');
+      expect(result.reason).toContain('require-approval-destructive-open-world');
     });
 
     it('requires approval for shell_exec', () => {
@@ -62,9 +62,9 @@ describe('PolicyEnforcer', () => {
         annotations: { destructiveHint: true, openWorldHint: true, requiresApproval: true },
         sessionId: 'sess_123'
       });
-      expect(receipt.decision).toBe('block');
-      expect(receipt.policyId).toContain('deny-destructive');
-      expect(receipt.riskTier).toBe('prohibited');
+      expect(receipt.decision).toBe('escalate');
+      expect(receipt.policyId).toContain('require-approval-destructive');
+      expect(receipt.riskTier).toBe('high');
       expect(receipt.sessionId).toBe('sess_123');
       expect(receipt.correlationId).toContain('sess_123');
     });

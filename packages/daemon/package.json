@@ -97,6 +97,7 @@
     "coverage": "vitest --run --coverage --passWithNoTests"
   },
   "dependencies": {
+    "@agentsy/bootstrap": "workspace:*",
     "@agentsy/gateway": "workspace:*",
     "@agentsy/guardrails": "workspace:*",
     "@agentsy/memory": "workspace:*",

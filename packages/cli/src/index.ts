@@ -300,6 +300,16 @@ async function handleTokenomicsCommand(rest: readonly string[], io: CliIO): Prom
   return runTokenomicsCommand(rest, io);
 }
 
+async function handleProjectCommand(rest: readonly string[], io: CliIO): Promise<number> {
+  const { runProjectCommand } = await import('./commands/project.js');
+  return runProjectCommand(rest, io);
+}
+
+async function handleInstallCommand(rest: readonly string[], io: CliIO): Promise<number> {
+  const { runInstallCommand } = await import('./commands/install.js');
+  return runInstallCommand(rest, io);
+}
+
 async function handleIndexCommand(rest: readonly string[], io: CliIO): Promise<number> {
   const { runIndexCommand } = await import('./commands/retrieval.js');
   return runIndexCommand(rest, io);
@@ -318,7 +328,7 @@ async function handleSourcesCommand(rest: readonly string[], io: CliIO): Promise
 function handleUnknownCommand(command: string | undefined, io: CliIO): number {
   (io.stderr ?? DEFAULT_IO.stderr)(`Unknown command: ${command ?? '(none)'}`);
   (io.stderr ?? DEFAULT_IO.stderr)(
-    'Supported commands: tui (default), chat, compress, compress-memory, memory-sync-dev, setup, doctor, sandbox-diagnostics, content-address-stats, lb, guardrails, config, settings, mcp, connectors, index, search, sources, secrets, tokenomics'
+    'Supported commands: tui (default), chat, compress, compress-memory, memory-sync-dev, setup, doctor, sandbox-diagnostics, content-address-stats, lb, guardrails, config, settings, mcp, connectors, index, search, sources, secrets, tokenomics, project, install'
   );
   (io.stderr ?? DEFAULT_IO.stderr)('Chat flags: --agent <name> --plan --mock --model <id> --provider <id>');
   return 1;
@@ -360,7 +370,9 @@ const COMMANDS: Record<string, CommandEntry> = {
       list: handleGuardrailsCommand,
       install: handleGuardrailsCommand,
       uninstall: handleGuardrailsCommand,
-      policy: handleGuardrailsCommand
+      policy: handleGuardrailsCommand,
+      test: handleGuardrailsCommand,
+      hub: handleGuardrailsCommand
     }
   },
   sanitize: {
@@ -420,7 +432,21 @@ const COMMANDS: Record<string, CommandEntry> = {
   },
   index: { handler: handleIndexCommand },
   search: { handler: handleSearchCommand },
-  sources: { handler: handleSourcesCommand }
+  sources: { handler: handleSourcesCommand },
+  project: {
+    handler: handleProjectCommand,
+    subcommands: {
+      scan: handleProjectCommand,
+      init: handleProjectCommand,
+      update: handleProjectCommand
+    }
+  },
+  install: {
+    handler: handleInstallCommand,
+    subcommands: {
+      recommended: handleInstallCommand
+    }
+  }
 };
 
 export async function runCli(argv: readonly string[], io: CliIO = DEFAULT_IO): Promise<number> {

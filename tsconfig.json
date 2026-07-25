@@ -24,6 +24,8 @@
     "paths": {
       "@agentsy/daemon": ["packages/daemon/src/index.ts"],
       "@agentsy/daemon/*": ["packages/daemon/src/*"],
+      "@agentsy/bootstrap": ["packages/bootstrap/src/index.ts"],
+      "@agentsy/bootstrap/*": ["packages/bootstrap/src/*"],
       "@agentsy/context": ["packages/context/src/index.ts"],
       "@agentsy/guardrails": ["packages/guardrails/src/index.ts"],
       "@agentsy/models": ["packages/models/src/index.ts"],

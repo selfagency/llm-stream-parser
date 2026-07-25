@@ -100,26 +100,38 @@ export async function readConfig(rootPath: string): Promise<AgentsyConfig | null
 
 // ── Simple YAML serializer (no dependency) ──────────────
 
+function yamlList(lines: string[], key: string, indent: number, items: string[]): void {
+  const pad = '  '.repeat(indent);
+  if (items.length === 0) {
+    lines.push(`${pad}${key}: []`);
+    return;
+  }
+  lines.push(`${pad}${key}:`);
+  const itemPad = '  '.repeat(indent + 1);
+  items.forEach(item => lines.push(`${itemPad}- ${item}`));
+}
+
 function configToYaml(config: AgentsyConfig): string {
   const lines: string[] = ['schemaVersion: 1', 'project:'];
-  lines.push(`  rootPath: ${config.project.rootPath}`);
+  const p = config.project;
+  lines.push(`  rootPath: ${p.rootPath}`);
   lines.push('  profile:');
-  if (config.project.profile.languages.length > 0) {
-    lines.push('    languages:');
-    for (const lang of config.project.profile.languages) {
-      lines.push(`      - ${lang}`);
-    }
+  const prof = p.profile;
+  lines.push(`    rootPath: ${prof.rootPath}`);
+  yamlList(lines, 'languages', 2, prof.languages);
+  yamlList(lines, 'frameworks', 2, prof.frameworks);
+  lines.push(`    packageManager: ${prof.packageManager}`);
+  lines.push(`    buildSystem: ${prof.buildSystem}`);
+  yamlList(lines, 'linter', 2, prof.linter);
+  yamlList(lines, 'testRunner', 2, prof.testRunner);
+  lines.push(`    monorepo: ${prof.monorepo}`);
+  if (prof.monorepoTool) {
+    lines.push(`    monorepoTool: ${prof.monorepoTool}`);
   }
-  if (config.project.profile.frameworks.length > 0) {
-    lines.push('    frameworks:');
-    for (const fw of config.project.profile.frameworks) {
-      lines.push(`      - ${fw}`);
-    }
-  }
-  lines.push(`    packageManager: ${config.project.profile.packageManager}`);
-  lines.push(`    buildSystem: ${config.project.profile.buildSystem}`);
-  lines.push(`    monorepo: ${config.project.profile.monorepo}`);
-  lines.push(`  detectedAt: ${config.project.detectedAt}`);
+  yamlList(lines, 'ci', 2, prof.ci);
+  yamlList(lines, 'deploymentTarget', 2, prof.deploymentTarget);
+  lines.push(`    detectedAt: ${prof.detectedAt}`);
+  lines.push(`  detectedAt: ${p.detectedAt}`);
   lines.push('installed:');
   lines.push('  connectors: []');
   lines.push('  mcpServers: []');
@@ -134,10 +146,161 @@ function configToYaml(config: AgentsyConfig): string {
   return `${lines.join('\n')}\n`;
 }
 
-function parseYaml(_content: string): AgentsyConfig | null {
-  // For now, return null to indicate YAML parsing needs a proper library.
-  // This base implementation creates configs via createDefaultConfig().
-  return null;
+/**
+ * Minimal YAML parser for the subset of YAML written by configToYaml().
+ *
+ * Handles:
+ *   - `key: value` scalar pairs (strings, booleans, numbers)
+ *   - `key:` nested objects with indented children
+ *   - `  - value` list items under a key
+ *   - `key: []` empty list shorthand
+ *
+ * Uses a two-pass approach: first builds an intermediate tree, then
+ * flattens it, so that `key:` followed by `- items` creates an array
+ * rather than an object.
+ *
+ * Returns null on any parse failure so callers can fall through cleanly.
+ */
+
+interface YamlNode {
+  /** Child key → child index map (object nodes only) */
+  children: Map<string, number>;
+  /** Nesting depth (0-based) */
+  depth: number;
+  /** True when this node is an array element */
+  isArrayItem: boolean;
+  /** Parent index or -1 for root */
+  parent: number;
+  /** Raw line text */
+  text: string;
+  /** Inline scalar value string, or null if container */
+  value: string | null;
+}
+
+function parseYaml(content: string): AgentsyConfig | null {
+  try {
+    const rawLines = content.split('\n');
+    const nodes: YamlNode[] = [
+      { depth: -1, text: '', children: new Map(), parent: -1, value: null, isArrayItem: false }
+    ];
+    let currentIdx = 0;
+
+    for (const rawLine of rawLines) {
+      const line = rawLine.trimEnd();
+      if (line.trim() === '' || line.trim().startsWith('#')) {
+        continue;
+      }
+
+      const depth = line.search(/\S/);
+      const trimmed = line.trim();
+
+      // Walk up to find the correct parent (skip siblings at same depth)
+      while (currentIdx > 0) {
+        const cur = nodes[currentIdx];
+        if (cur === undefined) {
+          break;
+        }
+        if (cur.depth < depth) {
+          break;
+        }
+        currentIdx = cur.parent;
+      }
+
+      let value: string | null = null;
+      const isListItem = trimmed.startsWith('- ');
+
+      if (isListItem) {
+        value = trimmed.slice(2);
+        const parent = nodes[currentIdx];
+        if (parent !== undefined && parent.value !== null) {
+          parent.value = null;
+        }
+      } else {
+        const colonIndex = trimmed.indexOf(':');
+        if (colonIndex === -1) {
+          continue;
+        }
+
+        const rest = trimmed.slice(colonIndex + 1).trim();
+        value = rest === '[]' ? '' : rest || null;
+      }
+
+      const nodeIdx = nodes.length;
+      const node: YamlNode = {
+        depth,
+        text: trimmed,
+        children: new Map(),
+        parent: currentIdx,
+        value,
+        isArrayItem: isListItem
+      };
+      nodes.push(node);
+
+      const parentNode = nodes[currentIdx];
+      if (parentNode !== undefined && !isListItem && !parentNode.isArrayItem) {
+        const key = trimmed.slice(0, trimmed.indexOf(':')).trim();
+        parentNode.children.set(key, nodeIdx);
+      }
+
+      // Push scope for non-list-item lines that open a container
+      if (!isListItem) {
+        currentIdx = nodeIdx;
+      }
+    }
+
+    function buildObj(nodeIdx: number): unknown {
+      const node = nodes[nodeIdx];
+      if (node === undefined) {
+        return null;
+      }
+
+      if (node.value !== null) {
+        return node.value === '' ? ([] as unknown[]) : parseScalar(node.value);
+      }
+
+      const childIndices: number[] = [];
+      for (let i = nodeIdx + 1; i < nodes.length; i++) {
+        const child = nodes[i];
+        if (child === undefined || child.parent !== nodeIdx) {
+          break;
+        }
+        if (child.depth <= node.depth) {
+          break;
+        }
+        childIndices.push(i);
+      }
+
+      if (childIndices.length > 0 && childIndices.every(i => nodes[i]?.isArrayItem)) {
+        return childIndices.map(i => buildObj(i));
+      }
+
+      const obj: Record<string, unknown> = {};
+      for (const [key, childIdx] of node.children) {
+        obj[key] = buildObj(childIdx);
+      }
+      return obj;
+    }
+
+    return buildObj(0) as AgentsyConfig;
+  } catch {
+    return null;
+  }
+}
+
+function parseScalar(value: string): string | boolean | number {
+  if (value === 'true') {
+    return true;
+  }
+  if (value === 'false') {
+    return false;
+  }
+  if (/^\d+$/.test(value)) {
+    return Number.parseInt(value, 10);
+  }
+  if (/^\d+\.\d+$/.test(value)) {
+    return Number.parseFloat(value);
+  }
+  return value;
 }
 
 // ── Agent Tools ─────────────────────────────────────────

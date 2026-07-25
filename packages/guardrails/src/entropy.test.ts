@@ -57,6 +57,24 @@ describe('EntropyScanner', () => {
     expect(result.status).toBe('pass');
   });
 
+  it('default threshold is 3.5', async () => {
+    const scanner = new EntropyScanner();
+    // 'abcdefghij' has 10 unique chars → log2(10) ≈ 3.32, below threshold → pass
+    const passResult = await scanner.evaluate('abcdefghij');
+    expect(passResult.status).toBe('pass');
+    // 'abcdefghijk' has 11 unique chars → log2(11) ≈ 3.46, still just under
+    const edgePass = await scanner.evaluate('abcdefghijk');
+    expect(edgePass.status).toBe('pass');
+  });
+
+  it('detects strings with entropy between 3.5 and 4.0', async () => {
+    const scanner = new EntropyScanner();
+    // 14 diverse characters → log2(14) ≈ 3.81, above 3.5 → flagged
+    const result = await scanner.evaluate('token: aB3dE5gH7jK9mN');
+    expect(result.status).toBe('escalate');
+    expect(result.detections?.[0]?.id).toBe('high-entropy-secret');
+  });
+
   it('passes on UUID (excluded from FP)', async () => {
     const scanner = new EntropyScanner();
     const result = await scanner.evaluate('uuid: 550e8400-e29b-41d4-a716-446655440000');
