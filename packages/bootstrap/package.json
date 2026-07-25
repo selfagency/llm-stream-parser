@@ -36,7 +36,7 @@
     "build": "tsup",
     "check-types": "tsc --noEmit",
     "test": "vitest --run --passWithNoTests",
-    "coverage": "vitest --run --coverage --passWithNoTests --testTimeout=15000"
+    "coverage": "vitest --run --coverage --passWithNoTests"
   },
   "devDependencies": {
     "tsup": "^8.5.1",
