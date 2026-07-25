@@ -36,7 +36,7 @@
     "build": "tsup",
     "check-types": "tsc --noEmit",
     "test": "vitest --run --passWithNoTests",
-    "coverage": "NODE_OPTIONS=--max-old-space-size=2048 vitest --run --coverage --passWithNoTests"
+    "coverage": "vitest --run --coverage --passWithNoTests --testTimeout=15000"
   },
   "devDependencies": {
     "tsup": "^8.5.1",
