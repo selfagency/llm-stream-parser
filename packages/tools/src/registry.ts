@@ -59,6 +59,22 @@ export class ToolRegistry {
     }
   }
 
+  /**
+   * Replace an existing tool registration. If the tool doesn't exist,
+   * registers it as new. Returns the previous registration if any.
+   * This is the mechanism for "hoisting" — AFT tools replace baseline
+   * tools by name while preserving their annotations in the registry.
+   */
+  replace(name: string, definition: ToolDefinition): ToolRegistration | null {
+    const previous = this.#tools.get(name) ?? null;
+    this.#tools.set(name, {
+      ...(definition.annotations ? { annotations: { ...definition.annotations } } : {}),
+      handler: definition.handler,
+      name
+    });
+    return previous;
+  }
+
   remove(name: string): boolean {
     return this.#tools.delete(name);
   }
