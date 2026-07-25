@@ -72,7 +72,7 @@ function parseManifestItem(item: EccManifestItem, source: string): RegistryEntry
     name,
     description: item.description ?? '',
     source,
-    version: item.version
+    ...(item.version === undefined ? {} : { version: item.version })
   };
 }
 

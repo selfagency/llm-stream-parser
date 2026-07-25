@@ -63,7 +63,7 @@ export class RateLimiterScanner implements GuardrailScanner {
 
   readonly #entries = new Map<string, RateEntry>();
   readonly #customLimits = new Map<string, number>();
-  readonly #keyDefaults: Record<string, RateWindow>;
+  readonly #keyDefaults: Record<KeyType, RateWindow>;
 
   constructor(config?: {
     /** Per-key-type default overrides. */

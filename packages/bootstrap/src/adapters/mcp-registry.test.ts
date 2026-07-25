@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createMcpRegistryAdapter } from './mcp-registry.js';
+import { createMcpRegistryAdapter, type FetchLike } from './mcp-registry.js';
 
 // ── Fixtures ──────────────────────────────────────────────
 
@@ -45,10 +45,10 @@ const SERVER_FIXTURE_2: Record<string, unknown> = {
 
 // ── Mock fetch factory ───────────────────────────────────
 
-function createMockFetch(firstPage: Record<string, unknown>, secondPage?: Record<string, unknown>) {
+function createMockFetch(firstPage: Record<string, unknown>, secondPage?: Record<string, unknown>): FetchLike {
   let callCount = 0;
 
-  return vi.fn(() => {
+  const fetcher: FetchLike = async (_input, _init) => {
     callCount += 1;
 
     if (callCount === 1 && firstPage !== undefined) {
@@ -72,7 +72,9 @@ function createMockFetch(firstPage: Record<string, unknown>, secondPage?: Record
       status: 200,
       json: async () => ({ servers: [], nextCursor: undefined })
     } as Response;
-  });
+  };
+
+  return fetcher;
 }
 
 // ── Tests ─────────────────────────────────────────────────

@@ -236,8 +236,7 @@ function guardrailToEntry(validator: GuardrailValidator): RegistryEntry {
     id: validator.id,
     name: validator.name,
     description: `${validator.description} [${validator.strategy.toUpperCase()} — ${validator.portStatus}]`,
-    source: 'guardrails-hub',
-    version: undefined
+    source: 'guardrails-hub'
   };
 }
 

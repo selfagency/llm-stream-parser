@@ -135,7 +135,11 @@ async function handlePositional(
 
   stdout(`Installing ${canonicalType}: ${componentId}...`);
   try {
-    const result: InstallResult = await installById(process.cwd(), canonicalType, componentId);
+    const result: InstallResult = await installById(
+      process.cwd(),
+      canonicalType as 'mcp-server' | 'skill' | 'guardrail' | 'connector',
+      componentId
+    );
     if (!result.success) {
       stderr(`Failed to install ${componentId}: ${result.error ?? 'Unknown error'}`);
       return 1;

@@ -195,13 +195,13 @@ export function dirtyParse<T = unknown>(input: string): T | null {
   }
 
   // Tier 3: Add missing closing brackets (also try with trailing comma fix)
-  let withBrackets: string;
   try {
-    withBrackets = addMissingClosingBrackets(cleaned);
+    const withBrackets = addMissingClosingBrackets(cleaned);
     return JSON.parse(withBrackets) as T;
   } catch {
     // Try adding brackets + removing trailing commas.
     try {
+      const withBrackets = addMissingClosingBrackets(cleaned);
       const fixed = removeTrailingCommas(withBrackets);
       return JSON.parse(fixed) as T;
     } catch {

@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createBuiltinScanners, GuardrailHub } from '@agentsy/guardrails';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
 import type { CliIO } from '../index.js';
 import {
   type GuardrailCliOptions,
@@ -121,8 +122,8 @@ function createSeededOpts(): GuardrailCliOptions {
     hub,
     json: false,
     noColor: false,
-    stderr: vi.fn(),
-    stdout: vi.fn()
+    stderr: vi.fn() as unknown as GuardrailCliOptions['stderr'],
+    stdout: vi.fn() as unknown as GuardrailCliOptions['stdout']
   };
 }
 
@@ -131,8 +132,8 @@ function createEmptyOpts(): GuardrailCliOptions {
     hub: new GuardrailHub(),
     json: false,
     noColor: false,
-    stderr: vi.fn(),
-    stdout: vi.fn()
+    stderr: vi.fn() as unknown as GuardrailCliOptions['stderr'],
+    stdout: vi.fn() as unknown as GuardrailCliOptions['stdout']
   };
 }
 
@@ -188,7 +189,8 @@ describe('handleList', () => {
     opts.json = true;
     const exitCode = handleList([], opts);
     expect(exitCode).toBe(0);
-    const jsonCall = opts.stdout.mock.calls.find((call: unknown[]) => (call[0] as string).startsWith('['));
+    const stdoutMock = opts.stdout as unknown as { mock: { calls: unknown[][] } };
+    const jsonCall = stdoutMock.mock.calls.find((call: unknown[]) => (call[0] as string).startsWith('['));
     expect(jsonCall).toBeDefined();
     const entries = JSON.parse(jsonCall?.[0] as string);
     expect(Array.isArray(entries)).toBe(true);
@@ -339,7 +341,8 @@ describe('handlePolicy', () => {
     opts.json = true;
     const exitCode = handlePolicy(['/test-policy.yaml'], opts);
     expect(exitCode).toBe(0);
-    const jsonCall = opts.stdout.mock.calls.find((call: unknown[]) => (call[0] as string).startsWith('{'));
+    const stdoutFns = opts.stdout as unknown as { mock: { calls: unknown[][] } };
+    const jsonCall = stdoutFns.mock.calls.find((call: unknown[]) => (call[0] as string).startsWith('{'));
     expect(jsonCall).toBeDefined();
     const doc = JSON.parse(jsonCall?.[0] as string);
     expect(doc).toHaveProperty('version', '1.0');
@@ -434,7 +437,8 @@ describe('handleTest', () => {
     const opts = createEmptyOpts();
     const exitCode = handleTest(['/test-policy.yaml', 'rm -rf /', '--json', '--tool', 'shell_exec'], opts);
     expect(exitCode).toBe(0);
-    const jsonCall = opts.stdout.mock.calls.find((call: unknown[]) => (call[0] as string).startsWith('{'));
+    const outMock = opts.stdout as unknown as { mock: { calls: unknown[][] } };
+    const jsonCall = outMock.mock.calls.find((call: unknown[]) => (call[0] as string).startsWith('{'));
     expect(jsonCall).toBeDefined();
     const receipt = JSON.parse(jsonCall?.[0] as string);
     expect(receipt).toHaveProperty('decision');

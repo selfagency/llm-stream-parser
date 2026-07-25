@@ -23,6 +23,8 @@ export type Framework =
   | 'django'
   | 'flask'
   | 'spring'
+  | 'prisma'
+  | 'drizzle'
   | 'other';
 
 export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'pip' | 'poetry' | 'cargo' | 'go' | 'mix' | 'other';
@@ -74,7 +76,9 @@ const FRAMEWORK_DEPS: [string, Framework][] = [
   ['@astrojs/check', 'astro'],
   ['express', 'express'],
   ['fastify', 'fastify'],
-  ['hono', 'hono']
+  ['hono', 'hono'],
+  ['prisma', 'prisma'],
+  ['drizzle-orm', 'drizzle']
 ];
 
 const LINTER_DEPS: Record<string, string> = {

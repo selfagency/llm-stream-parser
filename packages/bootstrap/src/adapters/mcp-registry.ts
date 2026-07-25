@@ -21,11 +21,13 @@ const DEFAULT_PAGE_SIZE = 50;
 
 // ── Options ───────────────────────────────────────────────
 
+/** @internal */ export type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
+
 export interface McpRegistryAdapterOptions {
   /** Base URL for the MCP Registry API (default: https://registry.modelcontextprotocol.io/v0.1) */
   baseUrl?: string;
   /** Custom fetch implementation (default: global fetch) */
-  fetch?: typeof globalThis.fetch;
+  fetch?: FetchLike;
   /** Initial cursor for paginated listing (default: undefined) */
   initialCursor?: string;
   /** Page size for cursor pagination (default: 50) */
