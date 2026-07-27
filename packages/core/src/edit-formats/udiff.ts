@@ -99,9 +99,7 @@ export function parseUdiffs(text: string): EditParseResult {
  * otherwise the raw text is scanned for `--- …` / `+++ …` header pairs.
  * Each pair yields one block so that multi-file diffs are handled correctly.
  */
-// NOSONAR
-function collectDiffBlocks(text: string): string[] {
-  // Try fenced blocks first, then fall back to raw text
+function collectFencedBlocks(text: string): string[] | null {
   // nosemgrep: DIFF_BLOCK_REGEX is a hardcoded constant, not user-supplied input
   const fenceRegex = new RegExp(DIFF_BLOCK_REGEX.source, 'g');
   const fencedBlocks: string[] = [];
@@ -116,44 +114,49 @@ function collectDiffBlocks(text: string): string[] {
     }
   }
 
-  const source = hasFenced ? fencedBlocks : [text];
+  return hasFenced ? fencedBlocks : null;
+}
 
-  // Split each source block at file boundaries (---\n+++ pairs)
+function splitFileBoundaries(lines: string[]): string[] {
   const blocks: string[] = [];
-  for (const block of source) {
-    const lines = block.split('\n');
-    let i = 0;
-    let currentStart = -1;
+  let i = 0;
+  let currentStart = -1;
 
-    while (i < lines.length) {
-      const line = lines[i] ?? '';
-
-      if (ORIGINAL_FILE_REGEX.test(line)) {
-        // Check that the next non-blank line is a +++ header
-        let j = i + 1;
-        while (j < lines.length) {
-          const next = lines[j] ?? '';
-          if (next.length === 0) {
-            j++;
-            continue;
-          }
-          if (REVISED_FILE_REGEX.test(next)) {
-            // Flush previous block if any
-            if (currentStart >= 0) {
-              blocks.push(lines.slice(currentStart, i).join('\n'));
-            }
-            currentStart = i;
-          }
-          break;
+  while (i < lines.length) {
+    const line = lines[i] ?? '';
+    if (ORIGINAL_FILE_REGEX.test(line)) {
+      let j = i + 1;
+      while (j < lines.length) {
+        const next = lines[j] ?? '';
+        if (next.length === 0) {
+          j++;
+          continue;
         }
+        if (REVISED_FILE_REGEX.test(next)) {
+          if (currentStart >= 0) {
+            blocks.push(lines.slice(currentStart, i).join('\n'));
+          }
+          currentStart = i;
+        }
+        break;
       }
-      i++;
     }
+    i++;
+  }
 
-    // Flush last block
-    if (currentStart >= 0) {
-      blocks.push(lines.slice(currentStart).join('\n'));
-    }
+  if (currentStart >= 0) {
+    blocks.push(lines.slice(currentStart).join('\n'));
+  }
+  return blocks;
+}
+
+function collectDiffBlocks(text: string): string[] {
+  const fenced = collectFencedBlocks(text);
+  const sources = fenced ?? [text];
+  const blocks: string[] = [];
+
+  for (const block of sources) {
+    blocks.push(...splitFileBoundaries(block.split('\n')));
   }
 
   return blocks;
@@ -163,122 +166,127 @@ function collectDiffBlocks(text: string): string[] {
  * Attempts to parse a single diff block into a `ParsedUdiff`.
  * Returns `null` when the block cannot be parsed.
  */
-// NOSONAR
-function tryParseSingleDiff(block: string): ParsedUdiff | null {
-  const lines = block.split('\n');
-
-  // --- find file headers ---
-  let filePath: string | null = null;
-  const originalHeader = '';
-  let revisedHeader = '';
+function findDiffHeader(lines: string[]): { filePath: string | null; revisedHeader: string; startIndex: number } {
   let i = 0;
-
   for (; i < lines.length; i++) {
     const line = lines[i] ?? '';
-
-    const originalMatch = ORIGINAL_FILE_REGEX.exec(line);
-    if (originalMatch) {
+    if (ORIGINAL_FILE_REGEX.exec(line)) {
       i++;
       break;
     }
   }
-
   if (i >= lines.length) {
-    return null;
+    return { filePath: null, revisedHeader: '', startIndex: i };
   }
 
-  // Expect +++ line next (possibly with one blank line between)
   for (; i < lines.length; i++) {
     const line = lines[i] ?? '';
     const revisedMatch = REVISED_FILE_REGEX.exec(line);
     if (revisedMatch) {
-      revisedHeader = revisedMatch[1] ?? '';
-      filePath = revisedMatch[1] ?? null;
+      return { filePath: revisedMatch[1] ?? null, revisedHeader: revisedMatch[1] ?? '', startIndex: i + 1 };
+    }
+  }
+  return { filePath: null, revisedHeader: '', startIndex: i };
+}
+
+function classifyHunkLine(
+  firstChar: string | undefined,
+  hunkLine: string
+): { type: 'context' | 'add' | 'delete' | 'skip' | 'end'; content?: string } {
+  if (firstChar === ' ' || firstChar === '' || hunkLine.length === 0) {
+    return { type: 'context', content: normalizeContent(hunkLine) };
+  }
+  if (firstChar === '+') {
+    return { type: 'add', content: hunkLine.slice(1) };
+  }
+  if (firstChar === '-') {
+    return { type: 'delete', content: hunkLine.slice(1) };
+  }
+  if (firstChar === '@') {
+    return { type: 'end' };
+  }
+  if (firstChar === '\\') {
+    return { type: 'skip' };
+  }
+  return { type: 'end' };
+}
+
+function parseSingleHunk(lines: string[], startIndex: number): { hunk: UdiffHunk | null; nextIndex: number } {
+  if (startIndex >= lines.length) {
+    return { hunk: null, nextIndex: startIndex };
+  }
+  const hunkLine = lines[startIndex] ?? '';
+  const hunkMatch = HUNK_HEADER_REGEX.exec(hunkLine);
+  if (!hunkMatch) {
+    return { hunk: null, nextIndex: startIndex + 1 };
+  }
+
+  const oldStart = Number(hunkMatch[1]);
+  const oldLines = hunkMatch[2] ? Number(hunkMatch[2]) : 1;
+  const newStart = Number(hunkMatch[3]);
+  const newLines = hunkMatch[4] ? Number(hunkMatch[4]) : 1;
+
+  let i = startIndex + 1;
+  const hunkLines: UdiffHunkLine[] = [];
+  let addedCount = 0;
+  let deletedCount = 0;
+
+  while (i < lines.length) {
+    const classification = classifyHunkLine(lines[i]?.[0], lines[i] ?? '');
+    if (classification.type === 'end') {
+      break;
+    }
+    if (classification.type === 'skip') {
       i++;
+      continue;
+    }
+    if (classification.type === 'context') {
+      hunkLines.push({ type: 'context', content: classification.content ?? '' });
+      i++;
+    }
+    if (classification.type === 'add') {
+      hunkLines.push({ type: 'add', content: classification.content ?? '' });
+      addedCount++;
+      i++;
+    }
+    if (classification.type === 'delete') {
+      hunkLines.push({ type: 'delete', content: classification.content ?? '' });
+      deletedCount++;
+      i++;
+    }
+
+    if (hunkLines.length > 10_000 || addedCount + deletedCount > 10_000) {
       break;
     }
   }
 
-  if (!filePath) {
+  const hunk: UdiffHunk = { oldStart, oldLines, newStart, newLines, lines: hunkLines };
+  return { hunk, nextIndex: i };
+}
+
+function tryParseSingleDiff(block: string): ParsedUdiff | null {
+  const lines = block.split('\n');
+  const header = findDiffHeader(lines);
+  if (!header.filePath) {
     return null;
   }
 
-  // --- parse hunks ---
   const hunks: UdiffHunk[] = [];
+  let i = header.startIndex;
 
   while (i < lines.length) {
-    const line = lines[i] ?? '';
-    const hunkMatch = HUNK_HEADER_REGEX.exec(line);
-
-    if (hunkMatch) {
-      const oldStart = Number(hunkMatch[1]);
-      const oldLines = hunkMatch[2] ? Number(hunkMatch[2]) : 1;
-      const newStart = Number(hunkMatch[3]);
-      const newLines = hunkMatch[4] ? Number(hunkMatch[4]) : 1;
-
-      i++;
-      const hunkLines: UdiffHunkLine[] = [];
-      let addedCount = 0;
-      let deletedCount = 0;
-
-      // Count total operation lines (non-context)
-      while (i < lines.length) {
-        const hunkLine = lines[i] ?? '';
-        const firstChar = hunkLine[0];
-
-        if (firstChar === ' ' || firstChar === '' || hunkLine.length === 0) {
-          hunkLines.push({ type: 'context', content: normalizeContent(hunkLine) });
-          i++;
-          if (hunkLines.length > 10_000) {
-            break; // safety bound
-          }
-        } else if (firstChar === '+') {
-          hunkLines.push({ type: 'add', content: hunkLine.slice(1) });
-          addedCount++;
-          i++;
-        } else if (firstChar === '-') {
-          hunkLines.push({ type: 'delete', content: hunkLine.slice(1) });
-          deletedCount++;
-          i++;
-        } else if (firstChar === '@') {
-          // next hunk
-          break;
-        } else if (firstChar === '\\') {
-          // No newline at end of file marker — skip
-          i++;
-          continue;
-        } else {
-          // end of hunk
-          break;
-        }
-
-        if (addedCount + deletedCount > 10_000) {
-          break; // safety bound
-        }
-      }
-
-      hunks.push({
-        oldStart,
-        oldLines,
-        newStart,
-        newLines,
-        lines: hunkLines
-      });
-    } else {
-      i++;
+    const result = parseSingleHunk(lines, i);
+    if (result.hunk) {
+      hunks.push(result.hunk);
     }
+    i = result.nextIndex;
   }
 
   if (hunks.length === 0) {
     return null;
   }
 
-  return {
-    filePath,
-    hunks,
-    originalHeader,
-    revisedHeader
-  };
+  return { filePath: header.filePath, hunks, originalHeader: '', revisedHeader: header.revisedHeader };
 }
 
 /**
