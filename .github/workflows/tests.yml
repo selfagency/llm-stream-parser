@@ -120,7 +120,7 @@ jobs:
           CI: true
           NODE_OPTIONS: --max-old-space-size=4096
         run: |
-          pnpm turbo run coverage ${{ matrix.filter }} -- \
+          pnpm turbo run coverage ${{ matrix.filter }} --concurrency=2 -- \
             --coverage.reporter=json \
             --coverage.reporter=lcov \
             --coverage.reporter=text \
