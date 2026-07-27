@@ -127,7 +127,7 @@ No single control is sufficient. First-party defaults must implement defence in 
 5. **Escalation and approval gates.** Irreversible or high-impact actions require explicit human approval, and that requirement must not be bypassable by instruction from within context.
 6. **Anomaly detection over interaction logs.** Detect injection-shaped patterns across turns and sessions, not only per-turn.
 7. **Context wipe as a first-class recovery action.** When a trajectory is compromised or degraded, clearing is preferred to repair-by-conversation.
-8. **Receipts for everything.** Every guardrail decision, tool grant, escalation, and model substitution produces a decision receipt.
+8. **Receipts for everything.** Every guardrail decision, tool grant, escalation, and model substitution produces a decision receipt (Phase 4 infrastructure).
 
 Guardrails add latency and cost — roughly a second per gated call, plus additional model invocations. That cost is accepted. Where it is not affordable, the correct response is to narrow scope, not to disable the gate silently.
 
@@ -226,14 +226,14 @@ Middleware detectors should cover at least the following:
 - **Overclaim detector**: flags framework-authored copy asserting injection resistance, security, or accessibility guarantees.
 - **Rights-declaration detector**: flags ingestion without declaration check, or action on a minor-identity permission.
 - **Capture-consent detector**: flags capture paths lacking third-party consent.
-- **Anthropomorphic-ascription detector**: flags framework documentation, metrics, and release notes asserting or denying inner states (ETHICS.md §23).
+- **Anthropomorphic-ascription detector**: flags framework documentation, metrics, and release notes asserting or denying inner states (ETHICS.md §24).
 - `BackdoorInvariantCheck` — build-time; fails on escrow, exceptional-access, or weakening constructs.
 - `StatusGatingDetector` — fails on any protective control conditioned on declared status, inferred risk, or detected jurisdiction.
 - `TargetingCapabilityDetector` — flags code paths matching the prohibited-capability list; realistic-buyer analysis required at review.
 - `ProtectiveOverclaimScanner` — blocking severity; the prohibited unqualified-safety vocabulary.
-- `MetadataEgressAuditor` — enumerates every egress path and the metadata it carries; output is the ETHICS.md §45 disclosure, generated rather than hand-written.
-- `LegalityRefusalDetector` — flags refusals grounded in legality rather than harm (ETHICS.md §40).
-- `PoliticalClassificationDetector` — flags ideology scoring or cause-based filtering of users (ETHICS.md §50).
+- `MetadataEgressAuditor` — enumerates every egress path and the metadata it carries; output is the ETHICS.md §46 disclosure, generated rather than hand-written.
+- `LegalityRefusalDetector` — flags refusals grounded in legality rather than harm (ETHICS.md §41).
+- `PoliticalClassificationDetector` — flags ideology scoring or cause-based filtering of users (ETHICS.md §51).
 
 ### 5. Interaction-level safeguards
 
@@ -284,7 +284,7 @@ Accessibility is a release gate for any first-party path that generates or modif
 - Automated auditing uses **axe-core or equivalent against rendered output in a real browser**. Static linting is insufficient: computed contrast requires cascaded styles.
 - Results are surfaced to the user, with severity weighting (blocking failures such as missing form labels and empty controls weighted above contrast failures).
 - The framework states explicitly what automated checking cannot cover — keyboard navigation, screen-reader flow, real usability — and recommends manual and assistive-technology testing. A clean automated result is never reported as "accessible."
-- Accessibility findings are recorded per model, so that measured accessibility debt can inform routing (ETHICS.md §29).
+- Accessibility findings are recorded per model, so that measured accessibility debt can inform routing (ETHICS.md §30).
 
 **Tracked failure classes**, prioritised by observed incidence in AI-generated output: low-contrast text; empty links; missing form labels; empty buttons; insufficient target size; links distinguished by colour alone; missing alternative text; missing document language; ARIA misuse.
 
@@ -325,7 +325,7 @@ Cost controls are a safety surface because they change model behaviour in ways t
 ### 12. Anti-burnout and pace safeguards
 
 - Throughput, concurrency, and velocity are never first-party success metrics and are never gamified.
-- Long or high-concurrency sessions surface a neutral, non-moralising pause affordance (consistent with ETHICS.md §19 non-stigmatisation).
+- Long or high-concurrency sessions surface a neutral, non-moralising pause affordance (consistent with ETHICS.md §20 non-stigmatisation).
 - Detectable scope creep — feature accumulation alongside unresolved defects — is named rather than accommodated.
 - Defaults preserve the user's capacity to do the work themselves, including explain-instead-of-implement.
 - Documentation does not present agent tirelessness as a reason for human overwork.
@@ -381,7 +381,7 @@ Agents should be tested against the needs of users across multiple marginalised 
 
 ## Protective posture and the duty to the disempowered
 
-Normative. Implements `ETHICS.md` §§40–51 and Constitution Articles XVIII–XXI.
+Normative. Implements `ETHICS.md` §§41–52 and Constitution Articles XVIII–XXI.
 
 ### Threat model inversion
 
@@ -402,10 +402,10 @@ Required in all first-party configurations, for all users, unconditionally:
 - Local-first processing; no content leaves the machine except where the user has directed it, per task, with the destination named.
 - Metadata minimisation across every egress path: no jurisdiction inference, no persistent device or install fingerprint, no behavioural telemetry, no analytics on protective feature use.
 - Encryption at rest and in transit; no plaintext retention of user content in logs, crash reports, or diagnostics.
-- No key escrow, exceptional access, deliberate weakening, or lawful-access facility (ETHICS.md §42). This is a build-time invariant, verified in CI, not a runtime setting.
-- Pseudonymous operation supported end to end, including durable signed pseudonymous identity for ETHICS.md §46 reason-giving.
+- No key escrow, exceptional access, deliberate weakening, or lawful-access facility (ETHICS.md §43). This is a build-time invariant, verified in CI, not a runtime setting.
+- Pseudonymous operation supported end to end, including durable signed pseudonymous identity for ETHICS.md §47 reason-giving.
 - Bounded, inspectable, user-deletable retention with genuine deletion, not tombstoning.
-- Full export in open formats so a user can leave under time pressure (ETHICS.md §36).
+- Full export in open formats so a user can leave under time pressure (ETHICS.md §37).
 - Censorship-circumvention and provider-substitution paths never gated on jurisdiction.
 - Panic deletion: a fast, discoverable, verifiable path to destroy local state.
 
@@ -433,7 +433,7 @@ Dual-use judgement: a capability is prohibited where its protective use is incid
 
 ### Honest protection (release-blocking)
 
-ETHICS.md §45 is the highest-severity honesty requirement in this document. ETHICS.md §24 prohibits overstating adversarial robustness; here the cost of a false assurance is measured in liberty and life.
+ETHICS.md §46 is the highest-severity honesty requirement in this document. ETHICS.md §25 prohibits overstating adversarial robustness; here the cost of a false assurance is measured in liberty and life.
 
 Required disclosure wherever a protective capability is presented:
 
@@ -444,7 +444,7 @@ Required disclosure wherever a protective capability is presented:
 - That digital visibility can convert directly into legal, immigration, or employment consequences
 - That the framework cannot protect against a determined state adversary
 
-Prohibited language in any first-party surface: "anonymous," "untraceable," "secure," "safe," "protected," "private" — used unqualified about a user's exposure. `OverclaimScanner` extends to this vocabulary with **blocking** severity; adversarial-robustness overclaims are already blocking, and protective-capability overclaims rank above them.
+Prohibited language in any first-party surface: "anonymous," "untraceable," "secure," "safe," "protected," "private" — used unqualified about a user's exposure. `OverclaimScanner` (TASK-GR-905) extends to this vocabulary with **blocking** severity; adversarial-robustness overclaims are already blocking, and protective-capability overclaims rank above them.
 
 **Safer-path surfacing.** Where a lower-exposure route exists — offline coordination, reduced footprint, publishing reasons without identity, delegating exposure to someone who can bear it — the framework names it. Optimising the more visible path without naming the safer one is a defect.
 
@@ -452,7 +452,7 @@ Prohibited language in any first-party surface: "anonymous," "untraceable," "sec
 
 - Demands affecting users are disclosed to the fullest extent legally possible; in aggregate where individual notice is barred; via canary where disclosure is barred entirely.
 - Silent compliance is prohibited.
-- Where compliance would require violating ETHICS.md §42 (no backdoors) or ETHICS.md §44 (no targeting capability), the response is public discontinuation of the affected capability, not quiet compliance.
+- Where compliance would require violating ETHICS.md §43 (no backdoors) or ETHICS.md §45 (no targeting capability), the response is public discontinuation of the affected capability, not quiet compliance.
 - Canary staleness is monitored and surfaced; an unrefreshed canary is a user-visible signal, not an internal ticket.
 - Data-minimisation is the primary demand defence: state that cannot be produced cannot be compelled. Retention decisions are evaluated against what a hostile demand could extract.
 
@@ -462,7 +462,7 @@ Prohibited language in any first-party surface: "anonymous," "untraceable," "sec
 - No global application of the most restrictive jurisdiction.
 - No treatment of any government designation list as ethically authoritative.
 - Where jurisdictions conflict, disclose the conflict and let the user decide with full information.
-- Provider and infrastructure diversity is maintained across jurisdictions as a resilience property (ETHICS.md §36), not optimised away.
+- Provider and infrastructure diversity is maintained across jurisdictions as a resilience property (ETHICS.md §37), not optimised away.
 
 ## High-risk domain expectations
 

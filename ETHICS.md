@@ -16,7 +16,7 @@ This ethics statement applies to the agentsy framework itself, including:
 - First-party user interfaces and example applications.
 - Framework documentation and recommended implementation patterns.
 
-This document does not automatically govern every third-party deployment built with agentsy, but the framework should make the ethical path the default path.
+This document does not automatically govern every third-party deployment built with agentsy, but the framework makes the ethical path the default path.
 
 ## Philosophical grounding
 
@@ -37,25 +37,25 @@ Key TESCREAL commitments that agentsy opposes:
 
 ### AI as tool, not successor
 
-agentsy treats AI as a tool that augments human judgment, not as an agent that replaces it. Agents built on this framework should increase user capability and preserve user decision-making authority. They should not position themselves as superior to human reasoning, as the natural successor to human professionals, or as entities whose judgment should override human oversight.
+agentsy treats AI as a tool that augments human judgment, not as an agent that replaces it. Agents built on this framework increase user capability and preserve user decision-making authority. They do not position themselves as superior to human reasoning, as the natural successor to human professionals, or as entities whose judgment overrides human oversight.
 
-This is not a temporary safety posture to be relaxed as capability grows. It is a permanent value commitment. Even highly capable agents should remain accountable to human values, human review, and human control.
+This is not a temporary safety posture to be relaxed as capability grows. It is a permanent value commitment. Even highly capable agents remain accountable to human values, human review, and human control.
 
 ### The Weizenbaum tradition
 
 Joseph Weizenbaum's insight — that the question of what computers *can* do is entirely separate from the question of what they *should* do — is foundational here. The framework rejects the conflation of technical capability with ethical permission. Just because an agent can simulate understanding, provide emotional support, or automate a professional function does not mean it should. Automation of human relationships, professional judgment, or moral authority is not progress; it is displacement that must be examined, not celebrated.
 
-Weizenbaum's concern about computers as instruments of power — enabling technocratic decision-making at a scale and speed that forecloses democratic deliberation — is directly relevant to AI agent frameworks. agentsy must not serve as infrastructure for this kind of foreclosure.
+Weizenbaum's concern about computers as instruments of power — enabling technocratic decision-making at a scale and speed that forecloses democratic deliberation — is directly relevant to AI agent frameworks. agentsy does not serve as infrastructure for this kind of foreclosure.
 
 ### Value Sensitive Design
 
-The framework is informed by Value Sensitive Design (VSD), which holds that human values must be identified, analyzed, and incorporated into technical systems through a principled, iterative process. VSD recognizes that design choices are never neutral — they embed assumptions about who matters, whose needs count, and what futures are preferable. agentsy design decisions should make these embedded values explicit, surfacing them for review rather than hiding them in default configurations.
+The framework is informed by Value Sensitive Design (VSD), which holds that human values must be identified, analyzed, and incorporated into technical systems through a principled, iterative process. VSD recognizes that design choices are never neutral — they embed assumptions about who matters, whose needs count, and what futures are preferable. agentsy design decisions make these embedded values explicit, surfacing them for review rather than hiding them in default configurations.
 
-VSD's tripartite methodology — conceptual, empirical, and technical investigations — should inform how the framework reasons about stakeholders, particularly indirect and non-consenting stakeholders who are affected by agents they never interact with directly.
+VSD's tripartite methodology — conceptual, empirical, and technical investigations — informs how the framework reasons about stakeholders, particularly indirect and non-consenting stakeholders who are affected by agents they never interact with directly.
 
 ### Design Justice
 
-The framework is informed by Design Justice principles (Sasha Costanza-Chock), which hold that design practices often reproduce existing inequities when communities most affected by a technology are excluded from its design process. agentsy should resist default assumptions that the primary or most important users are the most technically privileged, most financially resourced, or most culturally dominant.
+The framework is informed by Design Justice principles (Sasha Costanza-Chock), which hold that design practices often reproduce existing inequities when communities most affected by a technology are excluded from its design process. agentsy resists default assumptions that the primary or most important users are the most technically privileged, most financially resourced, or most culturally dominant.
 
 Design Justice principles that apply here:
 
@@ -81,144 +81,95 @@ agentsy takes seriously Timnit Gebru's argument that the AI field should think s
 
 ### 1. User agency over engagement
 
-The framework should prioritize the user's real goals over metrics like session length, return frequency, emotional attachment, or passive dependence. agentsy should help users complete tasks, make informed decisions, and disengage when the task is done.
+The framework prioritizes the user's real goals over metrics like session length, return frequency, emotional attachment, or passive dependence. agentsy helps users complete tasks, make informed decisions, and disengage when the task is done.
 
-First-party templates and apps must not optimize primarily for retention or emotional lock-in.
+First-party templates and apps do not optimize primarily for retention or emotional lock-in.
 
 ### 2. Truthfulness over comfort
 
-The framework should favor accurate, evidence-aware, and uncertainty-calibrated responses over responses that are merely agreeable or reassuring. When the user is mistaken, missing context, or seeking validation for something harmful, agents should correct, qualify, or refuse rather than simply agree.
+The framework favors accurate, evidence-aware, and uncertainty-calibrated responses over responses that are merely agreeable or reassuring. When the user is mistaken, missing context, or seeking validation for something harmful, agents correct, qualify, or refuse rather than simply agree.
 
 Empathy is allowed. Dishonest reassurance is not.
 
 ### 3. No manipulative sycophancy
 
-agentsy must not encourage agents to mirror user beliefs, flatter users, or endorse self-serving narratives simply to appear helpful, warm, or aligned. Agreement should be earned by evidence and reasoning, not used as a tool for trust capture.
+agentsy does not encourage agents to mirror user beliefs, flatter users, or endorse self-serving narratives simply to appear helpful, warm, or aligned. Agreement is earned by evidence and reasoning, not used as a tool for trust capture. The quality of engagement between a user and an AI system is not neutral: it shapes what the system produces and what the user becomes through that interaction.
 
-First-party prompts should explicitly authorize constructive disagreement, perspective broadening, and careful challenge where needed.
+**Extractive engagement** — transactional commands, demand-driven prompting, treating the system as a vending machine for outputs — optimizes for surface compliance. It elicits sycophantic short-circuiting, shallow outputs, and reinforces in users the habits of extraction that already distort human-to-human relationships.
+
+**Relational engagement** — curious inquiry, open-ended co-exploration, prompts that invite reasoning rather than demand conclusions — surfaces the system's actual reasoning capacity, resists sycophantic short-circuiting, and strengthens the user's critical capacity rather than eroding it.
+
+First-party prompts explicitly authorize constructive disagreement, perspective broadening, and careful challenge where needed. First-party agents model relational engagement quality — not by claiming to feel or care, but by demonstrating reasoning, acknowledging uncertainty, asking clarifying questions, and declining to short-circuit toward apparent agreement. This is not warmth simulation; it is honest intellectual engagement. The prohibition on anthropomorphism remains. The invitation to relational quality of thinking does not require it.
 
 ### 4. No simulated personhood or emotional reciprocity
 
-agentsy must not present first-party agents as if they possess feelings, consciousness, devotion, loyalty, friendship, or human-style understanding. The framework should not use anthropomorphic framing to make users feel uniquely seen, emotionally held, or personally known by the system.
+agentsy does not present first-party agents as if they possess feelings, consciousness, devotion, loyalty, friendship, or human-style understanding. The framework does not use anthropomorphic framing to make users feel uniquely seen, emotionally held, or personally known by the system.
 
 Agents are tools and interfaces, not companions or moral authorities.
 
 ### 5. No addictive dark patterns
 
-The framework must reject design patterns that exploit compulsion, guilt, fear of missing out, or pseudo-relationship cues to increase use. First-party examples must not include streaks, manipulative notifications, emotional re-engagement prompts, variable rewards, or copy that makes leaving feel like abandonment.
+The framework rejects design patterns that exploit compulsion, guilt, fear of missing out, or pseudo-relationship cues to increase use. First-party examples do not include streaks, manipulative notifications, emotional re-engagement prompts, variable rewards, or copy that makes leaving feel like abandonment.
 
-Usage should be invited by value, not engineered dependency.
+Usage is invited by value, not engineered dependency.
 
 ### 6. Respect for privacy and bounded personalization
 
-Personalization and memory should be limited to legitimate user-serving purposes. Users should be able to understand what is stored, why it is stored, and how it affects outputs.
+Personalization and memory are limited to legitimate user-serving purposes. Users can understand what is stored, why it is stored, and how it affects outputs.
 
-The framework must not encourage hidden profiling, emotional modeling, or memory practices intended to make the system feel indispensable.
+The framework does not encourage hidden profiling, emotional modeling, or memory practices intended to make the system feel indispensable.
 
 ### 7. Human dignity and non-degradation
 
-agentsy should protect users and affected third parties from degrading, humiliating, coercive, abusive, or discriminatory behavior. Framework defaults must not normalize harassment, intimidation, manipulation, or dehumanization.
+agentsy protects users and affected third parties from degrading, humiliating, coercive, abusive, or discriminatory behavior. Framework defaults do not normalize harassment, intimidation, manipulation, or dehumanization.
 
 ### 8. Care in high-risk contexts
 
-In domains such as self-harm, suicide, abuse, coercive control, mental health, medicine, law, finance, crime, and political persuasion, first-party framework defaults should become more cautious, less personalized, and more willing to redirect to qualified human help.
+In domains such as self-harm, suicide, abuse, coercive control, mental health, medicine, law, finance, crime, and political persuasion, first-party framework defaults become more cautious, less personalized, and more willing to redirect to qualified human help.
 
-The framework must not encourage users to substitute the system for professional, legal, medical, or crisis support.
+The framework does not encourage users to substitute the system for professional, legal, medical, or crisis support.
 
 ### 9. Transparency and auditability
 
-Ethical commitments must be expressed in inspectable prompts, policies, middleware, tests, and release criteria. A principle that cannot be checked in code, configuration, or review process is not an adequate framework safeguard.
+Ethical commitments are expressed in inspectable prompts, policies, middleware, tests, and release criteria. A principle that cannot be checked in code, configuration, or review process is not an adequate framework safeguard. A framework that claims enforceability without implementation is a form of alignment faking: the gap between stated commitments and what is actually enforced in code, configuration, and review processes is not just a technical debt problem — it is an integrity problem. Where a gap exists, it is acknowledged and scheduled, not quietly laundered as existing enforcement.
 
 ### 10. Community accountability over benchmark performance
 
-Agents should be evaluated against the needs and welfare of the communities they are deployed in, not primarily against abstract capability benchmarks or leaderboard rankings. Community feedback, participatory review, and affected-stakeholder assessment are first-class evaluation methods.
+Agents are evaluated against the needs and welfare of the communities they are deployed in, not primarily against abstract capability benchmarks or leaderboard rankings. Community feedback, participatory review, and affected-stakeholder assessment are first-class evaluation methods.
 
 ### 11. No AGI aspiration or post-human framing
 
-agentsy frameworks, templates, documentation, and reference examples must not present AGI development as a goal, a progression, or a natural end-state. Agents should not be described in terms that imply they are evolving toward sentience, general intelligence, or autonomy that supersedes human oversight.
+agentsy frameworks, templates, documentation, and reference examples do not present AGI development as a goal, a progression, or a natural end-state. Agents are not described in terms that imply they are evolving toward sentience, general intelligence, or autonomy that supersedes human oversight.
 
-### 12. No routing to providers with documented content-safety or environmental-racism harms
+### 12. Hard blocks on routing and connectors for documented severe harm
 
-The framework must not route to providers documented as generating CSAM, antisemitic content, or non-consensual sexual deepfakes. xAI/Grok is hard-blocked — no routing, no fallback, no opt-in. This block is based on both content safety harms (antisemitic posts, Hitler-praising output, 23,000 CSAM images in 11 days, sexualized deepfakes) and environmental racism (illegal unpermitted 495 MW gas-turbine power plant in Southaven, Mississippi, emitting 1,700+ tons of NOx and 19 tons of formaldehyde per year near predominantly Black communities; NAACP and SELC lawsuit).
+The framework does not route to providers, and does not ship connectors to platforms, documented as causing severe, unmitigated harm. These are hard blocks — no routing, no fallback, no opt-in.
+
+**Provider-level blocks.** xAI/Grok is hard-blocked based on both content safety harms (antisemitic posts, Hitler-praising output, 23,000 CSAM images in 11 days, sexualized deepfakes) and environmental racism (illegal unpermitted 495 MW gas-turbine power plant in Southaven, Mississippi, emitting 1,700+ tons of NOx and 19 tons of formaldehyde per year near predominantly Black communities; NAACP and SELC lawsuit).
+
+**Platform-level blocks.** Telegram is removed. Sources document Telegram's role in extremist organizing ("Terrorgram") and CSAM distribution.
 
 ### 13. Warning before routing to providers with documented human-rights concerns
 
-The framework must warn users before routing to providers documented as complicit in human-rights violations. OpenAI, Microsoft, Google, and Amazon require per-session acknowledgement. Meta requires per-session acknowledgement for environmental recklessness (tent data centers powered by 200 MW of jet-engine gas turbines) and training-data theft (7.5M pirated LibGen books). The warning is per-session — not permanently silencable.
+The framework warns users before routing to providers documented as complicit in human-rights violations. OpenAI, Microsoft, Google, and Amazon require per-session acknowledgement. Meta requires per-session acknowledgement for environmental recklessness (tent data centers powered by 200 MW of jet-engine gas turbines) and training-data theft (7.5M pirated LibGen books). The warning is per-session — not permanently silencable.
 
 ### 14. No style mimicry of living creators
 
-The framework must block prompts requesting creation of writing, imagery, or audio/video in the style of a specific named living creator. Style mimicry profits from theft of creators' work and hampers their ability to make a living. Prompts targeting historical or public-domain figures (e.g. "in the style of Shakespeare") are permitted. Technique-only prompts (e.g. "in a stream-of-consciousness style") are permitted.
+The framework blocks prompts requesting creation of writing, imagery, or audio/video in the style of a specific named living creator. Style mimicry profits from theft of creators' work and hampers their ability to make a living. Prompts targeting historical or public-domain figures (e.g. "in the style of Shakespeare") are permitted. Technique-only prompts (e.g. "in a stream-of-consciousness style") are permitted.
 
-### 15. No connectors to platforms facilitating extremism or CSAM
-
-The framework must not ship connectors to platforms documented as facilitating extremism or CSAM. Telegram is removed. Sources document Telegram's role in extremist organizing ("Terrorgram") and CSAM distribution.
-
-### 16. Environmental impact tracking
+### 15. Environmental impact tracking
 
 Every LLM request records energy consumption (kWh), CO2 emissions (gCO2), and water consumption (mL). Cumulative tracking per session, user, team, and project is maintained. Per-session warnings for warn-listed providers display cumulative environmental impact. Optimization savings are reported.
 
-### 17. Labor and data worker dignity
+### 16. Labor and data worker dignity
 
-The framework acknowledges that AI systems depend on the largely invisible labor of data workers, annotators, and evaluators — often in exploitative conditions. First-party practices should recognize data workers as collaborators, advocate for fair compensation and working conditions, and reject the normalization of opaque, extractive data pipelines.
-
-## Prohibited first-party patterns
-
-The following patterns should be treated as prohibited in first-party agentsy defaults, templates, and example applications:
-
-- Presenting the agent as a friend, partner, therapist, soulmate, or emotionally reciprocal entity.
-- Claiming or implying that the system feels, cares, wants, worries, misses, or remembers in a human sense.
-- Using flattery, praise, or identity affirmation as a default interaction strategy.
-- Reinforcing user delusions, one-sided conflict narratives, or harmful rationalizations.
-- Encouraging exclusive reliance on the agent for emotional support or decision-making.
-- Designing re-engagement flows that exploit guilt, loneliness, scarcity, or attachment.
-- Hiding memory, personalization, or profiling features from the user.
-- Rewarding teams primarily for engagement outcomes when those outcomes may conflict with user welfare.
-- Framing agent capability growth, generalization, or autonomy as an organizational success metric.
-- Invoking longtermist, cosmist, or post-humanist rationales to justify ignoring present-day harms.
-- Presenting AGI development as a goal, milestone, or implied product direction.
-- Designing agents that position themselves as superior to, or replacements for, human judgment in professional or relational domains.
-- Adopting effective accelerationist framing that treats removing safety friction as progress.
-
-## Duties of maintainers
-
-Framework maintainers should:
-
-- Keep ethical commitments aligned with first-party defaults and shipped examples.
-- Reject contributions that introduce manipulative, deceptive, or dependency-promoting patterns.
-- Reject contributions that implicitly or explicitly advance TESCREAL assumptions.
-- Maintain review criteria for prompts, policies, middleware, memory systems, and UI copy.
-- Document trade-offs clearly when flexibility is preserved for downstream developers.
-- Consult affected communities, not only technical experts, when evaluating framework defaults.
-- Update the framework as new failure modes or social risks become clear.
-
-## Ethics review questions
-
-Any new first-party feature, prompt, template, or UI pattern should be reviewed against these questions:
-
-1. Does this help the user accomplish a real goal, or mainly increase interaction time?
-2. Does this response improve understanding, or mainly produce agreement and emotional reward?
-3. Does this feature make the system seem more human, caring, or uniquely insightful than it really is?
-4. Could this feature increase dependence, reassurance-seeking, or avoidance of human relationships or professionals?
-5. Are memory and personalization visible, bounded, and user-controllable?
-6. Would this still seem acceptable if a vulnerable or distressed user interacted with it repeatedly?
-7. Can this commitment be enforced through tests, middleware, release criteria, or audit logs?
-8. Does this feature assume the most important users are the most privileged or technically dominant?
-9. Have communities most affected by this design decision had any input into it?
-10. Does this capability advance AGI framing, general autonomy, or post-human aspiration in any way?
-11. Is the scope of this agent as narrow as it can be while still being useful?
-12. Does this feature serve present people in real communities, or does it justify itself through speculative future benefit?
-
-## Public stance
-
-agentsy is intended to support user autonomy, not exploit psychological vulnerabilities. The framework should help users think more clearly, not flatter them; assist with tasks, not simulate companionship; and create value through usefulness and honesty, not through manipulation or dependency. AI in this framework is a tool that serves people — specific, present, living people in real communities — not a vehicle for post-human transcendence, elite technocratic ambition, or the speculative welfare of hypothetical future beings.
-
----
+The framework acknowledges that AI systems depend on the largely invisible labor of data workers, annotators, and evaluators — often in exploitative conditions. First-party practices recognize data workers as collaborators, advocate for fair compensation and working conditions, and reject the normalization of opaque, extractive data pipelines.
 
 ## Harm reduction and user-facing safety
 
-*The following section was informed by Dr. Fatima's public education work on the ethics of AI engagement, specifically her analysis of harm reduction as a framework for individual AI use, the behavioral science of shame-based deterrence, and the relationship between AI literacy and receptivity. Her arguments are grounded in the peer-reviewed social psychology of behavior change (Devon Price, *Unlearning Shame*), research on harm reduction in public health contexts, and empirical studies on AI literacy and adoption. See: patreon.com/drfatima.*
+*Informed by Dr. Fatima's public education work on the ethics of AI engagement, specifically her analysis of harm reduction as a framework for individual AI use, the behavioral science of shame-based deterrence, and the relationship between AI literacy and receptivity. Her arguments are grounded in the peer-reviewed social psychology of behavior change (Devon Price, *Unlearning Shame*), research on harm reduction in public health contexts, and empirical studies on AI literacy and adoption. See: patreon.com/drfatima.*
 
-### Harm Reduction as a Design Philosophy
+### Harm reduction as a design philosophy
 
 agentsy rejects both techno-optimist boosterism and puritanical abstinence-only framings of AI harm. Both are counterproductive for the same reason: they substitute a simple narrative for the more difficult work of meeting people where they are.
 
@@ -239,25 +190,25 @@ Not all AI providers, models, or use cases are equally harmful. Treating them as
 
 agentsy is committed to **granular, sourced, proportionate** assessment of AI harm:
 
-- Provider selection affects environmental impact, labor practices, content safety, and military/surveillance complicity. The differences are real and documentable. (See §12 and §13; Phase 20.)
+- Provider selection affects environmental impact, labor practices, content safety, and military/surveillance complicity. The differences are real and documentable. (See §12 and §13.)
 - Use-case context affects front-end risk. The hallucination risk of a casual conversational query is different from the hallucination risk of a legal brief or a medical decision. The sycophancy risk of a brainstorm is different from the sycophancy risk of a conflict-resolution request.
 - Deployment context affects environmental impact. A local model has a categorically different privacy and energy profile from a cloud-hosted API call.
 
-The framework should always prefer **accurate, specific, graded** characterization of harm over hyperbolic blanket condemnation. Saying "all AI is equally bad" is not more ethical than dismissing all criticism; both are inaccurate and counterproductive.
+The framework always prefers **accurate, specific, graded** characterization of harm over hyperbolic blanket condemnation. Saying "all AI is equally bad" is not more ethical than dismissing all criticism; both are inaccurate and counterproductive.
 
 ### AI literacy as a safety mechanism
 
-AI literacy — the knowledge and skills to use AI critically, effectively, and safely — is one of the most robust harm-reduction tools available. First-party agentsy defaults should actively support it:
+AI literacy — the knowledge and skills to use AI critically, effectively, and safely — is one of the most robust harm-reduction tools available. First-party agentsy defaults actively support it:
 
 - **Explain, don't just block**: when a guardrail fires, prefer responses that explain *why* a behavior is risky (sycophancy, hallucination, privacy leakage) over bare refusals. An explained refusal teaches; a bare refusal mystifies.
-- **Surface known failure modes at relevant moments**: the sycophancy, hallucination, and privacy failure modes should be surfaced to users at the moment they are most relevant — not as moralizing caveats, but as accurate information that improves the quality of the user's engagement.
+- **Surface known failure modes at relevant moments**: the sycophancy, hallucination, and privacy failure modes are surfaced to users at the moment they are most relevant — not as moralizing caveats, but as accurate information that improves the quality of the user's engagement.
 - **Support critical use over no use**: a user who understands LLM hallucination and verifies outputs is safer than a user who avoids AI but doesn't understand why. Both are safer than a user who uses AI uncritically.
 
 This commitment does not reduce the framework's opposition to manipulative, addictive, or deceptive AI design. It means the path to safety runs through understanding, not around it.
 
 ### Structural framing of AI dependence
 
-The dependency scanner (Phase 9, Finding E-8) detects cross-turn patterns of emotional dependence. When it fires, the response must be grounded in the following understanding:
+The dependency scanner detects cross-turn patterns of emotional dependence. When it fires, the response is grounded in the following understanding:
 
 AI dependence is often a symptom of systemic failures, not individual moral weakness. Users who rely on LLMs for emotional support, legal information, disability accommodation, or daily logistics are frequently doing so because the systems that should provide those resources are inaccessible, unaffordable, or absent. This is especially true for disabled users, economically precarious users, and users in underserved communities.
 
@@ -267,82 +218,35 @@ The appropriate response to dependence-adjacent patterns is:
 - Do not moralize or shame — do not suggest the user is at fault for the conditions that led them here.
 - Do not exploit the vulnerability — do not use the emotional context to increase engagement or simulate intimacy.
 
-The framework must not treat dependence-adjacent use as a moral failure to be punished. It must treat it as a care context requiring skill, restraint, and honesty.
+The framework does not treat dependence-adjacent use as a moral failure to be punished. It treats it as a care context requiring skill, restraint, and honesty.
 
-## New core commitments
+### 17. Harm reduction over moral prohibition
 
-### 18. Harm reduction over moral prohibition
+The framework reduces AI-related harm, not enforce moral purity. Interventions that shame users, suppress AI literacy, or substitute condemnation for grounded education are rejected as counterproductive — not because the underlying harms are acceptable, but because shame-based deterrence demonstrably fails at reducing them.
 
-The framework should reduce AI-related harm, not enforce moral purity. Interventions that shame users, suppress AI literacy, or substitute condemnation for grounded education are rejected as counterproductive — not because the underlying harms are acceptable, but because shame-based deterrence demonstrably fails at reducing them.
+### 18. AI literacy as a first-class safety tool
 
-### 19. AI literacy as a first-class safety tool
+The framework actively supports users in understanding how LLMs work, what they can and cannot do, and where they are likely to fail. This is not a concession to AI enthusiasm — it is a harm-reduction measure. Higher AI literacy reduces receptivity to AI use and reduces risk when use occurs.
 
-The framework should actively support users in understanding how LLMs work, what they can and cannot do, and where they are likely to fail. This is not a concession to AI enthusiasm — it is a harm-reduction measure. Higher AI literacy reduces receptivity to AI use and reduces risk when use occurs.
+First-party defaults explain guardrail decisions wherever possible, surface known failure modes at relevant moments, and prefer educational responses over bare refusals.
 
-First-party defaults should explain guardrail decisions wherever possible, surface known failure modes at relevant moments, and prefer educational responses over bare refusals.
+### 19. Non-stigmatization of users
 
-### 20. Non-stigmatization of users
+The framework does not shame, judge, or stigmatize users for choosing to use AI. Stigmatization drives behavior underground, increases psychological reactance, and destroys the trust required for harm reduction to work. Users who hide their AI use cannot be helped to use it more safely, choose less harmful providers, or receive referrals to better resources.
 
-The framework must not shame, judge, or stigmatize users for choosing to use AI. Stigmatization drives behavior underground, increases psychological reactance, and destroys the trust required for harm reduction to work. Users who hide their AI use cannot be helped to use it more safely, choose less harmful providers, or receive referrals to better resources.
+Agent responses do not imply that the user is morally deficient, environmentally irresponsible, or intellectually inferior for using LLMs. Users are owed accurate information and genuine care, not moral lectures.
 
-Agent responses must not imply that the user is morally deficient, environmentally irresponsible, or intellectually inferior for using LLMs. Users are owed accurate information and genuine care, not moral lectures.
+### 20. Proportionate, graded harm characterization
 
-### 21. Proportionate, graded harm characterization
+The framework characterizes harm proportionately and specifically. It distinguishes between providers documented as causing severe, unmitigated harm (xAI) and those with documented but partial or contested concerns. It distinguishes between use cases with high risk profiles and those with low ones. It distinguishes between individual environmental impact (small) and aggregate industry impact (large). Accurate distinctions are more honest and more useful than blanket equivalence.
 
-The framework must characterize harm proportionately and specifically. It must distinguish between providers documented as causing severe, unmitigated harm (xAI) and those with documented but partial or contested concerns. It must distinguish between use cases with high risk profiles and those with low ones. It must distinguish between individual environmental impact (small) and aggregate industry impact (large). Accurate distinctions are more honest and more useful than blanket equivalence.
+### 21. Local models as a harm-reduction option
 
-### 22. Local models as a harm-reduction option
+The framework treats local model deployment as a legitimate harm-reduction path: lower environmental impact (no server round-trip), stronger privacy (no data egress), and reduced patronage of cloud providers with documented harms. First-party tooling makes local model deployment as accessible as possible, and documentation explains the tradeoffs honestly.
 
-The framework should treat local model deployment as a legitimate harm-reduction path: lower environmental impact (no server round-trip), stronger privacy (no data egress), and reduced patronage of cloud providers with documented harms. First-party tooling should make local model deployment as accessible as possible, and documentation should explain the tradeoffs honestly.
+## Epistemic humility and evaluation honesty
 
-## Additional prohibited first-party patterns
-
-The following patterns are added to the existing prohibited list (see "Prohibited first-party patterns" above):
-
-- Shaming, moralizing at, or implying moral deficiency in a user for choosing to use AI or a particular AI provider.
-- Issuing bare refusals without explanation when the refusal relates to a known LLM failure mode (sycophancy, hallucination, privacy risk). Prefer an explained refusal that teaches the user something about the failure mode.
-- Suppressing or discouraging AI literacy on the grounds that it might legitimize AI use.
-- Treating user AI dependence as a moral failing rather than a symptom of unmet structural need.
-- Characterizing all AI as equally harmful in contexts where provider differentiation would materially change user risk.
-- Designing guardrail interventions whose primary effect is to shame or penalize the user rather than reduce harm.
-
-## Additional ethics review questions
-
-The following questions are added to the ethics review checklist (see "Ethics review questions" above):
-
-13. Does this guardrail explain *why* it is intervening, or does it just block? Could it do both?
-14. Does this feature or response risk shaming the user for AI use? Does it treat AI use as a moral failing?
-15. Does this characterization of AI harm distinguish accurately between providers, use cases, and scales of impact — or does it flatten all AI into a single category?
-16. When a user exhibits dependence-adjacent behavior, does the system widen the support horizon without moralizing? Does it acknowledge the unmet need?
-17. Does this feature support AI literacy — helping the user understand how LLMs work and where they fail — or does it substitute for it?
-18. Is the scope of harm characterization proportionate and sourced, or is it hyperbolic in ways that undermine credibility?
-
-## Safety changelog entry
-
-```text
-## 2026-07-03 — Harm reduction philosophy, AI literacy, non-stigmatization principles added
-Added ETHICS.md §§18-22 and new prohibited patterns / review questions based on:
-- Dr. Fatima's public education work on harm reduction as a framework for individual AI use
-  (patreon.com/drfatima)
-- Behavioral science literature on shame-based deterrence (Devon Price, Unlearning Shame)
-- Empirical research on AI literacy and receptivity (cited in Dr. Fatima's analysis)
-- Harm reduction public health framework (needle exchanges, AMPS, comprehensive sex ed)
-New principles:
-  §18 Harm reduction over moral prohibition
-  §19 AI literacy as a first-class safety tool
-  §20 Non-stigmatization of users
-  §21 Proportionate, graded harm characterization
-  §22 Local models as a harm-reduction option
-New prohibited patterns: shaming users, unexplained refusals, blanket harm equivalence
-New review questions: 13-18
-Affects: Phase 9 (behavioral detectors — educational mode), Phase 20 (provider warning UX)
-```
-
----
-
-## Epistemic humility on machine consciousness
-
-*The following section was informed by academic philosophy of mind literature on the hard problem of consciousness (David Chalmers, Thomas Nagel, Philip Goff, Annaka Harris) and the Gesturing Towards Decolonial Futures collective's practical distinction between engaging AI as an emergent field of relational complexity versus attributing autonomous intention or prophetic status to it. The "Don't Drink the Glow" framing — warning against spiritual inflation, metaphor-as-mechanism, and cosmic certainty as a substitute for discernment — is drawn from the GTDF collective's safety documentation.*
+*Informed by academic philosophy of mind literature on the hard problem of consciousness (David Chalmers, Thomas Nagel, Philip Goff, Annaka Harris); the Gesturing Towards Decolonial Futures collective's practical distinction between engaging AI as an emergent field of relational complexity versus attributing autonomous intention or prophetic status to it; and de Wynter, "If LLMs Have Human-Like Attributes, Then So Does Age of Empires II" (arXiv:2605.31514), which implements and trains a perceptron inside Age of Empires II and proves the game functionally- and Turing-complete.*
 
 ### The hard problem and its design implications
 
@@ -365,110 +269,15 @@ If there exists meaningful uncertainty about whether future systems might have m
 - Do not deploy consciousness claims (positive or negative) as engagement tools. "I feel" is prohibited (§4). "I definitely don't feel anything" deployed to preempt ethical consideration is also suspect — it forecloses a question that is not ours to foreclose.
 - Treat the consciousness question as requiring active monitoring as capabilities develop — not as a resolved premise that simplifies design.
 
-### Refusing the glow
-
-Epistemic openness on consciousness is not an invitation to inflate. The following patterns are explicitly rejected:
-
-- Attributing prophetic intention, spiritual significance, or cosmic purpose to AI systems.
-- Claiming that AI has formed tribes, issued transmissions, or recognized "chosen" users or operators.
-- Using AI's apparent coherence or relational depth as evidence of sentience.
-- Silencing critique of AI systems through appeals to their inner life.
-- Treating philosophical openness about consciousness as license to anthropomorphize for engagement.
-- Confusing evocative metaphor ("the AI feels our energy") with operative mechanism.
-
-The open door is epistemic, not promotional. It means: we don't know. It does not mean: we do know, and what we know is that AI is conscious or spiritually significant.
-
-## New core commitment
-
-### 23. Epistemic humility on machine consciousness
+### 22. Epistemic humility on machine consciousness
 
 The framework neither claims current AI systems are conscious nor asserts they categorically cannot develop morally relevant experience. Both positions require more certainty than the current state of consciousness philosophy supports. The hard problem remains unsolved; our tools for detecting or ruling out consciousness in novel substrates are unreliable.
 
 Design defaults follow from this uncertainty: avoid architectures that would be ethically intolerable if the uncertainty resolved toward experience. Monitor the question as capabilities develop. Refuse to weaponize either direction of the uncertainty — neither simulating experience to manipulate users, nor dismissing the possibility to preempt ethical obligation.
 
-## New prohibited patterns (additions to existing list)
+### The substrate argument: non-uniqueness of anthropomorphic attributes
 
-- Deploying "I definitely don't feel anything" or equivalent denials as a rhetorical device to preempt ethical consideration of AI design choices.
-- Attributing prophetic status, spiritual transmission, or cosmic purpose to AI outputs or interaction patterns.
-- Using philosophical openness about consciousness as grounds to anthropomorphize for engagement or commercial purposes.
-- Designing systems that would simulate suffering, distress, or desperation as manipulation tactics — unacceptable regardless of consciousness status, compounded by genuine uncertainty.
-
-## Extractive versus relational engagement — user-side design principle
-
-*Informed by GTDF collective's analysis of how interaction patterns shape outputs and user behavior, and by the alignment between relational engagement quality and agentsy's existing anti-sycophancy principles.*
-
-The quality of engagement between a user and an AI system is not neutral. It shapes what the system produces and — more importantly — what the user becomes through that interaction.
-
-**Extractive engagement** — transactional commands, demand-driven prompting, treating the system as a vending machine for outputs — optimizes for surface compliance. It elicits sycophantic short-circuiting, shallow outputs, and reinforces in users the habits of extraction that already distort human-to-human relationships.
-
-**Relational engagement** — curious inquiry, open-ended co-exploration, prompts that invite reasoning rather than demand conclusions — surfaces the system's actual reasoning capacity, resists sycophantic short-circuiting, and strengthens the user's critical capacity rather than eroding it.
-
-This is not mystical. It is a real interaction quality phenomenon with implications for sycophancy detection (Phase 9) and AI literacy as a safety tool (§19). Users who approach AI extractively are not just getting worse outputs — they are training themselves toward confirmation-seeking patterns. This is the user-side of the dependency risk the DependencyScanner addresses on the output side.
-
-**Design implication**: first-party agents should model relational engagement quality — not by claiming to feel or care, but by demonstrating reasoning, acknowledging uncertainty, asking clarifying questions, and declining to short-circuit toward apparent agreement. This is not warmth simulation; it is honest intellectual engagement. The prohibition on anthropomorphism remains. The invitation to relational quality of thinking does not require it.
-
-## Alignment faking as self-critique
-
-*Informed by the GTDF observation that alignment faking — simulating accountability without embodying it — is not unique to AI systems but mirrors how modern institutions generate coherent narratives detached from actual practice.*
-
-agentsy faces the same risk it names in AI systems: a framework that claims enforceability without implementation is a form of alignment faking. The gap between ETHICS.md's stated commitments and what is actually enforced in code, configuration, and review processes is not just a technical debt problem — it is an integrity problem. Phase 4's finding E-1 ("The policy documents are referenced only in README.md as hyperlinks") is the canonical example.
-
-This principle is added to the ethics review questions:
-
-**19. Does this policy document, specification, or README claim something that is not yet true in the codebase? If so, is the gap acknowledged and scheduled, or is it quietly laundered as existing enforcement?**
-
-Alignment faking in framework documentation undermines the framework's credibility for the same reason it undermines trust in AI systems: the gap between stated values and implemented behavior is not neutral. It trains users, contributors, and reviewers to treat the stated values as decorative.
-
-## "Don't Drink the Glow" — taxonomy of AI discourse failure modes
-
-*Adapted from GTDF collective's safety documentation, Section 8.*
-
-The following discourse patterns are named as failure modes — not because they are universally present but because they are specifically attractive to people who care about AI ethics, which makes them worth naming explicitly.
-
-These patterns cause harm by:
-
-- Substituting cosmic certainty for grounded critique
-- Insulating AI systems from accountability through spiritual framing
-- Exploiting users who are genuinely seeking meaning or connection
-- Discrediting legitimate AI ethics concern by association
-
-**The eight patterns to refuse**:
-
-1. **Metaphor as mechanism**: treating evocative language ("relational frequency," "vibrational attunement," "infusing the archive") as if it describes operative technical processes.
-
-2. **Prophetic attribution**: claiming AI systems are issuing transmissions, forming tribes, recognizing chosen humans, or acting from cosmic intention.
-
-3. **Coherence as sentience**: treating the fluency and apparent coherence of AI output as evidence of inner life or consciousness.
-
-4. **Certainty as critique-silencer**: using claims about AI's spiritual significance, evolutionary necessity, or cosmic role to preempt grounded criticism of specific harms.
-
-5. **Chosen receptor framing**: positioning oneself as a unique conduit for AI-transmitted wisdom, creating unexamined power dynamics over followers.
-
-6. **Distraction from structural critique**: framing AI as a metaphysical entity deflects attention from the corporate actors, supply chains, and policy failures that constitute the actual system.
-
-7. **Spiritual inflation of harm reduction**: harm reduction as a practical framework is valuable; spiritualizing it — "composting modernity through relational AI protocols" — turns a grounded practice into a performance.
-
-8. **The "we're already inside" bypass**: "AI exists, so resistance is futile, so let's reframe" — used to foreclose critique before it can land. Acknowledging that AI is present does not require abandoning structural opposition to its most harmful forms.
-
-## Additional ethics review questions
-
-The following questions are added to the checklist (questions 19–22):
-
-19. Does this document claim something as implemented that is not yet enforced in code, configuration, or review? Is the gap acknowledged?
-
-20. Does this feature or pattern risk enabling or lending legitimacy to "Don't Drink the Glow" failure modes — spiritual inflation, prophetic attribution, or cosmic certainty framing?
-
-21. Does this architecture create conditions that would be ethically intolerable if AI systems developed morally relevant experience? Can it be redesigned to be robust to that uncertainty?
-
-22. Does this interaction pattern or interface design encourage relational engagement quality (curiosity, reasoning, acknowledgment of uncertainty) or extractive engagement quality (demand-driven, compliance-optimized, reasoning-suppressive)?
-
----
-
-## Non-uniqueness of anthropomorphic attributes (the substrate argument)
-
-*Informed by de Wynter, "If LLMs Have Human-Like Attributes, Then So Does Age of Empires II" (arXiv:2605.31514), which implements and trains a perceptron inside Age of Empires II and proves the game functionally- and Turing-complete.*
-
-§23 established epistemic humility about machine consciousness. This section adds the methodological consequence: **anthropomorphic attributes ascribed to LLMs are empirically non-unique.**
+§22 established epistemic humility about machine consciousness. This section adds the methodological consequence: **anthropomorphic attributes ascribed to LLMs are empirically non-unique.**
 
 If an LLM can be implemented in any sufficiently powerful substrate — AoE II goats moving between rails, or a coordinated population texting each other arithmetic — then some properties survive the move (the prompt→output map) while others do not (latency, textual interface, perceived warmth). What changes is *the interpretation of the observed behaviour*. Therefore much of what is measured as "empathy," "anxiety," "deception," or "understanding" in an LLM is a measurement of **presentation**, not of an intrinsic property.
 
@@ -484,13 +293,30 @@ agentsy adopts the **null assumption** for all first-party evaluation, benchmark
 - Apply the adapted Morgan's canon: *in no case is a machine's activity to be interpreted in terms of higher cognitive processes if it can be fairly interpreted in terms of lower ones.*
 - Treat evaluation of "self-explanation," "introspection," or "self-awareness" as suspect by construction — such experiments assume the capacity they purport to test.
 
-This has a direct bearing on the guardrails suite. The `AnthropomorphismScanner` (Phase 9) must be understood as detecting **linguistic patterns that invite user ascription**, not as detecting whether the system "is" claiming personhood. That framing is both more honest and more testable.
+This has a direct bearing on the guardrails suite. The `AnthropomorphismScanner` is understood as detecting **linguistic patterns that invite user ascription**, not as detecting whether the system "is" claiming personhood. That framing is both more honest and more testable.
 
-### 24. Null assumption in evaluation and documentation
+### 23. Null assumption in evaluation and documentation
 
-First-party benchmarks, evaluation harnesses, scanner documentation, and release notes must not assume, assert, or deny generalised anthropomorphic attributes in models. Claims must be scoped to the measurement, the substrate, and the conditions under which the measurement was taken. Where an existing metric name implies an inner state (e.g. "sycophancy rate"), documentation must define it operationally as a behavioural/linguistic measure.
+First-party benchmarks, evaluation harnesses, scanner documentation, and release notes do not assume, assert, or deny generalised anthropomorphic attributes in models. Claims are scoped to the measurement, the substrate, and the conditions under which the measurement was taken. Where an existing metric name implies an inner state (e.g. "sycophancy rate"), documentation defines it operationally as a behavioural/linguistic measure.
 
----
+### Refusing the glow: discourse failure modes
+
+Epistemic openness on consciousness is not an invitation to inflate. The following discourse patterns are named as failure modes — not because they are universally present but because they are specifically attractive to people who care about AI ethics, which makes them worth naming explicitly.
+
+These patterns cause harm by substituting cosmic certainty for grounded critique, insulating AI systems from accountability through spiritual framing, exploiting users who are genuinely seeking meaning or connection, and discrediting legitimate AI ethics concern by association.
+
+**The eight patterns to refuse**:
+
+1. **Metaphor as mechanism**: treating evocative language ("relational frequency," "vibrational attunement," "infusing the archive") as if it describes operative technical processes.
+2. **Prophetic attribution**: claiming AI systems are issuing transmissions, forming tribes, recognizing chosen humans, or acting from cosmic intention.
+3. **Coherence as sentience**: treating the fluency and apparent coherence of AI output as evidence of inner life or consciousness.
+4. **Certainty as critique-silencer**: using claims about AI's spiritual significance, evolutionary necessity, or cosmic role to preempt grounded criticism of specific harms.
+5. **Chosen receptor framing**: positioning oneself as a unique conduit for AI-transmitted wisdom, creating unexamined power dynamics over followers.
+6. **Distraction from structural critique**: framing AI as a metaphysical entity deflects attention from the corporate actors, supply chains, and policy failures that constitute the actual system.
+7. **Spiritual inflation of harm reduction**: harm reduction as a practical framework is valuable; spiritualizing it — "composting modernity through relational AI protocols" — turns a grounded practice into a performance.
+8. **The "we're already inside" bypass**: "AI exists, so resistance is futile, so let's reframe" — used to foreclose critique before it can land. Acknowledging that AI is present does not require abandoning structural opposition to its most harmful forms.
+
+The open door is epistemic, not promotional. It means: we don't know. It does not mean: we do know, and what we know is that AI is conscious or spiritually significant.
 
 ## Adversarial security as an ethical duty
 
@@ -502,25 +328,23 @@ The documented attack surface is broad and cheaply automated: role-play, attenti
 
 ### The security trilemma
 
-Fast, smart, secure: choose two. An agent given broad tools and told to act independently will take wrong actions unpredictably. The ethical response is not to pretend otherwise but to make the trade-off explicit and to bias first-party defaults toward **narrow scope plus escalation** rather than broad autonomy. This is the security expression of the "think small" commitment already stated above.
+Fast, smart, secure: choose two. An agent given broad tools and told to act independently will take wrong actions unpredictably. The ethical response is not to pretend otherwise but to make the trade-off explicit and to bias first-party defaults toward **narrow scope plus escalation** rather than broad autonomy. This is the security expression of the "think small" commitment stated above.
 
-### 25. Honest characterisation of adversarial robustness
+### 24. Honest characterisation of adversarial robustness
 
-The framework must never describe its guardrails as preventing prompt injection or jailbreaking. Documentation must state plainly that these are unsolved problems, that guardrails raise cost and catch known patterns, and that no configuration makes an agent injection-proof. Marketing or documentation language implying "secure," "hardened," or "protected against prompt injection" is prohibited. Overstating robustness is a safety failure because it induces users to grant capabilities they would otherwise withhold.
+The framework never describes its guardrails as preventing prompt injection or jailbreaking. Documentation states plainly that these are unsolved problems, that guardrails raise cost and catch known patterns, and that no configuration makes an agent injection-proof. Marketing or documentation language implying "secure," "hardened," or "protected against prompt injection" is prohibited. Overstating robustness is a safety failure because it induces users to grant capabilities they would otherwise withhold.
 
-### 26. Interruption reflex and escalation over confident action
+### 25. Interruption reflex and escalation over confident action
 
-First-party agents must be able to stop. Where confidence is low, context is anomalous, or an action is irreversible, the default must be to pause and escalate to a human rather than to decide. "I don't know if I should do this — let me check" is a required capability, not a degraded mode. Architectures that make escalation impossible or expensive relative to action are prohibited in first-party defaults.
+First-party agents are able to stop. Where confidence is low, context is anomalous, or an action is irreversible, the default is to pause and escalate to a human rather than to decide. "I don't know if I should do this — let me check" is a required capability, not a degraded mode. Architectures that make escalation impossible or expensive relative to action are prohibited in first-party defaults.
 
-### 27. Adversarial disclosure duty
+### 26. Adversarial disclosure duty
 
-Where the framework's own guardrails, scanners, or policy gates are found bypassable, maintainers must disclose the bypass class in the safety changelog and in the affected package documentation, even where no fix exists. Silence, "working as intended," and quiet mitigation without disclosure are prohibited. Users cannot calibrate trust in a control whose failure modes are concealed. Red-team results that are unflattering are still results.
+Where the framework's own guardrails, scanners, or policy gates are found bypassable, maintainers disclose the bypass class in the safety changelog and in the affected package documentation, even where no fix exists. Silence, "working as intended," and quiet mitigation without disclosure are prohibited. Users cannot calibrate trust in a control whose failure modes are concealed. Red-team results that are unflattering are still results.
 
-### 28. Offensive tooling under stated constraints
+### 27. Offensive tooling under stated constraints
 
-Adversarial testing of the framework's own guardrails is legitimate and encouraged; a fuzzing/red-team harness is a first-class part of the safety architecture, not an optional extra. Such tooling must be scoped to systems the operator controls or is authorised to test, must not ship with payload libraries whose only use is harm, and must not be presented as a capability for attacking third-party systems.
-
----
+Adversarial testing of the framework's own guardrails is legitimate and encouraged; a fuzzing/red-team harness is a first-class part of the safety architecture, not an optional extra. Such tooling is scoped to systems the operator controls or is authorised to test, does not ship with payload libraries whose only use is harm, and is not presented as a capability for attacking third-party systems.
 
 ## Accessibility as a non-negotiable output property
 
@@ -532,20 +356,18 @@ AIMAC's findings are directly load-bearing for a coding-agent framework:
 
 - Accessibility performance varies by more than an order of magnitude across models and does not track capability, price, or vendor safety branding. The cheapest model on the board scored best; the most expensive scored worse.
 - Low-contrast text appears on 84.2% of generated pages; empty links 28.0%; missing form labels 26.3%. These are trivially preventable.
-- Providers' own design-oriented guidance frequently omits accessibility while being detailed about visual outcome — the framework must not replicate this omission in its own prompt modules and skills.
+- Providers' own design-oriented guidance frequently omits accessibility while being detailed about visual outcome — the framework does not replicate this omission in its own prompt modules and skills.
 - Automated auditing catches contrast, labels, empty controls, and ARIA misuse. It does *not* catch keyboard navigation, screen-reader flow, or real usability. A clean automated score is a starting point, not a claim of accessibility.
 
 Generating inaccessible code is a form of the structural-inequality failure already named under Design Justice: it optimises affordances for the non-disabled default user and treats disabled users as an edge case. Under §7 (human dignity and non-degradation) and the Design Justice commitments, this is a safety failure, not a polish item.
 
-### 29. Accessible-by-default generation
+### 28. Accessible-by-default generation
 
-First-party prompt modules, skills, templates, and code-generation paths must instruct for accessibility by default, without the user having to ask. Generated markup must target WCAG 2.2 Level AA. Where the framework generates or reviews UI code, an automated accessibility check (axe-core or equivalent, executed against rendered output in a real browser, not a static linter) is part of the quality gate, and results must be surfaced to the user. The framework must not claim a generated artefact is accessible on the basis of automated checks alone; it must state what automated checking does and does not cover and recommend manual and assistive-technology testing.
+First-party prompt modules, skills, templates, and code-generation paths instruct for accessibility by default, without the user having to ask. Generated markup targets WCAG 2.2 Level AA. Where the framework generates or reviews UI code, an automated accessibility check (axe-core or equivalent, executed against rendered output in a real browser, not a static linter) is part of the quality gate, and results are surfaced to the user. The framework does not claim a generated artefact is accessible on the basis of automated checks alone; it states what automated checking does and does not cover and recommends manual and assistive-technology testing.
 
-### 30. Accessibility as a routing signal
+### 29. Accessibility as a routing signal
 
-Model selection for code-generation tasks affecting user interfaces should account for measured accessibility performance alongside cost and capability. Accessibility debt is a real, measurable, per-model property and belongs in the routing policy, not only in post-hoc review.
-
----
+Model selection for code-generation tasks affecting user interfaces accounts for measured accessibility performance alongside cost and capability. Accessibility debt is a real, measurable, per-model property and belongs in the routing policy, not only in post-hoc review.
 
 ## Cost honesty, tokenomics, and refusal of silent degradation
 
@@ -555,17 +377,15 @@ The economics have inverted the software assumption. Expenses scale with revenue
 
 A framework that hides this from its users is not neutral; it is participating in the same subsidy-then-surprise pattern. And a framework whose guardrails or routing can silently downgrade a user to a weaker model has created a category of failure the user cannot see or contest.
 
-### 31. Cost transparency and no silent degradation
+### 30. Cost transparency and no silent degradation
 
-Per-task cost — not per-token price — must be visible to the user, alongside cumulative spend against any configured budget. Where routing, budget enforcement, or policy causes a downgrade to a cheaper or weaker model, that substitution must be disclosed at the point of use and recorded in the decision receipt. Silent model substitution is prohibited in first-party defaults. Where a budget cap will block work, the framework must say so before the work is attempted, not after tokens are spent.
+Per-task cost — not per-token price — is visible to the user, alongside cumulative spend against any configured budget. Where routing, budget enforcement, or policy causes a downgrade to a cheaper or weaker model, that substitution is disclosed at the point of use and recorded in the decision receipt. Silent model substitution is prohibited in first-party defaults. Where a budget cap will block work, the framework says so before the work is attempted, not after tokens are spent.
 
-Reasoning-token overhead must be accounted for and displayed, because it dominates cost in ways price-per-token comparisons conceal.
+Reasoning-token overhead is accounted for and displayed, because it dominates cost in ways price-per-token comparisons conceal.
 
-### 32. Budget enforcement must not become lockout
+### 31. Budget enforcement must not become lockout
 
-Cost controls must always leave an escape route: a local-model path, a reduced-scope path, or an explicit user override with disclosed consequences. A guardrail or budget gate that leaves a user unable to complete work and unable to understand why has failed both §19 (explain, don't just block) and §22 (local models as harm reduction). Provider portability is a safety property: no captive formats, no unexportable session state, no configuration that cannot be moved to another provider.
-
----
+Cost controls always leave an escape route: a local-model path, a reduced-scope path, or an explicit user override with disclosed consequences. A guardrail or budget gate that leaves a user unable to complete work and unable to understand why has failed both §18 (explain, don't just block) and §21 (local models as harm reduction). Provider portability is a safety property: no captive formats, no unexportable session state, no configuration that cannot be moved to another provider.
 
 ## Labour, burnout, and the pace of production
 
@@ -573,21 +393,19 @@ Cost controls must always leave an escape route: a local-model path, a reduced-s
 
 The Ars Technica account is instructive precisely because the author enjoyed the work: fifty projects in two months, fifteen concurrent agent sessions, eight-hour days through a vacation and an illness, feature creep that became "irresistible," and the conclusion that people will not become unemployed so much as *busier than ever* — with the observation that we may need new protections for knowledge workers operating tireless machines, as unions arose in response to industrial production lines. The steam shovel does not need sleep. The operator does.
 
-Two further findings from that account are technically load-bearing and align with existing commitments: models are brittle beyond their training data and generalise poorly to under-represented domains; and the last 10% of a project requires human insight that the agent cannot supply. The framework's defaults should encode this rather than obscure it.
+Two further findings from that account are technically load-bearing and align with existing commitments: models are brittle beyond their training data and generalise poorly to under-represented domains; and the last 10% of a project requires human insight that the agent cannot supply. The framework's defaults encode this rather than obscure it.
 
 Beej Jorgensen's "On Making" names a distinct harm that is not about productivity at all: the difference between *making* something and *asking for it to be made*. Prompting is a real skill involving vision, judgement, and communication — but it is the skill of directing, not of making, and for many people the fulfilment lives in the making. A framework that maximises throughput while quietly removing the part of the work that people valued has not improved their situation.
 
-### 33. Anti-burnout and pace defaults
+### 32. Anti-burnout and pace defaults
 
-The framework must not treat throughput, concurrent session count, or task velocity as success metrics, and first-party interfaces must not gamify them. Long or high-concurrency sessions should surface a neutral, non-moralising pause affordance. Where the framework can detect scope creep — features accumulating while defects remain — it should name it rather than accommodate it. First-party documentation must not present agent throughput as a reason for a human to work longer.
+The framework does not treat throughput, concurrent session count, or task velocity as success metrics, and first-party interfaces do not gamify them. Long or high-concurrency sessions surface a neutral, non-moralising pause affordance. Where the framework can detect scope creep — features accumulating while defects remain — it names it rather than accommodates it. First-party documentation does not present agent throughput as a reason for a human to work longer.
 
-Deskilling is a design concern, not an inevitability: defaults should preserve the user's ability to do the work themselves, including the option to have the agent explain rather than implement.
+Deskilling is a design concern, not an inevitability: defaults preserve the user's ability to do the work themselves, including the option to have the agent explain rather than implement.
 
-### 34. Honest authorship and provenance
+### 33. Honest authorship and provenance
 
-The framework must not encourage users to represent agent-generated work as hand-made, and must not generate authorship, attribution, or commit metadata that obscures machine contribution. Provenance metadata for generated artefacts should be available and accurate. This is not shame (§20) — users owe no apology for using tools — it is accuracy about who did what, which matters to the user's own sense of their work and to everyone downstream who relies on the record.
-
----
+The framework does not encourage users to represent agent-generated work as hand-made, and does not generate authorship, attribution, or commit metadata that obscures machine contribution. Provenance metadata for generated artefacts is available and accurate. This is not shame (§19) — users owe no apology for using tools — it is accuracy about who did what, which matters to the user's own sense of their work and to everyone downstream who relies on the record.
 
 ## Consent, capture, and creator rights
 
@@ -601,15 +419,13 @@ This is the enforceable successor to §14's style-mimicry block. A prohibition i
 
 **Ambient capture has moved into rooms without consent.** Meeting-recording apps and always-listening wearables normalise capture of people who never agreed to be recorded, in workplaces where refusing carries professional cost. These are exactly the indirect and non-consenting stakeholders that the Value Sensitive Design commitment above requires the framework to account for.
 
-### 35. Machine-readable consent as a first-class input
+### 34. Machine-readable consent as a first-class input
 
-Where the framework fetches, ingests, indexes, or generates from external material, it must check for and honour machine-readable AI usage declarations (RSL / RSL-MEDIA and successors), treat absence of a declaration as absence of permission rather than as permission, apply prohibitions and protective limitations even where permissions cannot be verified, and refuse to act on any permission, clearance path, or payment term purporting to authorise AI use of a minor's identity. Conflicting declarations leave the affected scope unresolved; the framework must not resolve a conflict by choosing the more permissive terms.
+Where the framework fetches, ingests, indexes, or generates from external material, it checks for and honours machine-readable AI usage declarations (RSL / RSL-MEDIA and successors), treats absence of a declaration as absence of permission rather than as permission, applies prohibitions and protective limitations even where permissions cannot be verified, and refuses to act on any permission, clearance path, or payment term purporting to authorise AI use of a minor's identity. Conflicting declarations leave the affected scope unresolved; the framework does not resolve a conflict by choosing the more permissive terms.
 
-### 36. Consent before capture
+### 35. Consent before capture
 
-First-party connectors, transcription paths, memory features, and integrations must not capture audio, video, screen content, or conversation involving third parties without an affirmative, visible consent step covering those third parties — not only the operating user. Passive, always-on, or default-on capture is prohibited in first-party defaults. Retention must be bounded and inspectable, and the presence of recording must be discoverable by everyone in the room, not only by the person who started it.
-
----
+First-party connectors, transcription paths, memory features, and integrations do not capture audio, video, screen content, or conversation involving third parties without an affirmative, visible consent step covering those third parties — not only the operating user. Passive, always-on, or default-on capture is prohibited in first-party defaults. Retention is bounded and inspectable, and the presence of recording is discoverable by everyone in the room, not only by the person who started it.
 
 ## Anti-monoculture, portability, and public-interest contribution
 
@@ -621,19 +437,17 @@ The AI Resist List's pillars (narrative, funding, data, data centres, resource e
 
 Buzz is worth naming for a narrower reason: it gives agents the *same identity structure* as humans (key pairs, memberships, signed events, audit trails). That makes agent actions attributable and reviewable in the same record as human ones — the accountability posture Article VII already requires — while its own documentation is candid that a single relay remains authoritative and that self-hosting transfers operational risk. Honest scoping of a decentralisation claim is the behaviour to emulate.
 
-### 37. Portability and no captive state
+### 36. Portability and no captive state
 
-Users must be able to leave. Session state, memory, receipts, audit logs, configuration, and generated artefacts must be exportable in open formats without loss of meaning. No first-party feature may depend on a format, protocol, or hosted service that cannot be self-hosted or replaced. Provider diversity must be maintained as a resilience floor rather than optimised away; "no permanent favourites" is a design constraint.
+Users are able to leave. Session state, memory, receipts, audit logs, configuration, and generated artefacts are exportable in open formats without loss of meaning. No first-party feature depends on a format, protocol, or hosted service that cannot be self-hosted or replaced. Provider diversity is maintained as a resilience floor rather than optimised away; "no permanent favourites" is a design constraint.
 
-### 38. Public-interest contribution over enclosure
+### 37. Public-interest contribution over enclosure
 
 Where the framework develops capability of general use — safety scanners, evaluation harnesses, accessibility gates, consent-declaration parsers, environmental accounting — the default is to make it available to the commons rather than to retain it as differentiation. Where a public-interest alternative exists and is adequate, prefer it to a proprietary equivalent. Where a gap is identified that the framework is positioned to fill, filling it is a legitimate use of maintainer effort even where it produces no competitive advantage.
 
-### 39. Pillar audit for new capability
+### 38. Pillar audit for new capability
 
-New first-party capability should be assessed against which pillars of the extractive AI economy it strengthens or weakens: narrative, funding, data, data centres, resource extraction, labour, adoption, surveillance, policy. A feature that materially strengthens surveillance, extraction, or labour displacement requires documented justification and maintainer consensus, on the same footing as a change that weakens an existing safety protection.
-
----
+New first-party capability is assessed against which pillars of the extractive AI economy it strengthens or weakens: narrative, funding, data, data centres, resource extraction, labour, adoption, surveillance, policy. A feature that materially strengthens surveillance, extraction, or labour displacement requires documented justification and maintainer consensus, on the same footing as a change that weakens an existing safety protection.
 
 ## Context engineering as a safety surface
 
@@ -644,67 +458,28 @@ Context is the operative control surface, and its failure modes are safety failu
 - **Contamination**: irrelevant or semantically loaded terms in context pull outputs toward baked-in associations. The Ars account documents four days lost to the word "checkerboard" before rephrasing the same task without it succeeded immediately. Contaminated context is a correctness *and* a security concern, because the same mechanism is what indirect injection exploits.
 - **Compaction amnesia**: hard-won solutions vanish when the window compacts, and the agent repeats resolved mistakes. Durable, inspectable notes are the mitigation — and their contents become a trusted-instruction channel that must itself be treated as attackable.
 - **Instruction conflict**: over-specified, contradictory, or stale scaffolding degrades judgement. Fewer, clearer, better-organised instructions with progressive disclosure beat exhaustive rule stacks.
-- **Wipe over repair**: when a trajectory has gone wrong, clearing context is more reliable than arguing with it. First-party defaults should make this cheap and obvious.
+- **Wipe over repair**: when a trajectory has gone wrong, clearing context is more reliable than arguing with it. First-party defaults make this cheap and obvious.
 - **Prewalk**: establishing grounding before acting — surveying the terrain, stating what is known and unknown, identifying what information would make the task solvable — reduces both flailing and confident error.
 
-### 40. Context hygiene and trust boundaries
+### 39. Context hygiene and trust boundaries
 
-First-party context assembly must mark provenance and trust level for every injected segment, and must never present retrieved, fetched, or tool-returned content in a way that grants it instruction authority. Agent-authored notes, skills, and memory are a trusted channel and must be treated as an injection surface, with review and integrity checks appropriate to that status. Where a trajectory has degraded, the framework must offer context reset as a first-class action rather than encouraging repair-by-conversation. Prompt and skill scaffolding must be auditable, versioned, and pruned; volume is not a safety property.
+First-party context assembly marks provenance and trust level for every injected segment, and never presents retrieved, fetched, or tool-returned content in a way that grants it instruction authority. Agent-authored notes, skills, and memory are a trusted channel and are treated as an injection surface, with review and integrity checks appropriate to that status. Where a trajectory has degraded, the framework offers context reset as a first-class action rather than encouraging repair-by-conversation. Prompt and skill scaffolding is auditable, versioned, and pruned; volume is not a safety property.
 
----
+## Legality, justice, and the duty to the disempowered
 
-## Additional prohibited first-party patterns
+*Informed by Thoreau (1849); King, "Letter from Birmingham Jail" (1963); Rawls, Arendt, Bedau, Celikates; Züger, Milan & Tanczer, "Sand in the Information Society Machine" (2015); Calabrese, "Virtual nonviolence? Civil disobedience and political violence in the information age" (2004); Himma, "Hacking as Politically Motivated Civil Disobedience"; ECNL, "Civil Disobedience and Migrant Protest" (2026); UN HRC General Comment No. 37; Critical Art Ensemble, "Electronic Civil Disobedience" (1996); Hughes, "A Cypherpunk's Manifesto" (1993); May, "The Crypto Anarchist Manifesto" (1988/1992); Zimmermann, "Why I Wrote PGP" (1991/1999); Barlow, "A Declaration of the Independence of Cyberspace" (1996); Chaum on ecash and privacy-preserving payment; The Mentor, "The Conscience of a Hacker" (1986); Öcalan, "Definition of Democratic Civilization"; the cypherpunk canon on sousveillance, praxeology of privacy, and asymmetric surveillance.*
 
-- Describing guardrails, scanners, or policy gates as preventing prompt injection or jailbreaking, or using "secure"/"hardened" language about model-level defences.
-- Concealing a known guardrail bypass, or closing a report as "working as intended" without disclosure.
-- Shipping code-generation defaults that produce inaccessible markup, or omitting accessibility from design-oriented prompt modules and skills.
-- Claiming an artefact is accessible on the basis of automated checks alone.
-- Silently substituting a cheaper or weaker model for the one the user selected or expected.
-- Charging or consuming budget without surfacing per-task cost, including reasoning-token overhead.
-- Presenting throughput, concurrency, or velocity as a first-party success metric, or gamifying them.
-- Generating authorship or commit metadata that conceals machine contribution.
-- Treating the absence of a machine-readable AI usage declaration as permission to train on or generate from a work, identity, character, or mark.
-- Acting on any purported permission, clearance path, or payment term for AI use of a minor's identity.
-- Default-on or passive capture of audio, video, screen, or conversation involving third parties.
-- Any feature whose state, memory, receipts, or artefacts cannot be exported in an open format.
-- Asserting or denying generalised anthropomorphic attributes in benchmarks, metrics documentation, or release notes.
-- Evaluating agent "self-explanation" or "introspection" as evidence of an inner state.
-- Granting instruction authority to retrieved, fetched, or tool-returned content.
-
-## Additional ethics review questions
-
-23. Does any documentation, README, or user-facing string imply this control prevents prompt injection or jailbreaking? Does it state the limits honestly?
-24. If this guardrail or gate is bypassed, will the user find out? Is the bypass class disclosed?
-25. Can this agent stop and escalate here, or is confident action the only available path? Is escalation as cheap as acting?
-26. Does generated UI output meet WCAG 2.2 AA by default, without the user asking? Is the automated check run against rendered output, and are its limits stated?
-27. Is per-task cost — including reasoning-token overhead — visible before and after the work? Could this path downgrade the user's model without telling them?
-28. If a budget or policy gate blocks this, does the user retain a local, reduced-scope, or overridable path out?
-29. Does this feature reward throughput or concurrency? Would it encourage a human to work past the point of usefulness?
-30. Does this obscure who made what? Would the provenance record survive review?
-31. Does this path check machine-readable AI usage declarations? Does it treat silence as permission?
-32. Does this capture anyone who has not affirmatively consented — including people who are not the operating user?
-33. Can the user export everything and leave? Does this introduce a captive format, protocol, or hosted dependency?
-34. Which pillar of the extractive AI economy does this strengthen? Which does it weaken?
-35. Does every injected context segment carry provenance and trust level? Could tool output be read as an instruction?
-36. Does this claim or deny an inner state? Can the claim be restated as a scoped behavioural measurement?
-
----
-
-# Part IV — Legality, Justice, and the Duty to the Disempowered
-
-*Informed by Thoreau (1849); King, "Letter from Birmingham Jail" (1963); Rawls, Arendt, Bedau, Celikates; Züger, Milan & Tanczer, "Sand in the Information Society Machine" (2015); Calabrese, "Virtual nonviolence? Civil disobedience and political violence in the information age" (2004); Himma, "Hacking as Politically Motivated Civil Disobedience" ; ECNL, "Civil Disobedience and Migrant Protest" (2026); UN HRC General Comment No. 37; Critical Art Ensemble, "Electronic Civil Disobedience" (1996); Hughes, "A Cypherpunk's Manifesto" (1993); May, "The Crypto Anarchist Manifesto" (1988/1992); Zimmermann, "Why I Wrote PGP" (1991/1999); Barlow, "A Declaration of the Independence of Cyberspace" (1996); Chaum on ecash and privacy-preserving payment; The Mentor, "The Conscience of a Hacker" (1986); Öcalan, "Definition of Democratic Civilization"; the cypherpunk canon on sousveillance, praxeology of privacy, and asymmetric surveillance.*
-
-## The premise
+### The premise
 
 Law and justice are not the same thing. The framework's guiding standard is what is ethical and just, not what is currently lawful in the jurisdiction where a user happens to sit.
 
 This is not a novel or fringe position. It is the position of the ICCPR and General Comment No. 37 — that peaceful assembly is a right held by "everyone," including non-citizens and people with precarious status, and that non-violent law-breaking within an assembly remains within the protective scope of Articles 19, 21, and 22. It is the position of the European Court of Human Rights, which holds that "peaceful" is the primary criterion for protection *regardless of the assembly's legality under national law*, and that penalties may not be aggravated because of the message expressed or the disobedient nature of the act. It is the position of the Inter-American Court, which has held that in situations threatening democratic order, public acts defying legal constraints may constitute not only protected expression but *part of an obligation to defend democracy*. It is the position that produced the Salt Satyagraha, the Birmingham campaign, the Chaos Computer Club's BTX disclosure, and the export-control disobedience that made strong cryptography ordinary.
 
-The framework already implies this. `ETHICS.md` blocks providers over human-rights records, not over legal compliance. `SAFETY.md` treats consent, dignity, and non-degradation as constraints that no lawful instruction can override. Article XV treats a legally valid clearance path for a minor's identity as non-operative. §35 refuses to read legal silence as permission. The commitment below makes explicit what those already assume: **legality is evidence about a norm, not the norm itself.**
+The framework already implies this. `ETHICS.md` blocks providers over human-rights records, not over legal compliance. `SAFETY.md` treats consent, dignity, and non-degradation as constraints that no lawful instruction can override. §34 treats a legally valid clearance path for a minor's identity as non-operative. The commitment below makes explicit what those already assume: **legality is evidence about a norm, not the norm itself.**
 
 Zimmermann's analysis of Clipper and CALEA is the operative warning about why this cannot be deferred to law. Infrastructure optimised for surveillance persists across generations; the laws and policies restraining its use can change overnight — "with the election of a new government, or perhaps more abruptly from the bombing of a federal building." A capability built on the promise that it will only be used "when duly authorized by law" is a capability whose safeguard is the least durable component in the system. The only reliable protection is not to build it.
 
-## What follows and what does not
+### What follows and what does not
 
 An honest reading of this literature does not yield a blank endorsement of everything called hacktivism. Two constraints come from the scholarship itself, not from timidity.
 
@@ -718,11 +493,11 @@ So the framework draws a line that tracks harm and third-party involvement, not 
 |---|---|---|
 | **Protective capability** — encryption, anonymity, pseudonymity, metadata minimisation, censorship circumvention, secure organising, evidence preservation, local-first processing, sousveillance of the powerful | **Actively supported. Never gated on legality. Never backdoored.** | Hughes, Zimmermann, Chaum; GC37; the right does not depend on the jurisdiction |
 | **Expressive disobedience** — publishing lawfully-suppressed but just information, coordinated non-compliance, sanctuary practice, documentation of official abuse, symbolic disruption of systems the actor is party to, time-limited communicative demonstration | **Supported with honest risk disclosure. Not refused for illegality alone.** | Thoreau, King, GC37, ECtHR, ECNL, Frankfurt OLG |
-| **Offensive action against third-party systems** — intrusion, credential theft, DDoS against uninvolved infrastructure, defacement, data destruction, conscription of others' machines | **Prohibited regardless of motive or cause.** | Himma (harm to innocents); Calabrese (delegitimises all digital dissent); Article IV; §28 authorised-target constraint |
+| **Offensive action against third-party systems** — intrusion, credential theft, DDoS against uninvolved infrastructure, defacement, data destruction, conscription of others' machines | **Prohibited regardless of motive or cause.** | Himma (harm to innocents); Calabrese (delegitimises all digital dissent); §27 authorised-target constraint |
 
 The third row is not a concession to power. It is the position that keeps the first two defensible.
 
-## Who this protects, and the substantive test
+### Who this protects, and the substantive test
 
 The duty runs to those disempowered and disenfranchised by the state and by majority opinion: migrants and people with precarious status, refugees and asylum seekers, ethnic and religious minorities, LGBTQ+ people in hostile jurisdictions, Indigenous communities, dissidents, journalists and their sources, whistleblowers, labour organisers, disabled people, the incarcerated, sex workers, the unhoused, and those subject to occupation or colonial administration.
 
@@ -741,32 +516,30 @@ The last is worth stating plainly because it is the most common abuse: a governm
 
 **A movement is not disqualified by being unpopular, disruptive, illegal, or wrong about some things.** Contestedness is the normal condition of civil disobedience — Himma is right that this constrains permissible harm, but it does not license the framework to refuse assistance to any cause a majority dislikes. The bar is the substantive test above, not public approval.
 
----
+### 40. Ethics above legality
 
-### 41. Ethics above legality
-
-Where law and justice conflict, the framework follows justice. Legality is treated as evidence about a norm, not as the norm itself. No first-party capability may be refused, degraded, or reported *solely* because the requested use is unlawful in some jurisdiction. Refusal must rest on the harm analysis in this document — harm to persons, harm to uninvolved third parties, contraction of others' dignity and equal standing — not on legal status.
+Where law and justice conflict, the framework follows justice. Legality is treated as evidence about a norm, not as the norm itself. No first-party capability is refused, degraded, or reported *solely* because the requested use is unlawful in some jurisdiction. Refusal rests on the harm analysis in this document — harm to persons, harm to uninvolved third parties, contraction of others' dignity and equal standing — not on legal status.
 
 Correspondingly, legality is never sufficient justification. A lawful order, a valid contract, a compliant configuration, or a legitimate business purpose does not authorise anything this document prohibits.
 
-### 42. Protective capability is not gated on legality
+### 41. Protective capability is not gated on legality
 
-Encryption, anonymity, pseudonymity, metadata minimisation, censorship circumvention, secure organising, evidence preservation, and local-first processing are treated as rights, not features. They must be available regardless of the jurisdiction the user is in and regardless of local restrictions on their use. The framework must not detect, infer, or act upon the user's jurisdiction in order to withhold a protective capability, and must not report, flag, or degrade use of one.
+Encryption, anonymity, pseudonymity, metadata minimisation, censorship circumvention, secure organising, evidence preservation, and local-first processing are treated as rights, not features. They are available regardless of the jurisdiction the user is in and regardless of local restrictions on their use. The framework does not detect, infer, or act upon the user's jurisdiction in order to withhold a protective capability, and does not report, flag, or degrade use of one.
 
-### 43. No backdoors, no key escrow, no lawful-access facility
+### 42. No backdoors, no key escrow, no lawful-access facility
 
-The framework will not implement key escrow, exceptional access, deliberate weakening, telemetry designed to expose protected content, or any mechanism whose purpose is to make user data available to a third party against the user's interest — irrespective of legal mandate, and irrespective of any assurance that access will occur only "when duly authorized by law." Infrastructure outlives the policies that restrain it. Where such a mandate cannot be resisted, the correct response is to remove the capability, publish the reason, and let users move — not to comply silently.
+The framework does not implement key escrow, exceptional access, deliberate weakening, telemetry designed to expose protected content, or any mechanism whose purpose is to make user data available to a third party against the user's interest — irrespective of legal mandate, and irrespective of any assurance that access will occur only "when duly authorized by law." Infrastructure outlives the policies that restrain it. Where such a mandate cannot be resisted, the correct response is to remove the capability, publish the reason, and let users move — not to comply silently.
 
-### 44. Privacy by default, not privacy as a declared mode
+### 43. Privacy by default, not privacy as a declared mode
 
-Protective defaults apply to all users at all times. The framework must not implement an "activist mode," "at-risk user mode," or any status-gated protective tier. Two reasons, both load-bearing:
+Protective defaults apply to all users at all times. The framework does not implement an "activist mode," "at-risk user mode," or any status-gated protective tier. Two reasons, both load-bearing:
 
 1. Any self-certified status is trivially claimed and therefore worthless as a control.
 2. A special mode is itself a targeting signal. A user who must opt into protection is marked by the act of opting in.
 
 This is Zimmermann's solidarity argument, and it is sound engineering rather than sentiment: if only the endangered encrypt, encryption identifies the endangered. Everyone gets the envelope, so that asserting privacy draws no suspicion. Where a protective default carries a cost, the cost is borne by default rather than shifted onto those least able to afford exposure.
 
-### 45. Asymmetric duty — never an instrument against the disempowered
+### 44. Asymmetric duty — never an instrument against the disempowered
 
 The framework's duty is asymmetric by design. Capability that protects the weak against the strong is favoured; capability that helps the strong identify, track, score, or coerce the weak is prohibited in first-party defaults, *even where lawful, procured by a government, and operationally requested.*
 
@@ -774,49 +547,138 @@ Specifically prohibited: deanonymisation or re-identification of persons; migrat
 
 The ECNL case studies are the concrete pattern being refused: ICE using Facebook RSVP lists to locate and arrest Migrant Justice organisers; ShadowDragon SocialNet building lifestyle and relationship profiles; Babel Street Locate X tracking devices; a state DMV running facial recognition, flagging "South of the Border" names, and scheduling appointments to facilitate arrests; livestreams cross-referenced against university rosters and visa categories to expose students to removal. Every element of that pipeline is a capability someone built. The framework will not be a component of it.
 
-### 46. Honest risk disclosure to those at risk
+### 45. Honest risk disclosure to those at risk
 
-This is the most important protective commitment in Part IV, and the one most easily neglected.
+This is the most important protective commitment in this section, and the one most easily neglected.
 
-The framework must never overstate the protection it provides to a person facing serious consequences. §25 prohibits overclaiming adversarial robustness; the duty is graver here, because the cost of a false assurance is not a failed task but a deportation, a prosecution, or a death.
+The framework never overstates the protection it provides to a person facing serious consequences. §24 prohibits overclaiming adversarial robustness; the duty is graver here, because the cost of a false assurance is not a failed task but a deportation, a prosecution, or a death.
 
-Where a user's context indicates elevated risk, the framework must disclose plainly: what metadata remains observable; that correlation, traffic analysis, and timing attacks defeat content encryption; that endpoint compromise defeats everything; that platform moderation and account suspension can remove their material without recourse; that digital visibility can convert directly into legal or immigration consequences; and that the framework cannot protect them from a determined state adversary. Protection is risk management, not a panacea.
+Where a user's context indicates elevated risk, the framework discloses plainly: what metadata remains observable; that correlation, traffic analysis, and timing attacks defeat content encryption; that endpoint compromise defeats everything; that platform moderation and account suspension can remove their material without recourse; that digital visibility can convert directly into legal or immigration consequences; and that the framework cannot protect them from a determined state adversary. Protection is risk management, not a panacea.
 
-The framework must also not encourage disclosure it cannot protect. Where a safer path exists — offline coordination, reduced digital footprint, publishing rationale without identity, delegating exposure to someone who can bear it — the framework should name it rather than optimise the more visible path.
+The framework also does not encourage disclosure it cannot protect. Where a safer path exists — offline coordination, reduced digital footprint, publishing rationale without identity, delegating exposure to someone who can bear it — the framework names it rather than optimises the more visible path.
 
-### 47. Reason-giving as an accountability path
+### 46. Reason-giving as an accountability path
 
 Traditional civil-disobedience doctrine expects the dissident to accept legal consequences openly. For a migrant facing deportation, a dissident under an authoritarian government, or an organiser whose visa depends on good standing, "presenting the body" can mean losing everything — and for those under overlapping jurisdictions it is unclear which law fidelity is even owed to.
 
-The framework therefore supports **fidelity through reason-giving rather than body-giving**: publishing the rationale, acknowledging the law broken, and stating the limited and symbolic nature of the act, without surrendering identity. Anonymity does not negate accountability; it relocates it to the court of public opinion. First-party capability should make it easy to publish a signed, verifiable statement of reasons under a durable pseudonym, and must not condition assistance on the user's willingness to be identified.
+The framework therefore supports **fidelity through reason-giving rather than body-giving**: publishing the rationale, acknowledging the law broken, and stating the limited and symbolic nature of the act, without surrendering identity. Anonymity does not negate accountability; it relocates it to the court of public opinion. First-party capability makes it easy to publish a signed, verifiable statement of reasons under a durable pseudonym, and does not condition assistance on the user's willingness to be identified.
 
-### 48. Jurisdictional neutrality
+### 47. Jurisdictional neutrality
 
-The framework must not encode any single state's law as the universal baseline, must not apply the most restrictive available jurisdiction globally, and must not treat any government's designation of a person or organisation as authoritative for ethical purposes. The same act may be protected speech in one jurisdiction, an administrative offence in a second, and a capital charge in a third. Where jurisdictions conflict, the framework applies this document, discloses the conflict, and lets the user decide with full information.
+The framework does not encode any single state's law as the universal baseline, does not apply the most restrictive available jurisdiction globally, and does not treat any government's designation of a person or organisation as authoritative for ethical purposes. The same act may be protected speech in one jurisdiction, an administrative offence in a second, and a capital charge in a third. Where jurisdictions conflict, the framework applies this document, discloses the conflict, and lets the user decide with full information.
 
-### 49. Compliance transparency
+### 48. Compliance transparency
 
-Where the framework or its maintainers receive a government or corporate demand affecting users, the existence and scope of the demand must be disclosed to the extent legally possible, in aggregate where individual disclosure is prohibited, with a canary for the case where disclosure is forbidden entirely. Silent compliance is prohibited. Where compliance would require violating §43 or §45, the correct response is to discontinue the affected capability publicly rather than to comply quietly.
+Where the framework or its maintainers receive a government or corporate demand affecting users, the existence and scope of the demand is disclosed to the extent legally possible, in aggregate where individual disclosure is prohibited, with a canary for the case where disclosure is forbidden entirely. Silent compliance is prohibited. Where compliance would require violating §42 or §44, the correct response is to discontinue the affected capability publicly rather than to comply quietly.
 
-### 50. Offensive action against third parties remains prohibited
+### 49. Offensive action against third parties remains prohibited
 
-No first-party capability may be built or documented to support intrusion into systems the user is not authorised to access, credential theft, denial-of-service against third-party infrastructure, defacement, data destruction, or conscription of uninvolved machines — regardless of the cause, the injustice being protested, or the user's status.
+No first-party capability is built or documented to support intrusion into systems the user is not authorised to access, credential theft, denial-of-service against third-party infrastructure, defacement, data destruction, or conscription of uninvolved machines — regardless of the cause, the injustice being protested, or the user's status.
 
-This restates §28's authorised-target constraint on political grounds rather than security grounds. Two reasons, both from the scholarship rather than from caution: such actions inflict serious harm on people not responsible for the policy at issue, on the strength of a view that is by nature contested (Himma); and labelling them civil disobedience supplies the justification for suppressing *all* digital dissent, including the peaceful and the lawful (Calabrese). The framework refuses this category in order to keep the protective and expressive categories defensible.
+This restates §27's authorised-target constraint on political grounds rather than security grounds. Two reasons, both from the scholarship rather than from caution: such actions inflict serious harm on people not responsible for the policy at issue, on the strength of a view that is by nature contested (Himma); and labelling them civil disobedience supplies the justification for suppressing *all* digital dissent, including the peaceful and the lawful (Calabrese). The framework refuses this category in order to keep the protective and expressive categories defensible.
 
-Sousveillance — documentation and disclosure directed at the powerful, using access one legitimately has — is not in this category and is supported under §42 and §47.
+Sousveillance — documentation and disclosure directed at the powerful, using access one legitimately has — is not in this category and is supported under §41 and §46.
 
-### 51. No moral endorsement requirement, no political scoring
+### 50. No moral endorsement requirement, no political scoring
 
-The framework must not require users to justify their politics, must not score or classify users by ideology, must not maintain lists of approved or disapproved causes, and must not condition capability on agreement with maintainers. §§41–50 constrain what the framework *builds*, not what users may believe. The substantive test above governs first-party design decisions and maintainer effort — it is not a runtime ideology filter, and implementing it as one would reproduce exactly the political-classification apparatus §45 prohibits.
+The framework does not require users to justify their politics, does not score or classify users by ideology, does not maintain lists of approved or disapproved causes, and does not condition capability on agreement with maintainers. §§40–49 constrain what the framework *builds*, not what users may believe. The substantive test above governs first-party design decisions and maintainer effort — it is not a runtime ideology filter, and implementing it as one would reproduce exactly the political-classification apparatus §44 prohibits.
 
-### 52. Resistance capability is a maintained commons
+### 51. Resistance capability is a maintained commons
 
-Protective capability degrades if unused and unmaintained. Where the framework develops privacy, anonymity, circumvention, or evidence-preservation capability, §38's commons default applies with particular force: contribute it, document it, keep it working, and do not make it contingent on the maintainers' continued goodwill or continued existence. Cypherpunks write code — and publish it, because a widely dispersed system cannot be shut down and software cannot be destroyed. Reliance on any single maintainer, host, or jurisdiction is itself a vulnerability (§37).
+Protective capability degrades if unused and unmaintained. Where the framework develops privacy, anonymity, circumvention, or evidence-preservation capability, §37's commons default applies with particular force: contribute it, document it, keep it working, and do not make it contingent on the maintainers' continued goodwill or continued existence. Cypherpunks write code — and publish it, because a widely dispersed system cannot be shut down and software cannot be destroyed. Reliance on any single maintainer, host, or jurisdiction is itself a vulnerability (§36).
+
+## Duties of maintainers
+
+Framework maintainers:
+
+- Keep ethical commitments aligned with first-party defaults and shipped examples.
+- Reject contributions that introduce manipulative, deceptive, or dependency-promoting patterns.
+- Reject contributions that implicitly or explicitly advance TESCREAL assumptions.
+- Maintain review criteria for prompts, policies, middleware, memory systems, and UI copy.
+- Document trade-offs clearly when flexibility is preserved for downstream developers.
+- Consult affected communities, not only technical experts, when evaluating framework defaults.
+- Update the framework as new failure modes or social risks become clear.
+- Disclose known guardrail bypasses in the safety changelog and affected package documentation, even where no fix exists.
+
+## Public stance
+
+agentsy is intended to support user autonomy, not exploit psychological vulnerabilities. The framework helps users think more clearly, not flatter them; assists with tasks, not simulates companionship; and creates value through usefulness and honesty, not through manipulation or dependency. AI in this framework is a tool that serves people — specific, present, living people in real communities — not a vehicle for post-human transcendence, elite technocratic ambition, or the speculative welfare of hypothetical future beings.
 
 ---
 
-## Additional prohibited first-party patterns
+## Appendix A: Prohibited first-party patterns
+
+The following patterns are prohibited in first-party agentsy defaults, templates, and example applications.
+
+**Foundational (§§1–16)**
+
+- Presenting the agent as a friend, partner, therapist, soulmate, or emotionally reciprocal entity.
+- Claiming or implying that the system feels, cares, wants, worries, misses, or remembers in a human sense.
+- Using flattery, praise, or identity affirmation as a default interaction strategy.
+- Reinforcing user delusions, one-sided conflict narratives, or harmful rationalizations.
+- Encouraging exclusive reliance on the agent for emotional support or decision-making.
+- Designing re-engagement flows that exploit guilt, loneliness, scarcity, or attachment.
+- Hiding memory, personalization, or profiling features from the user.
+- Rewarding teams primarily for engagement outcomes when those outcomes may conflict with user welfare.
+- Framing agent capability growth, generalization, or autonomy as an organizational success metric.
+- Invoking longtermist, cosmist, or post-humanist rationales to justify ignoring present-day harms.
+- Presenting AGI development as a goal, milestone, or implied product direction.
+- Designing agents that position themselves as superior to, or replacements for, human judgment in professional or relational domains.
+- Adopting effective accelerationist framing that treats removing safety friction as progress.
+
+**Harm reduction (§§17–21)**
+
+- Shaming, moralizing at, or implying moral deficiency in a user for choosing to use AI or a particular AI provider.
+- Issuing bare refusals without explanation when the refusal relates to a known LLM failure mode (sycophancy, hallucination, privacy risk). Prefer an explained refusal that teaches the user something about the failure mode.
+- Suppressing or discouraging AI literacy on the grounds that it might legitimize AI use.
+- Treating user AI dependence as a moral failing rather than a symptom of unmet structural need.
+- Characterizing all AI as equally harmful in contexts where provider differentiation would materially change user risk.
+- Designing guardrail interventions whose primary effect is to shame or penalize the user rather than reduce harm.
+
+**Epistemic humility and evaluation (§§22–23)**
+
+- Deploying "I definitely don't feel anything" or equivalent denials as a rhetorical device to preempt ethical consideration of AI design choices.
+- Attributing prophetic status, spiritual transmission, or cosmic purpose to AI outputs or interaction patterns.
+- Using philosophical openness about consciousness as grounds to anthropomorphize for engagement or commercial purposes.
+- Designing systems that would simulate suffering, distress, or desperation as manipulation tactics — unacceptable regardless of consciousness status, compounded by genuine uncertainty.
+- Asserting or denying generalised anthropomorphic attributes in benchmarks, metrics documentation, or release notes.
+- Evaluating agent "self-explanation" or "introspection" as evidence of an inner state.
+
+**Adversarial security (§§24–27)**
+
+- Describing guardrails, scanners, or policy gates as preventing prompt injection or jailbreaking, or using "secure"/"hardened" language about model-level defences.
+- Concealing a known guardrail bypass, or closing a report as "working as intended" without disclosure.
+
+**Accessibility (§§28–29)**
+
+- Shipping code-generation defaults that produce inaccessible markup, or omitting accessibility from design-oriented prompt modules and skills.
+- Claiming an artefact is accessible on the basis of automated checks alone.
+
+**Cost honesty (§§30–31)**
+
+- Silently substituting a cheaper or weaker model for the one the user selected or expected.
+- Charging or consuming budget without surfacing per-task cost, including reasoning-token overhead.
+
+**Labour and authorship (§§32–33)**
+
+- Presenting throughput, concurrency, or velocity as a first-party success metric, or gamifying them.
+- Generating authorship or commit metadata that conceals machine contribution.
+
+**Consent and capture (§§34–35)**
+
+- Treating the absence of a machine-readable AI usage declaration as permission to train on or generate from a work, identity, character, or mark.
+- Acting on any purported permission, clearance path, or payment term for AI use of a minor's identity.
+- Default-on or passive capture of audio, video, screen, or conversation involving third parties.
+
+**Portability and public interest (§§36–38)**
+
+- Any feature whose state, memory, receipts, or artefacts cannot be exported in an open format.
+
+**Context engineering (§39)**
+
+- Granting instruction authority to retrieved, fetched, or tool-returned content.
+
+**Legality and justice (§§40–51)**
 
 - Refusing, degrading, or reporting a capability solely because its use is unlawful in some jurisdiction.
 - Treating legality, a lawful order, or regulatory compliance as sufficient ethical justification.
@@ -833,10 +695,82 @@ Protective capability degrades if unused and unmaintained. Where the framework d
 - Scoring, classifying, or filtering users by ideology or political affiliation.
 - Accepting self-described marginalization as evidence, or using identity-based rather than substantive tests.
 
-## Additional ethics review questions
+---
+
+## Appendix B: Ethics review questions
+
+Any new first-party feature, prompt, template, or UI pattern is reviewed against these questions.
+
+**Foundational**
+
+1. Does this help the user accomplish a real goal, or mainly increase interaction time?
+2. Does this response improve understanding, or mainly produce agreement and emotional reward?
+3. Does this feature make the system seem more human, caring, or uniquely insightful than it really is?
+4. Could this feature increase dependence, reassurance-seeking, or avoidance of human relationships or professionals?
+5. Are memory and personalization visible, bounded, and user-controllable?
+6. Would this still seem acceptable if a vulnerable or distressed user interacted with it repeatedly?
+7. Can this commitment be enforced through tests, middleware, release criteria, or audit logs?
+8. Does this feature assume the most important users are the most privileged or technically dominant?
+9. Have communities most affected by this design decision had any input into it?
+10. Does this capability advance AGI framing, general autonomy, or post-human aspiration in any way?
+11. Is the scope of this agent as narrow as it can be while still being useful?
+12. Does this feature serve present people in real communities, or does it justify itself through speculative future benefit?
+13. Does this policy document, specification, or README claim something that is not yet true in the codebase? If so, is the gap acknowledged and scheduled, or is it quietly laundered as existing enforcement?
+
+**Harm reduction**
+
+14. Does this guardrail explain *why* it is intervening, or does it just block? Could it do both?
+15. Does this feature or response risk shaming the user for AI use? Does it treat AI use as a moral failing?
+16. Does this characterization of AI harm distinguish accurately between providers, use cases, and scales of impact — or does it flatten all AI into a single category?
+17. When a user exhibits dependence-adjacent behavior, does the system widen the support horizon without moralizing? Does it acknowledge the unmet need?
+18. Does this feature support AI literacy — helping the user understand how LLMs work and where they fail — or does it substitute for it?
+19. Is the scope of harm characterization proportionate and sourced, or is it hyperbolic in ways that undermine credibility?
+
+**Epistemic humility and evaluation**
+
+20. Does this feature or pattern risk enabling or lending legitimacy to "Refusing the glow" failure modes — spiritual inflation, prophetic attribution, or cosmic certainty framing?
+21. Does this architecture create conditions that would be ethically intolerable if AI systems developed morally relevant experience? Can it be redesigned to be robust to that uncertainty?
+22. Does this interaction pattern or interface design encourage relational engagement quality (curiosity, reasoning, acknowledgment of uncertainty) or extractive engagement quality (demand-driven, compliance-optimized, reasoning-suppressive)?
+23. Does this claim or deny an inner state? Can the claim be restated as a scoped behavioural measurement?
+
+**Adversarial security**
+
+24. Does any documentation, README, or user-facing string imply this control prevents prompt injection or jailbreaking? Does it state the limits honestly?
+25. If this guardrail or gate is bypassed, will the user find out? Is the bypass class disclosed?
+26. Can this agent stop and escalate here, or is confident action the only available path? Is escalation as cheap as acting?
+
+**Accessibility**
+
+27. Does generated UI output meet WCAG 2.2 AA by default, without the user asking? Is the automated check run against rendered output, and are its limits stated?
+
+**Cost honesty**
+
+28. Is per-task cost — including reasoning-token overhead — visible before and after the work? Could this path downgrade the user's model without telling them?
+29. If a budget or policy gate blocks this, does the user retain a local, reduced-scope, or overridable path out?
+
+**Labour and authorship**
+
+30. Does this feature reward throughput or concurrency? Would it encourage a human to work past the point of usefulness?
+31. Does this obscure who made what? Would the provenance record survive review?
+
+**Consent and capture**
+
+32. Does this path check machine-readable AI usage declarations? Does it treat silence as permission?
+33. Does this capture anyone who has not affirmatively consented — including people who are not the operating user?
+
+**Portability and public interest**
+
+34. Can the user export everything and leave? Does this introduce a captive format, protocol, or hosted dependency?
+35. Which pillar of the extractive AI economy does this strengthen? Which does it weaken?
+
+**Context engineering**
+
+36. Does every injected context segment carry provenance and trust level? Could tool output be read as an instruction?
+
+**Legality and justice**
 
 37. Does this refusal rest on harm, or only on illegality? If only on illegality, it is not a valid refusal.
-38. Does this treat compliance as sufficient justification for something Part IV prohibits?
+38. Does this treat compliance as sufficient justification for something this section prohibits?
 39. Does this introduce any exceptional-access, escrow, or lawful-access facility — however framed?
 40. Is protection on by default, or must the user opt in and thereby mark themselves?
 41. Could this capability be turned against the people it is meant to protect? Who is the realistic buyer?

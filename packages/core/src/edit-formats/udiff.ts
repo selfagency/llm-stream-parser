@@ -117,31 +117,28 @@ function collectFencedBlocks(text: string): string[] | null {
   return hasFenced ? fencedBlocks : null;
 }
 
+function scanAheadForRevised(lines: string[], start: number): boolean {
+  for (let j = start; j < lines.length; j++) {
+    const next = lines[j] ?? '';
+    if (next.length === 0) continue;
+    return REVISED_FILE_REGEX.test(next);
+  }
+  return false;
+}
+
 function splitFileBoundaries(lines: string[]): string[] {
   const blocks: string[] = [];
-  let i = 0;
   let currentStart = -1;
 
-  while (i < lines.length) {
+  for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? '';
-    if (ORIGINAL_FILE_REGEX.test(line)) {
-      let j = i + 1;
-      while (j < lines.length) {
-        const next = lines[j] ?? '';
-        if (next.length === 0) {
-          j++;
-          continue;
-        }
-        if (REVISED_FILE_REGEX.test(next)) {
-          if (currentStart >= 0) {
-            blocks.push(lines.slice(currentStart, i).join('\n'));
-          }
-          currentStart = i;
-        }
-        break;
-      }
+    if (!ORIGINAL_FILE_REGEX.test(line)) continue;
+    if (!scanAheadForRevised(lines, i + 1)) continue;
+
+    if (currentStart >= 0) {
+      blocks.push(lines.slice(currentStart, i).join('\n'));
     }
-    i++;
+    currentStart = i;
   }
 
   if (currentStart >= 0) {
@@ -211,12 +208,36 @@ function classifyHunkLine(
   return { type: 'end' };
 }
 
+function collectHunkLine(
+  hunkLines: UdiffHunkLine[],
+  classification: ReturnType<typeof classifyHunkLine>,
+  counters: { addedCount: number; deletedCount: number },
+  i: number
+): number {
+  switch (classification.type) {
+    case 'end':
+      return -1;
+    case 'skip':
+      return 1;
+    case 'context':
+      hunkLines.push({ type: 'context', content: classification.content ?? '' });
+      return 1;
+    case 'add':
+      hunkLines.push({ type: 'add', content: classification.content ?? '' });
+      counters.addedCount++;
+      return 1;
+    case 'delete':
+      hunkLines.push({ type: 'delete', content: classification.content ?? '' });
+      counters.deletedCount++;
+      return 1;
+  }
+}
+
 function parseSingleHunk(lines: string[], startIndex: number): { hunk: UdiffHunk | null; nextIndex: number } {
   if (startIndex >= lines.length) {
     return { hunk: null, nextIndex: startIndex };
   }
-  const hunkLine = lines[startIndex] ?? '';
-  const hunkMatch = HUNK_HEADER_REGEX.exec(hunkLine);
+  const hunkMatch = HUNK_HEADER_REGEX.exec(lines[startIndex] ?? '');
   if (!hunkMatch) {
     return { hunk: null, nextIndex: startIndex + 1 };
   }
@@ -228,40 +249,16 @@ function parseSingleHunk(lines: string[], startIndex: number): { hunk: UdiffHunk
 
   let i = startIndex + 1;
   const hunkLines: UdiffHunkLine[] = [];
-  let addedCount = 0;
-  let deletedCount = 0;
+  const counters = { addedCount: 0, deletedCount: 0 };
 
   while (i < lines.length) {
-    const classification = classifyHunkLine(lines[i]?.[0], lines[i] ?? '');
-    if (classification.type === 'end') {
-      break;
-    }
-    if (classification.type === 'skip') {
-      i++;
-      continue;
-    }
-    if (classification.type === 'context') {
-      hunkLines.push({ type: 'context', content: classification.content ?? '' });
-      i++;
-    }
-    if (classification.type === 'add') {
-      hunkLines.push({ type: 'add', content: classification.content ?? '' });
-      addedCount++;
-      i++;
-    }
-    if (classification.type === 'delete') {
-      hunkLines.push({ type: 'delete', content: classification.content ?? '' });
-      deletedCount++;
-      i++;
-    }
-
-    if (hunkLines.length > 10_000 || addedCount + deletedCount > 10_000) {
-      break;
-    }
+    const step = collectHunkLine(hunkLines, classifyHunkLine(lines[i]?.[0], lines[i] ?? ''), counters, i);
+    if (step === -1) break;
+    i += step;
+    if (hunkLines.length > 10_000 || counters.addedCount + counters.deletedCount > 10_000) break;
   }
 
-  const hunk: UdiffHunk = { oldStart, oldLines, newStart, newLines, lines: hunkLines };
-  return { hunk, nextIndex: i };
+  return { hunk: { oldStart, oldLines, newStart, newLines, lines: hunkLines }, nextIndex: i };
 }
 
 function tryParseSingleDiff(block: string): ParsedUdiff | null {
