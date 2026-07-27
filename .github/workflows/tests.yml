@@ -89,7 +89,9 @@ jobs:
           - group: runtime
             filter: --filter=@agentsy/guardrails --filter=@agentsy/runtime --filter=@agentsy/orchestrator --filter=@agentsy/session --filter=@agentsy/memory --filter=@agentsy/retrieval --filter=@agentsy/secrets
           - group: surface
-            filter: --filter=@agentsy/cli --filter=@agentsy/ui --filter=@agentsy/tools --filter=@agentsy/prompts --filter=@agentsy/vscode --filter=@agentsy/testing --filter=@agentsy/plugins --filter=@agentsy/agents --filter=@agentsy/bootstrap --filter=@agentsy/daemon
+            filter: --filter=@agentsy/cli --filter=@agentsy/ui --filter=@agentsy/tools --filter=@agentsy/prompts --filter=@agentsy/vscode --filter=@agentsy/testing --filter=@agentsy/plugins --filter=@agentsy/agents --filter=@agentsy/bootstrap
+          - group: daemon
+            filter: --filter=@agentsy/daemon
 
     steps:
       - name: Checkout repository
@@ -171,6 +173,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: coverage-reports-surface
+          path: coverage-input
+
+      - name: Download daemon coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-reports-daemon
           path: coverage-input
 
       - name: Merge coverage reports
