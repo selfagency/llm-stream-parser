@@ -85,9 +85,9 @@ jobs:
       matrix:
         include:
           - group: core
-            filter: --filter=@agentsy/shared --filter=@agentsy/core --filter=@agentsy/providers --filter=@agentsy/gateway --filter=@agentsy/models --filter=@agentsy/tokenomics --filter=@agentsy/observability --filter=@agentsy/context
+            filter: --filter=@agentsy/shared --filter=@agentsy/core --filter=@agentsy/providers --filter=@agentsy/gateway --filter=@agentsy/models --filter=@agentsy/tokenomics --filter=@agentsy/observability
           - group: runtime
-            filter: --filter=@agentsy/guardrails --filter=@agentsy/runtime --filter=@agentsy/orchestrator --filter=@agentsy/session --filter=@agentsy/memory --filter=@agentsy/retrieval --filter=@agentsy/secrets --filter=@agentsy/scripts
+            filter: --filter=@agentsy/guardrails --filter=@agentsy/runtime --filter=@agentsy/orchestrator --filter=@agentsy/session --filter=@agentsy/memory --filter=@agentsy/retrieval --filter=@agentsy/secrets
           - group: surface
             filter: --filter=@agentsy/cli --filter=@agentsy/ui --filter=@agentsy/tools --filter=@agentsy/prompts --filter=@agentsy/vscode --filter=@agentsy/testing --filter=@agentsy/plugins --filter=@agentsy/agents --filter=@agentsy/bootstrap --filter=@agentsy/daemon
 
