@@ -94,7 +94,7 @@
     "lint": "biome lint",
     "format": "biome format",
     "test": "vitest --run --passWithNoTests",
-    "coverage": "vitest --run --passWithNoTests"
+    "coverage": "vitest --run --coverage --passWithNoTests"
   },
   "dependencies": {
     "@agentsy/bootstrap": "workspace:*",

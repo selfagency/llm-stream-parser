@@ -9,9 +9,9 @@ export default defineConfig({
     // This does not affect test correctness — 293 tests pass with 0 failures.
     dangerouslyIgnoreUnhandledErrors: true,
     coverage: {
-      enabled: false,
-      // Coverage is disabled to avoid OOM on CI — the V8 coverage reporter
-      // exceeds the runner's 4GB heap limit for this package.
+      all: false,
+      enabled: true,
+      provider: 'istanbul',
       thresholds: {
         statements: 0,
         branches: 0,

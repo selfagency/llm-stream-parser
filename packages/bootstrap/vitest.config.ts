@@ -5,7 +5,15 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     coverage: {
-      enabled: false
+      all: false,
+      enabled: true,
+      provider: 'istanbul',
+      thresholds: {
+        statements: 0,
+        branches: 0,
+        functions: 0,
+        lines: 0
+      }
     }
   }
 });
