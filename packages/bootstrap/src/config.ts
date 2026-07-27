@@ -177,7 +177,27 @@ interface YamlNode {
   value: string | null;
 }
 
-// NOSONAR
+function parseLineValue(trimmed: string, isListItem: boolean): string | null {
+  if (isListItem) {
+    return trimmed.slice(2);
+  }
+  const colonIndex = trimmed.indexOf(':');
+  if (colonIndex === -1) {
+    return null;
+  }
+  const rest = trimmed.slice(colonIndex + 1).trim();
+  return rest === '[]' ? '' : rest || null;
+}
+
+function walkToParent(nodes: YamlNode[], currentIdx: number, depth: number): number {
+  while (currentIdx > 0) {
+    const cur = nodes[currentIdx];
+    if (!cur || cur.depth < depth) break;
+    currentIdx = cur.parent;
+  }
+  return currentIdx;
+}
+
 function parseYaml(content: string): AgentsyConfig | null {
   try {
     const rawLines = content.split('\n');
@@ -194,56 +214,20 @@ function parseYaml(content: string): AgentsyConfig | null {
 
       const depth = line.search(/\S/);
       const trimmed = line.trim();
-
-      // Walk up to find the correct parent (skip siblings at same depth)
-      while (currentIdx > 0) {
-        const cur = nodes[currentIdx];
-        if (cur === undefined) {
-          break;
-        }
-        if (cur.depth < depth) {
-          break;
-        }
-        currentIdx = cur.parent;
-      }
-
-      let value: string | null = null;
+      currentIdx = walkToParent(nodes, currentIdx, depth);
       const isListItem = trimmed.startsWith('- ');
-
-      if (isListItem) {
-        value = trimmed.slice(2);
-        const parent = nodes[currentIdx];
-        if (parent !== undefined && parent.value !== null) {
-          parent.value = null;
-        }
-      } else {
-        const colonIndex = trimmed.indexOf(':');
-        if (colonIndex === -1) {
-          continue;
-        }
-
-        const rest = trimmed.slice(colonIndex + 1).trim();
-        value = rest === '[]' ? '' : rest || null;
-      }
+      const value = parseLineValue(trimmed, isListItem);
+      if (value === null && !isListItem) continue;
 
       const nodeIdx = nodes.length;
-      const node: YamlNode = {
-        depth,
-        text: trimmed,
-        children: new Map(),
-        parent: currentIdx,
-        value,
-        isArrayItem: isListItem
-      };
-      nodes.push(node);
+      nodes.push({ depth, text: trimmed, children: new Map(), parent: currentIdx, value, isArrayItem: isListItem });
 
       const parentNode = nodes[currentIdx];
-      if (parentNode !== undefined && !isListItem && !parentNode.isArrayItem) {
+      if (parentNode && !isListItem && !parentNode.isArrayItem) {
         const key = trimmed.slice(0, trimmed.indexOf(':')).trim();
         parentNode.children.set(key, nodeIdx);
       }
 
-      // Push scope for non-list-item lines that open a container
       if (!isListItem) {
         currentIdx = nodeIdx;
       }

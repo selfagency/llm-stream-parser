@@ -42,67 +42,20 @@ const _FILE_HEADER_REGEX = /^(?:={3,}|---)\s+(.+)$/m;
  * Headers without subsequent content are still emitted (with an empty
  * replacement string).  The function never throws.
  */
-// NOSONAR
 export function parseWholeFile(text: string): EditParseResult {
-  const edits: FileEdit[] = [];
   const errors: string[] = [];
 
-  // Try XML-tag format first: <filename>path</filename> / <path>path</path>
   const xmlParser = parseXmlTagFormat(text);
   if (xmlParser.edits.length > 0) {
     return xmlParser;
   }
 
-  // === / --- header format
-  const lines = text.split('\n');
-  let currentFile: string | null = null;
-  let contentStart = -1;
+  const { edits, lastFile, lastContentStart } = parseHeaderBlocks(text, errors);
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i] ?? '';
-
-    const headerMatch = /^(?:={3,}|---)\s+(.+)$/.exec(line);
-    if (headerMatch) {
-      // Flush previous file
-      if (currentFile) {
-        const endContent = lines.slice(contentStart, i).join('\n');
-        edits.push({
-          filePath: currentFile,
-          type: 'whole-file',
-          replacement: endContent
-        });
-      }
-
-      currentFile = headerMatch[1]?.trim() ?? null;
-      if (!currentFile) {
-        errors.push('Empty file path in header');
-        continue;
-      }
-      contentStart = i + 1;
-      continue;
-    }
-
-    // Also check for standalone XML-style filename on its own line
-    if (currentFile === null) {
-      const xmlMatch = /<filename>(.+?)<\/filename>/.exec(line);
-      if (xmlMatch) {
-        const path = xmlMatch[1]?.trim();
-        if (path) {
-          currentFile = path;
-          contentStart = i + 1;
-        }
-      }
-    }
-  }
-
-  // Flush last file
-  if (currentFile && contentStart >= 0) {
-    const endContent = lines.slice(contentStart).join('\n');
-    edits.push({
-      filePath: currentFile,
-      type: 'whole-file',
-      replacement: endContent
-    });
+  if (lastFile && lastContentStart >= 0) {
+    const lines = text.split('\n');
+    const endContent = lines.slice(lastContentStart).join('\n');
+    edits.push({ filePath: lastFile, type: 'whole-file', replacement: endContent });
   }
 
   if (edits.length === 0 && errors.length === 0) {
@@ -110,6 +63,45 @@ export function parseWholeFile(text: string): EditParseResult {
   }
 
   return { edits, errors };
+}
+
+function parseHeaderBlocks(
+  text: string,
+  errors: string[]
+): { edits: FileEdit[]; lastFile: string | null; lastContentStart: number } {
+  const edits: FileEdit[] = [];
+  const lines = text.split('\n');
+  let currentFile: string | null = null;
+  let contentStart = -1;
+  const HEADER_REGEX = /^(?:={3,}|---)\s+(.+)$/;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] ?? '';
+    const headerMatch = HEADER_REGEX.exec(line);
+
+    if (headerMatch) {
+      if (currentFile) {
+        edits.push({ filePath: currentFile, type: 'whole-file', replacement: lines.slice(contentStart, i).join('\n') });
+      }
+      currentFile = headerMatch[1]?.trim() ?? null;
+      if (!currentFile) {
+        errors.push('Empty file path in header');
+      } else {
+        contentStart = i + 1;
+      }
+      continue;
+    }
+
+    if (currentFile === null) {
+      const xmlMatch = /<filename>(.+?)<\/filename>/.exec(line);
+      if (xmlMatch?.[1]?.trim()) {
+        currentFile = xmlMatch[1].trim();
+        contentStart = i + 1;
+      }
+    }
+  }
+
+  return { edits, lastFile: currentFile, lastContentStart: contentStart };
 }
 
 // ---------------------------------------------------------------------------
