@@ -107,6 +107,7 @@ jobs:
 
       - name: Run unit tests with coverage and JUNIT
         env:
+          CI: true
           NODE_OPTIONS: --max-old-space-size=4096
         run: |
           pnpm turbo run coverage -- \
@@ -115,8 +116,6 @@ jobs:
             --coverage.reporter=text \
             --reporter=junit \
             --outputFile.junit=test-report.junit.xml
-        env:
-          CI: true
         continue-on-error: false
 
       - name: Upload test results to GitHub
