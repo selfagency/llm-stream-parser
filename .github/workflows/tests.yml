@@ -85,11 +85,11 @@ jobs:
       matrix:
         include:
           - group: core
-            filter: "@agentsy/shared @agentsy/core @agentsy/providers @agentsy/gateway @agentsy/models @agentsy/tokenomics @agentsy/observability @agentsy/context"
+            filter: --filter=@agentsy/shared --filter=@agentsy/core --filter=@agentsy/providers --filter=@agentsy/gateway --filter=@agentsy/models --filter=@agentsy/tokenomics --filter=@agentsy/observability --filter=@agentsy/context
           - group: runtime
-            filter: "@agentsy/guardrails @agentsy/runtime @agentsy/orchestrator @agentsy/session @agentsy/memory @agentsy/retrieval @agentsy/secrets @agentsy/scripts"
+            filter: --filter=@agentsy/guardrails --filter=@agentsy/runtime --filter=@agentsy/orchestrator --filter=@agentsy/session --filter=@agentsy/memory --filter=@agentsy/retrieval --filter=@agentsy/secrets --filter=@agentsy/scripts
           - group: surface
-            filter: "@agentsy/cli @agentsy/ui @agentsy/tools @agentsy/prompts @agentsy/vscode @agentsy/testing @agentsy/plugins @agentsy/agents @agentsy/bootstrap @agentsy/daemon"
+            filter: --filter=@agentsy/cli --filter=@agentsy/ui --filter=@agentsy/tools --filter=@agentsy/prompts --filter=@agentsy/vscode --filter=@agentsy/testing --filter=@agentsy/plugins --filter=@agentsy/agents --filter=@agentsy/bootstrap --filter=@agentsy/daemon
 
     steps:
       - name: Checkout repository
@@ -120,7 +120,7 @@ jobs:
           CI: true
           NODE_OPTIONS: --max-old-space-size=4096
         run: |
-          pnpm turbo run coverage --filter=${{ matrix.filter }} -- \
+          pnpm turbo run coverage ${{ matrix.filter }} -- \
             --coverage.reporter=json \
             --coverage.reporter=lcov \
             --coverage.reporter=text \
