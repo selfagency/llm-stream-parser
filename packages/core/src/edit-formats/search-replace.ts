@@ -98,8 +98,7 @@ const FENCE_BLOCK_REGEX = /```([\w-]*)\n([\s\S]*?)```/g;
  * collected in `errors` while valid blocks are still returned in `edits`.
  * The function never throws.
  */
-// NOSONAR — S3776 cognitive complexity 16/15; parsing logic inherently requires
-// a while loop with nested conditionals for SEARCH/REPLACE fence processing.
+// NOSONAR — parsing logic inherently requires a while loop with conditionals
 export function parseSearchReplace(text: string): EditParseResult {
   const edits: FileEdit[] = [];
   const errors: string[] = [];
