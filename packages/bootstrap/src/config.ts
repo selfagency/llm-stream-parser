@@ -177,7 +177,7 @@ interface YamlNode {
   value: string | null;
 }
 
-// NOSONAR — custom YAML parser inherently requires line-by-line conditional processing
+// NOSONAR
 function parseYaml(content: string): AgentsyConfig | null {
   try {
     const rawLines = content.split('\n');

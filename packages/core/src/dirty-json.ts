@@ -120,7 +120,7 @@ function addMissingClosingBrackets(text: string): string {
  * Find the first top-level JSON object `{...}` in a string using brace matching.
  * Returns the matched substring (including braces) or `null`.
  */
-// NOSONAR — brace-matching inherently requires character-level conditionals
+// NOSONAR
 function findFirstJsonObject(text: string): string | null {
   let inString = false;
   let escaped = false;

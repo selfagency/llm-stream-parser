@@ -99,7 +99,7 @@ export function parseUdiffs(text: string): EditParseResult {
  * otherwise the raw text is scanned for `--- …` / `+++ …` header pairs.
  * Each pair yields one block so that multi-file diffs are handled correctly.
  */
-// NOSONAR — file-boundary detection inherently requires nested conditionals
+// NOSONAR
 function collectDiffBlocks(text: string): string[] {
   // Try fenced blocks first, then fall back to raw text
   // nosemgrep: DIFF_BLOCK_REGEX is a hardcoded constant, not user-supplied input
@@ -163,7 +163,7 @@ function collectDiffBlocks(text: string): string[] {
  * Attempts to parse a single diff block into a `ParsedUdiff`.
  * Returns `null` when the block cannot be parsed.
  */
-// NOSONAR — free-form diff parsing inherently requires nested conditionals
+// NOSONAR
 function tryParseSingleDiff(block: string): ParsedUdiff | null {
   const lines = block.split('\n');
 

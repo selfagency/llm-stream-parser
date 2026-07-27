@@ -42,7 +42,7 @@ const _FILE_HEADER_REGEX = /^(?:={3,}|---)\s+(.+)$/m;
  * Headers without subsequent content are still emitted (with an empty
  * replacement string).  The function never throws.
  */
-// NOSONAR — multi-format parsing inherently requires format-discrimination branches
+// NOSONAR
 export function parseWholeFile(text: string): EditParseResult {
   const edits: FileEdit[] = [];
   const errors: string[] = [];

@@ -51,7 +51,7 @@ export interface AftStats {
   totalLoc: number;
 }
 
-interface AftJson {
+export interface AftJson {
   /** Detected configuration files */
   configFiles: string[];
   /** Detected entry point files */
