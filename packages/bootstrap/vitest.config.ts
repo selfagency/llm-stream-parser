@@ -5,9 +5,9 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     coverage: {
-      all: false,
-      enabled: true,
       provider: 'istanbul',
+      include: ['src/**/*.ts'],
+      all: false,
       thresholds: {
         statements: 0,
         branches: 0,
