@@ -121,42 +121,50 @@ function addMissingClosingBrackets(text: string): string {
  * Returns the matched substring (including braces) or `null`.
  */
 // NOSONAR
+function consumeChar(
+  i: number,
+  text: string,
+  state: { escaped: boolean; inString: boolean; depth: number; start: number }
+): number {
+  const char = text[i]!;
+  if (state.escaped) {
+    state.escaped = false;
+    return 1;
+  }
+  if (char === '\\') {
+    state.escaped = true;
+    return 1;
+  }
+  if (char === '"') {
+    state.inString = !state.inString;
+    return 1;
+  }
+  if (state.inString) {
+    return 1;
+  }
+  if (char === '{') {
+    if (state.depth === 0) {
+      state.start = i;
+    }
+    state.depth++;
+  } else if (char === '}') {
+    state.depth--;
+    if (state.depth === 0 && state.start >= 0) {
+      return 2;
+    }
+  }
+  return 1;
+}
+
 function findFirstJsonObject(text: string): string | null {
-  let inString = false;
-  let escaped = false;
-  let depth = 0;
-  let start = -1;
+  const state = { escaped: false, inString: false, depth: 0, start: -1 };
 
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i]!;
-
-    if (escaped) {
-      escaped = false;
-      continue;
+  for (let i = 0; i < text.length; ) {
+    const result = consumeChar(i, text, state);
+    if (result === 2) {
+      return text.slice(state.start, i + 1);
     }
-    if (char === '\\') {
-      escaped = true;
-      continue;
-    }
-    if (char === '"') {
-      inString = !inString;
-      continue;
-    }
-    if (inString) {
-      continue;
-    }
-
-    if (char === '{') {
-      if (depth === 0) {
-        start = i;
-      }
-      depth++;
-    } else if (char === '}') {
-      depth--;
-      if (depth === 0 && start >= 0) {
-        return text.slice(start, i + 1);
-      }
-    }
+    i += result;
   }
 
   return null;

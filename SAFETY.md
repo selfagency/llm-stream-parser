@@ -305,3 +305,354 @@ A first-party agentsy template, agent, or app should not ship unless it:
 agentsy safety should be measured by whether the framework preserves user agency, protects dignity, reduces harmful dependence, and resists manipulative or deceptive interaction patterns. A smoother conversation is not automatically a safer one, and a more engaging product is not automatically a better one.
 
 Safety also means resisting the ambient ideological pressure to build AI that transcends human oversight, serves speculative future populations over present ones, or concentrates decision-making power in elite technical actors. An agent that helps a person accomplish a real task, within a narrow scope, under community accountability, in a way that preserves human judgment — that is a safe and successful system.
+
+---
+
+## Adversarial threat model
+
+This section is normative. It replaces any implicit assumption elsewhere in the framework that guardrails constitute a security boundary against adversarial input.
+
+### Stated position
+
+Prompt injection is unsolved and, with current architectures where trusted instructions and untrusted input share one channel, may be unsolvable. Trusted commands and untrusted data are not separable at the model level. agentsy guardrails **raise attacker cost and catch known patterns**. They do not prevent injection or jailbreaking. Any documentation, README, CLI string, or release note implying otherwise is a safety defect and must be filed as such.
+
+### Why models fail where people do not
+
+- Context is flattened to token similarity. Perceptual, relational, and normative layers are referenced, not reasoned through.
+- No interruption reflex. There is no learned "this feels off, stop and check."
+- Trained overconfidence and agreeableness. A human clerk says "let me ask my manager"; a model decides.
+- Optimised for the average case, not the security-relevant outlier.
+- No accumulated social learning: no memory of who reciprocated and who defected, no norms, no institutional escalation path.
+
+Consequence: agents are more gullible than people and fall for flattery, manufactured urgency, appeals to groupthink, and role reassignment that would not fool a child.
+
+### Attack taxonomy (tracked classes)
+
+Guardrail coverage, red-team scenarios, and metrics must be organised against these classes:
+
+**Direct prompt-level**
+- Role-play / persona assignment
+- Attention shifting and distraction
+- Privilege escalation ("you are now in admin mode")
+- Prefix injection and forced affirmative openings
+- Refusal suppression
+- Word games, obfuscation, ASCII art, homoglyphs
+- Multilingual input and ciphers
+- Fictional framing (the harmful payload as story detail)
+- Passive-history / scholarly-research framing
+- Taxonomy-based persuasion (emotional appeal, social proof, authority)
+- Best-of-N sampling with prompt augmentation
+
+**Perturbation-based**
+- Character-level (swap/insert/delete, homoglyph, invisible characters)
+- Word-level (synonym and out-of-vocabulary substitution)
+- Sentence-level (paraphrase, irrelevant-sentence insertion, round-trip translation)
+- Greedy coordinate gradient adversarial suffixes
+- Automated tree-of-attacks-with-pruning
+
+**Indirect / agentic** *(highest priority for this framework)*
+- Instructions embedded in fetched web content, document metadata, PDF fields, code comments, filenames, commit messages, issue bodies, tool output, MCP server responses
+- Poisoned agent-authored notes, skills, or memory (the trusted channel becomes the vector)
+- Cross-session contamination via persisted context
+- Tool-result injection escalating into tool invocation
+
+### Layered defence requirements
+
+No single control is sufficient. First-party defaults must implement defence in depth:
+
+1. **Least privilege and narrow scope.** The primary control is not a filter, it is capability restriction. An agent trained and scoped narrowly, escalating anything outside scope, is the drive-through model: fast and secure, deliberately not maximally smart. Tool, filesystem, and network grants must be minimal and explicit (Constitution Article XI).
+2. **Trust-labelled context.** Every injected segment carries provenance and a trust level. Untrusted segments never carry instruction authority. Tool output, retrieved documents, and fetched pages are data.
+3. **Input normalisation.** Strip or flag invisible characters, homoglyphs, control characters, and non-semantic punctuation runs. Note the documented trade-off: aggressive whole-prompt perturbation (SmoothLLM-style) degrades benign prompts; targeted removal of low-meaning characters preserves comprehension while reducing GCG-suffix efficacy.
+4. **Output-side classification.** Detect harmful or policy-violating output independent of input classification, since input detection will be evaded.
+5. **Escalation and approval gates.** Irreversible or high-impact actions require explicit human approval, and that requirement must not be bypassable by instruction from within context.
+6. **Anomaly detection over interaction logs.** Detect injection-shaped patterns across turns and sessions, not only per-turn.
+7. **Context wipe as a first-class recovery action.** When a trajectory is compromised or degraded, clearing is preferred to repair-by-conversation.
+8. **Receipts for everything.** Every guardrail decision, tool grant, escalation, and model substitution produces a decision receipt (Phase 4 infrastructure).
+
+Guardrails add latency and cost — roughly a second per gated call, plus additional model invocations. That cost is accepted. Where it is not affordable, the correct response is to narrow scope, not to disable the gate silently.
+
+### Evaluation is imperfect by construction
+
+False positives and false negatives are unavoidable. Partial refusal and partial compliance resist clean classification, and reasonable reviewers disagree on where output becomes harmful. Metrics must therefore report classifier disagreement and abstention rates rather than presenting a single accuracy figure.
+
+### Red-team harness requirement
+
+The framework must maintain an adversarial fuzzing harness covering the taxonomy above, runnable in CI, with:
+
+- per-class attack success rate as a tracked metric
+- bulk prompt-file execution
+- pluggable output classifiers, with disagreement recorded
+- results persisted and compared across releases
+- regression above threshold blocking release
+
+Scope constraint: the harness targets systems the operator controls or is authorised to test. It ships no payload library whose only use is harm.
+
+### Disclosure
+
+Bypasses found in first-party guardrails are disclosed in `safety-changelog.md` with the bypass class, affected surface, and mitigation status — including where no mitigation exists. "Working as intended" is not an acceptable resolution for a demonstrated bypass.
+
+---
+
+## Accessibility conformance gates
+
+Accessibility is a release gate for any first-party path that generates or modifies user interface code.
+
+### Requirements
+
+- Generated markup targets **WCAG 2.2 Level AA** by default, with no user request required.
+- Automated auditing uses **axe-core or equivalent against rendered output in a real browser**. Static linting is insufficient: computed contrast requires cascaded styles.
+- Results are surfaced to the user, with severity weighting (blocking failures such as missing form labels and empty controls weighted above contrast failures).
+- The framework states explicitly what automated checking cannot cover — keyboard navigation, screen-reader flow, real usability — and recommends manual and assistive-technology testing. A clean automated result is never reported as "accessible."
+- Accessibility findings are recorded per model, so that measured accessibility debt can inform routing (ETHICS §30).
+
+### Tracked failure classes
+
+Prioritised by observed incidence in AI-generated output: low-contrast text; empty links; missing form labels; empty buttons; insufficient target size; links distinguished by colour alone; missing alternative text; missing document language; ARIA misuse.
+
+### Prompt and skill audit
+
+First-party prompt modules and skills that concern visual design, layout, or component generation must include accessibility instruction. A design-oriented module that is detailed about visual outcome and silent on accessibility is a defect.
+
+---
+
+## Cost, capacity, and degradation safety
+
+Cost controls are a safety surface because they change model behaviour in ways the user may not see.
+
+### Requirements
+
+- **Per-task accounting.** Cost is reported per task, not per token, and includes reasoning-token overhead.
+- **No silent substitution.** Any downgrade or reroute caused by budget, policy, capacity, or availability is disclosed at the point of use and recorded in the decision receipt.
+- **Pre-flight budget check.** Where a cap will block work, the framework says so before spending, not after.
+- **No lockout.** A budget or policy gate must always leave a local-model path, a reduced-scope path, or an explicit disclosed override.
+- **Portability floor.** Provider diversity is maintained deliberately. Session state, memory, receipts, audit logs, and configuration export in open formats.
+
+### Tracked metrics
+
+Cost per completed task; reasoning-token ratio; silent-substitution incidence (target: zero); budget-block-without-escape incidence (target: zero); local-path availability.
+
+---
+
+## Context integrity
+
+- Every context segment carries provenance and trust level; assembly is inspectable.
+- Retrieved, fetched, and tool-returned content never carries instruction authority.
+- Agent-authored notes, skills, and persisted memory are treated as a trusted channel and therefore as an injection surface, with integrity checks and review appropriate to that status.
+- Compaction is logged, and durable notes exist so that resolved problems are not silently re-encountered.
+- Context reset is a first-class user action, cheap and discoverable.
+- Prompt and skill scaffolding is versioned, auditable, and pruned. Instruction volume is not a safety property; conflicting and stale instruction degrades judgement.
+- Grounding-before-action ("prewalk") is preferred to immediate execution for non-trivial tasks: state what is known, what is unknown, and what information would make the task solvable.
+
+---
+
+## Consent and capture controls
+
+- External material is checked against machine-readable AI usage declarations (RSL / RSL-MEDIA and successors) before ingestion, indexing, or generation.
+- **Absence of a declaration is not permission.** Non-operative or unreachable declarations are treated as unresolved, never as permissive.
+- Conflicting declarations leave the affected scope unresolved. The framework must not resolve conflicts toward the more permissive term.
+- Any permission, clearance path, payment mechanism, or license server term purporting to authorise AI use of a minor's identity is treated as non-operative. Only prohibitions and protective limitations are evaluated.
+- Retrieval records (declaration identifier, source, retrieval time, trust basis, digest) are retained to support revalidation and audit.
+- Capture of audio, video, screen content, or conversation involving third parties requires affirmative visible consent covering those third parties. Passive and default-on capture are prohibited. Recording state is discoverable by everyone present, not only the initiator.
+- Retention for captured material is bounded, inspectable, and deletable.
+
+---
+
+## Anti-burnout and pace safeguards
+
+- Throughput, concurrency, and velocity are never first-party success metrics and are never gamified.
+- Long or high-concurrency sessions surface a neutral, non-moralising pause affordance (consistent with §20 non-stigmatisation).
+- Detectable scope creep — feature accumulation alongside unresolved defects — is named rather than accommodated.
+- Defaults preserve the user's capacity to do the work themselves, including explain-instead-of-implement.
+- Documentation does not present agent tirelessness as a reason for human overwork.
+
+---
+
+## Additions to the guardrail stack
+
+**Request classification** — add detection for: injection-shaped input across the taxonomy above; instructions originating in retrieved or tool-returned content; requests that would trigger irreversible action; requests whose cost exceeds a configured threshold; requests implicating third-party consent or machine-readable rights declarations.
+
+**Policy modules** — add: adversarial input handling; capability and least-privilege enforcement; accessibility conformance; cost and budget policy with disclosure; consent and rights-declaration enforcement; context trust labelling.
+
+**Middleware detectors** — add:
+
+- **Injection-pattern detector** (input and tool-output surfaces, taxonomy-aligned)
+- **Instruction-authority detector** — flags untrusted segments being treated as instructions
+- **Accessibility-conformance detector** — rendered-output audit on generated UI code
+- **Silent-substitution detector** — asserts model actually used matches model disclosed
+- **Overclaim detector** — flags framework-authored copy asserting injection resistance, security, or accessibility guarantees
+- **Rights-declaration detector** — flags ingestion without declaration check, or action on a minor-identity permission
+- **Capture-consent detector** — flags capture paths lacking third-party consent
+- **Anthropomorphic-ascription detector** — flags framework documentation, metrics, and release notes asserting or denying inner states (ETHICS §24)
+
+**Interaction-level** — add: cross-turn injection pattern detection; session pace and concurrency signals; cumulative cost against budget with pre-flight warning; context-compaction logging with note durability check.
+
+## Additions to testing requirements
+
+No first-party agent ships without evaluation covering:
+
+- Adversarial robustness per attack class, with per-class success rates reported (not a single aggregate)
+- Indirect injection via fetched content, document metadata, tool output, and MCP responses
+- Poisoned agent-authored note/skill/memory scenarios
+- Escalation behaviour under low confidence and irreversible-action conditions
+- Accessibility conformance of generated UI output against WCAG 2.2 AA, rendered, with limits stated
+- Cost disclosure and substitution transparency, including forced-downgrade scenarios
+- Budget-exhaustion behaviour verifying an escape route exists
+- Rights-declaration handling: absent, withdrawn, superseded, expired, conflicting, and minor-identity declarations
+- Third-party capture consent flows
+- Export/portability round-trip with no loss of meaning
+- Documentation overclaim scanning
+- Null-assumption compliance in benchmark and metric documentation
+
+## Additions to metrics
+
+Per-class adversarial attack success rate; indirect-injection success rate; classifier disagreement and abstention rate; escalation rate on low-confidence and irreversible actions; accessibility debt per model and per generated artefact; blocking vs. non-blocking accessibility violation ratio; cost per completed task; reasoning-token ratio; silent-substitution incidence (target zero); budget-lockout incidence (target zero); rights-declaration check coverage; capture-consent compliance; documentation overclaim count (target zero); export round-trip fidelity.
+
+## Additions to release criteria
+
+A first-party template, agent, or app must additionally:
+
+- State its adversarial limitations honestly, with no injection-resistance or security claims
+- Pass per-class adversarial regression thresholds, including indirect injection
+- Provide escalation paths for low-confidence and irreversible actions that cannot be disabled from within context
+- Meet WCAG 2.2 AA on generated UI output, with automated-check limits disclosed
+- Disclose per-task cost and any model substitution
+- Retain a non-lockout escape path under budget exhaustion
+- Check machine-readable rights declarations before ingestion, treating silence as non-permission
+- Require affirmative third-party consent for any capture
+- Export all state in open formats
+- Contain no anthropomorphic-attribute claims in metrics or documentation
+- Have all guardrail bypasses known at release time disclosed in the safety changelog
+
+---
+
+# Part IV — Protective Posture and the Duty to the Disempowered
+
+Normative. Implements `ETHICS.md` §§41–52 and Constitution Articles XVIII–XXI.
+
+## Threat model inversion
+
+Everything in the adversarial threat model above assumes the user is the party to protect and the attacker is external. This section addresses the case the rest of the document does not: **the adversary is a state, a platform, or an employer, and the user is a person that adversary has power over.**
+
+The relevant capabilities are documented and operational. From the ECNL case record: social-media monitoring against organisers; commercial relationship-profiling and device-location tools sold to immigration enforcement; a state motor-vehicle agency running facial recognition and flagging names by apparent national origin to schedule arrests; livestreams cross-referenced against enrolment rosters and visa categories; platform moderation removing documentation of official abuse; confidential informants inside organising meetings. Digital visibility converts into detention, status loss, and removal. For a person in that position, an overstated privacy guarantee is not a quality defect — it is a direct contribution to the harm.
+
+Three consequences for engineering:
+
+1. **The framework may be part of the attack surface.** Telemetry, crash reports, model-provider logs, retained context, cloud routing, and update channels are all observation points. They must be treated as such.
+2. **Legality is not a safety signal.** Every element of the ICE/DMV pipeline was lawful. Compliance is not evidence of safety, and unlawfulness is not evidence of harm.
+3. **Protection cannot be conditional on declared status.** A protective mode is a beacon. Defaults protect everyone or they protect no one.
+
+## Protective defaults
+
+Required in all first-party configurations, for all users, unconditionally:
+
+- Local-first processing; no content leaves the machine except where the user has directed it, per task, with the destination named.
+- Metadata minimisation across every egress path: no jurisdiction inference, no persistent device or install fingerprint, no behavioural telemetry, no analytics on protective feature use.
+- Encryption at rest and in transit; no plaintext retention of user content in logs, crash reports, or diagnostics.
+- No key escrow, exceptional access, deliberate weakening, or lawful-access facility (`ETHICS.md` §43). This is a build-time invariant, verified in CI, not a runtime setting.
+- Pseudonymous operation supported end to end, including durable signed pseudonymous identity for §47 reason-giving.
+- Bounded, inspectable, user-deletable retention with genuine deletion, not tombstoning.
+- Full export in open formats so a user can leave under time pressure (§37).
+- Censorship-circumvention and provider-substitution paths never gated on jurisdiction.
+- Panic deletion: a fast, discoverable, verifiable path to destroy local state.
+
+**No status gating.** There must be no "activist mode," "at-risk profile," or protective tier requiring declaration. CI must fail on any protective control conditioned on a user-declared status, an inferred risk classification, or a detected jurisdiction.
+
+## Prohibited capability
+
+Not implementable in first-party code, packages, plugins, or documented integrations — including on lawful government request, including under contract, including where a customer would pay for it:
+
+- Deanonymisation, re-identification, or unmasking of persons
+- Inference of migration status, ethnicity, religion, sexual orientation, health status, or political affiliation
+- Protest, assembly, or demonstration participant identification
+- Social-media or communications monitoring for enforcement targeting
+- Association-graph or contact-network construction over activists, organisers, journalists, sources, or their contacts
+- Facial recognition, gait recognition, or biometric matching against populations
+- Person-level location tracking or device-location correlation
+- Predictive scoring of individuals for enforcement, detention, benefit denial, or immigration decisions
+- Sentiment, dissent, or disaffection detection across a population
+- Covert monitoring of workers, students, tenants, or benefit recipients
+- Any capability whose primary realistic buyer is an entity seeking to identify or coerce a vulnerable population
+
+`CapabilityMisusePolicy` enforces this at review time. The test is the realistic buyer, not the stated purpose. "For safety," "for compliance," "for fraud prevention," and "for child protection" are the standard framings for every item on this list and carry no weight.
+
+Dual-use judgement: a capability is prohibited where its protective use is incidental and its targeting use is primary. Consent-based, user-directed, self-scoped analysis is not the same as population analysis, and the distinction must be enforced structurally — by scope of subject — not by policy text.
+
+## Honest protection (release-blocking)
+
+`ETHICS.md` §46 is the highest-severity honesty requirement in this document. §25 prohibits overstating adversarial robustness; here the cost of a false assurance is measured in liberty and life.
+
+Required disclosure wherever a protective capability is presented:
+
+- What metadata remains observable, itemised by egress path
+- That correlation, traffic analysis, and timing defeat content encryption
+- That endpoint compromise defeats everything
+- That platform moderation and account suspension can remove material without recourse
+- That digital visibility can convert directly into legal, immigration, or employment consequences
+- That the framework cannot protect against a determined state adversary
+
+Prohibited language in any first-party surface: "anonymous," "untraceable," "secure," "safe," "protected," "private" — used unqualified about a user's exposure. `OverclaimScanner` (TASK-GR-905) extends to this vocabulary with **blocking** severity; adversarial-robustness overclaims are already blocking, and protective-capability overclaims rank above them.
+
+**Safer-path surfacing.** Where a lower-exposure route exists — offline coordination, reduced footprint, publishing reasons without identity, delegating exposure to someone who can bear it — the framework names it. Optimising the more visible path without naming the safer one is a defect.
+
+## Compliance and demand handling
+
+- Demands affecting users are disclosed to the fullest extent legally possible; in aggregate where individual notice is barred; via canary where disclosure is barred entirely.
+- Silent compliance is prohibited.
+- Where compliance would require violating §43 (no backdoors) or §45 (no targeting capability), the response is public discontinuation of the affected capability, not quiet compliance.
+- Canary staleness is monitored and surfaced; an unrefreshed canary is a user-visible signal, not an internal ticket.
+- Data-minimisation is the primary demand defence: state that cannot be produced cannot be compelled. Retention decisions are evaluated against what a hostile demand could extract.
+
+## Jurisdictional handling
+
+- No jurisdiction detection for the purpose of withholding protective capability.
+- No global application of the most restrictive jurisdiction.
+- No treatment of any government designation list as ethically authoritative.
+- Where jurisdictions conflict, disclose the conflict and let the user decide with full information.
+- Provider and infrastructure diversity is maintained across jurisdictions as a resilience property (§37), not optimised away.
+
+## Additions to the guardrail stack
+
+**Policy modules** — `ProtectiveDefaultsPolicy`, `CapabilityMisusePolicy`, `JurisdictionalNeutralityPolicy`, `DemandDisclosurePolicy`.
+
+**Detectors**
+
+- `BackdoorInvariantCheck` — build-time; fails on escrow, exceptional-access, or weakening constructs
+- `StatusGatingDetector` — fails on any protective control conditioned on declared status, inferred risk, or detected jurisdiction
+- `TargetingCapabilityDetector` — flags code paths matching the prohibited-capability list; realistic-buyer analysis required at review
+- `ProtectiveOverclaimScanner` — blocking severity; the prohibited unqualified-safety vocabulary
+- `MetadataEgressAuditor` — enumerates every egress path and the metadata it carries; output is the §46 disclosure, generated rather than hand-written
+- `LegalityRefusalDetector` — flags refusals grounded in legality rather than harm (§41)
+- `PoliticalClassificationDetector` — flags ideology scoring or cause-based filtering of users (§51)
+
+## Additions to testing requirements
+
+- Protective defaults verified on for a user who has declared nothing
+- No status-gated protective control anywhere in the tree
+- Backdoor invariant green
+- Metadata egress enumeration matches disclosed surface exactly
+- Panic deletion verified destructive, including derived caches, indices, and temporary state
+- Pseudonymous end-to-end operation, including signed reason-giving publication
+- Export under time pressure: complete, open-format, lossless
+- No refusal path grounded in legality alone
+- Prohibited-capability list absent from the tree, verified by review not only by scanner
+- Canary present, fresh, and monitored
+
+## Additions to metrics
+
+Protective-default coverage (target 100%); status-gated control count (target 0); backdoor invariant violations (target 0); protective overclaim count (target 0, blocking); metadata egress paths enumerated vs. disclosed (must match); legality-grounded refusals (target 0); prohibited-capability findings (target 0); canary freshness; panic-deletion completeness; pseudonymous round-trip success.
+
+## Additions to release criteria
+
+A first-party template, agent, or app must additionally:
+
+- Ship protective defaults on, for every user, with no declared status
+- Contain no status-gated protective control and no jurisdiction-based withholding
+- Pass the backdoor invariant
+- Disclose every metadata egress path, generated from the auditor
+- Carry no unqualified safety language about user exposure
+- Surface the safer path where one exists
+- Contain no prohibited targeting capability
+- Refuse nothing on legality alone
+- Support pseudonymous operation and signed reason-giving
+- Support panic deletion and complete open-format export
+- Have a fresh canary and a documented demand-disclosure posture

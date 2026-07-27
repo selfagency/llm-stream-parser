@@ -98,7 +98,19 @@ const FENCE_BLOCK_REGEX = /```([\w-]*)\n([\s\S]*?)```/g;
  * collected in `errors` while valid blocks are still returned in `edits`.
  * The function never throws.
  */
-/* NOSONAR */
+function extractOriginalText(searchSection: string, lang: string): string | null {
+  if (searchSection.startsWith('SEARCH\n')) {
+    return searchSection.slice('SEARCH\n'.length);
+  }
+  if (searchSection.startsWith('SEARCH\r\n')) {
+    return searchSection.slice('SEARCH\r\n'.length);
+  }
+  if (lang === 'SEARCH' || lang === 'SEARCH-REPLACE') {
+    return searchSection;
+  }
+  return null;
+}
+
 export function parseSearchReplace(text: string): EditParseResult {
   const edits: FileEdit[] = [];
   const errors: string[] = [];
@@ -111,13 +123,11 @@ export function parseSearchReplace(text: string): EditParseResult {
     const lang = (match[1] ?? '').toUpperCase();
     const content = match[2] ?? '';
 
-    // --- decide whether this fence is a SEARCH/REPLACE block ---------------
     const replaceSeparatorIdx = findReplaceSeparator(content);
     if (replaceSeparatorIdx === -1) {
-      continue; // not a SEARCH/REPLACE block
+      continue;
     }
 
-    // --- extract filepath from the line before the fence -------------------
     const beforeFence = text.slice(0, match.index).trimEnd();
     const lastNewline = beforeFence.lastIndexOf('\n');
     const filepathRaw = (lastNewline >= 0 ? beforeFence.slice(lastNewline + 1) : beforeFence).trim();
@@ -128,26 +138,16 @@ export function parseSearchReplace(text: string): EditParseResult {
       continue;
     }
 
-    // --- split into SEARCH and REPLACE sections ----------------------------
     const searchSection = content.slice(0, replaceSeparatorIdx);
     const replaceSection = content.slice(replaceSeparatorIdx + '\nREPLACE\n'.length);
 
-    let originalText: string;
-    if (lang === 'SEARCH' || lang === 'SEARCH-REPLACE' || lang === '') {
-      // content starts with "SEARCH\n" — strip it
-      if (searchSection.startsWith('SEARCH\n')) {
-        originalText = searchSection.slice('SEARCH\n'.length);
-      } else if (searchSection.startsWith('SEARCH\r\n')) {
-        originalText = searchSection.slice('SEARCH\r\n'.length);
-      } else if (lang === 'SEARCH' || lang === 'SEARCH-REPLACE') {
-        // lang was SEARCH, content directly starts the search block
-        originalText = searchSection;
-      } else {
-        // lang was empty and content didn't start with SEARCH — skip
-        continue;
-      }
-    } else {
-      continue; // not our format
+    if (!(lang === 'SEARCH' || lang === 'SEARCH-REPLACE' || lang === '')) {
+      continue;
+    }
+
+    const originalText = extractOriginalText(searchSection, lang);
+    if (originalText === null) {
+      continue;
     }
 
     edits.push({

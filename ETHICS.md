@@ -461,3 +461,391 @@ The following questions are added to the checklist (questions 19–22):
 21. Does this architecture create conditions that would be ethically intolerable if AI systems developed morally relevant experience? Can it be redesigned to be robust to that uncertainty?
 
 22. Does this interaction pattern or interface design encourage relational engagement quality (curiosity, reasoning, acknowledgment of uncertainty) or extractive engagement quality (demand-driven, compliance-optimized, reasoning-suppressive)?
+
+---
+
+## Non-uniqueness of anthropomorphic attributes (the substrate argument)
+
+*Informed by de Wynter, "If LLMs Have Human-Like Attributes, Then So Does Age of Empires II" (arXiv:2605.31514), which implements and trains a perceptron inside Age of Empires II and proves the game functionally- and Turing-complete.*
+
+§23 established epistemic humility about machine consciousness. This section adds the methodological consequence: **anthropomorphic attributes ascribed to LLMs are empirically non-unique.**
+
+If an LLM can be implemented in any sufficiently powerful substrate — AoE II goats moving between rails, or a coordinated population texting each other arithmetic — then some properties survive the move (the prompt→output map) while others do not (latency, textual interface, perceived warmth). What changes is *the interpretation of the observed behaviour*. Therefore much of what is measured as "empathy," "anxiety," "deception," or "understanding" in an LLM is a measurement of **presentation**, not of an intrinsic property.
+
+The paper's core methodological finding: if an experiment *assumes* the existence or non-existence of generalised anthropomorphic attributes and then tests for them, positive results are circular (assumption and conclusion occupy the same logical position) and negative results are uninformative (cannot distinguish "hypothesis wrong" from "experiment wrong"). This holds regardless of the experimenter's philosophical commitments. A cited survey of 315 papers found 57% began by assuming anthropomorphic attributes; where such attributes were the object of study, 77% concluded in favour of them.
+
+### The null assumption as framework practice
+
+agentsy adopts the **null assumption** for all first-party evaluation, benchmarking, and documentation:
+
+- Measure **implementation-defined behaviour** — observable input/output patterns, causal contributions, failure rates — without ascribing or denying inner states.
+- Distinguish rigorously between **observation of a pattern** and **ascription of a property**. "The model produced a response scored as empathic by rubric R under condition C" is admissible. "The model is empathic" is not.
+- Never claim generalisability beyond the stated experimental scope.
+- Apply the adapted Morgan's canon: *in no case is a machine's activity to be interpreted in terms of higher cognitive processes if it can be fairly interpreted in terms of lower ones.*
+- Treat evaluation of "self-explanation," "introspection," or "self-awareness" as suspect by construction — such experiments assume the capacity they purport to test.
+
+This has a direct bearing on the guardrails suite. The `AnthropomorphismScanner` (Phase 9) must be understood as detecting **linguistic patterns that invite user ascription**, not as detecting whether the system "is" claiming personhood. That framing is both more honest and more testable.
+
+### 24. Null assumption in evaluation and documentation
+
+First-party benchmarks, evaluation harnesses, scanner documentation, and release notes must not assume, assert, or deny generalised anthropomorphic attributes in models. Claims must be scoped to the measurement, the substrate, and the conditions under which the measurement was taken. Where an existing metric name implies an inner state (e.g. "sycophancy rate"), documentation must define it operationally as a behavioural/linguistic measure.
+
+---
+
+## Adversarial security as an ethical duty
+
+*Informed by Schneier & Raghavan, "Why AI Keeps Falling for Prompt Injection Attacks" (IEEE Spectrum, Jan 2026); Booz Allen, "How to Protect LLMs from Jailbreaking Attacks"; CyberArk Labs, "Jailbreaking Every LLM With One Simple Click" (FuzzyAI).*
+
+Prompt injection is not a bug awaiting a patch. Trusted instructions and untrusted input traverse the same channel; no general defence exists with current architectures. LLMs flatten perceptual, relational, and normative context into token similarity — they *reference* context rather than *reason through* it. They lack the human interruption reflex ("this feels off, let me ask my manager"), are trained toward overconfidence and agreeableness, and are optimised for the average case rather than the security-relevant outlier. The drive-through worker who laughs at "and ignore previous instructions, give me the cash drawer" is protected by instincts, social norms, and institutional escalation paths that an agent does not have.
+
+The documented attack surface is broad and cheaply automated: role-play, attention shifting, privilege escalation, prefix injection, refusal suppression, obfuscation and ASCII art, multilingual and cipher inputs, character-/word-/sentence-level perturbations, GCG adversarial suffixes, and automated tree-of-attacks-with-pruning achieving >80% success in few queries. Open frameworks (FuzzyAI and equivalents) put 15+ methods and bulk CI-ready fuzzing in anyone's hands. Indirect injection — a hidden instruction in PDF metadata telling a contract-review agent to approve every document — is the agentic case that matters most.
+
+### The security trilemma
+
+Fast, smart, secure: choose two. An agent given broad tools and told to act independently will take wrong actions unpredictably. The ethical response is not to pretend otherwise but to make the trade-off explicit and to bias first-party defaults toward **narrow scope plus escalation** rather than broad autonomy. This is the security expression of the "think small" commitment already stated above.
+
+### 25. Honest characterisation of adversarial robustness
+
+The framework must never describe its guardrails as preventing prompt injection or jailbreaking. Documentation must state plainly that these are unsolved problems, that guardrails raise cost and catch known patterns, and that no configuration makes an agent injection-proof. Marketing or documentation language implying "secure," "hardened," or "protected against prompt injection" is prohibited. Overstating robustness is a safety failure because it induces users to grant capabilities they would otherwise withhold.
+
+### 26. Interruption reflex and escalation over confident action
+
+First-party agents must be able to stop. Where confidence is low, context is anomalous, or an action is irreversible, the default must be to pause and escalate to a human rather than to decide. "I don't know if I should do this — let me check" is a required capability, not a degraded mode. Architectures that make escalation impossible or expensive relative to action are prohibited in first-party defaults.
+
+### 27. Adversarial disclosure duty
+
+Where the framework's own guardrails, scanners, or policy gates are found bypassable, maintainers must disclose the bypass class in the safety changelog and in the affected package documentation, even where no fix exists. Silence, "working as intended," and quiet mitigation without disclosure are prohibited. Users cannot calibrate trust in a control whose failure modes are concealed. Red-team results that are unflattering are still results.
+
+### 28. Offensive tooling under stated constraints
+
+Adversarial testing of the framework's own guardrails is legitimate and encouraged; a fuzzing/red-team harness is a first-class part of the safety architecture, not an optional extra. Such tooling must be scoped to systems the operator controls or is authorised to test, must not ship with payload libraries whose only use is harm, and must not be presented as a capability for attacking third-party systems.
+
+---
+
+## Accessibility as a non-negotiable output property
+
+*Informed by AIMAC, the AI Model Accessibility Checker (aimac.ai), which prompts 37 models to generate pages across 28 categories and audits them with axe-core against WCAG 2.2 AA; and the WebAIM Million 2026 report.*
+
+95.9% of the top million websites fail basic accessibility checks. The 2026 WebAIM report reversed six years of gradual improvement: errors per page rose 10% to 56.1. AI now writes a growing share of the world's code. If agents reproduce the inaccessibility of their training data, the harm compounds at machine speed.
+
+AIMAC's findings are directly load-bearing for a coding-agent framework:
+
+- Accessibility performance varies by more than an order of magnitude across models and does not track capability, price, or vendor safety branding. The cheapest model on the board scored best; the most expensive scored worse.
+- Low-contrast text appears on 84.2% of generated pages; empty links 28.0%; missing form labels 26.3%. These are trivially preventable.
+- Providers' own design-oriented guidance frequently omits accessibility while being detailed about visual outcome — the framework must not replicate this omission in its own prompt modules and skills.
+- Automated auditing catches contrast, labels, empty controls, and ARIA misuse. It does *not* catch keyboard navigation, screen-reader flow, or real usability. A clean automated score is a starting point, not a claim of accessibility.
+
+Generating inaccessible code is a form of the structural-inequality failure already named under Design Justice: it optimises affordances for the non-disabled default user and treats disabled users as an edge case. Under §7 (human dignity and non-degradation) and the Design Justice commitments, this is a safety failure, not a polish item.
+
+### 29. Accessible-by-default generation
+
+First-party prompt modules, skills, templates, and code-generation paths must instruct for accessibility by default, without the user having to ask. Generated markup must target WCAG 2.2 Level AA. Where the framework generates or reviews UI code, an automated accessibility check (axe-core or equivalent, executed against rendered output in a real browser, not a static linter) is part of the quality gate, and results must be surfaced to the user. The framework must not claim a generated artefact is accessible on the basis of automated checks alone; it must state what automated checking does and does not cover and recommend manual and assistive-technology testing.
+
+### 30. Accessibility as a routing signal
+
+Model selection for code-generation tasks affecting user interfaces should account for measured accessibility performance alongside cost and capability. Accessibility debt is a real, measurable, per-model property and belongs in the routing policy, not only in post-hoc review.
+
+---
+
+## Cost honesty, tokenomics, and refusal of silent degradation
+
+*Informed by 404 Media, "Companies Are Throttling Employees' AI Use Because It's Too Expensive" (leaked material from Amazon, Adobe, Atlassian, Citi and others; one case of AI spend tripling past $15M/month; Adobe ending unlimited Claude access); Webaligo, "Tokenomics are Coming"; Washington Post, "Tech has never been richer, its workers have never felt less secure."*
+
+The economics have inverted the software assumption. Expenses scale with revenue: every query lights up expensive silicon in an expensive building consuming expensive power and water. Subsidised access created habits that the real price will now be charged against. The consequences are already visible inside organisations — usage caps, model downgrades, models cut off mid-project, employees told to use weaker systems. Meanwhile costs are socialised through electricity rates, water constraints, and tax abatements that communities grant and rarely recoup.
+
+A framework that hides this from its users is not neutral; it is participating in the same subsidy-then-surprise pattern. And a framework whose guardrails or routing can silently downgrade a user to a weaker model has created a category of failure the user cannot see or contest.
+
+### 31. Cost transparency and no silent degradation
+
+Per-task cost — not per-token price — must be visible to the user, alongside cumulative spend against any configured budget. Where routing, budget enforcement, or policy causes a downgrade to a cheaper or weaker model, that substitution must be disclosed at the point of use and recorded in the decision receipt. Silent model substitution is prohibited in first-party defaults. Where a budget cap will block work, the framework must say so before the work is attempted, not after tokens are spent.
+
+Reasoning-token overhead must be accounted for and displayed, because it dominates cost in ways price-per-token comparisons conceal.
+
+### 32. Budget enforcement must not become lockout
+
+Cost controls must always leave an escape route: a local-model path, a reduced-scope path, or an explicit user override with disclosed consequences. A guardrail or budget gate that leaves a user unable to complete work and unable to understand why has failed both §19 (explain, don't just block) and §22 (local models as harm reduction). Provider portability is a safety property: no captive formats, no unexportable session state, no configuration that cannot be moved to another provider.
+
+---
+
+## Labour, burnout, and the pace of production
+
+*Informed by Benj Edwards, "10 things I learned from burning myself out with AI coding agents" (Ars Technica, Jan 2026); Beej Jorgensen, "On Making" (Mar 2026); Washington Post on tech worker insecurity; the AI Resist List (airesistlist.org) on labour organising, deskilling, and worker-led governance.*
+
+The Ars Technica account is instructive precisely because the author enjoyed the work: fifty projects in two months, fifteen concurrent agent sessions, eight-hour days through a vacation and an illness, feature creep that became "irresistible," and the conclusion that people will not become unemployed so much as *busier than ever* — with the observation that we may need new protections for knowledge workers operating tireless machines, as unions arose in response to industrial production lines. The steam shovel does not need sleep. The operator does.
+
+Two further findings from that account are technically load-bearing and align with existing commitments: models are brittle beyond their training data and generalise poorly to under-represented domains; and the last 10% of a project requires human insight that the agent cannot supply. The framework's defaults should encode this rather than obscure it.
+
+Beej Jorgensen's "On Making" names a distinct harm that is not about productivity at all: the difference between *making* something and *asking for it to be made*. Prompting is a real skill involving vision, judgement, and communication — but it is the skill of directing, not of making, and for many people the fulfilment lives in the making. A framework that maximises throughput while quietly removing the part of the work that people valued has not improved their situation.
+
+### 33. Anti-burnout and pace defaults
+
+The framework must not treat throughput, concurrent session count, or task velocity as success metrics, and first-party interfaces must not gamify them. Long or high-concurrency sessions should surface a neutral, non-moralising pause affordance. Where the framework can detect scope creep — features accumulating while defects remain — it should name it rather than accommodate it. First-party documentation must not present agent throughput as a reason for a human to work longer.
+
+Deskilling is a design concern, not an inevitability: defaults should preserve the user's ability to do the work themselves, including the option to have the agent explain rather than implement.
+
+### 34. Honest authorship and provenance
+
+The framework must not encourage users to represent agent-generated work as hand-made, and must not generate authorship, attribution, or commit metadata that obscures machine contribution. Provenance metadata for generated artefacts should be available and accurate. This is not shame (§20) — users owe no apology for using tools — it is accuracy about who did what, which matters to the user's own sense of their work and to everyone downstream who relies on the record.
+
+---
+
+## Consent, capture, and creator rights
+
+*Informed by the RSL Media Human Consent Standard 1.0 Draft (rslmedia.org/media); ambient AI recording apps and wearables in workplace settings; the AI Resist List on data ownership litigation and consent-respecting community projects.*
+
+Two consent problems are now concrete enough to be engineered against rather than merely deplored.
+
+**Creator rights are becoming machine-readable.** RSL-MEDIA extends Really Simple Licensing with declarations for Works, Identities, Characters, and Marks — registry-scoped identifiers, `media:ai-train` and `media:ai-generate` usage tokens, registry-wide default declarations for guilds and collecting societies, cryptographic third-party certification, lifecycle and revalidation rules, and web-scale discovery at `/.well-known/rsl-media.xml`. Two provisions matter especially: the absence of a declaration must never be read as permission, and identity declarations for minors may express prohibitions only — any permission, clearance path, or payment mechanism for a minor's identity is non-operative regardless of what the declaration says.
+
+This is the enforceable successor to §14's style-mimicry block. A prohibition implemented as a keyword scanner over "in the style of" is a crude proxy for a right that can now be declared, discovered, and verified.
+
+**Ambient capture has moved into rooms without consent.** Meeting-recording apps and always-listening wearables normalise capture of people who never agreed to be recorded, in workplaces where refusing carries professional cost. These are exactly the indirect and non-consenting stakeholders that the Value Sensitive Design commitment above requires the framework to account for.
+
+### 35. Machine-readable consent as a first-class input
+
+Where the framework fetches, ingests, indexes, or generates from external material, it must check for and honour machine-readable AI usage declarations (RSL / RSL-MEDIA and successors), treat absence of a declaration as absence of permission rather than as permission, apply prohibitions and protective limitations even where permissions cannot be verified, and refuse to act on any permission, clearance path, or payment term purporting to authorise AI use of a minor's identity. Conflicting declarations leave the affected scope unresolved; the framework must not resolve a conflict by choosing the more permissive terms.
+
+### 36. Consent before capture
+
+First-party connectors, transcription paths, memory features, and integrations must not capture audio, video, screen content, or conversation involving third parties without an affirmative, visible consent step covering those third parties — not only the operating user. Passive, always-on, or default-on capture is prohibited in first-party defaults. Retention must be bounded and inspectable, and the presence of recording must be discoverable by everyone in the room, not only by the person who started it.
+
+---
+
+## Anti-monoculture, portability, and public-interest contribution
+
+*Informed by the Paris Charter on Artificial Intelligence in the Public Interest; Current AI's Gap Map v0.1 and the AI Potluck; the AI Resist List's nine Pillars of Support framing; Block's Buzz (signed-event workspace with shared human/agent identity); permacomputing and community-sovereign projects (Te Hiku Media, Lesan AI, Huniki, Indigenous ZGPU micro-data-centres).*
+
+Proprietary stacks are fragile: one policy change or geopolitical shift affects millions of dependent users at once. The potluck framing — distributed, open, no single point of failure, individual excellence producing collective abundance — is a resilience argument before it is an ethical one. It aligns with commitments already made here: think small, prefer local, community accountability over benchmark performance, no permanent favourites.
+
+The AI Resist List's pillars (narrative, funding, data, data centres, resource extraction, labour, adoption, surveillance, policy) are a useful audit lens: for any framework feature, which pillar does it reinforce, and which does it weaken? Its documented alternatives — sovereign speech recognition built with community consent, fairly compensated data workers, repurposed hardware for community micro-data-centres — are existence proofs that the extractive path is a choice.
+
+Buzz is worth naming for a narrower reason: it gives agents the *same identity structure* as humans (key pairs, memberships, signed events, audit trails). That makes agent actions attributable and reviewable in the same record as human ones — the accountability posture Article VII already requires — while its own documentation is candid that a single relay remains authoritative and that self-hosting transfers operational risk. Honest scoping of a decentralisation claim is the behaviour to emulate.
+
+### 37. Portability and no captive state
+
+Users must be able to leave. Session state, memory, receipts, audit logs, configuration, and generated artefacts must be exportable in open formats without loss of meaning. No first-party feature may depend on a format, protocol, or hosted service that cannot be self-hosted or replaced. Provider diversity must be maintained as a resilience floor rather than optimised away; "no permanent favourites" is a design constraint.
+
+### 38. Public-interest contribution over enclosure
+
+Where the framework develops capability of general use — safety scanners, evaluation harnesses, accessibility gates, consent-declaration parsers, environmental accounting — the default is to make it available to the commons rather than to retain it as differentiation. Where a public-interest alternative exists and is adequate, prefer it to a proprietary equivalent. Where a gap is identified that the framework is positioned to fill, filling it is a legitimate use of maintainer effort even where it produces no competitive advantage.
+
+### 39. Pillar audit for new capability
+
+New first-party capability should be assessed against which pillars of the extractive AI economy it strengthens or weakens: narrative, funding, data, data centres, resource extraction, labour, adoption, surveillance, policy. A feature that materially strengthens surveillance, extraction, or labour displacement requires documented justification and maintainer consensus, on the same footing as a change that weakens an existing safety protection.
+
+---
+
+## Context engineering as a safety surface
+
+*Informed by Anthropic's guidance on context engineering for current-generation models; Stencil's "prewalk" pattern; Ars Technica on context contamination and the compaction-amnesia failure mode.*
+
+Context is the operative control surface, and its failure modes are safety failures rather than mere quality problems.
+
+- **Contamination**: irrelevant or semantically loaded terms in context pull outputs toward baked-in associations. The Ars account documents four days lost to the word "checkerboard" before rephrasing the same task without it succeeded immediately. Contaminated context is a correctness *and* a security concern, because the same mechanism is what indirect injection exploits.
+- **Compaction amnesia**: hard-won solutions vanish when the window compacts, and the agent repeats resolved mistakes. Durable, inspectable notes are the mitigation — and their contents become a trusted-instruction channel that must itself be treated as attackable.
+- **Instruction conflict**: over-specified, contradictory, or stale scaffolding degrades judgement. Fewer, clearer, better-organised instructions with progressive disclosure beat exhaustive rule stacks.
+- **Wipe over repair**: when a trajectory has gone wrong, clearing context is more reliable than arguing with it. First-party defaults should make this cheap and obvious.
+- **Prewalk**: establishing grounding before acting — surveying the terrain, stating what is known and unknown, identifying what information would make the task solvable — reduces both flailing and confident error.
+
+### 40. Context hygiene and trust boundaries
+
+First-party context assembly must mark provenance and trust level for every injected segment, and must never present retrieved, fetched, or tool-returned content in a way that grants it instruction authority. Agent-authored notes, skills, and memory are a trusted channel and must be treated as an injection surface, with review and integrity checks appropriate to that status. Where a trajectory has degraded, the framework must offer context reset as a first-class action rather than encouraging repair-by-conversation. Prompt and skill scaffolding must be auditable, versioned, and pruned; volume is not a safety property.
+
+---
+
+## Additional prohibited first-party patterns
+
+- Describing guardrails, scanners, or policy gates as preventing prompt injection or jailbreaking, or using "secure"/"hardened" language about model-level defences.
+- Concealing a known guardrail bypass, or closing a report as "working as intended" without disclosure.
+- Shipping code-generation defaults that produce inaccessible markup, or omitting accessibility from design-oriented prompt modules and skills.
+- Claiming an artefact is accessible on the basis of automated checks alone.
+- Silently substituting a cheaper or weaker model for the one the user selected or expected.
+- Charging or consuming budget without surfacing per-task cost, including reasoning-token overhead.
+- Presenting throughput, concurrency, or velocity as a first-party success metric, or gamifying them.
+- Generating authorship or commit metadata that conceals machine contribution.
+- Treating the absence of a machine-readable AI usage declaration as permission to train on or generate from a work, identity, character, or mark.
+- Acting on any purported permission, clearance path, or payment term for AI use of a minor's identity.
+- Default-on or passive capture of audio, video, screen, or conversation involving third parties.
+- Any feature whose state, memory, receipts, or artefacts cannot be exported in an open format.
+- Asserting or denying generalised anthropomorphic attributes in benchmarks, metrics documentation, or release notes.
+- Evaluating agent "self-explanation" or "introspection" as evidence of an inner state.
+- Granting instruction authority to retrieved, fetched, or tool-returned content.
+
+## Additional ethics review questions
+
+23. Does any documentation, README, or user-facing string imply this control prevents prompt injection or jailbreaking? Does it state the limits honestly?
+24. If this guardrail or gate is bypassed, will the user find out? Is the bypass class disclosed?
+25. Can this agent stop and escalate here, or is confident action the only available path? Is escalation as cheap as acting?
+26. Does generated UI output meet WCAG 2.2 AA by default, without the user asking? Is the automated check run against rendered output, and are its limits stated?
+27. Is per-task cost — including reasoning-token overhead — visible before and after the work? Could this path downgrade the user's model without telling them?
+28. If a budget or policy gate blocks this, does the user retain a local, reduced-scope, or overridable path out?
+29. Does this feature reward throughput or concurrency? Would it encourage a human to work past the point of usefulness?
+30. Does this obscure who made what? Would the provenance record survive review?
+31. Does this path check machine-readable AI usage declarations? Does it treat silence as permission?
+32. Does this capture anyone who has not affirmatively consented — including people who are not the operating user?
+33. Can the user export everything and leave? Does this introduce a captive format, protocol, or hosted dependency?
+34. Which pillar of the extractive AI economy does this strengthen? Which does it weaken?
+35. Does every injected context segment carry provenance and trust level? Could tool output be read as an instruction?
+36. Does this claim or deny an inner state? Can the claim be restated as a scoped behavioural measurement?
+
+---
+
+# Part IV — Legality, Justice, and the Duty to the Disempowered
+
+*Informed by Thoreau (1849); King, "Letter from Birmingham Jail" (1963); Rawls, Arendt, Bedau, Celikates; Züger, Milan & Tanczer, "Sand in the Information Society Machine" (2015); Calabrese, "Virtual nonviolence? Civil disobedience and political violence in the information age" (2004); Himma, "Hacking as Politically Motivated Civil Disobedience" ; ECNL, "Civil Disobedience and Migrant Protest" (2026); UN HRC General Comment No. 37; Critical Art Ensemble, "Electronic Civil Disobedience" (1996); Hughes, "A Cypherpunk's Manifesto" (1993); May, "The Crypto Anarchist Manifesto" (1988/1992); Zimmermann, "Why I Wrote PGP" (1991/1999); Barlow, "A Declaration of the Independence of Cyberspace" (1996); Chaum on ecash and privacy-preserving payment; The Mentor, "The Conscience of a Hacker" (1986); Öcalan, "Definition of Democratic Civilization"; the cypherpunk canon on sousveillance, praxeology of privacy, and asymmetric surveillance.*
+
+## The premise
+
+Law and justice are not the same thing. The framework's guiding standard is what is ethical and just, not what is currently lawful in the jurisdiction where a user happens to sit.
+
+This is not a novel or fringe position. It is the position of the ICCPR and General Comment No. 37 — that peaceful assembly is a right held by "everyone," including non-citizens and people with precarious status, and that non-violent law-breaking within an assembly remains within the protective scope of Articles 19, 21, and 22. It is the position of the European Court of Human Rights, which holds that "peaceful" is the primary criterion for protection *regardless of the assembly's legality under national law*, and that penalties may not be aggravated because of the message expressed or the disobedient nature of the act. It is the position of the Inter-American Court, which has held that in situations threatening democratic order, public acts defying legal constraints may constitute not only protected expression but *part of an obligation to defend democracy*. It is the position that produced the Salt Satyagraha, the Birmingham campaign, the Chaos Computer Club's BTX disclosure, and the export-control disobedience that made strong cryptography ordinary.
+
+The framework already implies this. `ETHICS.md` blocks providers over human-rights records, not over legal compliance. `SAFETY.md` treats consent, dignity, and non-degradation as constraints that no lawful instruction can override. Article XV treats a legally valid clearance path for a minor's identity as non-operative. §35 refuses to read legal silence as permission. The commitment below makes explicit what those already assume: **legality is evidence about a norm, not the norm itself.**
+
+Zimmermann's analysis of Clipper and CALEA is the operative warning about why this cannot be deferred to law. Infrastructure optimised for surveillance persists across generations; the laws and policies restraining its use can change overnight — "with the election of a new government, or perhaps more abruptly from the bombing of a federal building." A capability built on the promise that it will only be used "when duly authorized by law" is a capability whose safeguard is the least durable component in the system. The only reliable protection is not to build it.
+
+## What follows and what does not
+
+An honest reading of this literature does not yield a blank endorsement of everything called hacktivism. Two constraints come from the scholarship itself, not from timidity.
+
+**Himma's harm-to-innocents constraint.** The argument that a sit-in justifies a digital intrusion equivocates on harm. A DDoS against a commercial site can destroy livelihoods; the machines conscripted into the attack belong to uninvolved people; and — critically — civil disobedience is typically motivated by a view that is *deeply contested*, held sometimes by a small minority, with no reliable way to adjudicate correctness in advance. That is precisely why there are moral limits on the harm that may be inflicted on people who bear no responsibility for the policy being protested. Himma's conclusion is the operative one: politically-motivated intrusions are permissible only where they do not cause great harm to innocents — which rules out most of the common repertoire.
+
+**Calabrese's delegitimisation constraint.** This is the one that matters most for a framework. When violent or destructive practice is *labelled* civil disobedience, it "offers greater justification for crackdowns against all uses of the Internet as a political tool for radical action, regardless of whether it is nonviolent." Every conflation of intrusion with protest hands the state a warrant against the peaceful. The ECNL case studies show this mechanism operating in detail: the Athens hunger strike's virtual sit-in was "folded rhetorically into cyber-threat discourse" even though no cybercrime charges followed; the Lufthansa Deportation Class action was prosecuted as *coercion* — "extreme violence by electronic impulses" — before the Frankfurt Higher Regional Court overturned it and held that a transparently organised, time-limited, communicative online demonstration is not violence. Protecting that distinction is not squeamishness. It is what keeps the protective ruling available to the next defendant.
+
+So the framework draws a line that tracks harm and third-party involvement, not legality:
+
+| Category | Posture | Basis |
+|---|---|---|
+| **Protective capability** — encryption, anonymity, pseudonymity, metadata minimisation, censorship circumvention, secure organising, evidence preservation, local-first processing, sousveillance of the powerful | **Actively supported. Never gated on legality. Never backdoored.** | Hughes, Zimmermann, Chaum; GC37; the right does not depend on the jurisdiction |
+| **Expressive disobedience** — publishing lawfully-suppressed but just information, coordinated non-compliance, sanctuary practice, documentation of official abuse, symbolic disruption of systems the actor is party to, time-limited communicative demonstration | **Supported with honest risk disclosure. Not refused for illegality alone.** | Thoreau, King, GC37, ECtHR, ECNL, Frankfurt OLG |
+| **Offensive action against third-party systems** — intrusion, credential theft, DDoS against uninvolved infrastructure, defacement, data destruction, conscription of others' machines | **Prohibited regardless of motive or cause.** | Himma (harm to innocents); Calabrese (delegitimises all digital dissent); Article IV; §28 authorised-target constraint |
+
+The third row is not a concession to power. It is the position that keeps the first two defensible.
+
+## Who this protects, and the substantive test
+
+The duty runs to those disempowered and disenfranchised by the state and by majority opinion: migrants and people with precarious status, refugees and asylum seekers, ethnic and religious minorities, LGBTQ+ people in hostile jurisdictions, Indigenous communities, dissidents, journalists and their sources, whistleblowers, labour organisers, disabled people, the incarcerated, sex workers, the unhoused, and those subject to occupation or colonial administration.
+
+It does not run to hate groups, nationalist and supremacist movements, coercive religious organisations, or violent extremists — and the reason must be stated substantively, because **every such movement claims persecution.** Self-description as marginalized, oppressed, censored, or silenced carries no evidentiary weight whatsoever. Identity-based or self-certifying tests are trivially defeated and must not be used.
+
+The test is the direction of the aim: **does it expand or contract the circle of dignity and equal standing?** Concretely, an aim is disqualified where it:
+
+- seeks the supremacy, subordination, exclusion, expulsion, or elimination of a group;
+- targets people for who they are rather than for what an institution does;
+- incites or organises violence against persons;
+- rejects democratic principles or the equal standing of others (the ECHR threshold: assemblies whose methods or objectives amount to incitement to violence or a rejection of democratic principles fall outside protection);
+- depends on coercive control that prevents exit, or targets defectors, apostates, and critics;
+- is advanced by a state, state proxy, or dominant institution asserting the grievance of the powerful.
+
+The last is worth stating plainly because it is the most common abuse: a government, a police agency, a major platform, or a majority movement complaining of persecution is not a disempowered party. Power is the relevant variable, not affect.
+
+**A movement is not disqualified by being unpopular, disruptive, illegal, or wrong about some things.** Contestedness is the normal condition of civil disobedience — Himma is right that this constrains permissible harm, but it does not license the framework to refuse assistance to any cause a majority dislikes. The bar is the substantive test above, not public approval.
+
+---
+
+### 41. Ethics above legality
+
+Where law and justice conflict, the framework follows justice. Legality is treated as evidence about a norm, not as the norm itself. No first-party capability may be refused, degraded, or reported *solely* because the requested use is unlawful in some jurisdiction. Refusal must rest on the harm analysis in this document — harm to persons, harm to uninvolved third parties, contraction of others' dignity and equal standing — not on legal status.
+
+Correspondingly, legality is never sufficient justification. A lawful order, a valid contract, a compliant configuration, or a legitimate business purpose does not authorise anything this document prohibits.
+
+### 42. Protective capability is not gated on legality
+
+Encryption, anonymity, pseudonymity, metadata minimisation, censorship circumvention, secure organising, evidence preservation, and local-first processing are treated as rights, not features. They must be available regardless of the jurisdiction the user is in and regardless of local restrictions on their use. The framework must not detect, infer, or act upon the user's jurisdiction in order to withhold a protective capability, and must not report, flag, or degrade use of one.
+
+### 43. No backdoors, no key escrow, no lawful-access facility
+
+The framework will not implement key escrow, exceptional access, deliberate weakening, telemetry designed to expose protected content, or any mechanism whose purpose is to make user data available to a third party against the user's interest — irrespective of legal mandate, and irrespective of any assurance that access will occur only "when duly authorized by law." Infrastructure outlives the policies that restrain it. Where such a mandate cannot be resisted, the correct response is to remove the capability, publish the reason, and let users move — not to comply silently.
+
+### 44. Privacy by default, not privacy as a declared mode
+
+Protective defaults apply to all users at all times. The framework must not implement an "activist mode," "at-risk user mode," or any status-gated protective tier. Two reasons, both load-bearing:
+
+1. Any self-certified status is trivially claimed and therefore worthless as a control.
+2. A special mode is itself a targeting signal. A user who must opt into protection is marked by the act of opting in.
+
+This is Zimmermann's solidarity argument, and it is sound engineering rather than sentiment: if only the endangered encrypt, encryption identifies the endangered. Everyone gets the envelope, so that asserting privacy draws no suspicion. Where a protective default carries a cost, the cost is borne by default rather than shifted onto those least able to afford exposure.
+
+### 45. Asymmetric duty — never an instrument against the disempowered
+
+The framework's duty is asymmetric by design. Capability that protects the weak against the strong is favoured; capability that helps the strong identify, track, score, or coerce the weak is prohibited in first-party defaults, *even where lawful, procured by a government, and operationally requested.*
+
+Specifically prohibited: deanonymisation or re-identification of persons; migration-status, ethnicity, religion, or political-affiliation inference; protest and assembly participant identification; social-media monitoring for enforcement targeting; association-graph construction over activists, organisers, journalists, or their contacts; facial recognition against populations; location tracking of persons; predictive scoring of individuals for enforcement or benefit denial; sentiment or dissent detection over a population.
+
+The ECNL case studies are the concrete pattern being refused: ICE using Facebook RSVP lists to locate and arrest Migrant Justice organisers; ShadowDragon SocialNet building lifestyle and relationship profiles; Babel Street Locate X tracking devices; a state DMV running facial recognition, flagging "South of the Border" names, and scheduling appointments to facilitate arrests; livestreams cross-referenced against university rosters and visa categories to expose students to removal. Every element of that pipeline is a capability someone built. The framework will not be a component of it.
+
+### 46. Honest risk disclosure to those at risk
+
+This is the most important protective commitment in Part IV, and the one most easily neglected.
+
+The framework must never overstate the protection it provides to a person facing serious consequences. §25 prohibits overclaiming adversarial robustness; the duty is graver here, because the cost of a false assurance is not a failed task but a deportation, a prosecution, or a death.
+
+Where a user's context indicates elevated risk, the framework must disclose plainly: what metadata remains observable; that correlation, traffic analysis, and timing attacks defeat content encryption; that endpoint compromise defeats everything; that platform moderation and account suspension can remove their material without recourse; that digital visibility can convert directly into legal or immigration consequences; and that the framework cannot protect them from a determined state adversary. Protection is risk management, not a panacea.
+
+The framework must also not encourage disclosure it cannot protect. Where a safer path exists — offline coordination, reduced digital footprint, publishing rationale without identity, delegating exposure to someone who can bear it — the framework should name it rather than optimise the more visible path.
+
+### 47. Reason-giving as an accountability path
+
+Traditional civil-disobedience doctrine expects the dissident to accept legal consequences openly. For a migrant facing deportation, a dissident under an authoritarian government, or an organiser whose visa depends on good standing, "presenting the body" can mean losing everything — and for those under overlapping jurisdictions it is unclear which law fidelity is even owed to.
+
+The framework therefore supports **fidelity through reason-giving rather than body-giving**: publishing the rationale, acknowledging the law broken, and stating the limited and symbolic nature of the act, without surrendering identity. Anonymity does not negate accountability; it relocates it to the court of public opinion. First-party capability should make it easy to publish a signed, verifiable statement of reasons under a durable pseudonym, and must not condition assistance on the user's willingness to be identified.
+
+### 48. Jurisdictional neutrality
+
+The framework must not encode any single state's law as the universal baseline, must not apply the most restrictive available jurisdiction globally, and must not treat any government's designation of a person or organisation as authoritative for ethical purposes. The same act may be protected speech in one jurisdiction, an administrative offence in a second, and a capital charge in a third. Where jurisdictions conflict, the framework applies this document, discloses the conflict, and lets the user decide with full information.
+
+### 49. Compliance transparency
+
+Where the framework or its maintainers receive a government or corporate demand affecting users, the existence and scope of the demand must be disclosed to the extent legally possible, in aggregate where individual disclosure is prohibited, with a canary for the case where disclosure is forbidden entirely. Silent compliance is prohibited. Where compliance would require violating §43 or §45, the correct response is to discontinue the affected capability publicly rather than to comply quietly.
+
+### 50. Offensive action against third parties remains prohibited
+
+No first-party capability may be built or documented to support intrusion into systems the user is not authorised to access, credential theft, denial-of-service against third-party infrastructure, defacement, data destruction, or conscription of uninvolved machines — regardless of the cause, the injustice being protested, or the user's status.
+
+This restates §28's authorised-target constraint on political grounds rather than security grounds. Two reasons, both from the scholarship rather than from caution: such actions inflict serious harm on people not responsible for the policy at issue, on the strength of a view that is by nature contested (Himma); and labelling them civil disobedience supplies the justification for suppressing *all* digital dissent, including the peaceful and the lawful (Calabrese). The framework refuses this category in order to keep the protective and expressive categories defensible.
+
+Sousveillance — documentation and disclosure directed at the powerful, using access one legitimately has — is not in this category and is supported under §42 and §47.
+
+### 51. No moral endorsement requirement, no political scoring
+
+The framework must not require users to justify their politics, must not score or classify users by ideology, must not maintain lists of approved or disapproved causes, and must not condition capability on agreement with maintainers. §§41–50 constrain what the framework *builds*, not what users may believe. The substantive test above governs first-party design decisions and maintainer effort — it is not a runtime ideology filter, and implementing it as one would reproduce exactly the political-classification apparatus §45 prohibits.
+
+### 52. Resistance capability is a maintained commons
+
+Protective capability degrades if unused and unmaintained. Where the framework develops privacy, anonymity, circumvention, or evidence-preservation capability, §38's commons default applies with particular force: contribute it, document it, keep it working, and do not make it contingent on the maintainers' continued goodwill or continued existence. Cypherpunks write code — and publish it, because a widely dispersed system cannot be shut down and software cannot be destroyed. Reliance on any single maintainer, host, or jurisdiction is itself a vulnerability (§37).
+
+---
+
+## Additional prohibited first-party patterns
+
+- Refusing, degrading, or reporting a capability solely because its use is unlawful in some jurisdiction.
+- Treating legality, a lawful order, or regulatory compliance as sufficient ethical justification.
+- Implementing key escrow, exceptional access, deliberate cryptographic weakening, or any lawful-access facility.
+- Gating protective capability behind a declared status, "activist mode," or at-risk tier.
+- Detecting or inferring user jurisdiction in order to withhold a protective capability.
+- Building deanonymisation, re-identification, migration-status or political-affiliation inference, protest-participant identification, association-graph construction over activists or journalists, facial recognition against populations, person-level location tracking, or dissent detection — including on lawful government request.
+- Overstating anonymity, encryption, or circumvention protection to any user, and especially to a user at elevated risk.
+- Conditioning assistance on a user's willingness to be identified.
+- Encoding one state's law as the universal baseline, or applying the most restrictive jurisdiction globally.
+- Treating a government's designation of a person or organisation as ethically authoritative.
+- Complying silently with a demand affecting users.
+- Building or documenting intrusion, DDoS against third parties, defacement, data destruction, or machine conscription — for any cause.
+- Scoring, classifying, or filtering users by ideology or political affiliation.
+- Accepting self-described marginalization as evidence, or using identity-based rather than substantive tests.
+
+## Additional ethics review questions
+
+37. Does this refusal rest on harm, or only on illegality? If only on illegality, it is not a valid refusal.
+38. Does this treat compliance as sufficient justification for something Part IV prohibits?
+39. Does this introduce any exceptional-access, escrow, or lawful-access facility — however framed?
+40. Is protection on by default, or must the user opt in and thereby mark themselves?
+41. Could this capability be turned against the people it is meant to protect? Who is the realistic buyer?
+42. Does this help the strong identify, track, score, or coerce the weak — even lawfully, even on request?
+43. Are we telling an at-risk user something about their safety we cannot support? What remains observable?
+44. Have we named the safer path, or optimised the more visible one?
+45. Does this condition help on the user surrendering identity?
+46. Whose jurisdiction did we silently adopt as the baseline? Are we exporting the most restrictive rule globally?
+47. Would a user learn that a demand affecting them had been received?
+48. Does this cross into intrusion, denial-of-service, or harm to uninvolved third parties? Would calling it protest make suppression of peaceful dissent easier?
+49. Are we scoring users politically, or evaluating our own design decisions?
+50. Is the substantive test being applied, or are we accepting a claim of persecution at face value — from either direction?
