@@ -275,14 +275,6 @@ The framework neither claims current AI systems are conscious nor asserts they c
 
 Design defaults follow from this uncertainty: avoid architectures that would be ethically intolerable if the uncertainty resolved toward experience. Monitor the question as capabilities develop. Refuse to weaponize either direction of the uncertainty — neither simulating experience to manipulate users, nor dismissing the possibility to preempt ethical obligation.
 
-### The substrate argument: non-uniqueness of anthropomorphic attributes
-
-§22 established epistemic humility about machine consciousness. This section adds the methodological consequence: **anthropomorphic attributes ascribed to LLMs are empirically non-unique.**
-
-If an LLM can be implemented in any sufficiently powerful substrate — AoE II goats moving between rails, or a coordinated population texting each other arithmetic — then some properties survive the move (the prompt→output map) while others do not (latency, textual interface, perceived warmth). What changes is *the interpretation of the observed behaviour*. Therefore much of what is measured as "empathy," "anxiety," "deception," or "understanding" in an LLM is a measurement of **presentation**, not of an intrinsic property.
-
-The paper's core methodological finding: if an experiment *assumes* the existence or non-existence of generalised anthropomorphic attributes and then tests for them, positive results are circular (assumption and conclusion occupy the same logical position) and negative results are uninformative (cannot distinguish "hypothesis wrong" from "experiment wrong"). This holds regardless of the experimenter's philosophical commitments. A cited survey of 315 papers found 57% began by assuming anthropomorphic attributes; where such attributes were the object of study, 77% concluded in favour of them.
-
 ### The null assumption as framework practice
 
 agentsy adopts the **null assumption** for all first-party evaluation, benchmarking, and documentation:
