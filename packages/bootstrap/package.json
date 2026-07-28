@@ -36,10 +36,9 @@
     "build": "tsup",
     "check-types": "tsc --noEmit",
     "test": "vitest --run --passWithNoTests",
-    "coverage": "vitest --run --passWithNoTests"
+    "coverage": "vitest --run --passWithNoTests --coverage.enabled=false"
   },
   "devDependencies": {
-    "@vitest/coverage-istanbul": "^4.1.8",
     "tsup": "^8.5.1",
     "typescript": "~6.0.0",
     "vitest": "^4.1.8"

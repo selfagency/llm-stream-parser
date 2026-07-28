@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "name": "agentsy",
+  "color": "",
+  "dockState": {
+    "zones": {
+      "left": {
+        "position": "left",
+        "visible": false,
+        "size": 260,
+        "layout": null
+      },
+      "right": {
+        "position": "right",
+        "visible": false,
+        "size": 260,
+        "layout": null
+      },
+      "bottom": {
+        "position": "bottom",
+        "visible": false,
+        "size": 240,
+        "layout": null
+      },
+      "center": {
+        "position": "center",
+        "visible": true,
+        "size": 0,
+        "layout": {
+          "type": "tabs",
+          "id": "682205ee-62c5-4c6a-ad87-8bd16211a273",
+          "panelIds": [
+            "143b4808-2325-45b3-9907-d686cfefcaa4"
+          ],
+          "activeIndex": 0
+        }
+      }
+    }
+  },
+  "panels": {
+    "5fe7881d-0641-4acb-8846-b7ae4f415a15": {
+      "type": "terminal",
+      "title": "daniel@selfagency-m1mb:~/Developer/agentsy"
+    },
+    "143b4808-2325-45b3-9907-d686cfefcaa4": {
+      "type": "canvas",
+      "title": "Canvas"
+    }
+  },
+  "canvases": {
+    "143b4808-2325-45b3-9907-d686cfefcaa4": {
+      "id": "143b4808-2325-45b3-9907-d686cfefcaa4",
+      "canvasNodes": {
+        "c434aa6c-d0e2-4b01-9462-5def50af31cb": {
+          "id": "c434aa6c-d0e2-4b01-9462-5def50af31cb",
+          "origin": {
+            "x": -280,
+            "y": -622
+          },
+          "size": {
+            "width": 1092,
+            "height": 664
+          },
+          "zOrder": 12,
+          "creationIndex": 0,
+          "animationState": "idle",
+          "dockLayout": {
+            "type": "tabs",
+            "id": "c6c7c2f8-5acd-42d5-b4bf-67ab6881f218",
+            "panelIds": [
+              "5fe7881d-0641-4acb-8846-b7ae4f415a15"
+            ],
+            "activeIndex": 0
+          }
+        }
+      },
+      "zoomLevel": 1,
+      "viewportOffset": {
+        "x": 412,
+        "y": 672
+      }
+    }
+  }
+}

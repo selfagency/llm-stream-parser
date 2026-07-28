@@ -6,9 +6,7 @@ export default defineConfig({
     globals: true,
     dangerouslyIgnoreUnhandledErrors: true,
     coverage: {
-      provider: 'istanbul',
-      include: ['src/**/*.ts'],
-      all: false,
+      enabled: false,
       thresholds: {
         statements: 0,
         branches: 0,
