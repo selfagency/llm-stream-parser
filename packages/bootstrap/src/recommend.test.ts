@@ -15,7 +15,6 @@ function makeProfile(overrides: Partial<ProjectProfile>): ProjectProfile {
     linter: [],
     testRunner: [],
     monorepo: false,
-    monorepoTool: undefined,
     ci: [],
     deploymentTarget: [],
     detectedAt: new Date().toISOString(),

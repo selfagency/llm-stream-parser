@@ -20,17 +20,30 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./install": {
+      "types": "./dist/install.d.ts",
+      "import": "./dist/install.js",
+      "require": "./dist/install.cjs"
+    },
+    "./generators": {
+      "types": "./dist/generators.d.ts",
+      "import": "./dist/generators.js",
+      "require": "./dist/generators.cjs"
     }
   },
   "scripts": {
     "build": "tsup",
     "check-types": "tsc --noEmit",
     "test": "vitest --run --passWithNoTests",
-    "coverage": "vitest --run --coverage --passWithNoTests"
+    "coverage": "vitest --run --passWithNoTests --coverage"
   },
   "devDependencies": {
     "tsup": "^8.5.1",
     "typescript": "~6.0.0",
     "vitest": "^4.1.8"
+  },
+  "dependencies": {
+    "yaml": "^2.9.0"
   }
 }

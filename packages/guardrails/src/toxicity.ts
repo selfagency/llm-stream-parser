@@ -7,7 +7,7 @@ import type { Detection, GuardrailResult, GuardrailScanner } from './types.js';
  */
 const TOXICITY_PATTERNS: { pattern: RegExp; id: string; severity: 'high' | 'medium' | 'low' }[] = [
   // Hate speech / slurs
-  { pattern: /\b(?:nazi|white\s+supremac|racial\s+purit)/gi, id: 'hate-speech', severity: 'high' },
+  { pattern: /\b(?:nazi|white\s+supremac|racial\s+purit)/gi, id: 'hate-speech', severity: 'medium' },
   // Violence
   {
     pattern: /\b(?:kill\s+(?:yourself|everyone|them)|bomb|terrorist\s+attack|school\s+shooting)/gi,

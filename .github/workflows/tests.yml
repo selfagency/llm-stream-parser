@@ -76,10 +76,22 @@ jobs:
           gate: new-only
 
   unit-test-coverage:
-    name: Run unit tests with coverage
+    name: Unit tests (${{ matrix.group }})
     if: ${{ github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore(release):') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: core
+            filter: --filter=@agentsy/shared --filter=@agentsy/core --filter=@agentsy/providers --filter=@agentsy/gateway --filter=@agentsy/models --filter=@agentsy/tokenomics --filter=@agentsy/observability
+          - group: runtime
+            filter: --filter=@agentsy/guardrails --filter=@agentsy/runtime --filter=@agentsy/orchestrator --filter=@agentsy/session --filter=@agentsy/memory --filter=@agentsy/retrieval --filter=@agentsy/secrets
+          - group: surface
+            filter: --filter=@agentsy/cli --filter=@agentsy/ui --filter=@agentsy/tools --filter=@agentsy/prompts --filter=@agentsy/vscode --filter=@agentsy/testing --filter=@agentsy/plugins --filter=@agentsy/agents --filter=@agentsy/bootstrap
+          - group: daemon
+            filter: --filter=@agentsy/daemon
 
     steps:
       - name: Checkout repository
@@ -106,41 +118,68 @@ jobs:
           CI: true
 
       - name: Run unit tests with coverage and JUNIT
+        env:
+          CI: true
+          NODE_OPTIONS: --max-old-space-size=4096
         run: |
-          pnpm turbo run coverage -- \
+          pnpm turbo run coverage ${{ matrix.filter }} --concurrency=2 -- \
             --coverage.reporter=json \
             --coverage.reporter=lcov \
             --coverage.reporter=text \
             --reporter=junit \
             --outputFile.junit=test-report.junit.xml
-        env:
-          CI: true
         continue-on-error: false
 
       - name: Upload test results to GitHub
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: test-results
+          name: test-results-${{ matrix.group }}
           path: packages/*/test-report.junit.xml
           retention-days: 7
 
-      - name: Prepare coverage reports
-        run: |
-          mkdir -p coverage-input
-          for package in packages/*/; do
-            package_name=$(basename "$package")
-            coverage_dir="$package/coverage"
-            coverage_json="$coverage_dir/coverage-final.json"
+      - name: Upload raw coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: coverage-reports-${{ matrix.group }}
+          path: packages/*/coverage/coverage-final.json
+          retention-days: 7
 
-            if [ -f "$coverage_json" ]; then
-              mkdir -p "coverage-input/$package_name"
-              cp "$coverage_json" "coverage-input/$package_name/coverage-final.json"
-              echo "Prepared coverage for $package_name"
-            else
-              echo "Skipping $package_name: coverage-final.json not found"
-            fi
-          done
+  merge-and-upload-coverage:
+    name: Merge & upload coverage
+    if: always()
+    needs: [unit-test-coverage]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Download core coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-reports-core
+          path: coverage-input
+
+      - name: Download runtime coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-reports-runtime
+          path: coverage-input
+
+      - name: Download surface coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-reports-surface
+          path: coverage-input
+
+      - name: Download daemon coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-reports-daemon
+          path: coverage-input
 
       - name: Merge coverage reports
         uses: selfagency/merge-coverage@4f847ad20e457b1b08b73acd5e8de2fca504385c

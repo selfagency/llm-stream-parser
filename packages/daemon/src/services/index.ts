@@ -7,6 +7,11 @@
  */
 
 export {
+  type BootstrapResult,
+  BootstrapService,
+  type BootstrapServiceDeps
+} from './bootstrap-service.js';
+export {
   RetrievalService,
   type RetrievalServiceDeps,
   type RetrievedChunk,

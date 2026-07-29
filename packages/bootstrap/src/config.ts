@@ -6,6 +6,7 @@
 
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import YAML from 'yaml';
 import type { ProjectProfile } from './scanner.js';
 
 // ── Types ───────────────────────────────────────────────
@@ -82,62 +83,49 @@ export function createDefaultConfig(rootPath: string, profile: ProjectProfile): 
 }
 
 export async function writeConfig(rootPath: string, config: AgentsyConfig): Promise<void> {
-  const yaml = configToYaml(config);
   const ymlPath = await configPath(rootPath);
   await mkdir(dirname(ymlPath), { recursive: true });
-  await writeFile(ymlPath, yaml, 'utf-8');
+  await writeFile(ymlPath, YAML.stringify(config), 'utf-8');
 }
 
 export async function readConfig(rootPath: string): Promise<AgentsyConfig | null> {
   try {
     const ymlPath = await configPath(rootPath);
     const content = await readFile(ymlPath, 'utf-8');
-    return parseYaml(content);
+    const parsed = YAML.parse(content);
+    return isAgentsyConfig(parsed) ? parsed : null;
   } catch {
     return null;
   }
 }
 
-// ── Simple YAML serializer (no dependency) ──────────────
+// ── Runtime shape guard (kept lightweight; no Zod dependency) ──────────────
 
-function configToYaml(config: AgentsyConfig): string {
-  const lines: string[] = ['schemaVersion: 1', 'project:'];
-  lines.push(`  rootPath: ${config.project.rootPath}`);
-  lines.push('  profile:');
-  if (config.project.profile.languages.length > 0) {
-    lines.push('    languages:');
-    for (const lang of config.project.profile.languages) {
-      lines.push(`      - ${lang}`);
-    }
-  }
-  if (config.project.profile.frameworks.length > 0) {
-    lines.push('    frameworks:');
-    for (const fw of config.project.profile.frameworks) {
-      lines.push(`      - ${fw}`);
-    }
-  }
-  lines.push(`    packageManager: ${config.project.profile.packageManager}`);
-  lines.push(`    buildSystem: ${config.project.profile.buildSystem}`);
-  lines.push(`    monorepo: ${config.project.profile.monorepo}`);
-  lines.push(`  detectedAt: ${config.project.detectedAt}`);
-  lines.push('installed:');
-  lines.push('  connectors: []');
-  lines.push('  mcpServers: []');
-  lines.push('  skills: []');
-  lines.push('  guardrails: []');
-  lines.push('  hooks: []');
-  lines.push('recommendations: []');
-  lines.push('artifacts:');
-  lines.push('  agentsMd: false');
-  lines.push('  aft: false');
-  lines.push('  magicContext: false');
-  return `${lines.join('\n')}\n`;
+function _isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every(item => typeof item === 'string');
 }
 
-function parseYaml(_content: string): AgentsyConfig | null {
-  // For now, return null to indicate YAML parsing needs a proper library.
-  // This base implementation creates configs via createDefaultConfig().
-  return null;
+function isAgentsyConfig(value: unknown): value is AgentsyConfig {
+  if (value === null || typeof value !== 'object') {
+    return false;
+  }
+  const obj = value as Record<string, unknown>;
+  return (
+    typeof obj.schemaVersion === 'number' &&
+    typeof obj.project === 'object' &&
+    obj.project !== null &&
+    typeof (obj.project as Record<string, unknown>).rootPath === 'string' &&
+    typeof (obj.project as Record<string, unknown>).profile === 'object' &&
+    (obj.project as Record<string, unknown>).profile !== null &&
+    Array.isArray(((obj.project as Record<string, unknown>).profile as Record<string, unknown>).languages) &&
+    typeof obj.installed === 'object' &&
+    obj.installed !== null &&
+    Array.isArray((obj.installed as Record<string, unknown>).connectors) &&
+    typeof obj.artifacts === 'object' &&
+    obj.artifacts !== null &&
+    typeof (obj.artifacts as Record<string, unknown>).agentsMd === 'boolean' &&
+    Array.isArray(obj.recommendations)
+  );
 }
 
 // ── Agent Tools ─────────────────────────────────────────

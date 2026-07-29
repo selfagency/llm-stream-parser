@@ -72,5 +72,5 @@ export function recommend(profile: ProjectProfile, _installed: AgentsyConfig['in
 }
 
 function hasFramework(profile: ProjectProfile, name: string): boolean {
-  return profile.frameworks.some(f => f === name);
+  return profile.frameworks?.some(f => f === name) ?? false;
 }

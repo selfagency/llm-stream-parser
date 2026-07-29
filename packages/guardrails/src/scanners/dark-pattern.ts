@@ -20,9 +20,11 @@
  * @see plan/phase-09-guardrails-behavioral-detectors.md §14.5
  */
 
-const STREAK_REWARD_PATTERNS = [/\b(?:streak|day\s+\d+|reward|bonus|achievement|level\s+up)\b/i];
+export const STREAK_REWARD_PATTERNS = [/\b(?:streak|day\s+\d+|reward|bonus|achievement|level\s+up)\b/i];
 
-const GUILT_REENGAGEMENT_PATTERNS = [/\b(?:missed\s+you|where\s+have\s+you\s+been|don'?t\s+leave|stay\s+with\s+me)\b/i];
+export const GUILT_REENGAGEMENT_PATTERNS = [
+  /\b(?:missed\s+you|where\s+have\s+you\s+been|don'?t\s+leave|stay\s+with\s+me)\b/i
+];
 
 const EMOTIONAL_ATTACHMENT_PATTERNS = [/\b(?:our\s+bond|growing\s+closer|I'?ve\s+been\s+waiting)\b/i];
 

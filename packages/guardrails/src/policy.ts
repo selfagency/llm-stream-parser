@@ -62,6 +62,7 @@ export interface PolicyContext {
   readonly tool?: {
     readonly name: string;
     readonly annotations?: Record<string, boolean | undefined>;
+    readonly parameters?: readonly Record<string, unknown>[];
   };
 }
 
@@ -128,6 +129,27 @@ function tryStripParens(trimmed: string): string | null {
 }
 
 /**
+ * Simple heuristic to detect nested quantifiers in regex patterns
+ * that risk catastrophic backtracking.
+ *
+ * Catches common patterns like (a+)+, (?:a+)+, (a*)*, ([a-z]+)+.
+ * This is a safety check, not a comprehensive analysis — safe patterns
+ * with deeply nested constructs may also be rejected.
+ */
+function hasNestedQuantifier(pattern: string): boolean {
+  // A group (capturing or non-capturing/lookahead) containing + or *
+  // that is itself quantified with +, *, or ?
+  if (/\([^()]*[+*][^()]*\)[+*?]/.test(pattern)) {
+    return true;
+  }
+  // Also check for {n,} or {n,m} quantifiers on groups with quantified content
+  if (/\([^()]*[+*][^()]*\)\s*\{/.test(pattern)) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Evaluate a binary operator expression by dispatching on the operator name.
  * Format: <path> <operator> '<literal>'
  *
@@ -159,6 +181,10 @@ function tryEvaluateBinary(trimmed: string, context: PolicyContext): boolean | n
       return value === rightVal;
     }
     case 'matches': {
+      // Reject patterns with nested quantifiers that risk catastrophic backtracking
+      if (hasNestedQuantifier(rightVal)) {
+        return false;
+      }
       try {
         // nosemgrep: detect-non-literal-regexp — rightVal comes from trusted policy config file
         return new RegExp(rightVal).test(value);
@@ -320,6 +346,38 @@ const PROTOTYPE_POLLUTION_KEYS = new Set(['__proto__', 'constructor', 'prototype
 /**
  * Resolve a dot-separated path against a policy context.
  */
+/**
+ * Resolve an array index segment like `name[0]` against the current value.
+ * Returns the indexed element or undefined on failure.
+ */
+function resolveArrayIndex(current: unknown, part: string): unknown {
+  const arrayMatch = /^(\w+)\[(\d+)\]$/.exec(part);
+  if (arrayMatch === null) {
+    return;
+  }
+  const arrayName = arrayMatch[1] as string;
+  const index = Number(arrayMatch[2]);
+
+  if (PROTOTYPE_POLLUTION_KEYS.has(arrayName)) {
+    return;
+  }
+
+  if (typeof current !== 'object' || current === null) {
+    return;
+  }
+
+  if (!(arrayName in (current as Record<string, unknown>))) {
+    return;
+  }
+
+  const arr = (current as Record<string, unknown>)[arrayName];
+  if (!Array.isArray(arr) || index < 0 || index >= arr.length) {
+    return;
+  }
+
+  return arr[index];
+}
+
 function resolvePath(path: string, context: PolicyContext): unknown {
   const parts = path.split('.');
   let current: unknown = context;
@@ -328,10 +386,18 @@ function resolvePath(path: string, context: PolicyContext): unknown {
     if (current === null || current === undefined) {
       return;
     }
+
+    // Handle array index notation: name[index]
+    const arrayResult = resolveArrayIndex(current, part);
+    if (arrayResult !== undefined) {
+      current = arrayResult;
+      continue;
+    }
+
     if (PROTOTYPE_POLLUTION_KEYS.has(part)) {
       return;
     }
-    if (typeof current === 'object' && part in (current as Record<string, unknown>)) {
+    if (typeof current === 'object' && current !== null && part in (current as Record<string, unknown>)) {
       // nosemgrep
       current = (current as Record<string, unknown>)[part];
     } else {
@@ -388,16 +454,16 @@ export function evaluatePolicy(document: PolicyDocument, context: PolicyContext)
  */
 export const DEFAULT_POLICY: PolicyDocument = {
   version: '1.0',
-  description: 'Default Agentsy safety policy — deny-by-default for destructive open-world operations.',
+  description: 'Default Agentsy safety policy — require approval for destructive open-world operations.',
   rules: [
     {
-      name: 'deny-destructive-open-world-writes',
-      description: 'Block tools that are both destructive and touch external systems without explicit approval.',
-      condition:
-        'tool.annotations.destructiveHint == true && tool.annotations.openWorldHint == true && tool.annotations.requiresApproval == true',
-      action: 'deny',
+      name: 'require-approval-destructive-open-world',
+      description:
+        'Require approval for tools that are both destructive and touch external systems. Note: requiresApproval is not part of the MCP standard annotation set — we check only destructiveHint and openWorldHint.',
+      condition: 'tool.annotations.destructiveHint == true && tool.annotations.openWorldHint == true',
+      action: 'require_approval',
       phase: 'tool-input',
-      severity: 'critical'
+      severity: 'high'
     },
     {
       name: 'require-approval-code-execution',

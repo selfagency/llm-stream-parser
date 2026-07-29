@@ -82,6 +82,11 @@
       "types": "./dist/tool-calls.d.ts",
       "import": "./dist/tool-calls.js",
       "require": "./dist/tool-calls.cjs"
+    },
+    "./edit-formats": {
+      "types": "./dist/edit-formats.d.ts",
+      "import": "./dist/edit-formats.js",
+      "require": "./dist/edit-formats.cjs"
     }
   },
   "scripts": {

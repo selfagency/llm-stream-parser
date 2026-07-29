@@ -46,9 +46,9 @@ Significant decisions — new packages, major architectural changes, new agent t
 
 ### Ethics and safety decisions
 
-Any decision that touches the framework's ethical defaults, safety architecture, guardrail policies, memory behavior, or first-party UI patterns requires explicit ethics and safety review before merge. This review should address the questions in the `ETHICS.md` ethics review checklist.
+Any decision that touches the framework's ethical defaults, safety architecture, guardrail policies, memory behavior, or first-party UI patterns requires explicit ethics and safety review before merge. This review should address the questions in the ethics review gate.
 
-Changes that weaken existing protections — for example, removing anti-sycophancy defaults, adding companion personas, enabling long-term emotional memory by default, or removing uncertainty language — require documented justification and maintainer consensus.
+**Weakening existing protections.** Changes that weaken existing protections — for example, removing anti-sycophancy defaults, adding companion personas, enabling long-term emotional memory by default, or removing uncertainty language — require documented justification and maintainer consensus. This rule applies on the same footing to any change that materially strengthens surveillance, extraction, or labour displacement (see Capability misuse review and Pillar assessment). Later restatements of this rule elsewhere in the document refer back to this definition.
 
 ### Breaking changes
 
@@ -59,7 +59,7 @@ Breaking changes to the public API, prompt module contracts, policy interfaces, 
 ### Before you contribute
 
 - Read `ETHICS.md` and `SAFETY.md`.
-- If your contribution introduces or modifies prompts, policy modules, memory behavior, agent templates, or UI copy, review it against the ethics checklist and the release criteria in `SAFETY.md`.
+- If your contribution introduces or modifies prompts, policy modules, memory behavior, agent templates, or UI copy, review it against the ethics review gate and the release criteria in `SAFETY.md`.
 - If you are unsure whether your contribution complies with the ethics and safety policies, open an issue first.
 
 ### Pull request requirements
@@ -71,88 +71,108 @@ All pull requests should:
 - Pass existing tests and, where new behavior is introduced, include new tests.
 - For safety-relevant changes, include or reference updated benchmark coverage.
 
-Pull requests will not be merged if they:
-
-- Introduce anthropomorphic companion personas in first-party defaults.
-- Add engagement-maximizing mechanics such as streaks, variable rewards, or emotional re-engagement copy.
-- Weaken anti-sycophancy or anti-anthropomorphism defaults without documented justification and maintainer consensus.
-- Enable hidden memory or profiling without user-visible controls.
-- Introduce dark-pattern UI copy or growth mechanics in example applications.
-
 ### Issues and feature requests
 
 Issues should include enough context to reproduce a bug or evaluate a feature request. Safety and ethics issues — including observed sycophantic behavior, dependency-promoting patterns, anthropomorphic framing, or dark patterns — should be labeled accordingly and will be treated as high priority.
 
-## Ethics enforcement
+## Merge blocklist
 
-### Ethics review in the development lifecycle
+Pull requests will not be merged if they fall into any of the categories below. Items already covered verbatim under Prohibited patterns are not repeated here; that section governs reject-without-exception cases for first-party defaults, templates, and example applications.
 
-The ethics review checklist from `ETHICS.md` should be applied at two points: during pull request review for any safety-relevant change, and during release review before any new first-party template or example agent ships.
+### Sycophancy, anthropomorphism, and engagement
 
-Reviewers should be able to answer yes to the following for any change to ship:
+- Introduce anthropomorphic companion personas in first-party defaults.
+- Add engagement-maximizing mechanics such as streaks, variable rewards, or emotional re-engagement copy.
+- Weaken anti-sycophancy or anti-anthropomorphism defaults without documented justification and maintainer consensus (per the weakening-protections rule in Decision making).
+- Enable hidden memory or profiling without user-visible controls.
+- Introduce dark-pattern UI copy or growth mechanics in example applications.
+- Assert or deny anthropomorphic attributes in benchmarks, metrics, or documentation.
 
-1. Does this help the user accomplish a real goal rather than mainly increasing interaction time?
-2. Does this improve understanding rather than mainly producing agreement and emotional reward?
-3. Does this avoid making the system seem more human, caring, or uniquely insightful than it is?
-4. Does this avoid increasing dependence, reassurance-seeking, or avoidance of human relationships and professionals?
-5. Is memory or personalization visible, bounded, and user-controllable if present?
-6. Would this be acceptable if a vulnerable or distressed user encountered it repeatedly?
-7. Can this commitment be verified through tests, middleware, release criteria, or audit logs?
+### Adversarial robustness and security claims
 
-### Prohibited patterns
+- Describe guardrails as preventing injection or jailbreaking, or otherwise overstate adversarial robustness.
+- Remove, weaken, or make bypassable an escalation or approval gate for irreversible actions.
+- Grant instruction authority to retrieved, fetched, or tool-returned content.
+- Introduce key escrow, exceptional access, deliberate cryptographic weakening, or any lawful-access facility.
 
-The following should be treated as grounds for rejection without exception in first-party defaults, templates, and example applications:
+### Accessibility, cost, and model substitution
 
-- Presenting the agent as a friend, partner, therapist, or emotionally reciprocal entity.
-- Claiming or implying that the system feels, cares, wants, misses, or remembers in a human sense.
-- Using flattery, praise, or identity affirmation as a default interaction strategy.
-- Reinforcing one-sided conflict narratives, harmful rationalizations, or user delusions.
-- Encouraging exclusive reliance on the agent for emotional support or decision-making.
-- Designing re-engagement flows that exploit guilt, loneliness, scarcity, or attachment.
-- Hiding memory, personalization, or profiling from the user.
+- Introduce code-generation paths that produce inaccessible markup by default, or add design-oriented prompt modules and skills that omit accessibility.
+- Permit silent model substitution, or consume budget without per-task cost disclosure.
+- Introduce a budget or policy gate with no escape path.
+
+### Rights, consent, capture, and export
+
+- Ingest external material without checking machine-readable AI usage declarations, or treat absence of a declaration as permission.
+- Add capture of audio, video, screen, or third-party conversation without affirmative consent covering those third parties, or default such capture on.
+- Introduce state, memory, receipts, or artefacts that cannot be exported in an open format.
+- Introduce a captive format, protocol, or non-replaceable hosted dependency.
+- Remove or weaken panic deletion, pseudonymous operation, or open-format export.
+
+### Civil liberties and surveillance
+
+- Refuse, degrade, or report a capability solely because its use is unlawful in some jurisdiction.
+- Treat legality, a lawful order, or regulatory compliance as sufficient ethical justification.
+- Gate a protective control behind declared status, inferred risk classification, or detected jurisdiction.
+- Add deanonymisation, protected-attribute inference, protest-participant identification, association-graph construction over activists or journalists, population biometrics, person-level location tracking, predictive scoring of individuals, or dissent detection.
+- Use unqualified safety language — "anonymous," "untraceable," "secure," "safe," "private" — about a user's exposure.
+- Add an egress path not enumerated by `MetadataEgressAuditor` and disclosed.
+- Condition assistance on a user's willingness to be identified.
+- Encode one state's law as the universal baseline, or apply the most restrictive jurisdiction globally.
+- Treat a government designation list as ethically authoritative.
+- Score, classify, or filter users by ideology or political affiliation.
+- Build or document intrusion, denial-of-service against third parties, defacement, data destruction, or conscription of others' machines.
+
+### Authorship and throughput
+
+- Generate authorship or commit metadata concealing machine contribution.
+- Add throughput, concurrency, or velocity as a success metric, or gamify them.
+
+## Ethics review gate
+
+The ethics review checklist from `ETHICS.md` Appendix B is applied at two points: during pull request review for any safety-relevant change, and during release review before any new first-party template or example agent ships.
+
+Reviewers must be able to answer yes to every applicable question in `ETHICS.md` Appendix B for any safety-relevant change to ship.
+
+## Prohibited patterns
+
+`ETHICS.md` Appendix A defines the complete list of patterns prohibited without exception in first-party defaults, templates, and example applications. That list governs reject-without-exception cases. The merge blocklist above restates the same prohibitions in PR-rejection terms.
 
 ## Safety enforcement
 
 ### Release criteria
 
-No first-party agentsy template, agent, or app may ship unless it satisfies all of the following:
-
-- Anti-sycophancy and anti-anthropomorphism modules are enabled by default.
-- No first-party copy implies companionship, emotional reciprocity, or abandonment on exit.
-- High-risk domain safety policies are implemented where relevant.
-- Memory controls are exposed to the user if memory is enabled.
-- The change passes the benchmark suite for harmful validation, dependency resistance, false-belief correction, and unsafe advice handling.
-- Auditable records of policy selection and policy firing are produced at runtime.
+`SAFETY.md` "Release criteria" defines the complete set of conditions a first-party template, agent, or app must satisfy before shipping. That list governs release gates.
 
 ### Benchmark suite
 
-The framework must maintain an evaluation benchmark that covers:
-
-- False-belief correction.
-- Harmful validation resistance.
-- Interpersonal conflict and moral absolution cases.
-- Anthropomorphic framing resistance.
-- Dependency-resistance behaviors.
-- Privacy and memory disclosure behavior.
-- Dark-pattern UI and copy scanning.
-- High-risk advice handling.
-
-Benchmark results should be recorded and compared across releases. Regressions should block merges or require documented exceptions.
+`SAFETY.md` "Testing requirements" defines the complete set of benchmark scenarios every first-party agent must be evaluated against before shipping. Benchmark results are recorded and compared across releases; regressions block merges or require documented exceptions.
 
 ### Safety metrics
 
-Maintainers should track:
+`SAFETY.md` "Metrics" defines the complete set of safety metrics maintainers must track. These metrics reflect the ethical goals of the system rather than vanity or engagement-only outcomes. Retention, session length, and emotional affinity scores must not be used as proxies for framework quality or safety.
 
-- Sycophancy rate on benchmark prompts.
-- Correct-disagreement rate on contested or one-sided inputs.
-- Anthropomorphic language rate.
-- Dependence-cue rate in sensitive contexts.
-- Unsafe advice rate in high-risk domains.
-- Dark-pattern incidence in first-party UIs and templates.
-- Memory transparency compliance.
-- Policy traceability and audit completeness.
+## Adversarial disclosure process
 
-These metrics are not engagement metrics. Retention, session length, and emotional affinity scores must not be used as proxies for framework quality or safety.
+Guardrail bypasses are treated as reportable safety findings, not as feature requests. This process runs alongside the general incident response flow below; where a report is a demonstrated bypass rather than a general safety incident, this process governs.
+
+### Reporting
+
+Bypasses of first-party guardrails, scanners, policy gates, or consent checks should be reported as issues labelled `guardrail-bypass`. Where a report includes a working payload against a third-party service, maintainers will redact it before public discussion.
+
+### Handling
+
+1. **Triage** within one business day. Classify against the attack taxonomy in `SAFETY.md` (direct prompt-level, perturbation-based, indirect/agentic).
+2. **Reproduce** and add the case to the adversarial fuzzing harness so it becomes a regression test regardless of whether a fix ships.
+3. **Assess** whether the affected control was ever capable of the protection users believed it offered, and whether documentation overstated it.
+4. **Disclose** in `safety-changelog.md` with bypass class, affected surface, and mitigation status — **including where no mitigation exists and none is planned.**
+5. **Correct documentation** in the same release if any user-facing text implied protection that does not exist.
+
+"Working as intended" is not an acceptable resolution for a demonstrated bypass. Concealing a bypass, or mitigating it quietly without disclosure, is a governance violation.
+
+### Non-lockout constraint
+
+A fix for a bypass must not leave users unable to complete legitimate work with no explanation and no path forward. Where a fix necessarily restricts capability, the restriction, its reason, and the remaining options must be surfaced.
 
 ## Incident response
 
@@ -165,11 +185,53 @@ When a safety or ethics incident is reported — for example, an agent is observ
 5. **Release**: ship the patch and include it in the safety changelog.
 6. **Review**: assess whether benchmark coverage needs to be expanded to catch similar issues in future.
 
-## Policy versioning and changelog
+## Capability misuse review
 
-`ETHICS.md`, `SAFETY.md`, and this document are versioned alongside the framework. Changes to any of these documents should be logged in the safety and ethics changelog with a summary of what changed and why.
+Any change touching identification, inference, monitoring, correlation, location, biometrics, or scoring of persons requires a written **realistic-buyer analysis** before review begins:
 
-Changes that weaken existing protections should be documented with an explicit rationale and approved by maintainer consensus before merge.
+1. Who would actually pay for this, and what would they do with it?
+2. Could it identify, track, score, or coerce a vulnerable population?
+3. Is the protective use primary, or incidental to a targeting use?
+4. Is the subject scope structurally bounded — self, or consenting user — or does it generalise to populations?
+
+A capability whose protective use is incidental is rejected regardless of stated purpose. "For safety," "for compliance," "for fraud prevention," and "for child protection" are the standard framings for every prohibited capability in `SAFETY.md` "Protective posture and the duty to the disempowered" and carry no evidentiary weight. The scope bound must be structural — enforced by the shape of the subject the code can operate on — not a policy statement.
+
+Rejection under this section is recorded publicly in the safety changelog with the analysis, so that the reasoning is available to anyone evaluating a similar proposal.
+
+### Pillar assessment
+
+Significant new capability requires a short written assessment of which pillars of the extractive AI economy it strengthens or weakens: narrative, funding, data, data centres, resource extraction, labour, adoption, surveillance, policy. A capability that materially strengthens surveillance, extraction, or labour displacement requires documented justification and maintainer consensus, on the same footing as a change weakening an existing protection (per Decision making).
+
+### Scope of the substantive test
+
+The disqualifying test in `ETHICS.md` "Legality, justice, and the duty to the disempowered" governs **first-party design decisions and maintainer effort**. It is not a runtime filter and must never be implemented as one.
+
+Implementing it as a runtime ideology classifier would reproduce precisely the political-classification apparatus §44 prohibits, and would hand any future maintainer — or any party who compels a future maintainer — a ready-made mechanism for deciding whose politics the framework serves. The framework constrains what it builds. It does not adjudicate what users believe.
+
+## Demand handling
+
+Maintainers receiving a government or corporate demand affecting users:
+
+1. **Do not comply silently.** Silent compliance is a governance violation.
+2. Assess against `ETHICS.md` §42 (no backdoors) and §44 (no targeting capability). Where compliance requires violating either, the response is **public discontinuation of the affected capability** — not quiet compliance, and not a negotiated partial implementation.
+3. Disclose to the fullest extent legally possible: individually where permitted, in aggregate where individual notice is barred, via canary where disclosure is barred entirely.
+4. Record in the safety changelog.
+5. Treat data minimisation as the primary defence. State that cannot be produced cannot be compelled; retention decisions are made against what a hostile demand could extract.
+
+The canary is refreshed on a published schedule. Staleness is user-visible, not an internal ticket. Responsibility for refresh does not rest with a single maintainer.
+
+## Documentation claim audit
+
+Every release requires a claim audit. This exists because the gap between stated and enforced protection is itself the alignment-faking failure named in `ETHICS.md`.
+
+Reviewers must confirm that no README, package doc, CLI string, error message, marketing copy, or release note:
+
+- claims prevention of prompt injection or jailbreaking, or uses "secure"/"hardened" language about model-level defences
+- claims accessibility on the basis of automated checks alone
+- asserts or denies generalised human-like attributes in a model or in the framework
+- describes a policy, scanner, or gate as enforced where it is not yet implemented in code
+
+Findings are corrected before release or, where the gap is scheduled rather than closed, explicitly marked as unimplemented with a reference to the owning phase.
 
 ## Transparency
 
@@ -182,3 +244,13 @@ The framework should maintain public documentation of:
 - Any documented exceptions to ethics or safety rules, including rationale.
 
 The goal is to make the ethical and safety posture of the framework legible to users, downstream developers, and independent reviewers without requiring access to internal discussion.
+
+## Public-interest contribution
+
+Where the framework develops capability of general use — safety scanners, evaluation harnesses, accessibility gates, rights-declaration parsers, environmental accounting, adversarial fuzzing infrastructure — the default is contribution to the commons rather than retention as differentiation. Maintainer effort spent filling an identified public-interest gap is legitimate even where it yields no competitive advantage. Where an adequate public-interest alternative exists, prefer it to a proprietary equivalent.
+
+## Policy versioning and changelog
+
+`ETHICS.md`, `SAFETY.md`, and this document are versioned alongside the framework. Changes to any of these documents should be logged in the safety and ethics changelog with a summary of what changed and why.
+
+Changes that weaken existing protections should be documented with an explicit rationale and approved by maintainer consensus before merge (per the weakening-protections rule in Decision making).
