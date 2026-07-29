@@ -325,10 +325,15 @@ async function handleSourcesCommand(rest: readonly string[], io: CliIO): Promise
   return runSourcesCommand(rest, io);
 }
 
+async function handleCouncilCommand(rest: readonly string[], io: CliIO): Promise<number> {
+  const { runCouncilCommand } = await import('./commands/council.js');
+  return runCouncilCommand(rest, io);
+}
+
 function handleUnknownCommand(command: string | undefined, io: CliIO): number {
   (io.stderr ?? DEFAULT_IO.stderr)(`Unknown command: ${command ?? '(none)'}`);
   (io.stderr ?? DEFAULT_IO.stderr)(
-    'Supported commands: tui (default), chat, compress, compress-memory, memory-sync-dev, setup, doctor, sandbox-diagnostics, content-address-stats, lb, guardrails, config, settings, mcp, connectors, index, search, sources, secrets, tokenomics, project, install'
+    'Supported commands: tui (default), chat, compress, compress-memory, memory-sync-dev, setup, doctor, sandbox-diagnostics, content-address-stats, lb, guardrails, config, settings, mcp, connectors, index, search, sources, secrets, tokenomics, project, install, council'
   );
   (io.stderr ?? DEFAULT_IO.stderr)('Chat flags: --agent <name> --plan --mock --model <id> --provider <id>');
   return 1;
@@ -445,6 +450,14 @@ const COMMANDS: Record<string, CommandEntry> = {
     handler: handleInstallCommand,
     subcommands: {
       recommended: handleInstallCommand
+    }
+  },
+  council: {
+    handler: handleCouncilCommand,
+    subcommands: {
+      list: handleCouncilCommand,
+      run: handleCouncilCommand,
+      status: handleCouncilCommand
     }
   }
 };

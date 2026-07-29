@@ -131,6 +131,9 @@ importers:
       '@agentsy/models':
         specifier: workspace:*
         version: link:../models
+      '@agentsy/orchestrator':
+        specifier: workspace:*
+        version: link:../orchestrator
       '@agentsy/plugins':
         specifier: workspace:*
         version: link:../plugins

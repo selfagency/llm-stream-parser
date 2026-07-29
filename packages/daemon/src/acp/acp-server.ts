@@ -1,57 +1,54 @@
 /**
  * ACP Server — Agent Client Protocol JSON-RPC 2.0 interface.
- *
- * Handles all 20 ACP methods from the compatibility matrix:
- * initialize, authenticate, session/new, session/prompt, session/load,
- * session/list, session/close, session/delete, session/resume,
- * session/cancel, session/set_mode, session/set_config_option,
- * fs/readTextFile, fs/writeTextFile, requestPermission,
- * terminal/create, terminal/output, terminal/wait_for_exit,
- * terminal/kill, terminal/release.
- *
+ * Phase 18: image/audio, MCP manager, session persistence.
  * @module
  */
 
 import { randomUUID } from 'node:crypto';
 import type { Daemon } from '../daemon.js';
 import type { SubprocessManager } from '../processes/subprocess-manager.js';
+import type { ACPEventLedger } from '../services/acp-event-ledger.js';
 import type { Logger } from '../types.js';
 import { AGENT_CAPABILITIES } from './acp-capabilities.js';
 import { ACPSessionBridge } from './acp-session-bridge.js';
-
-// ── Types ───────────────────────────────────────────────
+import { parsePromptContent } from './capabilities.js';
+import { ACPMCPManager, type MCPServerDefinition } from './mcp-manager.js';
+import { ACPSessionPersistence, type ACPSessionRecord } from './session-persistence.js';
 
 export interface ACPServerConfig {
   enabled: boolean;
-  maxSessions?: number;
+  ledgerDbPath?: string | undefined;
+  maxSessions?: number | undefined;
+  persistenceDbPath?: string | undefined;
   transport: 'stdio' | 'websocket';
-  websocketPort?: number;
+  websocketPort?: number | undefined;
 }
 
 export interface ACPServerDeps {
   daemon: Daemon;
+  ledger?: ACPEventLedger | undefined;
   logger: Logger;
+  persistenceDbPath?: string | undefined;
+  sessionPersistence?: ACPSessionPersistence | undefined;
   subprocessManager: SubprocessManager;
 }
 
 interface ACPRequest {
-  id: string | number;
+  id: number | string;
   jsonrpc: '2.0';
   method: string;
-  params?: Record<string, unknown>;
+  params?: Record<string, unknown> | undefined;
 }
 
 interface ACPResponse {
   error?: { code: number; message: string } | undefined;
-  id: string | number;
+  id: number | string;
   jsonrpc: '2.0';
   result?: unknown;
 }
 
 type NotificationHandler = (method: string, params: unknown) => void;
 type SendFn = (result: unknown, error?: { code: number; message: string }) => void;
-
-// ── Helpers ─────────────────────────────────────────────
 
 function isWithinScope(filePath: string, allowedDirs: string[]): boolean {
   return allowedDirs.some(dir => filePath.startsWith(dir));
@@ -70,8 +67,6 @@ class ACPError extends Error {
   }
 }
 
-// ── Server ──────────────────────────────────────────────
-
 export class ACPServer {
   #connection: {
     sendResponse: (response: ACPResponse) => void;
@@ -81,9 +76,63 @@ export class ACPServer {
   readonly #sessions = new Map<string, ACPSessionBridge>();
   readonly #terminals = new Map<string, { processId: string; dirs: string[] }>();
   readonly #deps: ACPServerDeps;
+  readonly #mcpManager: ACPMCPManager;
+  #persistence: ACPSessionPersistence | null = null;
+  readonly #ledger: ACPEventLedger | null;
 
   constructor(deps: ACPServerDeps) {
     this.#deps = deps;
+    this.#mcpManager = new ACPMCPManager({
+      logger: deps.logger,
+      subprocessManager: deps.subprocessManager
+    });
+    this.#persistence = deps.sessionPersistence ?? null;
+    this.#ledger = deps.ledger ?? null;
+  }
+
+  #initPersistence(config: ACPServerConfig): void {
+    if (this.#persistence) {
+      return;
+    }
+    const dbPath = config.persistenceDbPath ?? this.#deps.persistenceDbPath ?? ':memory:';
+    try {
+      this.#persistence = new ACPSessionPersistence(dbPath, this.#deps.logger, this.#ledger ?? this.#deps.ledger);
+    } catch (err) {
+      this.#deps.logger.warn('Failed to init ACP persistence, falling back to memory-only', {
+        error: err instanceof Error ? err.message : String(err)
+      });
+    }
+  }
+
+  #restoreSessions(): void {
+    if (!this.#persistence) {
+      return;
+    }
+    try {
+      const restored = this.#persistence.restoreOnStartup();
+      for (const rec of restored) {
+        if (!this.#sessions.has(rec.sessionId)) {
+          const bridge = this.#createBridgeFromRecord(rec);
+          this.#sessions.set(rec.sessionId, bridge);
+        }
+      }
+      this.#deps.logger.info(`Restored ${restored.length} persisted ACP sessions`);
+    } catch (err) {
+      this.#deps.logger.warn('Failed to restore ACP sessions', {
+        error: err instanceof Error ? err.message : String(err)
+      });
+    }
+  }
+
+  #createBridgeFromRecord(rec: ACPSessionRecord): ACPSessionBridge {
+    return new ACPSessionBridge({
+      sessionId: rec.sessionId,
+      agentId: `acp-${rec.sessionId}`,
+      daemon: this.#deps.daemon,
+      logger: this.#deps.logger,
+      cwd: rec.cwd,
+      additionalDirectories: rec.additionalDirectories ? [...rec.additionalDirectories] : []
+    });
   }
 
   async start(config: ACPServerConfig): Promise<void> {
@@ -91,22 +140,26 @@ export class ACPServer {
       this.#deps.logger.info('ACP server disabled');
       return;
     }
-
+    this.#initPersistence(config);
+    this.#restoreSessions();
     this.#deps.logger.info('ACP server started', {
       transport: config.transport,
-      port: config.websocketPort
+      port: config.websocketPort,
+      capabilities: {
+        image: AGENT_CAPABILITIES.promptCapabilities.image,
+        audio: AGENT_CAPABILITIES.promptCapabilities.audio,
+        http: AGENT_CAPABILITIES.mcpCapabilities.http,
+        sse: AGENT_CAPABILITIES.mcpCapabilities.sse
+      }
     });
     await Promise.resolve();
   }
 
   async stop(): Promise<void> {
-    // Close all sessions
     for (const [id, bridge] of this.#sessions) {
       await bridge.close();
       this.#sessions.delete(id);
     }
-
-    // Kill all terminals
     for (const [termId, term] of this.#terminals) {
       try {
         this.#deps.subprocessManager.killProcess(term.processId);
@@ -115,16 +168,26 @@ export class ACPServer {
       }
       this.#terminals.delete(termId);
     }
-
+    try {
+      await this.#mcpManager.stopAll();
+    } catch {
+      // ignore
+    }
     if (this.#connection) {
       await this.#connection.close();
       this.#connection = null;
     }
-
+    if (this.#persistence) {
+      try {
+        this.#persistence.close();
+      } catch {
+        // ignore
+      }
+      this.#persistence = null;
+    }
     this.#deps.logger.info('ACP server stopped');
   }
 
-  /** Register the transport connection handler. */
   setConnection(conn: {
     sendResponse: (response: ACPResponse) => void;
     sendNotification: (method: string, params: unknown) => void;
@@ -133,26 +196,30 @@ export class ACPServer {
     this.#connection = conn;
   }
 
-  /** Handle an incoming JSON-RPC 2.0 request. */
   async handleRequest(request: ACPRequest): Promise<void> {
     const { id, method, params } = request;
     const send = (result: unknown, error?: { code: number; message: string }): void => {
-      this.#connection?.sendResponse(
-        error === undefined ? { jsonrpc: '2.0', id, result } : { jsonrpc: '2.0', id, result, error }
-      );
+      if (!this.#connection) {
+        return;
+      }
+      if (error === undefined) {
+        this.#connection.sendResponse({ jsonrpc: '2.0', id, result });
+      } else {
+        this.#connection.sendResponse({ jsonrpc: '2.0', id, result, error });
+      }
     };
 
     try {
       const handler = this.#methodHandlers().get(method);
-      if (handler) {
-        if (method === 'session/prompt') {
-          await handler(params, send);
-        } else {
-          const result = await handler(params);
-          send(result);
-        }
-      } else {
+      if (!handler) {
         send(undefined, { code: -32_601, message: `Method not found: ${method}` });
+        return;
+      }
+      if (method === 'session/prompt') {
+        await handler(params, send);
+      } else {
+        const result = await handler(params);
+        send(result);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -186,63 +253,71 @@ export class ACPServer {
     ]);
   }
 
-  // ── Handler: initialize ─────────────────────────
-
   #handleInitialize(_params?: Record<string, unknown>): unknown {
     return {
       protocolVersion: '2025-03-26',
       capabilities: AGENT_CAPABILITIES,
-      serverInfo: {
-        name: 'agentsy',
-        version: '0.1.0'
-      }
+      serverInfo: { name: 'agentsy', version: '0.1.0' }
     };
   }
-
-  // ── Handler: authenticate ───────────────────────
 
   #handleAuthenticate(_params?: Record<string, unknown>): unknown {
     return { authenticated: true, identity: 'local' };
   }
 
-  // ── Handler: session/new ────────────────────────
+  async #spawnAgent(cwd: string, additionalDirectories: string[]): Promise<void> {
+    const scopeKey = `folder:${cwd}`;
+    const agentHost = this.#deps.daemon.agents;
+    if (!agentHost) {
+      return;
+    }
+    try {
+      await agentHost.spawn({
+        spec: { id: 'default', role: 'coder' },
+        scope: scopeKey,
+        additionalDirectories
+      });
+    } catch (err) {
+      this.#deps.logger.warn('Agent spawn failed (non-fatal)', {
+        error: err instanceof Error ? err.message : String(err)
+      });
+    }
+  }
+
+  async #startMcpForSession(
+    sessionId: string,
+    mcpServers: Record<string, MCPServerDefinition> | undefined
+  ): Promise<{ started: readonly { name: string }[]; failed: readonly { name: string }[] } | undefined> {
+    try {
+      const res = await this.#mcpManager.startServers(sessionId, mcpServers);
+      if (res.failed.length > 0) {
+        this.#deps.logger.warn('Some MCP servers failed to start', {
+          sessionId,
+          failed: res.failed.map(f => f.name)
+        });
+      }
+      return { started: res.started, failed: res.failed };
+    } catch (err) {
+      this.#deps.logger.warn('MCP manager failed', {
+        sessionId,
+        error: err instanceof Error ? err.message : String(err)
+      });
+      return;
+    }
+  }
 
   async #handleSessionNew(params?: Record<string, unknown>): Promise<unknown> {
     const sessionId = randomUUID();
     const cwd = (params?.cwd as string) ?? process.cwd();
     const additionalDirectories = (params?.additionalDirectories as string[]) ?? [];
-    const mcpServers = params?.mcpServers as
-      | Record<string, { command: string; args?: string[]; env?: Record<string, string> }>
-      | undefined;
+    const mcpServers = params?.mcpServers as Record<string, MCPServerDefinition> | undefined;
 
-    // Derive scope from cwd (folder-based scoping)
-    const scopeKey = `folder:${cwd}`;
+    await this.#spawnAgent(cwd, additionalDirectories);
+    const mcpResult = await this.#startMcpForSession(sessionId, mcpServers);
 
-    // Spawn agent with folder scope
-    const agentId = `acp-${sessionId}`;
-    const agentHost = this.#deps.daemon.agents;
-    if (agentHost) {
-      try {
-        await agentHost.spawn({
-          spec: { id: 'default', role: 'coder' },
-          scope: scopeKey,
-          additionalDirectories
-        });
-      } catch (err) {
-        this.#deps.logger.warn('Agent spawn failed (non-fatal)', {
-          sessionId,
-          error: err instanceof Error ? err.message : String(err)
-        });
-      }
-    }
-
-    // Start MCP servers provided by the client
-    await this.#spawnMcpServers(mcpServers, sessionId);
-
-    // Create session bridge
     const bridge = new ACPSessionBridge({
       sessionId,
-      agentId,
+      agentId: `acp-${sessionId}`,
       daemon: this.#deps.daemon,
       logger: this.#deps.logger,
       cwd,
@@ -250,42 +325,92 @@ export class ACPServer {
     });
     this.#sessions.set(sessionId, bridge);
 
-    return { sessionId, mode: 'code' };
+    this.#persistNewSession(sessionId, cwd, additionalDirectories, mcpServers);
+    this.#recordLedger(sessionId, 'session.create', { cwd, additionalDirectories, mcpServers });
+
+    return { sessionId, mode: 'code', mcpServers: mcpResult };
   }
 
-  // ── Handler: session/prompt ─────────────────────
+  #persistNewSession(
+    sessionId: string,
+    cwd: string,
+    additionalDirectories: string[],
+    mcpServers: Record<string, MCPServerDefinition> | undefined
+  ): void {
+    if (!this.#persistence) {
+      return;
+    }
+    try {
+      const rec: Omit<ACPSessionRecord, 'createdAt' | 'lastActiveAt'> = {
+        sessionId,
+        cwd,
+        additionalDirectories,
+        mcpServers,
+        mode: 'code'
+      };
+      this.#persistence.saveSession(rec);
+    } catch (err) {
+      this.#deps.logger.warn('Failed to persist ACP session', {
+        sessionId,
+        error: err instanceof Error ? err.message : String(err)
+      });
+    }
+  }
+
+  #recordLedger(
+    sessionId: string,
+    eventType: 'session.create' | 'session.close' | 'session.prompt' | 'stream.end',
+    data: Record<string, unknown>
+  ): void {
+    if (!this.#ledger) {
+      return;
+    }
+    try {
+      this.#ledger.record(sessionId, eventType, data);
+    } catch {
+      // ignore
+    }
+  }
 
   async #handleSessionPrompt(
     params?: Record<string, unknown>,
     send?: (result: unknown, error?: { code: number; message: string }) => void
   ): Promise<void> {
     const sessionId = params?.sessionId as string;
-    const prompt = params?.prompt as string;
+    const rawPrompt = params?.prompt as unknown;
     const bridge = this.#sessions.get(sessionId);
 
     if (!bridge) {
       send?.(undefined, { code: -32_002, message: 'Session not found' });
       return;
     }
-
-    if (!prompt) {
+    if (rawPrompt === undefined || rawPrompt === null) {
       send?.(undefined, { code: -32_003, message: 'Prompt is required' });
       return;
     }
 
-    // Send acknowledgement immediately
+    try {
+      const parsed = parsePromptContent(rawPrompt);
+      if (parsed.images.length > 0 || parsed.audios.length > 0) {
+        this.#deps.logger.debug('Prompt contains media', {
+          sessionId,
+          images: parsed.images.length,
+          audios: parsed.audios.length
+        });
+      }
+    } catch {
+      // non-fatal
+    }
+
     send?.(null);
 
     const notificationCallback: NotificationHandler = (method, notificationParams) => {
       this.#connection?.sendNotification(method, notificationParams);
     };
 
-    const result = await bridge.handlePrompt(prompt, {
+    const result = await bridge.handlePrompt(rawPrompt, {
       onChunk: chunk => {
-        notificationCallback('session/update', {
-          type: 'agent_message_chunk',
-          content: chunk.text
-        });
+        notificationCallback('session/update', { type: 'agent_message_chunk', content: chunk.text });
       },
       onToolCall: toolCall => {
         notificationCallback('session/update', {
@@ -297,88 +422,189 @@ export class ACPServer {
         });
       },
       onToolCallUpdate: update => {
-        notificationCallback('session/update', {
+        const payload: Record<string, unknown> = {
           type: 'tool_call_update',
           toolCallId: update.toolCallId,
-          status: update.status,
-          ...(update.output === undefined ? {} : { output: update.output })
-        });
+          status: update.status
+        };
+        if (update.output !== undefined) {
+          payload.output = update.output;
+        }
+        notificationCallback('session/update', payload);
       },
       onUsage: usage => {
-        notificationCallback('session/update', {
-          type: 'usage_update',
-          usage
-        });
+        notificationCallback('session/update', { type: 'usage_update', usage });
       }
     });
 
-    // Send prompt result as notification
-    notificationCallback('session/update', {
-      type: 'prompt_result',
-      stopReason: result.stopReason
-    });
+    this.#recordLedger(sessionId, 'session.prompt', { prompt: rawPrompt });
+    this.#recordLedger(sessionId, 'stream.end', { stopReason: result.stopReason });
+
+    if (this.#persistence) {
+      try {
+        this.#persistence.updateSession(sessionId, {});
+      } catch {
+        // ignore
+      }
+    }
+
+    notificationCallback('session/update', { type: 'prompt_result', stopReason: result.stopReason });
   }
 
-  // ── Handler: session/load ───────────────────────
+  #loadPersistedForLoad(sessionId: string): ReturnType<ACPSessionPersistence['loadPersistedState']> | null {
+    if (!this.#persistence) {
+      return null;
+    }
+    try {
+      return this.#persistence.loadPersistedState(sessionId);
+    } catch {
+      return null;
+    }
+  }
 
   #handleSessionLoad(params?: Record<string, unknown>): unknown {
     const sessionId = params?.sessionId as string;
-    const bridge = this.#sessions.get(sessionId);
-
-    if (!bridge) {
+    if (!sessionId) {
       return { error: { code: -32_002, message: 'Session not found' } };
     }
 
-    return {
-      sessionId: bridge.sessionId,
-      agentId: bridge.agentId,
-      cwd: bridge.cwd,
-      mode: 'code'
-    };
-  }
+    const bridge = this.#sessions.get(sessionId);
+    if (bridge) {
+      const persistedState = this.#loadPersistedForLoad(sessionId);
+      return {
+        sessionId: bridge.sessionId,
+        agentId: bridge.agentId,
+        cwd: bridge.cwd,
+        mode: 'code',
+        additionalDirectories: bridge.additionalDirectories,
+        events: persistedState?.events ?? [],
+        conversation: persistedState?.materializedViews.conversation ?? []
+      };
+    }
 
-  // ── Handler: session/list ───────────────────────
+    const state = this.#loadPersistedForLoad(sessionId);
+    if (state) {
+      const newBridge = this.#createBridgeFromRecord(state.record);
+      this.#sessions.set(sessionId, newBridge);
+      return {
+        sessionId: state.record.sessionId,
+        agentId: newBridge.agentId,
+        cwd: state.record.cwd,
+        mode: state.record.mode ?? 'code',
+        additionalDirectories: state.record.additionalDirectories,
+        mcpServers: state.record.mcpServers,
+        events: state.events,
+        conversation: state.materializedViews.conversation,
+        fromPersistence: true
+      };
+    }
+
+    return { error: { code: -32_002, message: 'Session not found' } };
+  }
 
   #handleSessionList(): unknown {
-    const sessions = Array.from(this.#sessions.entries()).map(([id, bridge]) => ({
+    const inMemory = Array.from(this.#sessions.entries()).map(([id, bridge]) => ({
       sessionId: id,
       agentId: bridge.agentId,
-      cwd: bridge.cwd
+      cwd: bridge.cwd,
+      source: 'memory' as const
     }));
-    return { sessions };
+
+    const persisted = this.#collectPersistedNotInMemory();
+    return { sessions: [...inMemory, ...persisted] };
   }
 
-  // ── Handler: session/close ──────────────────────
+  #collectPersistedNotInMemory(): Array<{ sessionId: string; agentId: string; cwd: string; source: 'persistence' }> {
+    const out: Array<{ sessionId: string; agentId: string; cwd: string; source: 'persistence' }> = [];
+    if (!this.#persistence) {
+      return out;
+    }
+    try {
+      const recs = this.#persistence.listSessions();
+      for (const rec of recs) {
+        const already = this.#sessions.has(rec.sessionId);
+        if (!already) {
+          out.push({
+            sessionId: rec.sessionId,
+            agentId: `acp-${rec.sessionId}`,
+            cwd: rec.cwd,
+            source: 'persistence'
+          });
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return out;
+  }
 
   async #handleSessionClose(params?: Record<string, unknown>): Promise<unknown> {
     const sessionId = params?.sessionId as string;
     const bridge = this.#sessions.get(sessionId);
-    if (!bridge) {
+    const persistedExists = this.#persistence?.loadSession(sessionId);
+    const sessionExists = Boolean(bridge ?? persistedExists);
+    if (!sessionExists) {
       return { error: { code: -32_002, message: 'Session not found' } };
     }
-    await bridge.close();
-    this.#sessions.delete(sessionId);
+    if (bridge) {
+      await bridge.close();
+      this.#sessions.delete(sessionId);
+    }
+    try {
+      this.#mcpManager.stopServers(sessionId);
+    } catch {
+      // ignore
+    }
+    this.#recordLedger(sessionId, 'session.close', {});
     return { closed: true };
   }
 
-  // ── Handler: session/delete ─────────────────────
-
-  #handleSessionDelete(params?: Record<string, unknown>): Promise<unknown> {
-    return this.#handleSessionClose(params);
+  async #handleSessionDelete(params?: Record<string, unknown>): Promise<unknown> {
+    const closeResult = await this.#handleSessionClose(params);
+    const sessionId = params?.sessionId as string;
+    if (this.#persistence && sessionId) {
+      try {
+        this.#persistence.deleteSession(sessionId);
+      } catch {
+        // ignore
+      }
+    }
+    return closeResult;
   }
-
-  // ── Handler: session/resume ─────────────────────
 
   #handleSessionResume(params?: Record<string, unknown>): unknown {
     const sessionId = params?.sessionId as string;
-    const bridge = this.#sessions.get(sessionId);
-    if (!bridge) {
+    if (!sessionId) {
       return { error: { code: -32_002, message: 'Session not found' } };
     }
-    return { resumed: true, sessionId: bridge.sessionId };
+    const bridge = this.#sessions.get(sessionId);
+    if (bridge) {
+      return { resumed: true, sessionId: bridge.sessionId, source: 'memory' };
+    }
+    if (!this.#persistence) {
+      return { error: { code: -32_002, message: 'Session not found' } };
+    }
+    try {
+      const state = this.#persistence.resumeSession(sessionId);
+      if (state) {
+        const newBridge = this.#createBridgeFromRecord(state.record);
+        this.#sessions.set(sessionId, newBridge);
+        return {
+          resumed: true,
+          sessionId: state.record.sessionId,
+          source: 'persistence',
+          events: state.events.length,
+          conversation: state.materializedViews.conversation
+        };
+      }
+    } catch (err) {
+      this.#deps.logger.warn('Failed to resume persisted session', {
+        sessionId,
+        error: err instanceof Error ? err.message : String(err)
+      });
+    }
+    return { error: { code: -32_002, message: 'Session not found' } };
   }
-
-  // ── Handler: session/cancel ─────────────────────
 
   #handleSessionCancel(params?: Record<string, unknown>): unknown {
     const sessionId = params?.sessionId as string;
@@ -390,8 +616,6 @@ export class ACPServer {
     return { cancelled: true };
   }
 
-  // ── Handler: session/set_mode ───────────────────
-
   #handleSessionSetMode(params?: Record<string, unknown>): unknown {
     const sessionId = params?.sessionId as string;
     const mode = params?.mode as string;
@@ -400,10 +624,15 @@ export class ACPServer {
       return { error: { code: -32_002, message: 'Session not found' } };
     }
     bridge.setMode(mode);
+    if (this.#persistence) {
+      try {
+        this.#persistence.updateSession(sessionId, { mode });
+      } catch {
+        // ignore
+      }
+    }
     return { modeSet: true, mode };
   }
-
-  // ── Handler: session/set_config_option ──────────
 
   #handleSessionSetConfigOption(params?: Record<string, unknown>): unknown {
     const sessionId = params?.sessionId as string;
@@ -417,13 +646,12 @@ export class ACPServer {
     return { configured: true };
   }
 
-  // ── Handler: fs/readTextFile ───────────────────
-
   async #handleFsReadTextFile(params?: Record<string, unknown>): Promise<unknown> {
     const filePath = params?.filePath as string;
     const sessionId = params?.sessionId as string;
     const dirs = this.#getSessionDirs(sessionId);
-    if (!(filePath && isWithinScope(filePath, dirs))) {
+    const within = filePath ? isWithinScope(filePath, dirs) : false;
+    if (!within) {
       scopeDenied();
     }
     const fs = await import('node:fs/promises');
@@ -431,14 +659,13 @@ export class ACPServer {
     return { content };
   }
 
-  // ── Handler: fs/writeTextFile ──────────────────
-
   async #handleFsWriteTextFile(params?: Record<string, unknown>): Promise<unknown> {
     const filePath = params?.filePath as string;
     const content = params?.content as string;
     const sessionId = params?.sessionId as string;
     const dirs = this.#getSessionDirs(sessionId);
-    if (!(filePath && isWithinScope(filePath, dirs))) {
+    const within = filePath ? isWithinScope(filePath, dirs) : false;
+    if (!within) {
       scopeDenied();
     }
     const fs = await import('node:fs/promises');
@@ -446,16 +673,11 @@ export class ACPServer {
     return { written: true };
   }
 
-  // ── Handler: requestPermission ──────────────────
-
   #handleRequestPermission(params?: Record<string, unknown>): unknown {
     const permission = params?.permission as string;
-    // Local mode: auto-approve
     this.#deps.logger.info('ACP permission request (auto-approved)', { permission });
     return { approved: true };
   }
-
-  // ── Handler: terminal/create ────────────────────
 
   async #handleTerminalCreate(params?: Record<string, unknown>): Promise<unknown> {
     const sessionId = params?.sessionId as string;
@@ -485,15 +707,12 @@ export class ACPServer {
     }
   }
 
-  // ── Handler: terminal/output ───────────────────
-
   #handleTerminalOutput(params?: Record<string, unknown>): unknown {
     const terminalId = params?.terminalId as string;
     const term = this.#terminals.get(terminalId);
     if (!term) {
       return { error: { code: -32_006, message: 'Terminal not found' } };
     }
-
     try {
       const output = this.#deps.subprocessManager.getOutput(term.processId);
       if (!output) {
@@ -505,17 +724,13 @@ export class ACPServer {
     }
   }
 
-  // ── Handler: terminal/wait_for_exit ─────────────
-
   async #handleTerminalWaitForExit(params?: Record<string, unknown>): Promise<unknown> {
     const terminalId = params?.terminalId as string;
     const term = this.#terminals.get(terminalId);
     if (!term) {
       return { error: { code: -32_006, message: 'Terminal not found' } };
     }
-
     try {
-      // ACP terminal/wait_for_exit — poll until the process exits or times out
       const exitCode = await this.#waitForSubprocessExit(term.processId);
       return { exitCode };
     } catch (err) {
@@ -528,14 +743,11 @@ export class ACPServer {
     }
   }
 
-  // ── Handler: terminal/kill ─────────────────────
-
-  async #handleTerminalKill(params?: Record<string, unknown>): Promise<unknown> {
+  #handleTerminalKill(params?: Record<string, unknown>): unknown {
     const terminalId = params?.terminalId as string;
     const term = this.#requireTerminal(terminalId);
-
     try {
-      await this.#deps.subprocessManager.killProcess(term.processId);
+      this.#deps.subprocessManager.killProcess(term.processId);
       return { killed: true };
     } catch (err) {
       return {
@@ -547,15 +759,12 @@ export class ACPServer {
     }
   }
 
-  // ── Handler: terminal/release ──────────────────
-
   #handleTerminalRelease(params?: Record<string, unknown>): unknown {
     const terminalId = params?.terminalId as string;
     const term = this.#terminals.get(terminalId);
     if (!term) {
       return { error: { code: -32_006, message: 'Terminal not found' } };
     }
-
     try {
       this.#deps.subprocessManager.killProcess(term.processId);
     } catch {
@@ -565,9 +774,6 @@ export class ACPServer {
     return { released: true };
   }
 
-  // ── Helpers ───────────────────────────────────
-
-  /** Get a terminal by ID or throw a not-found error. */
   #requireTerminal(terminalId: string): { processId: string; dirs: string[] } {
     const term = this.#terminals.get(terminalId);
     if (!term) {
@@ -576,39 +782,13 @@ export class ACPServer {
     return term;
   }
 
-  /** Spawn MCP servers provided by the ACP client. */
-  async #spawnMcpServers(
-    mcpServers: Record<string, { command: string; args?: string[]; env?: Record<string, string> }> | undefined,
-    sessionId: string
-  ): Promise<void> {
-    if (!mcpServers) {
-      return;
-    }
-    for (const [name, server] of Object.entries(mcpServers)) {
-      try {
-        await this.#deps.subprocessManager.spawnProcess({
-          id: `acp-mcp-${sessionId}-${name}`,
-          command: server.command,
-          ...(server.args ? { args: server.args } : {}),
-          ...(server.env ? { env: server.env } : {}),
-          restartPolicy: 'always'
-        });
-      } catch (err) {
-        this.#deps.logger.warn('Failed to spawn client MCP server', {
-          name,
-          error: err instanceof Error ? err.message : String(err)
-        });
-      }
-    }
-  }
-
-  /** Poll a subprocess until it exits, with a 30s timeout. */
   async #waitForSubprocessExit(processId: string): Promise<number | null> {
     const deadline = Date.now() + 30_000;
     while (Date.now() < deadline) {
       const allProcs = this.#deps.subprocessManager.listProcesses();
       const proc = allProcs.find(p => p.id === processId);
-      if (!proc || proc.status === 'stopped' || proc.status === 'crashed' || proc.status === 'killed') {
+      const isDone = !proc || proc.status === 'stopped' || proc.status === 'crashed' || proc.status === 'killed';
+      if (isDone) {
         return proc?.exitCode ?? null;
       }
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -618,9 +798,19 @@ export class ACPServer {
 
   #getSessionDirs(sessionId: string): string[] {
     const bridge = this.#sessions.get(sessionId);
-    if (!bridge) {
-      return [process.cwd()];
+    if (bridge) {
+      return [bridge.cwd, ...bridge.additionalDirectories];
     }
-    return [bridge.cwd, ...bridge.additionalDirectories];
+    if (this.#persistence) {
+      try {
+        const rec = this.#persistence.loadSession(sessionId);
+        if (rec) {
+          return [rec.cwd, ...(rec.additionalDirectories ?? [])];
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return [process.cwd()];
   }
 }

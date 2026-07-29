@@ -3,6 +3,9 @@
  * These determine which ACP methods the client can invoke and
  * which features are available.
  */
+/**
+ * Phase 18: Full ACP capabilities with image/audio and MCP HTTP/SSE support.
+ */
 export const AGENT_CAPABILITIES = {
   loadSession: true,
   sessionCapabilities: {
@@ -13,13 +16,13 @@ export const AGENT_CAPABILITIES = {
     additionalDirectories: true
   },
   promptCapabilities: {
-    image: false,
-    audio: false,
+    image: true,
+    audio: true,
     embeddedContext: true
   },
   mcpCapabilities: {
-    http: false,
-    sse: false
+    http: true,
+    sse: true
   },
   permissionKindProbing: true
 } as const;

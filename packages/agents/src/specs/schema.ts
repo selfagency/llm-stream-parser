@@ -51,6 +51,13 @@ export const AgentHooksSchema = z
   })
   .passthrough();
 
+export const ToolFilterSchema = z
+  .object({
+    allow: z.array(z.string()).optional(),
+    deny: z.array(z.string()).optional()
+  })
+  .passthrough();
+
 /**
  * Zod schema for agent specification
  */
@@ -64,7 +71,8 @@ export const AgentSpecSchema = z
     hooks: AgentHooksSchema.optional(),
     skillRegistry: z.array(SkillMetadataSchema).optional(),
     orchestrator: z.enum(['sequential', 'parallel', 'sisyphus']).optional(),
-    tokenBudget: z.number().int().positive().optional()
+    tokenBudget: z.number().int().positive().optional(),
+    tools: ToolFilterSchema.optional()
   })
   .passthrough();
 

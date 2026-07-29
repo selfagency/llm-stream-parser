@@ -139,3 +139,13 @@ export type { PersistenceAdapter } from './persistence/types.js';
 // ---------------------------------------------------------------------------
 
 export { GatewayClientShim, type GatewayIPCClient } from './gateway-client.js';
+
+export {
+  buildTurnStateHeader,
+  createStickyRoutingTable,
+  parseTurnStateHeader,
+  type StickyRoute,
+  type StickyRoutingOptions,
+  type StickyRoutingTable,
+  type TurnState
+} from './sticky-routing.js';

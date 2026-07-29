@@ -362,6 +362,18 @@ export class UnifiedDB {
       {
         name: '013_memory_items_bridge',
         sql: "CREATE TABLE IF NOT EXISTS memory_items (id TEXT PRIMARY KEY, scope TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'episodic', content TEXT NOT NULL, created_at INTEGER DEFAULT (unixepoch()))"
+      },
+      {
+        name: '014_agent_checkpoints',
+        sql: 'CREATE TABLE IF NOT EXISTS agent_checkpoints (id TEXT PRIMARY KEY, agent_id TEXT NOT NULL, name TEXT NOT NULL, timestamp TEXT NOT NULL, data TEXT NOT NULL, created_at INTEGER DEFAULT (unixepoch()))'
+      },
+      {
+        name: '015_agent_checkpoints_indexes',
+        sql: 'CREATE INDEX IF NOT EXISTS idx_agent_checkpoints_agent_id ON agent_checkpoints(agent_id)'
+      },
+      {
+        name: '016_agent_checkpoints_timestamp_idx',
+        sql: 'CREATE INDEX IF NOT EXISTS idx_agent_checkpoints_timestamp ON agent_checkpoints(timestamp)'
       }
     ];
 

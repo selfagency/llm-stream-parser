@@ -6,7 +6,14 @@ export type {
   ToolResult
 } from './definitions.js';
 export { type SpillResult, spillToDisk } from './disk-spill.js';
-export { type ToolRegistration, ToolRegistry, type ToolStatus } from './registry.js';
+export {
+  EmptyToolListError,
+  type ToolFilterConfig,
+  type ToolFilterResult,
+  type ToolRegistration,
+  ToolRegistry,
+  type ToolStatus
+} from './registry.js';
 export { registerBaselineTools } from './tools/baseline.js';
 export { createFsTools } from './tools/fs/index.js';
 export { createHttpTool } from './tools/http/index.js';

@@ -24,6 +24,8 @@
     "paths": {
       "@agentsy/daemon": ["packages/daemon/src/index.ts"],
       "@agentsy/daemon/*": ["packages/daemon/src/*"],
+      "@agentsy/gateway": ["packages/gateway/src/index.ts"],
+      "@agentsy/gateway/*": ["packages/gateway/src/*"],
       "@agentsy/bootstrap": ["packages/bootstrap/src/index.ts"],
       "@agentsy/bootstrap/*": ["packages/bootstrap/src/*"],
       "@agentsy/context": ["packages/context/src/index.ts"],
@@ -49,7 +51,22 @@
       "@agentsy/tools": ["packages/tools/src/index.ts"],
       "@agentsy/tools/*": ["packages/tools/src/*"],
       "@agentsy/ui": ["packages/ui/src/index.ts"],
-      "@agentsy/ui/*": ["packages/ui/src/*"]
+      "@agentsy/ui/*": ["packages/ui/src/*"],
+      "@agentsy/orchestrator": ["packages/orchestrator/src/index.ts"],
+      "@agentsy/orchestrator/council": [
+        "packages/orchestrator/src/council/index.ts"
+      ],
+      "@agentsy/orchestrator/*": ["packages/orchestrator/src/*"],
+      "@agentsy/core": ["packages/core/src/index.ts"],
+      "@agentsy/core/*": ["packages/core/src/*"],
+      "@agentsy/providers": ["packages/providers/src/index.ts"],
+      "@agentsy/providers/*": ["packages/providers/src/*"],
+      "@agentsy/cli": ["packages/cli/src/index.ts"],
+      "@agentsy/cli/*": ["packages/cli/src/*"],
+      "@agentsy/runtime": ["packages/runtime/src/index.ts"],
+      "@agentsy/runtime/*": ["packages/runtime/src/*"],
+      "@agentsy/retrieval": ["packages/retrieval/src/index.ts"],
+      "@agentsy/retrieval/*": ["packages/retrieval/src/*"]
     },
     "rewriteRelativeImportExtensions": true,
     "allowImportingTsExtensions": true

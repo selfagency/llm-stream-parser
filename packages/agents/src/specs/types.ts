@@ -8,6 +8,11 @@ export interface AgentLayer {
   tokenBudget: number;
 }
 
+export interface ToolFilterSpec {
+  allow?: string[];
+  deny?: string[];
+}
+
 export interface AgentSpec {
   constraints?: string[];
   description: string;
@@ -18,6 +23,7 @@ export interface AgentSpec {
   role: string;
   skillRegistry?: SkillMetadata[];
   tokenBudget?: number;
+  tools?: ToolFilterSpec;
 }
 
 export interface AgentHooks {

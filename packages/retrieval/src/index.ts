@@ -3,6 +3,25 @@ export { ContextBuilder, lostInMiddleOrder } from './context/index.js';
 export type { RagEngineOptions, RagResult } from './engine.js';
 export { initRag, RagEngine } from './engine.js';
 export { IndexingPipeline } from './indexing/index.js';
+export type {
+  ExportInfo,
+  FileSummary,
+  ImportInfo,
+  Summarizer,
+  SummarizerOptions,
+  SupportedLanguage,
+  SymbolInfo,
+  SymbolKind
+} from './pi-ast/index.js';
+export {
+  compressFileContent,
+  createSummarizer,
+  detectLanguage,
+  estimateTokens,
+  fitsTokenBudget,
+  shouldSummarizeFile,
+  summarizeFile
+} from './pi-ast/index.js';
 export type { ProcessedQuery, QueryClass, QueryLlm } from './query/index.js';
 export { QueryProcessor } from './query/index.js';
 export type { RerankedResult, Reranker, RerankerConfig, RerankerStrategy } from './reranking/index.js';

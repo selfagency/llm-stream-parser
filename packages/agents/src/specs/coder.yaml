@@ -102,6 +102,25 @@ hooks:
     - "record-architectural-decisions"
     - "update-cost-tracking"
 
+# Tool filtering — deny rules strip tools before model sees them
+tools:
+  allow:
+    - read_file
+    - write_file
+    - edit_file
+    - run_command
+    - fs_read
+    - fs_write
+    - fs_patch
+    - shell_exec
+    - http_fetch
+    - repl
+  deny:
+    - delete_file
+    - format_disk
+    - rm_rf
+    - "*_secret"
+
 # Global token budget for this agent
 tokenBudget: 45000
 

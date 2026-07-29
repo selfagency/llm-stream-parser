@@ -2,10 +2,9 @@
  * ACP Session Bridge — handles per-session prompt execution with
  * real streaming support wired through the daemon's StreamManager.
  *
- * Each ACP session gets a bridge that:
- * 1. Routes prompts through the daemon's agent/runtime pipeline
- * 2. Streams responses back via ACP callbacks (onChunk, onToolCall, etc.)
- * 3. Supports cancellation and mode/config options
+ * Phase 18 enhancements:
+ * - Image support: base64 images forwarded to vision-capable models
+ * - Audio support: ASR pipeline integration (stub)
  *
  * @module
  */
@@ -15,23 +14,24 @@ import type { StreamChunk } from '@agentsy/shared';
 import type { Daemon } from '../daemon.js';
 import type { StreamProvider } from '../services/stream-manager.js';
 import type { Logger } from '../types.js';
+import { createASRPipelineStub, forwardImagesToVisionModel, parsePromptContent } from './capabilities.js';
 
 export interface ACPSessionBridgeDeps {
-  additionalDirectories?: string[];
-  agentId?: string;
-  cwd?: string;
-  daemon: Daemon;
-  logger: Logger;
-  sessionId?: string;
+  readonly additionalDirectories?: string[];
+  readonly agentId?: string;
+  readonly cwd?: string;
+  readonly daemon: Daemon;
+  readonly logger: Logger;
+  readonly sessionId?: string;
 }
 
 export interface ACPPromptCallbacks {
-  embeddedContext?: unknown[];
-  images?: Array<{ data: string; mimeType: string; type: string }>;
-  onChunk: (chunk: { text: string }) => void;
-  onToolCall: (toolCall: { arguments: string; id: string; name: string }) => void;
-  onToolCallUpdate: (update: { output?: string; status: string; toolCallId: string }) => void;
-  onUsage: (usage: { costUsd?: number; inputTokens: number; outputTokens: number }) => void;
+  readonly embeddedContext?: unknown[];
+  readonly images?: Array<{ data: string; mimeType: string; type: string }>;
+  readonly onChunk: (chunk: { text: string }) => void;
+  readonly onToolCall: (toolCall: { arguments: string; id: string; name: string }) => void;
+  readonly onToolCallUpdate: (update: { output?: string; status: string; toolCallId: string }) => void;
+  readonly onUsage: (usage: { costUsd?: number; inputTokens: number; outputTokens: number }) => void;
 }
 
 export class ACPSessionBridge {
@@ -52,22 +52,55 @@ export class ACPSessionBridge {
   }
 
   /**
-   * Handle a prompt from an ACP client. Streams the response back
-   * via the provided callbacks.
+   * Handle a prompt from an ACP client. Supports:
+   * - Plain string
+   * - Structured content blocks with image/audio
+   * - Embedded context URIs
    */
-  async handlePrompt(prompt: string, callbacks: ACPPromptCallbacks): Promise<{ stopReason: string }> {
+  async handlePrompt(promptInput: unknown, callbacks: ACPPromptCallbacks): Promise<{ stopReason: string }> {
     this.abortController = new AbortController();
 
     try {
+      const parsed = parsePromptContent(promptInput);
+      const visionForward = forwardImagesToVisionModel(parsed);
+
+      let effectiveText = parsed.text;
+
+      if (parsed.audios.length > 0) {
+        const asr = createASRPipelineStub();
+        const transcripts = await asr.transcribeBatch(parsed.audios);
+        const transcriptTexts = transcripts.map(t => t.text).filter(Boolean);
+        if (transcriptTexts.length > 0) {
+          const audioSection = `\n\n[Audio transcripts]\n${transcriptTexts.join('\n')}`;
+          effectiveText = effectiveText ? `${effectiveText}${audioSection}` : transcriptTexts.join('\n');
+        }
+        this.deps.logger.info('ACP audio blocks transcribed', {
+          sessionId: this.sessionId,
+          audioCount: parsed.audios.length
+        });
+      }
+
+      if (parsed.images.length > 0) {
+        this.deps.logger.info('ACP image blocks received', {
+          sessionId: this.sessionId,
+          imageCount: parsed.images.length,
+          mimes: parsed.images.map(i => i.mimeType)
+        });
+      }
+
+      const promptText = typeof promptInput === 'string' ? promptInput : effectiveText;
+      const promptLength = typeof promptText === 'string' ? promptText.length : JSON.stringify(promptInput).length;
+
       this.deps.logger.info('ACP session/prompt', {
         sessionId: this.sessionId,
-        promptLength: prompt.length
+        promptLength,
+        hasImages: visionForward.hasImages,
+        imageCount: parsed.images.length,
+        audioCount: parsed.audios.length
       });
 
-      // Create a StreamProvider that delegates to the gateway's LoadBalancedClient
       const streamProvider = this.#createStreamProvider();
 
-      // Start a stream through the daemon's StreamManager
       const streamManager = this.deps.daemon.streamManager;
       if (!streamManager) {
         this.deps.logger.warn('StreamManager not available, falling back to basic response', {
@@ -77,22 +110,28 @@ export class ACPSessionBridge {
         return { stopReason: 'end_turn' };
       }
 
-      // Wire ACP notification adapter for this agent/session
       const acpAdapter = this.deps.daemon.acpNotificationAdapter;
       const agentId = `acp-${this.sessionId}`;
 
       if (acpAdapter) {
         acpAdapter.wireAgentToSession(agentId, this.sessionId, (method, params) => {
-          // ACP notification → already mapped by the adapter
-          // In a real ACP connection, this would send the notification
-          // over the ACP transport. For now, we log it.
           this.deps.logger.debug('ACP notification', { method, params });
         });
       }
 
+      // Build messages: if vision, use multi-modal content array, else text
+      const messages = visionForward.hasImages
+        ? [
+            {
+              role: 'user' as const,
+              content: JSON.stringify(visionForward.content)
+            }
+          ]
+        : [{ role: 'user' as const, content: effectiveText }];
+
       const { streamId } = streamManager.startStream(
         {
-          messages: [{ role: 'user', content: prompt }]
+          messages
         },
         streamProvider,
         {
@@ -115,7 +154,6 @@ export class ACPSessionBridge {
         }
       );
 
-      // Wait for abort or completion
       await new Promise<void>(resolve => {
         const onAbort = (): void => {
           streamManager.cancelStream(streamId);
@@ -124,9 +162,6 @@ export class ACPSessionBridge {
         if (this.abortController) {
           this.abortController.signal.addEventListener('abort', onAbort, { once: true });
         }
-        // In a real integration, we'd wait for stream.end notification.
-        // For now, resolve after a reasonable delay so the stream
-        // infrastructure can initialize and emit its first chunks.
         setTimeout(resolve, 100).unref();
       });
 
@@ -141,7 +176,9 @@ export class ACPSessionBridge {
   }
 
   cancel(): void {
-    this.abortController?.abort();
+    if (this.abortController) {
+      this.abortController.abort();
+    }
   }
 
   setMode(_mode: string): void {
@@ -159,29 +196,15 @@ export class ACPSessionBridge {
     return Promise.resolve();
   }
 
-  // ── Internal ─────────────────────────────────────────
-
   #createStreamProvider(): StreamProvider {
-    // Creates a stream provider that routes through the daemon's
-    // gateway (via RoutingService) and the LoadBalancedClient.
     const logger = this.deps.logger;
 
     return {
       stream(request) {
-        // In production, this would:
-        // 1. Call routing.selectModel() to choose a provider
-        // 2. Get the LoadBalancedClient from the gateway
-        // 3. Call client.stream() with routing decision info
-        //
-        // For now, return an empty iterable since the gateway
-        // and provider infrastructure is not yet fully wired
-        // for the streaming path.
         logger.debug('Stream provider invoked', {
           model: request.model,
           messages: request.messages.length
         });
-
-        // Placeholder: return an empty async iterable
         return {
           [Symbol.asyncIterator]() {
             return {

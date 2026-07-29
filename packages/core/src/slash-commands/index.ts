@@ -1,12 +1,19 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
+import {
+  expandSlashCommandPrompt as expandPromptInternal,
+  parseSlashInvocation as parseInvocationInternal,
+  substituteArguments as substituteArgsInternal
+} from './argument-substitution.js';
+
 export interface SlashCommandDefinition {
   readonly description: string;
   readonly hooks: readonly string[];
   readonly instructions?: string;
   readonly name: string;
   readonly packageName: string;
+  readonly prompt?: string;
   readonly triggers: readonly string[];
 }
 
@@ -15,8 +22,18 @@ interface SlashCommandDraft {
   hooks: string[];
   instructions?: string;
   name?: string;
+  prompt?: string;
   triggers: string[];
 }
+
+export type { SlashInvocation, SubstitutionResult } from './argument-substitution.js';
+export {
+  createArgumentSubstitutor,
+  expandSlashCommandPrompt,
+  parseArgumentString,
+  parseSlashInvocation,
+  substituteArguments
+} from './argument-substitution.js';
 
 const WORKSPACE_MANIFESTS = [
   'packages/cli/slash-commands.yaml',
@@ -54,7 +71,7 @@ function createDraft(): SlashCommandDraft {
 
 function pushCommand(commands: SlashCommandDefinition[], current: SlashCommandDraft | null, packageName: string): void {
   if (current?.name && current.description) {
-    const command: SlashCommandDefinition = {
+    let command: SlashCommandDefinition = {
       description: current.description,
       hooks: current.hooks,
       name: current.name,
@@ -63,11 +80,17 @@ function pushCommand(commands: SlashCommandDefinition[], current: SlashCommandDr
     };
 
     if (current.instructions !== undefined) {
-      commands.push({
+      command = {
         ...command,
         instructions: current.instructions
-      });
-      return;
+      };
+    }
+
+    if (current.prompt !== undefined) {
+      command = {
+        ...command,
+        prompt: current.prompt
+      };
     }
 
     commands.push(command);
@@ -110,6 +133,12 @@ function applyCommandField(current: SlashCommandDraft, trimmed: string): boolean
   const instructionsMatch = /^instructions:\s*(.+)$/u.exec(trimmed);
   if (instructionsMatch !== null) {
     current.instructions = parseScalar(instructionsMatch[1] ?? '');
+    return true;
+  }
+
+  const promptMatch = /^prompt:\s*(.+)$/u.exec(trimmed);
+  if (promptMatch !== null) {
+    current.prompt = parseScalar(promptMatch[1] ?? '');
     return true;
   }
 
@@ -216,4 +245,72 @@ export function loadSlashCommands(workspaceRoot = findWorkspaceRoot(process.cwd(
   }
 
   return [...deduped.values()];
+}
+
+// ── Integration: invocation expansion ───────────────────────────────────────
+
+export interface ExpandedSlashCommand {
+  readonly args: readonly string[];
+  readonly argsString: string;
+  readonly commandName: string;
+  readonly definition: SlashCommandDefinition;
+  /** Expanded prompt/template (if definition has prompt/instructions with placeholders). */
+  readonly expandedPrompt: string;
+  readonly warnings: readonly string[];
+}
+
+/**
+ * Expand a raw slash invocation line (e.g. "/refactor src/utils/parser.ts")
+ * against a definition's prompt template. If definition has no prompt but has
+ * instructions, instructions is used as fallback template. Otherwise the raw
+ * argsString is returned.
+ */
+export function expandSlashCommand(definition: SlashCommandDefinition, invocationLine: string): ExpandedSlashCommand {
+  const invocation = parseInvocationInternal(invocationLine);
+  const template = definition.prompt ?? definition.instructions ?? '$ARGUMENTS';
+  const result = substituteArgsInternal(template, invocation.argsString);
+
+  return {
+    definition,
+    commandName: invocation.commandName || definition.name,
+    argsString: invocation.argsString,
+    args: invocation.args,
+    expandedPrompt: result.substituted,
+    warnings: result.warnings
+  };
+}
+
+/**
+ * Resolve a raw input line against a list of slash command definitions
+ * and return the expanded command if matched. Returns null if no definition matches.
+ * Match is by definition.name (e.g. "/refactor").
+ */
+export function resolveSlashCommand(
+  inputLine: string,
+  definitions: readonly SlashCommandDefinition[]
+): ExpandedSlashCommand | null {
+  const invocation = parseInvocationInternal(inputLine);
+  const def = definitions.find(d => d.name === invocation.commandName);
+  if (def === undefined) {
+    return null;
+  }
+  return expandSlashCommand(def, inputLine);
+}
+
+/**
+ * Factory for slash-command registry + expansion (ESM-first public API).
+ */
+export function createSlashCommandRegistry(workspaceRoot = findWorkspaceRoot(process.cwd())): {
+  load: () => readonly SlashCommandDefinition[];
+  expand: (definition: SlashCommandDefinition, invocationLine: string) => ExpandedSlashCommand;
+  resolve: (inputLine: string, defs?: readonly SlashCommandDefinition[]) => ExpandedSlashCommand | null;
+  expandPrompt: (template: string, invocationLine: string) => ReturnType<typeof expandPromptInternal>;
+} {
+  const load = () => loadSlashCommands(workspaceRoot);
+  return {
+    load,
+    expand: expandSlashCommand,
+    resolve: (inputLine, defs) => resolveSlashCommand(inputLine, defs ?? load()),
+    expandPrompt: (template, invocationLine) => expandPromptInternal(template, invocationLine)
+  };
 }
