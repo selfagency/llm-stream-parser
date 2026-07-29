@@ -48,30 +48,30 @@ const SERVER_FIXTURE_2: Record<string, unknown> = {
 function createMockFetch(firstPage: Record<string, unknown>, secondPage?: Record<string, unknown>): FetchLike {
   let callCount = 0;
 
-  const fetcher: FetchLike = async (_input, _init) => {
+  const fetcher: FetchLike = (_input, _init) => {
     callCount += 1;
 
     if (callCount === 1 && firstPage !== undefined) {
-      return {
+      return Promise.resolve({
         ok: true,
         status: 200,
         json: async () => firstPage
-      } as Response;
+      } as Response);
     }
 
     if (secondPage !== undefined) {
-      return {
+      return Promise.resolve({
         ok: true,
         status: 200,
         json: async () => secondPage
-      } as Response;
+      } as Response);
     }
 
-    return {
+    return Promise.resolve({
       ok: true,
       status: 200,
       json: async () => ({ servers: [], nextCursor: undefined })
-    } as Response;
+    } as Response);
   };
 
   return fetcher;
@@ -125,11 +125,26 @@ describe('McpRegistryAdapter', () => {
         json: async () => SERVER_FIXTURE_1
       } as Response);
 
-      const adapter = createMcpRegistryAdapter({ fetch: mockFetch, pageSize: 10 });
-      await adapter.list();
+      const adapter = createMcpRegistryAdapter({ fetch: mockFetch, pageSize: 10, maxPages: 1 });
+      const entries = await adapter.list();
 
       const callUrl = mockFetch.mock.calls[0]?.[0]?.toString() ?? '';
       expect(callUrl).toContain('limit=10');
+      expect(entries).toHaveLength(2);
+    });
+
+    it('should stop at maxPages when the server keeps returning a cursor', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => SERVER_FIXTURE_1
+      } as Response);
+
+      const adapter = createMcpRegistryAdapter({ fetch: mockFetch, maxPages: 3 });
+      const entries = await adapter.list();
+
+      expect(mockFetch).toHaveBeenCalledTimes(3);
+      expect(entries).toHaveLength(6);
     });
   });
 
@@ -171,12 +186,12 @@ describe('McpRegistryAdapter', () => {
     });
 
     it('should return null for non-existent id', async () => {
-      const mockFetch = vi.fn().mockResolvedValue({
+      const mockFetch = createMockFetch({
         ok: false,
         status: 404,
         statusText: 'Not Found',
         json: async () => ({ error: 'not found' })
-      } as Response);
+      });
 
       const adapter = createMcpRegistryAdapter({ fetch: mockFetch });
       const entry = await adapter.get('non.existent');

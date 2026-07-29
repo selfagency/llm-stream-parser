@@ -118,13 +118,16 @@ function isSkillsShDetailResponse(value: unknown): value is SkillsShDetailRespon
 // ── Helpers ───────────────────────────────────────────────
 
 function skillToEntry(skill: SkillsShSkill): RegistryEntry {
-  return {
+  const base: Omit<RegistryEntry, 'version'> = {
     id: skill.id,
     name: skill.name,
     description: skill.description ?? '',
-    source: 'skills.sh',
-    version: skill.contentHash
+    source: 'skills.sh'
   };
+  if (skill.contentHash === undefined) {
+    return base;
+  }
+  return { ...base, version: skill.contentHash };
 }
 
 function buildHeaders(token?: string): Record<string, string> {

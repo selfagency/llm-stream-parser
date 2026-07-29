@@ -6,7 +6,7 @@ export default defineConfig({
     globals: true,
     dangerouslyIgnoreUnhandledErrors: true,
     coverage: {
-      enabled: false,
+      include: ['packages/daemon/src/**/*.ts'],
       thresholds: {
         statements: 0,
         branches: 0,

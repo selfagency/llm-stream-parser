@@ -18,6 +18,7 @@ import type { RegistryAdapter, RegistryEntry } from './types.js';
 
 const DEFAULT_BASE_URL = 'https://registry.modelcontextprotocol.io/v0.1';
 const DEFAULT_PAGE_SIZE = 50;
+const DEFAULT_MAX_PAGES = 100;
 
 // ── Options ───────────────────────────────────────────────
 
@@ -30,6 +31,8 @@ export interface McpRegistryAdapterOptions {
   fetch?: FetchLike;
   /** Initial cursor for paginated listing (default: undefined) */
   initialCursor?: string;
+  /** Maximum number of pages to fetch (default: 100) */
+  maxPages?: number;
   /** Page size for cursor pagination (default: 50) */
   pageSize?: number;
 }
@@ -111,13 +114,17 @@ function extractEntryName(server: McpServerManifest): string {
 
 function serverToEntry(server: McpServerManifest): RegistryEntry {
   const id = extractEntryId(server);
-  return {
+  const entry: Record<string, unknown> = {
     id,
     name: extractEntryName(server),
     description: server.description ?? '',
-    source: 'mcp-registry',
-    version: server.packages?.[0]?.version
+    source: 'mcp-registry'
   };
+  const version = server.packages?.[0]?.version;
+  if (version !== undefined) {
+    entry.version = version;
+  }
+  return entry as unknown as RegistryEntry;
 }
 
 function parseListResponse(data: unknown): { entries: RegistryEntry[]; nextCursor: string | undefined } {
@@ -127,7 +134,7 @@ function parseListResponse(data: unknown): { entries: RegistryEntry[]; nextCurso
 
   // Check for the standard format with servers array
   if (Array.isArray(data.servers)) {
-    const listResponse = data as McpRegistryListResponse;
+    const listResponse = data as unknown as McpRegistryListResponse;
     const entries: RegistryEntry[] = [];
 
     for (const item of listResponse.servers) {
@@ -188,19 +195,16 @@ export function createMcpRegistryAdapter(options?: McpRegistryAdapterOptions): R
 
     async list(): Promise<RegistryEntry[]> {
       const allEntries: RegistryEntry[] = [];
-      let cursor: string | undefined;
+      let cursor: string | undefined = options?.initialCursor;
+      let pages = 0;
+      const maxPages = options?.maxPages ?? DEFAULT_MAX_PAGES;
 
-      // Fetch first page
-      const firstPage = await fetchPage(options?.initialCursor);
-      allEntries.push(...firstPage.entries);
-      cursor = firstPage.nextCursor;
-
-      // Fetch remaining pages
-      while (cursor !== undefined) {
+      do {
         const page = await fetchPage(cursor);
         allEntries.push(...page.entries);
         cursor = page.nextCursor;
-      }
+        pages += 1;
+      } while (cursor !== undefined && pages < maxPages);
 
       return allEntries;
     },

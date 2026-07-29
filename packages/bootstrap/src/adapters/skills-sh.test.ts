@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { audit, createSkillsShAdapter, curated } from './skills-sh.js';
+import type { RegistryAdapter } from './types.js';
 
 // ── Fixtures ──────────────────────────────────────────────
 
@@ -69,27 +70,31 @@ const AUDIT_FIXTURE = {
 // ── Mock fetch factory ───────────────────────────────────
 
 function createMockFetch(fixtures: Record<string, unknown>) {
-  return vi.fn((url: string | URL | Request) => {
-    const urlStr = url.toString();
+  return vi.fn((url: string | URL | Request) =>
+    Promise.resolve(
+      ((): Response => {
+        const urlStr = url.toString();
 
-    for (const [pattern, data] of Object.entries(fixtures)) {
-      if (urlStr.includes(pattern)) {
+        for (const [pattern, data] of Object.entries(fixtures)) {
+          if (urlStr.includes(pattern)) {
+            return {
+              ok: true,
+              status: 200,
+              statusText: 'OK',
+              json: async () => data
+            } as Response;
+          }
+        }
+
         return {
-          ok: true,
-          status: 200,
-          statusText: 'OK',
-          json: async () => data
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          json: async () => ({ error: 'not found' })
         } as Response;
-      }
-    }
-
-    return {
-      ok: false,
-      status: 404,
-      statusText: 'Not Found',
-      json: async () => ({ error: 'not found' })
-    } as Response;
-  });
+      })()
+    )
+  );
 }
 
 // ── Tests ─────────────────────────────────────────────────
@@ -199,7 +204,7 @@ describe('SkillsShAdapter', () => {
     it('should return curated sections', async () => {
       const mockFetch = createMockFetch({ '/curated': CURATED_FIXTURE });
       const adapter = createSkillsShAdapter({ fetch: mockFetch });
-      const sections = await curated(adapter, { fetch: mockFetch });
+      const sections = await curated(adapter as RegistryAdapter & { name: 'skills-sh' }, { fetch: mockFetch });
 
       expect(sections).toHaveLength(2);
       expect(sections[0]?.name).toBe('Frontend');
@@ -212,7 +217,7 @@ describe('SkillsShAdapter', () => {
     it('should return audit result', async () => {
       const mockFetch = createMockFetch({ '/audit': AUDIT_FIXTURE });
       const adapter = createSkillsShAdapter({ fetch: mockFetch });
-      const result = await audit(adapter, 'skill-ts', { fetch: mockFetch });
+      const result = await audit(adapter as RegistryAdapter & { name: 'skills-sh' }, 'skill-ts', { fetch: mockFetch });
 
       expect(result.skillId).toBe('skill-ts');
       expect(result.passed).toBe(true);

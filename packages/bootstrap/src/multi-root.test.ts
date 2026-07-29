@@ -69,7 +69,7 @@ describe('WorkspaceManager', () => {
   it('should return a copy of roots from listRoots', () => {
     const wm = new WorkspaceManager();
     wm.addRoot('/a');
-    const roots = wm.listRoots();
+    const roots = [...wm.listRoots()];
     roots.push('/b');
     expect(wm.listRoots()).toEqual(['/a']);
   });

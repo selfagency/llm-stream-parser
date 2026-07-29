@@ -225,7 +225,7 @@ export async function runProjectCommand(argv: readonly string[], io: CliIO = {})
   // Handle --help / -h at top level
   if (subcommand === '--help' || subcommand === '-h' || subcommand === undefined) {
     stdout(HELP);
-    return subcommand === undefined ? 0 : 0;
+    return 0;
   }
 
   switch (subcommand) {
