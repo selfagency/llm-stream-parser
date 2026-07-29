@@ -494,7 +494,11 @@ describe('summarizer factory integration', () => {
     const small = 'export const x = 1;';
     expect(s.compressIfNeeded(small, 'small.ts')).toBe(small);
 
-    const large = Array.from({ length: 100 }, (_, i) => `export function f${i}() {}`).join('\n');
+    // Each function has a multi-line body so the original is much larger than the summary
+    const large = Array.from(
+      { length: 80 },
+      (_, i) => `export function f${i}() {\n  const x = ${i};\n  const y = x * 2;\n  return { x, y };\n}`
+    ).join('\n');
     const compressed = s.compressIfNeeded(large, 'large.ts');
     expect(compressed).not.toBe(large);
     expect(compressed).toContain('Structural Summary');

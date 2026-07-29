@@ -1,4 +1,4 @@
-import type { ModelEntry, ModelReplica, ModelTier } from '@agentsy/gateway';
+import type { LogicalModel, ModelEntry, ModelReplica, ModelTier } from '@agentsy/gateway';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EscalationPolicy } from '../intelligence/gateway-backed-router.js';
 import type { CircuitBreakerSet } from './circuit-breaker-set.js';
@@ -12,8 +12,11 @@ vi.mock('@agentsy/gateway', () => ({
 
 vi.mock('./circuit-breaker-set.js', () => ({
   isOpen: vi.fn(() => false),
-  open: vi.fn(),
-  close: vi.fn()
+  recordFailure: vi.fn(),
+  recordSuccess: vi.fn(),
+  getOpenReplicaIds: vi.fn(() => []),
+  getState: vi.fn(() => 'closed'),
+  reset: vi.fn()
 }));
 
 // Import after mocks
@@ -29,9 +32,14 @@ describe('createFailoverChain', () => {
   beforeEach(() => {
     mockModel = {
       id: 'test-model-1',
-      name: 'Test Model 1',
+      modelName: 'Test Model 1',
       tier: 'micro',
-      providerId: 'test-provider'
+      providerId: 'test-provider',
+      capabilities: { audio: false, embeddings: false, jsonMode: false, reasoning: false, tools: false, vision: false },
+      contextWindow: 4096,
+      cost: { inputPer1MTokens: 0.001, outputPer1MTokens: 0.003 },
+      maxOutputTokens: 4096,
+      useCases: []
     };
 
     mockReplicas = [
@@ -39,29 +47,33 @@ describe('createFailoverChain', () => {
         id: 'replica-1',
         logicalModelId: 'test-model-1',
         providerId: 'test-provider',
-        region: 'us-east-1',
-        endpoint: 'https://api1.example.com'
+        cost: { inputPer1MTokens: 0.001, outputPer1MTokens: 0.003 },
+        isLocal: false,
+        upstreamModelName: 'gpt-4'
       },
       {
         id: 'replica-2',
         logicalModelId: 'test-model-1',
         providerId: 'test-provider',
-        region: 'us-west-2',
-        endpoint: 'https://api2.example.com'
+        cost: { inputPer1MTokens: 0.001, outputPer1MTokens: 0.003 },
+        isLocal: false,
+        upstreamModelName: 'gpt-4'
       },
       {
         id: 'replica-3',
         logicalModelId: 'test-model-2',
         providerId: 'test-provider',
-        region: 'eu-west-1',
-        endpoint: 'https://api3.example.com'
+        cost: { inputPer1MTokens: 0.001, outputPer1MTokens: 0.003 },
+        isLocal: false,
+        upstreamModelName: 'claude-3'
       },
       {
         id: 'replica-4',
         logicalModelId: 'test-model-3',
         providerId: 'test-provider',
-        region: 'us-east-1',
-        endpoint: 'https://api4.example.com'
+        cost: { inputPer1MTokens: 0.001, outputPer1MTokens: 0.003 },
+        isLocal: false,
+        upstreamModelName: 'gpt-4o'
       }
     ];
 
@@ -73,24 +85,36 @@ describe('createFailoverChain', () => {
 
     mockCircuitBreakerSet = {
       isOpen: vi.fn(() => false),
-      open: vi.fn(),
-      close: vi.fn()
-    };
+      recordFailure: vi.fn(),
+      recordSuccess: vi.fn(),
+      getOpenReplicaIds: vi.fn(() => []),
+      getState: vi.fn(() => 'closed'),
+      reset: vi.fn()
+    } as unknown as CircuitBreakerSet;
 
     mockRateLimitMap = new Map();
 
     vi.clearAllMocks();
 
     // Configure getLogicalModel to return proper tier info
+    const logicalModelBase: LogicalModel = {
+      id: '',
+      tier: 'micro' as ModelTier,
+      capabilities: { audio: false, embeddings: false, jsonMode: false, reasoning: false, tools: false, vision: false },
+      contextWindow: 4096,
+      maxOutputTokens: 4096,
+      useCases: []
+    };
+
     vi.mocked(getLogicalModel).mockImplementation((modelId: string) => {
       if (modelId === 'test-model-1') {
-        return { id: modelId, tier: 'micro' as ModelTier };
+        return { ...logicalModelBase, id: modelId, tier: 'micro' as ModelTier };
       }
       if (modelId === 'test-model-2') {
-        return { id: modelId, tier: 'micro' as ModelTier };
+        return { ...logicalModelBase, id: modelId, tier: 'micro' as ModelTier };
       }
       if (modelId === 'test-model-3') {
-        return { id: modelId, tier: 'small' as ModelTier };
+        return { ...logicalModelBase, id: modelId, tier: 'small' as ModelTier };
       }
       return;
     });
@@ -125,8 +149,8 @@ describe('createFailoverChain', () => {
 
       const replicaSteps = chain.steps.filter(s => s.type === 'next-replica');
       expect(replicaSteps).toHaveLength(2);
-      expect(replicaSteps[0].replicaId).toBe('replica-1');
-      expect(replicaSteps[1].replicaId).toBe('replica-2');
+      expect(replicaSteps[0]?.replicaId).toBe('replica-1');
+      expect(replicaSteps[1]?.replicaId).toBe('replica-2');
     });
 
     it('includes next-model steps for other models in same tier', () => {
@@ -140,8 +164,8 @@ describe('createFailoverChain', () => {
 
       const modelSteps = chain.steps.filter(s => s.type === 'next-model');
       expect(modelSteps).toHaveLength(1);
-      expect(modelSteps[0].logicalModelId).toBe('test-model-2');
-      expect(modelSteps[0].replicaId).toBe('replica-3');
+      expect(modelSteps[0]?.logicalModelId).toBe('test-model-2');
+      expect(modelSteps[0]?.replicaId).toBe('replica-3');
     });
 
     it('includes tier-escalation steps when allowed', () => {
@@ -155,8 +179,8 @@ describe('createFailoverChain', () => {
 
       const escalationSteps = chain.steps.filter(s => s.type === 'tier-escalation');
       expect(escalationSteps).toHaveLength(1);
-      expect(escalationSteps[0].replicaId).toBe('replica-4');
-      expect(escalationSteps[0].tier).toBe('small');
+      expect(escalationSteps[0]?.replicaId).toBe('replica-4');
+      expect(escalationSteps[0]?.tier).toBe('small');
     });
 
     it('excludes tier-escalation steps when disabled', () => {
@@ -181,11 +205,11 @@ describe('createFailoverChain', () => {
 
       const replicaSteps = chain.steps.filter(s => s.type === 'next-replica');
       expect(replicaSteps).toHaveLength(1);
-      expect(replicaSteps[0].replicaId).toBe('replica-1');
+      expect(replicaSteps[0]?.replicaId).toBe('replica-1');
     });
 
     it('excludes circuit-broken replicas', () => {
-      mockCircuitBreakerSet.isOpen.mockReturnValue(true);
+      mockCircuitBreakerSet.isOpen = () => true;
 
       const chain = createFailoverChain(
         mockModel,
@@ -212,7 +236,7 @@ describe('createFailoverChain', () => {
 
       const replicaSteps = chain.steps.filter(s => s.type === 'next-replica');
       expect(replicaSteps).toHaveLength(1);
-      expect(replicaSteps[0].replicaId).toBe('replica-2');
+      expect(replicaSteps[0]?.replicaId).toBe('replica-2');
     });
 
     it('marks all replicas as seen when all are rate-limited', () => {
@@ -367,7 +391,7 @@ describe('createFailoverChain', () => {
 
       // Only same-replica-retry step
       expect(chain.steps).toHaveLength(1);
-      expect(chain.steps[0].type).toBe('same-replica-retry');
+      expect(chain.steps[0]?.type).toBe('same-replica-retry');
     });
 
     it('handles escalationPolicy without chain', () => {
@@ -408,8 +432,21 @@ describe('createFailoverChain', () => {
     it('handles model with tier not in DEFAULT_CHAIN', () => {
       const modelWithCustomTier: ModelEntry = {
         id: 'custom-tier-model',
-        name: 'Custom Tier Model',
-        tier: 'custom' as ModelTier
+        modelName: 'Custom Tier Model',
+        tier: 'custom' as ModelTier,
+        providerId: 'test-provider',
+        capabilities: {
+          audio: false,
+          embeddings: false,
+          jsonMode: false,
+          reasoning: false,
+          tools: false,
+          vision: false
+        },
+        contextWindow: 4096,
+        cost: { inputPer1MTokens: 0.001, outputPer1MTokens: 0.003 },
+        maxOutputTokens: 4096,
+        useCases: []
       };
 
       const chain = createFailoverChain(
@@ -421,7 +458,7 @@ describe('createFailoverChain', () => {
       );
 
       expect(chain.steps.length).toBeGreaterThan(0);
-      expect(chain.steps[0].type).toBe('same-replica-retry');
+      expect(chain.steps[0]?.type).toBe('same-replica-retry');
     });
 
     it('returns chain even when no steps are available', () => {

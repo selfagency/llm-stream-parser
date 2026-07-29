@@ -106,7 +106,11 @@ function collectFencedBlocks(text: string): string[] | null {
   let hasFenced = false;
   let fencedMatch: RegExpExecArray | null;
 
-  while ((fencedMatch = fenceRegex.exec(text)) !== null) {
+  while (true) {
+    fencedMatch = fenceRegex.exec(text);
+    if (fencedMatch === null) {
+      break;
+    }
     const inner = fencedMatch[1] ?? '';
     if (RAW_DIFF_HEADER_REGEX.test(inner)) {
       fencedBlocks.push(inner);
@@ -120,7 +124,9 @@ function collectFencedBlocks(text: string): string[] | null {
 function scanAheadForRevised(lines: string[], start: number): boolean {
   for (let j = start; j < lines.length; j++) {
     const next = lines[j] ?? '';
-    if (next.length === 0) continue;
+    if (next.length === 0) {
+      continue;
+    }
     return REVISED_FILE_REGEX.test(next);
   }
   return false;
@@ -132,8 +138,12 @@ function splitFileBoundaries(lines: string[]): string[] {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? '';
-    if (!ORIGINAL_FILE_REGEX.test(line)) continue;
-    if (!scanAheadForRevised(lines, i + 1)) continue;
+    if (!ORIGINAL_FILE_REGEX.test(line)) {
+      continue;
+    }
+    if (!scanAheadForRevised(lines, i + 1)) {
+      continue;
+    }
 
     if (currentStart >= 0) {
       blocks.push(lines.slice(currentStart, i).join('\n'));
@@ -212,7 +222,7 @@ function collectHunkLine(
   hunkLines: UdiffHunkLine[],
   classification: ReturnType<typeof classifyHunkLine>,
   counters: { addedCount: number; deletedCount: number },
-  i: number
+  _i: number
 ): number {
   switch (classification.type) {
     case 'end':
@@ -229,6 +239,8 @@ function collectHunkLine(
     case 'delete':
       hunkLines.push({ type: 'delete', content: classification.content ?? '' });
       counters.deletedCount++;
+      return 1;
+    default:
       return 1;
   }
 }
@@ -253,9 +265,13 @@ function parseSingleHunk(lines: string[], startIndex: number): { hunk: UdiffHunk
 
   while (i < lines.length) {
     const step = collectHunkLine(hunkLines, classifyHunkLine(lines[i]?.[0], lines[i] ?? ''), counters, i);
-    if (step === -1) break;
+    if (step === -1) {
+      break;
+    }
     i += step;
-    if (hunkLines.length > 10_000 || counters.addedCount + counters.deletedCount > 10_000) break;
+    if (hunkLines.length > 10_000 || counters.addedCount + counters.deletedCount > 10_000) {
+      break;
+    }
   }
 
   return { hunk: { oldStart, oldLines, newStart, newLines, lines: hunkLines }, nextIndex: i };

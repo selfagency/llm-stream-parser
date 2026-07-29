@@ -756,13 +756,15 @@ function parseGo(content: string, includePrivate: boolean): GoParseResult {
 
     const pkgM = trimmed.match(GO_PACKAGE_RE);
     if (pkgM) {
-      symbols.push({
-        exported: false,
-        kind: 'package',
-        line: i + 1,
-        name: pkgM[1] ?? '',
-        signature: trimmed
-      });
+      if (includePrivate) {
+        symbols.push({
+          exported: false,
+          kind: 'package',
+          line: i + 1,
+          name: pkgM[1] ?? '',
+          signature: trimmed
+        });
+      }
       continue;
     }
 

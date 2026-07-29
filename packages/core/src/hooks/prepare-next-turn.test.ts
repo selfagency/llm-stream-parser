@@ -12,7 +12,7 @@ const makeInput = (overrides: Partial<PrepareNextTurnInput> = {}): PrepareNextTu
 
 describe('prepareNextTurn', () => {
   it('can swap the model for a turn', async () => {
-    const hook: PrepareNextTurnHook = async input => {
+    const hook: PrepareNextTurnHook = input => {
       if (input.turnCount === 0) {
         return { model: 'gpt-4-turbo' };
       }
@@ -28,7 +28,7 @@ describe('prepareNextTurn', () => {
   });
 
   it('can swap thinking configuration', async () => {
-    const hook: PrepareNextTurnHook = async () => ({
+    const hook: PrepareNextTurnHook = () => ({
       thinkingConfig: { budget: 8192 }
     });
 
@@ -38,7 +38,7 @@ describe('prepareNextTurn', () => {
   });
 
   it('can swap context scope', async () => {
-    const hook: PrepareNextTurnHook = async input => {
+    const hook: PrepareNextTurnHook = input => {
       if (input.turnCount === 2) {
         return { context: ['memory:recent'] };
       }
@@ -51,7 +51,7 @@ describe('prepareNextTurn', () => {
   });
 
   it('returns null when no changes are needed', async () => {
-    const hook: PrepareNextTurnHook = async () => null;
+    const hook: PrepareNextTurnHook = () => null;
 
     const result = await hook(makeInput());
     expect(result).toBeNull();
@@ -59,7 +59,7 @@ describe('prepareNextTurn', () => {
 
   it('receives accurate token usage data', async () => {
     const captured: PrepareNextTurnInput[] = [];
-    const hook: PrepareNextTurnHook = async input => {
+    const hook: PrepareNextTurnHook = input => {
       captured.push(input);
       return null;
     };

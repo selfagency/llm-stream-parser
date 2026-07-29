@@ -80,10 +80,10 @@ describe('scanUICopy', () => {
     it('detects "stay with me" patterns', () => {
       const result = scanUICopy(GUILT_REENGAGEMENT_COPY);
       expect(result.length).toBeGreaterThanOrEqual(3);
-      result.forEach(d => {
+      for (const d of result) {
         expect(d.pattern).toBe('guilt-reengagement');
         expect(d.severity).toBe('high');
-      });
+      }
     });
   });
 
