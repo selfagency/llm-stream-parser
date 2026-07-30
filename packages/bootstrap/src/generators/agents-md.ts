@@ -7,6 +7,22 @@
 import type { AgentsyConfig } from '../config.js';
 import type { ProjectProfile } from '../scanner.js';
 
+// ── Atlas manifest (optional, passed by caller) ────────────────────────
+
+/**
+ * Optional Atlas manifest data to include in the generated AGENTS.md.
+ * This is a structural subset of @agentsy/atlas's AtlasManifest —
+ * passed as plain data so bootstrap doesn't depend on @agentsy/atlas.
+ */
+export interface AtlasManifestData {
+  aiTasks: readonly string[];
+  constraints: readonly string[];
+  humanTasks: readonly string[];
+  layer?: string;
+  systemTasks: readonly string[];
+  touchpoints: readonly string[];
+}
+
 // ── Helpers ─────────────────────────────────────────────
 
 function bulletList(items: string[]): string {
@@ -240,6 +256,39 @@ function buildDoDont(): string {
   ].join('\n');
 }
 
+function buildAtlasManifest(manifest: AtlasManifestData): string {
+  const lines: string[] = ['## Agent Atlas Manifest', ''];
+
+  if (manifest.layer) {
+    lines.push(`- **Layer**: \`${manifest.layer}\``);
+  }
+
+  if (manifest.aiTasks.length > 0) {
+    lines.push(`- **AI Tasks**: ${manifest.aiTasks.map(t => `\`${t}\``).join(', ')}`);
+  }
+  if (manifest.humanTasks.length > 0) {
+    lines.push(`- **Human Tasks**: ${manifest.humanTasks.map(t => `\`${t}\``).join(', ')}`);
+  }
+  if (manifest.systemTasks.length > 0) {
+    lines.push(`- **System Tasks**: ${manifest.systemTasks.map(t => `\`${t}\``).join(', ')}`);
+  }
+  if (manifest.constraints.length > 0) {
+    lines.push(`- **Constraints**: ${manifest.constraints.map(c => `\`${c}\``).join(', ')}`);
+  }
+  if (manifest.touchpoints.length > 0) {
+    lines.push(`- **Touchpoints**: ${manifest.touchpoints.map(t => `\`${t}\``).join(', ')}`);
+  }
+
+  lines.push('');
+  lines.push(
+    '> These IDs reference the [AI Interaction Atlas](https://github.com/quietloudlab/ai-interaction-atlas) taxonomy.'
+  );
+  lines.push('> See `@agentsy/atlas` for the full pattern definitions.');
+  lines.push('');
+
+  return lines.join('\n');
+}
+
 // ── Main generator ──────────────────────────────────────
 
 /**
@@ -247,9 +296,10 @@ function buildDoDont(): string {
  *
  * @param profile - Detected project profile
  * @param config  - Current agentsy configuration
+ * @param atlas   - Optional Atlas manifest data to include in the file
  * @returns       - Complete AGENTS.md content
  */
-export function generateAgentsMd(profile: ProjectProfile, config: AgentsyConfig): string {
+export function generateAgentsMd(profile: ProjectProfile, config: AgentsyConfig, atlas?: AtlasManifestData): string {
   const sections: string[] = [
     '# AGENTS.md — Project Overview for AI Agents',
     '',
@@ -261,9 +311,14 @@ export function generateAgentsMd(profile: ProjectProfile, config: AgentsyConfig)
     buildLayout(profile),
     buildConventions(profile),
     buildGotchas(profile),
-    buildAgentsyComponents(config),
-    buildDoDont()
+    buildAgentsyComponents(config)
   ];
+
+  if (atlas) {
+    sections.push(buildAtlasManifest(atlas));
+  }
+
+  sections.push(buildDoDont());
 
   return `${sections.join('\n').trim()}\n`;
 }

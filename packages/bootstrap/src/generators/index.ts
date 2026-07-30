@@ -9,7 +9,13 @@ export {
   generateAftJson,
   generateAftMd
 } from './aft.js';
-export { generateAgentsMd } from './agents-md.js';
+export { type AtlasManifestData, generateAgentsMd } from './agents-md.js';
+export {
+  type ReviewFinding,
+  type ReviewResult,
+  type ReviewSeverity,
+  reviewAgentsMd
+} from './agents-md-review.js';
 export {
   type DbQueryFn,
   type MagicContextSeed,
