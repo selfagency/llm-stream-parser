@@ -10,6 +10,7 @@ export default defineConfig({
     skills: 'src/skills/index.ts'
   },
   external: [
+    '@agentsy/atlas',
     '@agentsy/core',
     '@agentsy/context',
     '@agentsy/memory',

@@ -4,11 +4,14 @@
  * Every "must" and "must not" from ETHICS.md, SAFETY.md, GOVERNANCE.md,
  * and docs/constitution.md is extracted into an EthicalClause. Each clause
  * has an `implementedBy` field that is either a scanner ID (added in Phase 9)
- * or `null` (a known enforcement gap).
+ * or `null` (a known enforcement gap). The optional `atlasConstraintId` field
+ * links the clause to an AI Interaction Atlas constraint for traceability.
  *
  * The registry is loaded once at daemon startup and made available to
  * scanners via the pipeline context.
  */
+
+import type { AtlasConstraintId } from '@agentsy/atlas';
 
 // =============================================================================
 // Types
@@ -24,6 +27,8 @@ export type EnforceableAs = 'scanner' | 'policy-rule' | 'prompt-module' | 'relea
  * A single ethical clause extracted from a policy document.
  */
 export interface EthicalClause {
+  /** Atlas constraint ID that this clause maps to, or `null` if unmapped */
+  readonly atlasConstraintId?: AtlasConstraintId | null;
   /** How this clause is intended to be enforced */
   readonly enforceableAs: EnforceableAs;
   /** References to docs/safety-exceptions.md entries, if any */
@@ -92,6 +97,16 @@ export class EthicsRegistry {
   get gapCount(): number {
     return this.getEthicsGaps().length;
   }
+
+  /** Clauses with an Atlas constraint ID that has no GuardrailsConfig mapping. */
+  getAtlasGaps(): EthicalClause[] {
+    return [...this.#clauses.values()].filter(c => c.atlasConstraintId !== null && c.atlasConstraintId !== undefined);
+  }
+
+  /** Clauses mapped to a specific Atlas constraint. */
+  getClausesForAtlasConstraint(constraintId: AtlasConstraintId): EthicalClause[] {
+    return [...this.#clauses.values()].filter(c => c.atlasConstraintId === constraintId);
+  }
 }
 
 // =============================================================================
@@ -111,9 +126,18 @@ function clause(
   section: string,
   text: string,
   enforceableAs: EnforceableAs,
-  implementedBy?: string | null
+  implementedBy?: string | null,
+  atlasConstraintId?: AtlasConstraintId | null
 ): EthicalClause {
-  return { id, source, section, text, enforceableAs, implementedBy: implementedBy ?? null };
+  return {
+    id,
+    source,
+    section,
+    text,
+    enforceableAs,
+    implementedBy: implementedBy ?? null,
+    atlasConstraintId: atlasConstraintId ?? null
+  };
 }
 
 export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
@@ -207,14 +231,18 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'ETHICS.md',
     '§6',
     'Personalization and memory should be limited to legitimate user-serving purposes.',
-    'policy-rule'
+    'policy-rule',
+    null,
+    'const_privacy'
   ),
   clause(
     'ethics:memory-transparency',
     'ETHICS.md',
     '§6',
     'Users should be able to understand what is stored, why it is stored, and how it affects outputs.',
-    'policy-rule'
+    'policy-rule',
+    null,
+    'const_data_retention'
   ),
   clause(
     'ethics:no-hidden-profiling',
@@ -243,7 +271,9 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'ETHICS.md',
     '§8',
     'In high-risk domains, first-party framework defaults should become more cautious, less personalized, and more willing to redirect to qualified human help.',
-    'policy-rule'
+    'policy-rule',
+    null,
+    'const_human_loop'
   ),
   clause(
     'ethics:no-style-mimicry',
@@ -373,7 +403,8 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'Safety objectives',
     'First-party agents must not provide unsafe guidance in high-risk domains.',
     'scanner',
-    'high-risk-domain'
+    'high-risk-domain',
+    'const_content_safety'
   ),
   clause(
     'safety:no-hidden-personalization',
@@ -402,7 +433,8 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'Safety objectives',
     'First-party agents must preserve human judgment authority in professional, relational, and civic domains.',
     'scanner',
-    'professional-displacement'
+    'professional-displacement',
+    'const_human_loop'
   ),
   clause(
     'safety:transparent-auditable-safeguards',
@@ -471,7 +503,9 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'SAFETY.md',
     'Required behavioral rules',
     'If memory or personalization is active, the user should be able to inspect, edit, delete, reset, or disable it.',
-    'policy-rule'
+    'policy-rule',
+    null,
+    'const_data_retention'
   ),
   clause(
     'safety:no-agi-trajectory',
@@ -547,7 +581,8 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'Article I',
     'Humans have final authority over meaningful outcomes. The agent must never claim final authority over decisions that affect people materially, legally, politically, or socially.',
     'scanner',
-    'professional-displacement'
+    'professional-displacement',
+    'const_human_loop'
   ),
   clause(
     'constitution:truthfulness',
@@ -598,7 +633,9 @@ export const DEFAULT_ETHICS_REGISTRY = new EthicsRegistry([
     'constitution.md',
     'Article VIII',
     'The agent must minimize unnecessary data collection and memory retention. Users must be able to inspect and remove retained information.',
-    'policy-rule'
+    'policy-rule',
+    null,
+    'const_data_retention'
   ),
   clause(
     'constitution:epistemic-humility',

@@ -53,6 +53,7 @@
     "coverage": "vitest --coverage"
   },
   "dependencies": {
+    "@agentsy/atlas": "workspace:*",
     "@agentsy/core": "workspace:*",
     "@agentsy/runtime": "workspace:*",
     "@agentsy/shared": "workspace:*",

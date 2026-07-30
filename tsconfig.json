@@ -30,6 +30,8 @@
       "@agentsy/bootstrap/*": ["packages/bootstrap/src/*"],
       "@agentsy/context": ["packages/context/src/index.ts"],
       "@agentsy/guardrails": ["packages/guardrails/src/index.ts"],
+      "@agentsy/atlas": ["packages/atlas/src/index.ts"],
+      "@agentsy/atlas/*": ["packages/atlas/src/*"],
       "@agentsy/models": ["packages/models/src/index.ts"],
       "@agentsy/models/local-providers": [
         "packages/models/src/local-providers/index.ts"

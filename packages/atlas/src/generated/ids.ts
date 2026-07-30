@@ -1,0 +1,20 @@
+/**
+ * Atlas ID unions — generated from snapshot. Do not edit by hand.
+ *
+ * Three separate task ID unions so a manifest can't put a human task
+ * in the aiTasks array (catches YAML authoring errors at load time).
+ */
+
+export type AtlasAiTaskId = 'task_detect' | 'task_extract' | 'task_estimate' | 'task_explain' | 'task_forecast' | 'task_monitor' | 'task_retrieve' | 'task_segment' | 'task_classify' | 'task_match' | 'task_rank' | 'task_regress' | 'task_synthesize' | 'task_verify' | 'task_simulate' | 'task_represent' | 'task_cluster' | 'task_generate' | 'task_transform' | 'task_translate' | 'task_adapt' | 'task_act' | 'task_explore' | 'task_plan' | 'task_harvest';
+
+export type AtlasHumanTaskId = 'human_authenticate' | 'human_grant_consent' | 'human_connect_integration' | 'human_upload_file' | 'human_type_input' | 'human_voice_command' | 'human_gesture' | 'human_navigate_space' | 'human_adjust_control' | 'human_configure' | 'human_select_option' | 'human_choose' | 'human_start_process' | 'human_stop_process' | 'human_compare' | 'human_organize' | 'human_annotate' | 'human_review' | 'human_validate' | 'human_provide_feedback' | 'human_flag' | 'human_delegate' | 'human_edit' | 'human_export';
+
+export type AtlasSystemTaskId = 'system_read_db' | 'system_cache' | 'system_webhook' | 'system_timer' | 'system_rules' | 'system_format' | 'system_api' | 'system_create_db' | 'system_update_db' | 'system_delete_db' | 'system_notification' | 'system_log' | 'system_git' | 'system_train' | 'system_evaluate' | 'system_orchestrate' | 'system_analytics' | 'system_experiment' | 'system_monitor_model' | 'system_state' | 'system_reward' | 'system_session';
+
+export type AtlasArtifactId = 'data_text' | 'data_markup' | 'data_structured_text' | 'data_code' | 'data_conversation' | 'data_document' | 'data_session_history' | 'data_image' | 'data_video' | 'data_video_stream' | 'data_optical_flow' | 'data_3d_model' | 'data_point_cloud' | 'data_depth_map' | 'data_heatmap' | 'data_bbox' | 'data_mask' | 'data_audio' | 'data_audio_stream' | 'data_speech' | 'data_json' | 'data_list' | 'data_table' | 'data_knowledge_graph' | 'data_embedding' | 'data_point' | 'data_state_vector' | 'data_sensor_stream' | 'data_trajectory' | 'data_pose' | 'data_preference_profile' | 'data_token' | 'data_score' | 'data_classification' | 'data_signal' | 'data_log' | 'data_config' | 'data_schema' | 'data_db_record' | 'data_api_response' | 'data_action' | 'data_policy' | 'data_file' | 'data_selection' | 'data_group' | 'data_any' | 'data_multimodal';
+
+export type AtlasConstraintId = 'const_privacy' | 'const_latency' | 'const_confidence' | 'const_human_loop' | 'const_rate_limit' | 'const_context_window' | 'const_tone' | 'const_format' | 'const_authentication' | 'const_authorization' | 'const_encryption' | 'const_cost_budget' | 'const_compute_budget' | 'const_system_instruction' | 'const_prompt_template' | 'const_few_shot_examples' | 'const_data_residency' | 'const_data_retention' | 'const_content_safety' | 'const_error_handling' | 'const_streaming' | 'const_audit_log' | 'const_quality_threshold' | 'const_user_consent' | 'const_localization' | 'const_caching' | 'const_autonomy' | 'const_parallelism' | 'const_timeout' | 'const_minimalism' | 'const_code_style' | 'const_backward_compatibility' | 'const_attribution' | 'const_provenance' | 'const_citation' | 'const_model_portability' | 'const_eval_coverage';
+
+export type AtlasTouchpointId = 'tp_mobile' | 'tp_web' | 'tp_embedded' | 'tp_kiosk' | 'tp_wearable' | 'tp_chat' | 'tp_sms' | 'tp_email' | 'tp_avatar' | 'tp_voice' | 'tp_spatial_audio' | 'tp_microphone' | 'tp_headphones' | 'tp_speaker' | 'tp_vr' | 'tp_ar_passthrough' | 'tp_ar_optical' | 'tp_mobile_ar' | 'tp_api' | 'tp_cli' | 'tp_doc' | 'tp_iot_sensor' | 'tp_robot' | 'tp_appliance' | 'tp_vehicle' | 'tp_haptic' | 'tp_ambient' | 'tp_touchscreen' | 'tp_3d_space' | 'tp_game_controller' | 'tp_overlay_hud' | 'tp_text_input' | 'tp_button' | 'tp_selection_control' | 'tp_slider' | 'tp_file_picker' | 'tp_link' | 'tp_drag_drop';
+
+export type AtlasLayerId = 'layer_inbound' | 'layer_internal' | 'layer_outbound' | 'layer_interactive';

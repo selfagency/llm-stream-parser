@@ -67,7 +67,7 @@
   },
   "dependencies": {
     "@agentsy/shared": "workspace:*",
-    "isolated-vm": "^5.0.0"
+    "isolated-vm": "^6.1.2"
   },
   "devDependencies": {
     "@types/node": "^25.9.0",

@@ -1,3 +1,5 @@
+import type { AtlasManifest } from '@agentsy/atlas';
+
 export interface AgentLayer {
   dependsOn?: string[];
   execution?: 'sequential' | 'parallel';
@@ -14,6 +16,7 @@ export interface ToolFilterSpec {
 }
 
 export interface AgentSpec {
+  atlas?: AtlasManifest;
   constraints?: string[];
   description: string;
   hooks?: AgentHooks;

@@ -1,3 +1,4 @@
+import { AtlasManifestSchema } from '@agentsy/atlas';
 import { z } from 'zod';
 
 /**
@@ -66,6 +67,7 @@ export const AgentSpecSchema = z
     name: z.string(),
     role: z.string(),
     description: z.string(),
+    atlas: AtlasManifestSchema.optional(),
     layers: z.array(AgentLayerSchema).optional(),
     constraints: z.array(z.string()).optional(),
     hooks: AgentHooksSchema.optional(),
