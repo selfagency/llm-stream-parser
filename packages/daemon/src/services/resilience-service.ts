@@ -14,6 +14,7 @@
  */
 
 import { CircuitBreaker, CircuitBreakerOpenError, type CircuitBreakerOptions } from './circuit-breaker.js';
+import { createNoopLogger, type Logger } from './types.js';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,12 +50,7 @@ export interface ModelCallResult {
   [key: string]: unknown;
 }
 
-export interface ResilienceLogger {
-  debug(message: string, meta?: Record<string, unknown>): void;
-  error(message: string, meta?: Record<string, unknown>): void;
-  info(message: string, meta?: Record<string, unknown>): void;
-  warn(message: string, meta?: Record<string, unknown>): void;
-}
+export type ResilienceLogger = Logger;
 
 export interface RoutingServiceLike {
   selectModel(request: { tier: ModelTier }): Promise<RoutingDecision | null>;
@@ -114,26 +110,6 @@ export class AllProvidersExhaustedError extends Error {
     this.lastError = opts.lastError;
   }
 }
-
-// ── Logger helpers ───────────────────────────────────────────────────────────
-
-function createNoopLogger(): ResilienceLogger {
-  return {
-    debug() {
-      // noop
-    },
-    error() {
-      // noop
-    },
-    info() {
-      // noop
-    },
-    warn() {
-      // noop
-    }
-  };
-}
-
 // ── CircuitBreaker store ─────────────────────────────────────────────────────
 
 function getTierIndex(tier: string): number {
@@ -210,6 +186,7 @@ export function createResilienceService(
     if (!executor) {
       // If no executor is provided, synthesize a successful result for testing tiers
       // that still returns routing info. In production the daemon injects streamManager.
+      logger.warn('ResilienceService has no executor — calls return synthetic results. Check daemon wiring.');
       return {
         providerId: request.routing.providerId,
         modelId: request.routing.modelId,
@@ -342,6 +319,7 @@ export function createResilienceService(
           // Avoid infinite loops if routing returns same provider again without spillover difference
           // but still allow it if it's a different model or has fresh health
           logger.debug(`Skipping already attempted provider ${fallbackRouting.providerId} in tier ${fallbackTier}`);
+          continue;
         }
         logger.info(`Degrading from ${currentTier} to ${fallbackTier}`, {
           from: String(currentTier),

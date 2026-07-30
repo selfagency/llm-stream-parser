@@ -11,6 +11,7 @@
 
 import { randomUUID } from 'node:crypto';
 import type { AgentCheckpointRow } from '../db/schema.js';
+import { createNoopLogger, type Logger } from './types.js';
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -89,13 +90,6 @@ export interface CheckpointAgentHost {
   spawn?(spec: Record<string, unknown>): Promise<{ id: string } | { spec: { id: string } }>;
 }
 
-export interface Logger {
-  debug(message: string, meta?: Record<string, unknown>): void;
-  error(message: string, meta?: Record<string, unknown>): void;
-  info(message: string, meta?: Record<string, unknown>): void;
-  warn(message: string, meta?: Record<string, unknown>): void;
-}
-
 export interface CheckpointManagerDeps {
   agentHost?: CheckpointAgentHost;
   db: CheckpointDB;
@@ -166,23 +160,6 @@ function parseCheckpointRow(row: AgentCheckpointRow): AgentCheckpoint {
     const message = err instanceof Error ? err.message : String(err);
     throw new Error(`Failed to parse checkpoint data for id "${row.id}": ${message}`);
   }
-}
-
-function createNoopLogger(): Logger {
-  return {
-    debug(_msg: string, _meta?: Record<string, unknown>) {
-      // noop
-    },
-    error(_msg: string, _meta?: Record<string, unknown>) {
-      // noop
-    },
-    info(_msg: string, _meta?: Record<string, unknown>) {
-      // noop
-    },
-    warn(_msg: string, _meta?: Record<string, unknown>) {
-      // noop
-    }
-  };
 }
 
 function buildMetadata(base: Partial<CheckpointMetadata> & Record<string, unknown>): CheckpointMetadata {

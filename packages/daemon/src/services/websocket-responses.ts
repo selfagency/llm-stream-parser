@@ -20,6 +20,8 @@ import {
   type TurnState
 } from '@agentsy/gateway';
 
+import { createNoopLogger, type Logger } from './types.js';
+
 // ── Types ──────────────────────────────────────────────────
 
 export const TURN_STATE_HEADER = 'x-codex-turn-state';
@@ -388,30 +390,6 @@ export class WebSocketConnectionPool {
 
 // ── Service ────────────────────────────────────────────────
 
-export interface Logger {
-  debug(message: string, meta?: Record<string, unknown>): void;
-  error(message: string, meta?: Record<string, unknown>): void;
-  info(message: string, meta?: Record<string, unknown>): void;
-  warn(message: string, meta?: Record<string, unknown>): void;
-}
-
-function noOpLogger(): Logger {
-  return {
-    debug() {
-      // noop
-    },
-    error() {
-      // noop
-    },
-    info() {
-      // noop
-    },
-    warn() {
-      // noop
-    }
-  };
-}
-
 export class WebSocketResponsesService {
   readonly name = 'websocket-responses';
   readonly #pool: WebSocketConnectionPool;
@@ -432,7 +410,7 @@ export class WebSocketResponsesService {
       stickyOptions.ttlMs = options.prewarmTtlMs;
     }
     const stickyTable = options.stickyTable ?? createStickyRoutingTable(stickyOptions);
-    const logger = options.logger ?? noOpLogger();
+    const logger = options.logger ?? createNoopLogger();
 
     this.#now = now;
     this.#idGen = idGen;

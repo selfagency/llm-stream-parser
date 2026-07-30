@@ -126,7 +126,6 @@ export {
   type AuditEvent,
   type AuditSink,
   createSandboxService,
-  type Logger as SandboxLogger,
   type SandboxExecutionStatus,
   type SandboxInput,
   type SandboxOutput,

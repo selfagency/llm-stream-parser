@@ -199,6 +199,9 @@ function repairIncompleteJson(input: string): string {
         if (stack.at(-1) === char) {
           buffer += closed + char;
           stack.pop();
+        } else {
+          // Unmatched closing bracket — emit it anyway rather than silently dropping
+          buffer += char;
         }
       }
     } else {
@@ -403,6 +406,9 @@ function validateNode(
     if (typeof schema.maxLength === 'number' && value.length > schema.maxLength) {
       errors.push(`${path}: longer than maxLength ${schema.maxLength}`);
     }
+    // schema.pattern is expected to come from internal hardcoded schema definitions only.
+    // User-supplied patterns could cause ReDoS. All patterns in this codebase are
+    // compile-time constants defined in the OutputValidator's internal schema registry.
     if (typeof schema.pattern === 'string') {
       try {
         const re = new RegExp(schema.pattern);

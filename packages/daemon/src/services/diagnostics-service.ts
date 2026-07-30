@@ -17,6 +17,8 @@
  * @module
  */
 
+import { createNoopLogger, type Logger } from './types.js';
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export type DaemonState = 'starting' | 'running' | 'stopping' | 'stopped' | 'crashed';
@@ -191,13 +193,6 @@ export interface AcpServerLike {
   sessions?: Map<string, unknown> | Set<string> | unknown;
 }
 
-export interface Logger {
-  debug(message: string, meta?: Record<string, unknown>): void;
-  error(message: string, meta?: Record<string, unknown>): void;
-  info(message: string, meta?: Record<string, unknown>): void;
-  warn(message: string, meta?: Record<string, unknown>): void;
-}
-
 export interface DiagnosticsServiceDeps {
   acpServer?: AcpServerLike | null;
   agentHost?: AgentHostLike | null;
@@ -219,23 +214,6 @@ export interface DiagnosticsServiceOptions {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function createNoopLogger(): Logger {
-  return {
-    debug() {
-      // noop
-    },
-    error() {
-      // noop
-    },
-    info() {
-      // noop
-    },
-    warn() {
-      // noop
-    }
-  };
-}
 
 function safeNumber(value: unknown, fallback = 0): number {
   if (typeof value === 'number' && Number.isFinite(value)) {

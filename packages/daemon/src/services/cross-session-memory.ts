@@ -12,6 +12,8 @@
  * @module
  */
 
+import { createNoopLogger, type Logger } from './types.js';
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface MemoryItem {
@@ -62,13 +64,6 @@ export interface CrossSessionInsight {
   sessionIds: string[];
   summary: string;
   topic: string;
-}
-
-export interface Logger {
-  debug(message: string, meta?: Record<string, unknown>): void;
-  error(message: string, meta?: Record<string, unknown>): void;
-  info(message: string, meta?: Record<string, unknown>): void;
-  warn(message: string, meta?: Record<string, unknown>): void;
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -132,23 +127,6 @@ const STOPWORDS = new Set([
 ]);
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-
-function createNoopLogger(): Logger {
-  return {
-    debug(_msg: string, _meta?: Record<string, unknown>): void {
-      // noop
-    },
-    error(_msg: string, _meta?: Record<string, unknown>): void {
-      // noop
-    },
-    info(_msg: string, _meta?: Record<string, unknown>): void {
-      // noop
-    },
-    warn(_msg: string, _meta?: Record<string, unknown>): void {
-      // noop
-    }
-  };
-}
 
 function parseTimestamp(value: Date | number | string): Date {
   if (value instanceof Date) {

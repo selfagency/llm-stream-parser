@@ -14,7 +14,11 @@
  * @module
  */
 
+import { createNoopLogger, type Logger } from './types.js';
+
 // ── Types ────────────────────────────────────────────────────────────────────
+
+export type AuditSink = (event: AuditEvent) => Promise<void> | void;
 
 export interface ToolExecutionRequest {
   readonly agentId: string;
@@ -120,15 +124,6 @@ export interface AuditEvent {
   readonly toolName: string;
 }
 
-export type AuditSink = (event: AuditEvent) => Promise<void> | void;
-
-export interface Logger {
-  debug(message: string, meta?: Record<string, unknown>): void;
-  error(message: string, meta?: Record<string, unknown>): void;
-  info(message: string, meta?: Record<string, unknown>): void;
-  warn(message: string, meta?: Record<string, unknown>): void;
-}
-
 export interface SandboxServiceDeps {
   readonly agentHost: AgentHostLike;
   readonly auditSink?: AuditSink;
@@ -142,25 +137,6 @@ export interface SandboxServiceDeps {
 export interface SandboxServiceOptions {
   readonly auditEnabled?: boolean;
   readonly defaultTimeoutMs?: number;
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function createNoopLogger(): Logger {
-  return {
-    debug(_msg: string, _meta?: Record<string, unknown>) {
-      // noop
-    },
-    error(_msg: string, _meta?: Record<string, unknown>) {
-      // noop
-    },
-    info(_msg: string, _meta?: Record<string, unknown>) {
-      // noop
-    },
-    warn(_msg: string, _meta?: Record<string, unknown>) {
-      // noop
-    }
-  };
 }
 
 function validateString(value: unknown, field: string): string {
