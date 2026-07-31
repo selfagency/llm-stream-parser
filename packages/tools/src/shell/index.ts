@@ -8,6 +8,7 @@
  */
 
 import { exec as execCb } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { existsSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { isAbsolute, resolve } from 'node:path';
@@ -199,7 +200,7 @@ class PersistentShellImpl implements PersistentShell {
   readonly #initialEnv: Record<string, string>;
 
   constructor(options: PersistentShellOptions = {}) {
-    this.id = options.id ?? `shell_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    this.id = options.id ?? `shell_${Date.now()}_${randomUUID().slice(0, 6)}`;
     const initialCwd = options.initialCwd ?? process.cwd();
     this.#initialCwd = initialCwd;
     this.#cwd = initialCwd;

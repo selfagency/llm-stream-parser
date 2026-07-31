@@ -149,8 +149,8 @@ function scopesEqual(a: readonly string[], b: readonly string[]): boolean {
   if (a.length !== b.length) {
     return false;
   }
-  const aSorted = [...a].sort();
-  const bSorted = [...b].sort();
+  const aSorted = [...a].sort((x, y) => x.localeCompare(y));
+  const bSorted = [...b].sort((x, y) => x.localeCompare(y));
   for (let i = 0; i < aSorted.length; i++) {
     if (aSorted[i] !== bSorted[i]) {
       return false;

@@ -10,6 +10,7 @@
  * shared — isolation prevents resource contention.
  */
 
+import { randomUUID } from 'node:crypto';
 import type { ContextManager } from '../context/index.js';
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -65,7 +66,7 @@ export class BackgroundTaskManager {
    * parent agent but gets its own frame — no shared mutable state.
    */
   spawn(spec: BackgroundTaskSpec): BackgroundTaskHandle {
-    const taskId = spec.taskId ?? `bg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const taskId = spec.taskId ?? `bg_${Date.now()}_${randomUUID().slice(0, 6)}`;
 
     // Create isolated context frame with inherited context
     const frame = this.#contextManager.pushContext({

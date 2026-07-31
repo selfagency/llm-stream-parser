@@ -30,6 +30,7 @@ function getSnapshotNpmVersion(): string {
 function getLatestNpmVersion(): string {
   try {
     const output = execSync('npm view @quietloudlab/ai-interaction-atlas version 2>/dev/null', {
+      // NOSONAR:typescript:S4036
       encoding: 'utf-8'
     }).trim();
     return output;

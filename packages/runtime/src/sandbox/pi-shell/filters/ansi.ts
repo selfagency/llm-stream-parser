@@ -5,9 +5,9 @@
 
 // biome-ignore-all lint/suspicious/noControlCharactersInRegex: ANSI ESC required for stripping
 // biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: progress detection needs branching
-const ANSI_CSI_RE = /\x1B\[[0-?]*[ -/]*[@-~]/g;
-const ANSI_OSC_RE = /\x1B\][^\x07]*\x07/g;
-const ANSI_ESC_RE = /\x1B[@-Z\\-_]/g;
+const ANSI_CSI_RE = /\x1B\[[0-?]*[ -/]*[@-~]/g; // NOSONAR
+const ANSI_OSC_RE = /\x1B\][^\x07]*\x07/g; // NOSONAR
+const ANSI_ESC_RE = /\x1B[@-Z\\-_]/g; // NOSONAR
 
 const SPINNER_CHARS = new Set([
   '⠋',
@@ -63,7 +63,7 @@ const PROGRESS_BAR_RE = /\[.*[=█░#]+\s*\].*\d*%?/;
 const BRACKET_PERCENT_RE = /\[.*[=█░#>]+.*\].*\d+%/;
 const PERCENT_ONLY_RE = /^\s*\d{1,3}%\s*$/;
 const DOTS_PROGRESS_RE = /^\s*\.+\s*$/;
-const FETCH_PROGRESS_RE = /^\s*(?:-\s*)?fetchMetadata|extract|idealTree|npm\s+(?:timing|sill)\s+.*progress/i;
+const FETCH_PROGRESS_RE = /^\s*(?:-\s*)?(?:fetchMetadata|extract|idealTree|npm\s+(?:timing|sill)\s+.*progress)/i;
 const GIT_PROGRESS_RE = /^(?:remote:\s+)?(?:Counting|Compressing|Receiving|Resolving|Unpacking|Writing)\s+objects:/;
 
 export function stripAnsi(input: string): string {
@@ -73,7 +73,7 @@ export function stripAnsi(input: string): string {
   let out = input.replace(ANSI_OSC_RE, '');
   out = out.replace(ANSI_CSI_RE, '');
   out = out.replace(ANSI_ESC_RE, '');
-  out = out.replace(/\x1B/g, '');
+  out = out.replace(/\x1B/g, ''); // NOSONAR
   return out;
 }
 

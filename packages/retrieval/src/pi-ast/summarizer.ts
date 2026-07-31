@@ -734,7 +734,7 @@ const GO_PACKAGE_RE = /^\s*package\s+(\w+)/;
 const GO_IMPORT_SINGLE_RE = /^\s*import\s+(?:\w+\s+)?["`]([^"`]+)["`]/;
 const GO_IMPORT_START_RE = /^\s*import\s+\($/;
 const GO_IMPORT_ENTRY_RE = /^\s*(?:\w+\s+)?["`]([^"`]+)["`]/;
-const GO_FUNC_RE = /^\s*func\s+(?:\(\s*\w+\s+[^)]+\s*\)\s+)?(\w+)\s*(\([^)]*\))\s*(\(?[^ {]*\)?)?\s*\{?/;
+const GO_FUNC_RE = /^\s*func\s+(?:\(\s*\w+\s+[^)]+\s*\)\s+)?(\w+)\s*(\([^)]*\))\s*(\(?[^ {]*\)?)?\s*\{?/; // NOSONAR:typescript:S5842
 const GO_TYPE_RE = /^\s*type\s+(\w+)\s+(struct|interface|\w+)/;
 const GO_CONST_RE = /^\s*const\s+(\w+)/;
 
