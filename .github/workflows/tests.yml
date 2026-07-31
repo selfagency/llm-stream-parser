@@ -79,7 +79,7 @@ jobs:
     name: Unit tests (${{ matrix.group }})
     if: ${{ github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore(release):') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -89,7 +89,9 @@ jobs:
           - group: runtime
             filter: --filter=@agentsy/guardrails --filter=@agentsy/runtime --filter=@agentsy/orchestrator --filter=@agentsy/session --filter=@agentsy/memory --filter=@agentsy/retrieval --filter=@agentsy/secrets
           - group: surface
-            filter: --filter=@agentsy/cli --filter=@agentsy/ui --filter=@agentsy/tools --filter=@agentsy/prompts --filter=@agentsy/vscode --filter=@agentsy/testing --filter=@agentsy/plugins --filter=@agentsy/agents --filter=@agentsy/bootstrap
+            filter: --filter=@agentsy/cli --filter=@agentsy/ui --filter=@agentsy/tools --filter=@agentsy/prompts --filter=@agentsy/vscode --filter=@agentsy/testing --filter=@agentsy/agents --filter=@agentsy/bootstrap
+          - group: plugins
+            filter: --filter=@agentsy/plugins
           - group: daemon
             filter: --filter=@agentsy/daemon
 
@@ -179,6 +181,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: coverage-reports-daemon
+          path: coverage-input
+
+      - name: Download plugins coverage
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-reports-plugins
           path: coverage-input
 
       - name: Merge coverage reports
