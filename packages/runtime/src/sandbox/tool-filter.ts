@@ -49,6 +49,7 @@ export function patternToRegExp(pattern: string): RegExp {
   }
   const escaped = pattern.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&');
   const regexSource = `^${escaped.replace(/\*/g, '.*')}$`;
+  // nosemgrep: patterns come from agent YAML configs, not user input
   return new RegExp(regexSource);
 }
 

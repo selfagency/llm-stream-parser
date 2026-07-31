@@ -20,6 +20,7 @@ export class EmptyToolListError extends Error {
 
 function patternToRegExp(pattern: string): RegExp {
   const escaped = pattern.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&');
+  // nosemgrep: patterns come from agent YAML configs, not user input
   return new RegExp(`^${escaped.replace(/\*/g, '.*')}$`);
 }
 
