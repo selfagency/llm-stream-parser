@@ -317,7 +317,6 @@ function deepEqual(a: unknown, b: unknown): boolean {
   return false;
 }
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: schema validation is inherently branchy
 function validateNode(
   value: unknown,
   schema: JsonSchema,
@@ -343,6 +342,36 @@ function validateNode(
     return;
   }
 
+  validateCombinators(value, schema, path, errors, depth, maxDepth, keyCount, maxKeys);
+
+  if (typeof value === 'string') {
+    validateStringValue(value, schema, path, errors);
+  }
+
+  if (typeof value === 'number') {
+    validateNumberValue(value, schema, path, errors);
+  }
+
+  if (Array.isArray(value)) {
+    validateArrayValue(value, schema, path, errors, depth, maxDepth, keyCount, maxKeys);
+  }
+
+  if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+    validateObjectValue(value as Record<string, unknown>, schema, path, errors, depth, maxDepth, keyCount, maxKeys);
+  }
+}
+
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: combinator validation (anyOf/oneOf/allOf/not) is inherently branchy
+function validateCombinators(
+  value: unknown,
+  schema: JsonSchema,
+  path: string,
+  errors: string[],
+  depth: number,
+  maxDepth: number,
+  keyCount: { count: number },
+  maxKeys: number
+): void {
   if (Array.isArray(schema.enum)) {
     const enumVals = schema.enum as unknown[];
     if (!enumVals.some(item => deepEqual(item, value))) {
@@ -398,103 +427,120 @@ function validateNode(
       validateNode(value, sub, path, errors, depth + 1, maxDepth, keyCount, maxKeys);
     }
   }
+}
 
-  if (typeof value === 'string') {
-    if (typeof schema.minLength === 'number' && value.length < schema.minLength) {
-      errors.push(`${path}: shorter than minLength ${schema.minLength}`);
-    }
-    if (typeof schema.maxLength === 'number' && value.length > schema.maxLength) {
-      errors.push(`${path}: longer than maxLength ${schema.maxLength}`);
-    }
-    // schema.pattern is expected to come from internal hardcoded schema definitions only.
-    // User-supplied patterns could cause ReDoS. All patterns in this codebase are
-    // compile-time constants defined in the OutputValidator's internal schema registry.
-    if (typeof schema.pattern === 'string') {
-      try {
-        const re = new RegExp(schema.pattern);
-        if (!re.test(value)) {
-          errors.push(`${path}: does not match pattern ${schema.pattern}`);
-        }
-      } catch {
-        // ignore invalid pattern
+function validateStringValue(value: string, schema: JsonSchema, path: string, errors: string[]): void {
+  if (typeof schema.minLength === 'number' && value.length < schema.minLength) {
+    errors.push(`${path}: shorter than minLength ${schema.minLength}`);
+  }
+  if (typeof schema.maxLength === 'number' && value.length > schema.maxLength) {
+    errors.push(`${path}: longer than maxLength ${schema.maxLength}`);
+  }
+  // schema.pattern is expected to come from internal hardcoded schema definitions only.
+  // User-supplied patterns could cause ReDoS. All patterns in this codebase are
+  // compile-time constants defined in the OutputValidator's internal schema registry.
+  if (typeof schema.pattern === 'string') {
+    try {
+      const re = new RegExp(schema.pattern);
+      if (!re.test(value)) {
+        errors.push(`${path}: does not match pattern ${schema.pattern}`);
       }
+    } catch {
+      // ignore invalid pattern
     }
-    if (typeof schema.format === 'string') {
-      const fmt = schema.format as string;
-      if (fmt === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        errors.push(`${path}: does not match format 'email'`);
-      }
-      if (fmt === 'uri' && !/^[a-zA-Z][a-zA-Z0-9+\-.]*:/.test(value)) {
-        errors.push(`${path}: does not match format 'uri'`);
-      }
+  }
+  if (typeof schema.format === 'string') {
+    const fmt = schema.format as string;
+    if (fmt === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      errors.push(`${path}: does not match format 'email'`);
+    }
+    if (fmt === 'uri' && !/^[a-zA-Z][a-zA-Z0-9+\-.]*:/.test(value)) {
+      errors.push(`${path}: does not match format 'uri'`);
+    }
+  }
+}
+
+function validateNumberValue(value: number, schema: JsonSchema, path: string, errors: string[]): void {
+  if (typeof schema.minimum === 'number' && value < schema.minimum) {
+    errors.push(`${path}: below minimum ${schema.minimum}`);
+  }
+  if (typeof schema.maximum === 'number' && value > schema.maximum) {
+    errors.push(`${path}: above maximum ${schema.maximum}`);
+  }
+  if (typeof schema.exclusiveMinimum === 'number' && value <= schema.exclusiveMinimum) {
+    errors.push(`${path}: not above exclusiveMinimum ${schema.exclusiveMinimum}`);
+  }
+  if (typeof schema.exclusiveMaximum === 'number' && value >= schema.exclusiveMaximum) {
+    errors.push(`${path}: not below exclusiveMaximum ${schema.exclusiveMaximum}`);
+  }
+}
+
+function validateArrayValue(
+  value: unknown[],
+  schema: JsonSchema,
+  path: string,
+  errors: string[],
+  depth: number,
+  maxDepth: number,
+  keyCount: { count: number },
+  maxKeys: number
+): void {
+  if (typeof schema.minItems === 'number' && value.length < schema.minItems) {
+    errors.push(`${path}: fewer than minItems ${schema.minItems}`);
+  }
+  if (typeof schema.maxItems === 'number' && value.length > schema.maxItems) {
+    errors.push(`${path}: more than maxItems ${schema.maxItems}`);
+  }
+  const itemSchema = schema.items as JsonSchema | undefined;
+  if (itemSchema && typeof itemSchema === 'object' && !Array.isArray(itemSchema)) {
+    for (let i = 0; i < value.length; i++) {
+      validateNode(value[i], itemSchema, `${path}[${i}]`, errors, depth + 1, maxDepth, keyCount, maxKeys);
+    }
+  }
+}
+
+function validateObjectValue(
+  obj: Record<string, unknown>,
+  schema: JsonSchema,
+  path: string,
+  errors: string[],
+  depth: number,
+  maxDepth: number,
+  keyCount: { count: number },
+  maxKeys: number
+): void {
+  const keys = Object.keys(obj);
+  keyCount.count += keys.length;
+  if (maxKeys > 0 && keyCount.count > maxKeys) {
+    errors.push(`$: exceeds maxKeys ${maxKeys}`);
+    return;
+  }
+
+  const required = Array.isArray(schema.required)
+    ? (schema.required as unknown[]).filter((x): x is string => typeof x === 'string')
+    : [];
+
+  for (const key of required) {
+    if (!Object.hasOwn(obj, key)) {
+      errors.push(`${path}.${key}: missing required property`);
     }
   }
 
-  if (typeof value === 'number') {
-    if (typeof schema.minimum === 'number' && value < schema.minimum) {
-      errors.push(`${path}: below minimum ${schema.minimum}`);
-    }
-    if (typeof schema.maximum === 'number' && value > schema.maximum) {
-      errors.push(`${path}: above maximum ${schema.maximum}`);
-    }
-    if (typeof schema.exclusiveMinimum === 'number' && value <= schema.exclusiveMinimum) {
-      errors.push(`${path}: not above exclusiveMinimum ${schema.exclusiveMinimum}`);
-    }
-    if (typeof schema.exclusiveMaximum === 'number' && value >= schema.exclusiveMaximum) {
-      errors.push(`${path}: not below exclusiveMaximum ${schema.exclusiveMaximum}`);
+  const properties =
+    schema.properties && typeof schema.properties === 'object' && !Array.isArray(schema.properties)
+      ? (schema.properties as Record<string, JsonSchema>)
+      : {};
+
+  for (const [k, childSchema] of Object.entries(properties)) {
+    if (Object.hasOwn(obj, k) && childSchema && typeof childSchema === 'object' && !Array.isArray(childSchema)) {
+      validateNode(obj[k], childSchema, `${path}.${k}`, errors, depth + 1, maxDepth, keyCount, maxKeys);
     }
   }
 
-  if (Array.isArray(value)) {
-    if (typeof schema.minItems === 'number' && value.length < schema.minItems) {
-      errors.push(`${path}: fewer than minItems ${schema.minItems}`);
-    }
-    if (typeof schema.maxItems === 'number' && value.length > schema.maxItems) {
-      errors.push(`${path}: more than maxItems ${schema.maxItems}`);
-    }
-    const itemSchema = schema.items as JsonSchema | undefined;
-    if (itemSchema && typeof itemSchema === 'object' && !Array.isArray(itemSchema)) {
-      for (let i = 0; i < value.length; i++) {
-        validateNode(value[i], itemSchema, `${path}[${i}]`, errors, depth + 1, maxDepth, keyCount, maxKeys);
-      }
-    }
-  }
-
-  if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-    const obj = value as Record<string, unknown>;
-    const keys = Object.keys(obj);
-    keyCount.count += keys.length;
-    if (maxKeys > 0 && keyCount.count > maxKeys) {
-      errors.push(`$: exceeds maxKeys ${maxKeys}`);
-      return;
-    }
-
-    const required = Array.isArray(schema.required)
-      ? (schema.required as unknown[]).filter((x): x is string => typeof x === 'string')
-      : [];
-
-    for (const key of required) {
-      if (!Object.hasOwn(obj, key)) {
-        errors.push(`${path}.${key}: missing required property`);
-      }
-    }
-
-    const properties =
-      schema.properties && typeof schema.properties === 'object' && !Array.isArray(schema.properties)
-        ? (schema.properties as Record<string, JsonSchema>)
-        : {};
-
-    for (const [k, childSchema] of Object.entries(properties)) {
-      if (Object.hasOwn(obj, k) && childSchema && typeof childSchema === 'object' && !Array.isArray(childSchema)) {
-        validateNode(obj[k], childSchema, `${path}.${k}`, errors, depth + 1, maxDepth, keyCount, maxKeys);
-      }
-    }
-
-    if (schema.additionalProperties === false) {
-      for (const k of keys) {
-        if (!Object.hasOwn(properties, k)) {
-          errors.push(`${path}.${k}: additional property not allowed`);
-        }
+  if (schema.additionalProperties === false) {
+    for (const k of keys) {
+      if (!Object.hasOwn(properties, k)) {
+        errors.push(`${path}.${k}: additional property not allowed`);
       }
     }
   }

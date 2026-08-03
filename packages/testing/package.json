@@ -17,7 +17,6 @@
     "format": "biome format"
   },
   "dependencies": {
-    "@agentsy/atlas": "workspace:*",
     "@agentsy/core": "workspace:*",
     "@agentsy/memory": "workspace:*",
     "@agentsy/observability": "workspace:*",
