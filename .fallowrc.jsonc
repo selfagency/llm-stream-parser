@@ -147,7 +147,9 @@
     // UI — planned component exports (model-picker, renderers)
     "packages/ui/src/cli/create-cli-renderer.ts",
     "packages/ui/src/ink/components/model-picker/model-provider-dropdown.tsx",
-    "packages/ui/src/streaming-md/create-streaming-markdown-renderer.ts"
+    "packages/ui/src/streaming-md/create-streaming-markdown-renderer.ts",
+    // Rollout subpath — tsup entry for @agentsy/core/rollout, consumed via package.json exports
+    "packages/core/src/rollout/index.ts"
   ],
   // Runtime-discovered files loaded via oclif filesystem scan, worker_threads
   // spawn, Bree scheduler discovery, etc. — no static import chain to trace.
