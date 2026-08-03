@@ -317,6 +317,30 @@ function deepEqual(a: unknown, b: unknown): boolean {
   return false;
 }
 
+interface ValidationContext {
+  value: unknown;
+  schema: JsonSchema;
+  path: string;
+  errors: string[];
+  depth: number;
+  maxDepth: number;
+  keyCount: { count: number };
+  maxKeys: number;
+}
+
+function ctx(
+  value: unknown,
+  schema: JsonSchema,
+  path: string,
+  errors: string[],
+  depth: number,
+  maxDepth: number,
+  keyCount: { count: number },
+  maxKeys: number
+): ValidationContext {
+  return { value, schema, path, errors, depth, maxDepth, keyCount, maxKeys };
+}
+
 function validateNode(
   value: unknown,
   schema: JsonSchema,
@@ -342,36 +366,29 @@ function validateNode(
     return;
   }
 
-  validateCombinators(value, schema, path, errors, depth, maxDepth, keyCount, maxKeys);
+  const c = ctx(value, schema, path, errors, depth, maxDepth, keyCount, maxKeys);
+  validateCombinators(c);
 
   if (typeof value === 'string') {
-    validateStringValue(value, schema, path, errors);
+    validateStringValue(c);
   }
 
   if (typeof value === 'number') {
-    validateNumberValue(value, schema, path, errors);
+    validateNumberValue(c);
   }
 
   if (Array.isArray(value)) {
-    validateArrayValue(value, schema, path, errors, depth, maxDepth, keyCount, maxKeys);
+    validateArrayValue(c);
   }
 
   if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-    validateObjectValue(value as Record<string, unknown>, schema, path, errors, depth, maxDepth, keyCount, maxKeys);
+    validateObjectValue(c);
   }
 }
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: combinator validation (anyOf/oneOf/allOf/not) is inherently branchy
-function validateCombinators(
-  value: unknown,
-  schema: JsonSchema,
-  path: string,
-  errors: string[],
-  depth: number,
-  maxDepth: number,
-  keyCount: { count: number },
-  maxKeys: number
-): void {
+function validateCombinators(c: ValidationContext): void {
+  const { value, schema, path, errors, depth, maxDepth, keyCount, maxKeys } = c;
   if (Array.isArray(schema.enum)) {
     const enumVals = schema.enum as unknown[];
     if (!enumVals.some(item => deepEqual(item, value))) {
@@ -429,11 +446,13 @@ function validateCombinators(
   }
 }
 
-function validateStringValue(value: string, schema: JsonSchema, path: string, errors: string[]): void {
-  if (typeof schema.minLength === 'number' && value.length < schema.minLength) {
+function validateStringValue(c: ValidationContext): void {
+  const { value, schema, path, errors } = c;
+  const v = value as string;
+  if (typeof schema.minLength === 'number' && v.length < schema.minLength) {
     errors.push(`${path}: shorter than minLength ${schema.minLength}`);
   }
-  if (typeof schema.maxLength === 'number' && value.length > schema.maxLength) {
+  if (typeof schema.maxLength === 'number' && v.length > schema.maxLength) {
     errors.push(`${path}: longer than maxLength ${schema.maxLength}`);
   }
   // schema.pattern is expected to come from internal hardcoded schema definitions only.
@@ -442,7 +461,7 @@ function validateStringValue(value: string, schema: JsonSchema, path: string, er
   if (typeof schema.pattern === 'string') {
     try {
       const re = new RegExp(schema.pattern);
-      if (!re.test(value)) {
+      if (!re.test(v)) {
         errors.push(`${path}: does not match pattern ${schema.pattern}`);
       }
     } catch {
@@ -451,64 +470,52 @@ function validateStringValue(value: string, schema: JsonSchema, path: string, er
   }
   if (typeof schema.format === 'string') {
     const fmt = schema.format as string;
-    if (fmt === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    if (fmt === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
       errors.push(`${path}: does not match format 'email'`);
     }
-    if (fmt === 'uri' && !/^[a-zA-Z][a-zA-Z0-9+\-.]*:/.test(value)) {
+    if (fmt === 'uri' && !/^[a-zA-Z][a-zA-Z0-9+\-.]*:/.test(v)) {
       errors.push(`${path}: does not match format 'uri'`);
     }
   }
 }
 
-function validateNumberValue(value: number, schema: JsonSchema, path: string, errors: string[]): void {
-  if (typeof schema.minimum === 'number' && value < schema.minimum) {
+function validateNumberValue(c: ValidationContext): void {
+  const { value, schema, path, errors } = c;
+  const v = value as number;
+  if (typeof schema.minimum === 'number' && v < schema.minimum) {
     errors.push(`${path}: below minimum ${schema.minimum}`);
   }
-  if (typeof schema.maximum === 'number' && value > schema.maximum) {
+  if (typeof schema.maximum === 'number' && v > schema.maximum) {
     errors.push(`${path}: above maximum ${schema.maximum}`);
   }
-  if (typeof schema.exclusiveMinimum === 'number' && value <= schema.exclusiveMinimum) {
+  if (typeof schema.exclusiveMinimum === 'number' && v <= schema.exclusiveMinimum) {
     errors.push(`${path}: not above exclusiveMinimum ${schema.exclusiveMinimum}`);
   }
-  if (typeof schema.exclusiveMaximum === 'number' && value >= schema.exclusiveMaximum) {
+  if (typeof schema.exclusiveMaximum === 'number' && v >= schema.exclusiveMaximum) {
     errors.push(`${path}: not below exclusiveMaximum ${schema.exclusiveMaximum}`);
   }
 }
 
-function validateArrayValue(
-  value: unknown[],
-  schema: JsonSchema,
-  path: string,
-  errors: string[],
-  depth: number,
-  maxDepth: number,
-  keyCount: { count: number },
-  maxKeys: number
-): void {
-  if (typeof schema.minItems === 'number' && value.length < schema.minItems) {
+function validateArrayValue(c: ValidationContext): void {
+  const { value, schema, path, errors, depth, maxDepth, keyCount, maxKeys } = c;
+  const arr = value as unknown[];
+  if (typeof schema.minItems === 'number' && arr.length < schema.minItems) {
     errors.push(`${path}: fewer than minItems ${schema.minItems}`);
   }
-  if (typeof schema.maxItems === 'number' && value.length > schema.maxItems) {
+  if (typeof schema.maxItems === 'number' && arr.length > schema.maxItems) {
     errors.push(`${path}: more than maxItems ${schema.maxItems}`);
   }
   const itemSchema = schema.items as JsonSchema | undefined;
   if (itemSchema && typeof itemSchema === 'object' && !Array.isArray(itemSchema)) {
-    for (let i = 0; i < value.length; i++) {
-      validateNode(value[i], itemSchema, `${path}[${i}]`, errors, depth + 1, maxDepth, keyCount, maxKeys);
+    for (let i = 0; i < arr.length; i++) {
+      validateNode(arr[i], itemSchema, `${path}[${i}]`, errors, depth + 1, maxDepth, keyCount, maxKeys);
     }
   }
 }
 
-function validateObjectValue(
-  obj: Record<string, unknown>,
-  schema: JsonSchema,
-  path: string,
-  errors: string[],
-  depth: number,
-  maxDepth: number,
-  keyCount: { count: number },
-  maxKeys: number
-): void {
+function validateObjectValue(c: ValidationContext): void {
+  const { value, schema, path, errors, depth, maxDepth, keyCount, maxKeys } = c;
+  const obj = value as Record<string, unknown>;
   const keys = Object.keys(obj);
   keyCount.count += keys.length;
   if (maxKeys > 0 && keyCount.count > maxKeys) {

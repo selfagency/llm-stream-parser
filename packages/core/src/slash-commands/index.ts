@@ -136,7 +136,7 @@ function applyCommandField(current: SlashCommandDraft, trimmed: string): boolean
     return true;
   }
 
-  const promptMatch = /^prompt:\s*(.+)$/u.exec(trimmed);
+  const promptMatch = /^prompt:\s*([^\n]+)$/u.exec(trimmed);
   if (promptMatch !== null) {
     current.prompt = parseScalar(promptMatch[1] ?? '');
     return true;

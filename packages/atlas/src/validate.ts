@@ -31,43 +31,18 @@ export interface ManifestValidationResult {
  *   GuardrailsConfig field name. Pass `null` to skip gap detection.
  * @returns Validation result with invalid IDs and config gaps.
  */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: 6 repetitive for-loops, not deeply nested.
 export function validateAgentManifest(
   manifest: AtlasManifest,
   constraintToConfig?: ReadonlyMap<AtlasConstraintId, string | null>
 ): ManifestValidationResult {
   const invalidIds: string[] = [];
 
-  for (const id of manifest.aiTasks) {
-    if (!isValidAiTaskId(id)) {
-      invalidIds.push(id);
-    }
-  }
-  for (const id of manifest.humanTasks) {
-    if (!isValidHumanTaskId(id)) {
-      invalidIds.push(id);
-    }
-  }
-  for (const id of manifest.systemTasks) {
-    if (!isValidSystemTaskId(id)) {
-      invalidIds.push(id);
-    }
-  }
-  for (const id of manifest.dataArtifacts) {
-    if (!isValidArtifactId(id)) {
-      invalidIds.push(id);
-    }
-  }
-  for (const id of manifest.constraints) {
-    if (!isValidConstraintId(id)) {
-      invalidIds.push(id);
-    }
-  }
-  for (const id of manifest.touchpoints) {
-    if (!isValidTouchpointId(id)) {
-      invalidIds.push(id);
-    }
-  }
+  invalidIds.push(...validateIdList(manifest.aiTasks, isValidAiTaskId));
+  invalidIds.push(...validateIdList(manifest.humanTasks, isValidHumanTaskId));
+  invalidIds.push(...validateIdList(manifest.systemTasks, isValidSystemTaskId));
+  invalidIds.push(...validateIdList(manifest.dataArtifacts, isValidArtifactId));
+  invalidIds.push(...validateIdList(manifest.constraints, isValidConstraintId));
+  invalidIds.push(...validateIdList(manifest.touchpoints, isValidTouchpointId));
 
   const configGaps: AtlasConstraintId[] = [];
   if (constraintToConfig) {
@@ -86,4 +61,14 @@ export function validateAgentManifest(
     invalidIds,
     configGaps
   };
+}
+
+function validateIdList(ids: readonly string[], validator: (id: string) => boolean): string[] {
+  const invalid: string[] = [];
+  for (const id of ids) {
+    if (!validator(id)) {
+      invalid.push(id);
+    }
+  }
+  return invalid;
 }

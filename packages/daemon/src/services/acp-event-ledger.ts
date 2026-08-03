@@ -592,26 +592,9 @@ export class ACPEventLedger {
   getConversationView(sessionId: string): readonly ConversationEntry[] {
     const events = this.getSessionEvents(sessionId);
     const result: ConversationEntry[] = [];
+    const CONVERSATION_TYPES = new Set(['session.create', 'session.prompt', 'stream.end']);
     for (const ev of events) {
-      if (ev.eventType === 'session.create') {
-        const data = parseEventDataSafe(ev.eventData);
-        result.push({
-          content: extractContent(data),
-          eventType: ev.eventType,
-          sequence: ev.sequence,
-          sessionId: ev.sessionId,
-          timestamp: ev.timestamp
-        });
-      } else if (ev.eventType === 'session.prompt') {
-        const data = parseEventDataSafe(ev.eventData);
-        result.push({
-          content: extractContent(data),
-          eventType: ev.eventType,
-          sequence: ev.sequence,
-          sessionId: ev.sessionId,
-          timestamp: ev.timestamp
-        });
-      } else if (ev.eventType === 'stream.end') {
+      if (CONVERSATION_TYPES.has(ev.eventType)) {
         const data = parseEventDataSafe(ev.eventData);
         result.push({
           content: extractContent(data),

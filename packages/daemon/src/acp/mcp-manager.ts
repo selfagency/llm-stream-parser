@@ -251,7 +251,6 @@ function validateDefinition(def: MCPServerDefinition): { valid: boolean; error?:
     return { valid: false, error: 'definition is empty' };
   }
   const type = def.type ?? (def.url ? 'http' : 'stdio');
-
   const cmd = def.command;
   const hasCommand = typeof cmd === 'string' && cmd.trim().length > 0;
 
@@ -259,18 +258,8 @@ function validateDefinition(def: MCPServerDefinition): { valid: boolean; error?:
     return { valid: false, error: 'command is required for stdio type' };
   }
 
-  const isHttpType = type === 'http' || type === 'sse';
-  if (isHttpType) {
-    if (def.url) {
-      const urlCheck = validateUrl(def.url);
-      if (!urlCheck.valid) {
-        return urlCheck;
-      }
-    }
-    const hasUrlOrCommand = Boolean(def.url) || hasCommand;
-    if (!hasUrlOrCommand) {
-      return { valid: false, error: 'http/sse server requires url or command' };
-    }
+  if (type === 'http' || type === 'sse') {
+    return validateHttpDef(def, hasCommand);
   }
 
   if (def.args !== undefined) {
@@ -280,6 +269,20 @@ function validateDefinition(def: MCPServerDefinition): { valid: boolean; error?:
     }
   }
 
+  return { valid: true };
+}
+
+function validateHttpDef(def: MCPServerDefinition, hasCommand: boolean): { valid: boolean; error?: string } {
+  if (def.url) {
+    const urlCheck = validateUrl(def.url);
+    if (!urlCheck.valid) {
+      return urlCheck;
+    }
+  }
+  const hasUrlOrCommand = Boolean(def.url) || hasCommand;
+  if (!hasUrlOrCommand) {
+    return { valid: false, error: 'http/sse server requires url or command' };
+  }
   return { valid: true };
 }
 

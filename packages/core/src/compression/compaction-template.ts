@@ -103,7 +103,7 @@ export function renderCompactionTemplate(
     lines.push('## Table of Contents');
     lines.push('');
     for (const section of COMPACTION_SECTIONS) {
-      const anchor = section.toLowerCase().replace(/[\s]+/g, '-');
+      const anchor = section.toLowerCase().replace(/\s+/g, '-');
       lines.push(`- [${section}](#${anchor})`);
     }
     lines.push('');
@@ -129,7 +129,7 @@ interface HeaderMatch {
 }
 
 function collectHeaderMatches(markdown: string): HeaderMatch[] {
-  const headerPattern = /^##\s+(.+?)\s*$/gm;
+  const headerPattern = /^##\s+([^\n]+?)\s*$/gm;
   const matches: HeaderMatch[] = [];
   let m: RegExpExecArray | null;
   // biome-ignore lint/suspicious/noAssignInExpressions: regex exec loop

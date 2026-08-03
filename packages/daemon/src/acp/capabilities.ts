@@ -5,7 +5,7 @@
 
 import { AGENT_CAPABILITIES as BASE } from './acp-capabilities.js';
 
-export const AGENT_CAPABILITIES = BASE;
+export { AGENT_CAPABILITIES } from './acp-capabilities.js';
 
 export interface AgentCapabilities {
   readonly loadSession: boolean;

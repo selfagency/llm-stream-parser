@@ -73,23 +73,9 @@ function filterToolsInternal<T extends MinimalTool>(
   const allow = normalize(config.allow);
   const deny = normalize(config.deny);
   const allNames = tools.map(t => t.name);
-  let intermediate: readonly T[];
-  if (allow.length > 0) {
-    intermediate = tools.filter(t => matchesAny(t.name, allow));
-  } else {
-    intermediate = tools;
-  }
-  const allowed: T[] = [];
-  const denied: T[] = [];
-  const stripped: string[] = [];
-  for (const tool of intermediate) {
-    if (deny.length > 0 && matchesAny(tool.name, deny)) {
-      denied.push(tool);
-      stripped.push(tool.name);
-    } else {
-      allowed.push(tool);
-    }
-  }
+  const intermediate = allow.length > 0 ? tools.filter(t => matchesAny(t.name, allow)) : tools;
+  const { allowed, denied, stripped } = partitionTools(intermediate, deny);
+
   if (allow.length > 0) {
     const excluded = allNames.filter(n => !matchesAny(n, allow));
     for (const n of excluded) {
@@ -98,6 +84,7 @@ function filterToolsInternal<T extends MinimalTool>(
       }
     }
   }
+
   if (debug && stripped.length > 0) {
     debug('[tool-filter] stripped tools denied by agent rules', {
       stripped,
@@ -109,6 +96,24 @@ function filterToolsInternal<T extends MinimalTool>(
     console.debug('[tool-filter] stripped tools:', stripped.join(', '));
   }
   return { allowed, denied, strippedNames: stripped };
+}
+
+function partitionTools<T extends MinimalTool>(
+  tools: readonly T[],
+  deny: string[]
+): { allowed: T[]; denied: T[]; stripped: string[] } {
+  const allowed: T[] = [];
+  const denied: T[] = [];
+  const stripped: string[] = [];
+  for (const tool of tools) {
+    if (deny.length > 0 && matchesAny(tool.name, deny)) {
+      denied.push(tool);
+      stripped.push(tool.name);
+    } else {
+      allowed.push(tool);
+    }
+  }
+  return { allowed, denied, stripped };
 }
 
 interface CreateFilterOptions {

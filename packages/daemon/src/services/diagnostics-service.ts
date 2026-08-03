@@ -229,6 +229,26 @@ function safeString(value: unknown, fallback = 'unknown'): string {
   return fallback;
 }
 
+function _safeCall<T>(fn: (() => T) | undefined, fallback: T): T {
+  if (!fn) return fallback;
+  try {
+    const result = fn();
+    return result ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function safeCallNum(fn: (() => number | undefined) | undefined, fallback: number): number {
+  if (!fn) return fallback;
+  try {
+    const result = fn();
+    return result ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function resolveGateway(routingService: RoutingServiceLike | null | undefined): GatewayLike | null {
   if (!routingService) {
     return null;
@@ -253,27 +273,11 @@ function resolveModelsRegistered(
   routingService: RoutingServiceLike | null | undefined,
   gateway: GatewayLike | null
 ): number {
-  if (routingService?.getModelCount) {
-    try {
-      const c = routingService.getModelCount();
-      if (typeof c === 'number') {
-        return c;
-      }
-    } catch {
-      // ignore
-    }
-  }
+  const fromRouting = safeCallNum(() => routingService?.getModelCount?.(), 0);
+  if (fromRouting > 0) return fromRouting;
   if (gateway) {
-    if (typeof gateway.getModelCount === 'function') {
-      try {
-        const c = gateway.getModelCount();
-        if (typeof c === 'number') {
-          return c;
-        }
-      } catch {
-        // ignore
-      }
-    }
+    const fromGateway = safeCallNum(() => gateway.getModelCount?.(), 0);
+    if (fromGateway > 0) return fromGateway;
     if (typeof gateway.modelCount === 'number') {
       return gateway.modelCount;
     }
@@ -288,27 +292,11 @@ function resolveTotalProviders(
   routingService: RoutingServiceLike | null | undefined,
   gateway: GatewayLike | null
 ): number {
-  if (routingService?.getTotalProviderCount) {
-    try {
-      const c = routingService.getTotalProviderCount();
-      if (typeof c === 'number') {
-        return c;
-      }
-    } catch {
-      // ignore
-    }
-  }
+  const fromRouting = safeCallNum(() => routingService?.getTotalProviderCount?.(), 0);
+  if (fromRouting > 0) return fromRouting;
   if (gateway) {
-    if (typeof gateway.getTotalProviderCount === 'function') {
-      try {
-        const c = gateway.getTotalProviderCount();
-        if (typeof c === 'number') {
-          return c;
-        }
-      } catch {
-        // ignore
-      }
-    }
+    const fromGateway = safeCallNum(() => gateway.getTotalProviderCount?.(), 0);
+    if (fromGateway > 0) return fromGateway;
     if (Array.isArray(gateway.providerIds)) {
       return gateway.providerIds.length;
     }
@@ -323,27 +311,9 @@ function resolveHealthyProviders(
   routingService: RoutingServiceLike | null | undefined,
   gateway: GatewayLike | null
 ): number {
-  if (routingService?.getHealthyProviderCount) {
-    try {
-      const c = routingService.getHealthyProviderCount();
-      if (typeof c === 'number') {
-        return c;
-      }
-    } catch {
-      // ignore
-    }
-  }
-  if (gateway?.getHealthyProviderCount) {
-    try {
-      const c = gateway.getHealthyProviderCount();
-      if (typeof c === 'number') {
-        return c;
-      }
-    } catch {
-      // ignore
-    }
-  }
-  return 0;
+  const fromRouting = safeCallNum(() => routingService?.getHealthyProviderCount?.(), 0);
+  if (fromRouting > 0) return fromRouting;
+  return safeCallNum(() => gateway?.getHealthyProviderCount?.(), 0);
 }
 
 function normalizeAgentEntry(raw: unknown): AgentHealthEntry {
