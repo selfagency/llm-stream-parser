@@ -51,12 +51,20 @@ describe('InstructionsDiscoverer', () => {
       expect(d.projectDir).toBe(resolve(import.meta.dirname, '__fixtures__', 'test-instructions'));
     });
 
-    it('initialises 6 roots with descending priority', () => {
+    it('initialises 7 roots with descending priority', () => {
       const d = new InstructionsDiscoverer('/project');
       const rootSpecs = [
-        { idx: 0, path: '/project/AGENTS.md', priority: 90, scope: 'workspace', alwaysInject: true, isGlob: undefined },
         {
-          idx: 1,
+          idx: 0,
+          path: '/project/.agentsy/handoffs',
+          priority: 95,
+          scope: 'workspace',
+          alwaysInject: true,
+          isGlob: true
+        },
+        { idx: 1, path: '/project/AGENTS.md', priority: 90, scope: 'workspace', alwaysInject: true, isGlob: undefined },
+        {
+          idx: 2,
           path: '/project/CLAUDE.md',
           priority: 80,
           scope: undefined,
@@ -64,7 +72,7 @@ describe('InstructionsDiscoverer', () => {
           isGlob: undefined
         },
         {
-          idx: 2,
+          idx: 3,
           path: '/project/copilot-instructions.md',
           priority: 70,
           scope: undefined,
@@ -72,7 +80,7 @@ describe('InstructionsDiscoverer', () => {
           isGlob: undefined
         },
         {
-          idx: 3,
+          idx: 4,
           path: '/project/.cursor/rules',
           priority: 60,
           scope: undefined,
@@ -80,7 +88,7 @@ describe('InstructionsDiscoverer', () => {
           isGlob: true
         },
         {
-          idx: 4,
+          idx: 5,
           path: '.agentsy/instructions.md',
           priority: 50,
           scope: 'user',
@@ -88,7 +96,7 @@ describe('InstructionsDiscoverer', () => {
           isGlob: undefined
         },
         {
-          idx: 5,
+          idx: 6,
           path: '.config/agentsy/instructions.md',
           priority: 40,
           scope: 'user',
@@ -281,6 +289,43 @@ describe('InstructionsDiscoverer', () => {
 
       expect(results[0]?.path.startsWith('/')).toBe(true);
       expect(results[0]?.path).toBe(resolve(dir, 'AGENTS.md'));
+    });
+
+    it('discovers HANDOFF_*.md files at highest priority', async () => {
+      const dir = await createFixtureDir({
+        'AGENTS.md': '# agents',
+        '.agentsy/handoffs/HANDOFF_agent-1.md': '# Handoff — Agent agent-1\n\n## Goal\n\nTest goal'
+      });
+      fixtureDirs.push(dir);
+
+      const d = new InstructionsDiscoverer(dir);
+      const results = await d.discover();
+
+      // Handoff should be first (priority 95 > AGENTS.md priority 90)
+      expect(results.length).toBeGreaterThanOrEqual(2);
+      expect(results[0]?.path).toContain('HANDOFF_agent-1.md');
+      expect(results[0]?.priority).toBe(95);
+      expect(results[0]?.alwaysInject).toBe(true);
+      expect(results[1]?.path).toContain('AGENTS.md');
+      expect(results[1]?.priority).toBe(90);
+    });
+
+    it('discovers multiple handoff files', async () => {
+      const dir = await createFixtureDir({
+        '.agentsy/handoffs/HANDOFF_agent-1.md': '# Handoff 1',
+        '.agentsy/handoffs/HANDOFF_agent-2.md': '# Handoff 2'
+      });
+      fixtureDirs.push(dir);
+
+      const d = new InstructionsDiscoverer(dir);
+      const results = await d.discover();
+
+      const handoffResults = results.filter(r => r.path.includes('HANDOFF_'));
+      expect(handoffResults).toHaveLength(2);
+      for (const r of handoffResults) {
+        expect(r.priority).toBe(95);
+        expect(r.alwaysInject).toBe(true);
+      }
     });
   });
 });

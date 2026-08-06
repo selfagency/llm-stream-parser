@@ -6,4 +6,5 @@ export * from './executor.js';
 export * from './messaging.js';
 export * from './session.js';
 export * from './state-machine.js';
+export * from './tool-filter.js';
 export * from './types.js';

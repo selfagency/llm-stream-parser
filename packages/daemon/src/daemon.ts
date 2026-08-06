@@ -247,7 +247,8 @@ export class Daemon {
     this.pool =
       deps.pool ??
       new AgentPool({
-        filename: new URL('./pool/worker-entry.js', import.meta.url).href,
+        filename: new URL(`./pool/worker-entry${import.meta.url.endsWith('.ts') ? '.ts' : '.js'}`, import.meta.url)
+          .href,
         minThreads: this.config.pool.minThreads,
         maxThreads: this.config.pool.maxThreads,
         idleTimeoutMs: this.config.pool.idleTimeoutMs,

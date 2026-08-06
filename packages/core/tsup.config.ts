@@ -17,7 +17,9 @@ export default defineConfig({
     thinking: 'src/thinking/index.ts',
     'tool-calls': 'src/tool-calls/index.ts',
     'xml-filter': 'src/xml-filter/index.ts',
-    'edit-formats': 'src/edit-formats/index.ts'
+    'edit-formats': 'src/edit-formats/index.ts',
+    compression: 'src/compression/index.ts',
+    rollout: 'src/rollout/index.ts'
   },
   external: ['@agentsy/shared', 'zod'],
   format: ['esm', 'cjs'],

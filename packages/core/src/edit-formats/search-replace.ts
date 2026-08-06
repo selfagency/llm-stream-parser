@@ -11,6 +11,7 @@ import type { EditParseResult, FileEdit } from './types.js';
  * so that SEARCH blocks match source code regardless of the base indentation
  * level they were authored at.
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: API contract — external callers reference RelativeIndenter.normalize()
 export class RelativeIndenter {
   /**
    * Returns the number of leading whitespace characters common to all
@@ -118,8 +119,11 @@ export function parseSearchReplace(text: string): EditParseResult {
   // nosemgrep: FENCE_BLOCK_REGEX is a hardcoded constant, not user-supplied input
   const fenceRegex = new RegExp(FENCE_BLOCK_REGEX.source, 'g');
 
-  let match: RegExpExecArray | null;
-  while ((match = fenceRegex.exec(text)) !== null) {
+  while (true) {
+    const match = fenceRegex.exec(text);
+    if (match === null) {
+      break;
+    }
     const lang = (match[1] ?? '').toUpperCase();
     const content = match[2] ?? '';
 

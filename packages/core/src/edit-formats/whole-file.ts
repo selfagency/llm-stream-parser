@@ -84,10 +84,10 @@ function parseHeaderBlocks(
         edits.push({ filePath: currentFile, type: 'whole-file', replacement: lines.slice(contentStart, i).join('\n') });
       }
       currentFile = headerMatch[1]?.trim() ?? null;
-      if (!currentFile) {
-        errors.push('Empty file path in header');
-      } else {
+      if (currentFile) {
         contentStart = i + 1;
+      } else {
+        errors.push('Empty file path in header');
       }
       continue;
     }
@@ -123,7 +123,11 @@ function parseXmlTagFormat(text: string): EditParseResult {
     /<(?:filename|path)>\s*(.+?)\s*<\/(?:filename|path)>\s*\n?([\s\S]*?)(?=\n\s*<(?:filename|path)>|$)/gi;
 
   let match: RegExpExecArray | null;
-  while ((match = xmlPattern.exec(text)) !== null) {
+  while (true) {
+    match = xmlPattern.exec(text);
+    if (match === null) {
+      break;
+    }
     const filePath = (match[1] ?? '').trim();
     const content = match[2] ?? '';
 

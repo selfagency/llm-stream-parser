@@ -87,6 +87,16 @@
       "types": "./dist/edit-formats.d.ts",
       "import": "./dist/edit-formats.js",
       "require": "./dist/edit-formats.cjs"
+    },
+    "./compression": {
+      "types": "./dist/compression.d.ts",
+      "import": "./dist/compression.js",
+      "require": "./dist/compression.cjs"
+    },
+    "./rollout": {
+      "types": "./dist/rollout.d.ts",
+      "import": "./dist/rollout.js",
+      "require": "./dist/rollout.cjs"
     }
   },
   "scripts": {

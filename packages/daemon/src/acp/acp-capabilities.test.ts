@@ -12,11 +12,11 @@ describe('AGENT_CAPABILITIES', () => {
     expect(AGENT_CAPABILITIES.permissionKindProbing).toBe(true);
   });
 
-  it('should have image/audio still disabled (stub)', () => {
-    expect(AGENT_CAPABILITIES.promptCapabilities.image).toBe(false);
-    expect(AGENT_CAPABILITIES.promptCapabilities.audio).toBe(false);
-    expect(AGENT_CAPABILITIES.mcpCapabilities.http).toBe(false);
-    expect(AGENT_CAPABILITIES.mcpCapabilities.sse).toBe(false);
+  it('should have image/audio enabled (Phase 18)', () => {
+    expect(AGENT_CAPABILITIES.promptCapabilities.image).toBe(true);
+    expect(AGENT_CAPABILITIES.promptCapabilities.audio).toBe(true);
+    expect(AGENT_CAPABILITIES.mcpCapabilities.http).toBe(true);
+    expect(AGENT_CAPABILITIES.mcpCapabilities.sse).toBe(true);
   });
 
   it('should have embeddedContext enabled', () => {

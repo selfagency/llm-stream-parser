@@ -10,6 +10,7 @@ export default defineConfig({
     skills: 'src/skills/index.ts'
   },
   external: [
+    '@agentsy/atlas',
     '@agentsy/core',
     '@agentsy/context',
     '@agentsy/memory',
@@ -28,5 +29,11 @@ export default defineConfig({
   treeshake: true,
   clean: true,
   sourcemap: true,
-  dts: true
+  dts: {
+    // Clear inherited tsconfig paths so workspace deps resolve through node_modules
+    // (where compiled .d.ts files live) instead of following paths to source files.
+    compilerOptions: {
+      paths: {}
+    }
+  }
 });

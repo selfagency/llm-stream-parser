@@ -47,6 +47,7 @@
     "format": "biome format"
   },
   "dependencies": {
+    "@agentsy/atlas": "workspace:*",
     "@agentsy/core": "workspace:*",
     "@agentsy/gateway": "workspace:*",
     "@agentsy/memory": "workspace:*",

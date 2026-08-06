@@ -1,3 +1,5 @@
+import type { AtlasManifest } from '@agentsy/atlas';
+
 export interface AgentLayer {
   dependsOn?: string[];
   execution?: 'sequential' | 'parallel';
@@ -8,7 +10,13 @@ export interface AgentLayer {
   tokenBudget: number;
 }
 
+export interface ToolFilterSpec {
+  allow?: string[];
+  deny?: string[];
+}
+
 export interface AgentSpec {
+  atlas?: AtlasManifest;
   constraints?: string[];
   description: string;
   hooks?: AgentHooks;
@@ -18,6 +26,7 @@ export interface AgentSpec {
   role: string;
   skillRegistry?: SkillMetadata[];
   tokenBudget?: number;
+  tools?: ToolFilterSpec;
 }
 
 export interface AgentHooks {

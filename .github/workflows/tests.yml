@@ -79,7 +79,7 @@ jobs:
     name: Unit tests (${{ matrix.group }})
     if: ${{ github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore(release):') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -89,7 +89,9 @@ jobs:
           - group: runtime
             filter: --filter=@agentsy/guardrails --filter=@agentsy/runtime --filter=@agentsy/orchestrator --filter=@agentsy/session --filter=@agentsy/memory --filter=@agentsy/retrieval --filter=@agentsy/secrets
           - group: surface
-            filter: --filter=@agentsy/cli --filter=@agentsy/ui --filter=@agentsy/tools --filter=@agentsy/prompts --filter=@agentsy/vscode --filter=@agentsy/testing --filter=@agentsy/plugins --filter=@agentsy/agents --filter=@agentsy/bootstrap
+            filter: --filter=@agentsy/cli --filter=@agentsy/ui --filter=@agentsy/tools --filter=@agentsy/prompts --filter=@agentsy/vscode --filter=@agentsy/testing --filter=@agentsy/agents --filter=@agentsy/bootstrap
+          - group: plugins
+            filter: --filter=@agentsy/plugins
           - group: daemon
             filter: --filter=@agentsy/daemon
 
@@ -158,28 +160,50 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Download core coverage
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: coverage-reports-core
           path: coverage-input
 
       - name: Download runtime coverage
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: coverage-reports-runtime
           path: coverage-input
 
       - name: Download surface coverage
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: coverage-reports-surface
           path: coverage-input
 
       - name: Download daemon coverage
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: coverage-reports-daemon
           path: coverage-input
+
+      - name: Download plugins coverage
+        continue-on-error: true
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: coverage-reports-plugins
+          path: coverage-input
+
+      - name: Reorganize coverage files
+        shell: bash
+        run: |
+          # Upload produces packages/*/coverage/coverage-final.json but
+          # merge-coverage expects <pkg>/coverage-final.json. Flatten.
+          for dir in coverage-input/packages/*/; do
+            pkg="$(basename "$dir")"
+            src="coverage-input/packages/$pkg/coverage/coverage-final.json"
+            if [ -f "$src" ]; then
+              mkdir -p "coverage-input/$pkg"
+              cp "$src" "coverage-input/$pkg/coverage-final.json"
+            fi
+          done
+          rm -rf coverage-input/packages
 
       - name: Merge coverage reports
         uses: selfagency/merge-coverage@4f847ad20e457b1b08b73acd5e8de2fca504385c
@@ -201,6 +225,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Run codacy-coverage-reporter
+        continue-on-error: true
         uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699
         with:
           api-token: ${{ secrets.CODACY_API_TOKEN }}

@@ -405,8 +405,14 @@ export function createRuntimeWorkflowExecutor(options: RuntimeLoopOptions = {}):
   };
 }
 
+// Phase 17 — Tool deny-rule filtering
 // Phase 4 — Virtual sandbox
+// Phase 17 — pi-iso isolation PAL trait
+export * from './sandbox/persistent-shell.js';
+export * from './sandbox/pi-iso/index.js';
+export * from './sandbox/pi-shell/index.js';
 export * from './sandbox/policy/secrets-guard.js';
+export * from './sandbox/tool-filter.js';
 export * from './sandbox/virtual/container-detector.js';
 export * from './sandbox/virtual/dynamic-trigger.js';
 export * from './sandbox/virtual/router.js';

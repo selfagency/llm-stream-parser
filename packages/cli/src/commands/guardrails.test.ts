@@ -1,7 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createBuiltinScanners, GuardrailHub } from '@agentsy/guardrails';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Mock } from 'vitest';
 import type { CliIO } from '../index.js';
 import {
   type GuardrailCliOptions,

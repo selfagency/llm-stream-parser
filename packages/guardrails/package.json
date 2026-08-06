@@ -50,6 +50,7 @@
     "format": "biome format"
   },
   "dependencies": {
+    "@agentsy/atlas": "workspace:*",
     "@agentsy/shared": "workspace:*"
   },
   "devDependencies": {

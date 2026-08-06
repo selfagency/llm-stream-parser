@@ -38,6 +38,7 @@ Daemon and surfaces:
 - `@agentsy/plugins` — Plugin system
 - `@agentsy/secrets` — Secret management (12 provider backends: 1Password, Bitwarden, Dashlane, LastPass, Apple PM, Vault, AWS SM, GCP SM, Azure KV, Doppler, Infisical, exec)
 - `@agentsy/agents` — Agent runtime/specs (YAML agent templates)
+- `@agentsy/atlas` — AI Interaction Atlas integration (typed taxonomy, manifest validation, drift detection). Build-time-only dep on `@quietloudlab/ai-interaction-atlas`; the snapshot is the single source of truth.
 - `@agentsy/testing` (private) — Cross-package integration test helpers (MSW, aimock)
 
 **Published on npm** (verified 2026-06-17):

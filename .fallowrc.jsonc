@@ -147,7 +147,9 @@
     // UI — planned component exports (model-picker, renderers)
     "packages/ui/src/cli/create-cli-renderer.ts",
     "packages/ui/src/ink/components/model-picker/model-provider-dropdown.tsx",
-    "packages/ui/src/streaming-md/create-streaming-markdown-renderer.ts"
+    "packages/ui/src/streaming-md/create-streaming-markdown-renderer.ts",
+    // Rollout subpath — tsup entry for @agentsy/core/rollout, consumed via package.json exports
+    "packages/core/src/rollout/index.ts"
   ],
   // Runtime-discovered files loaded via oclif filesystem scan, worker_threads
   // spawn, Bree scheduler discovery, etc. — no static import chain to trace.
@@ -179,7 +181,17 @@
       "packages/cli/src/commands/secrets.ts",
       "packages/cli/src/commands/tokenomics.ts",
       // Turso config spreading — same optional fields repeated in createClient vs syncClient
-      "packages/memory/src/sync/turso-client.ts"
+      "packages/memory/src/sync/turso-client.ts",
+      // Intentional Phase 29 clone — tools/src/shell/index.ts is a self-contained
+      // copy of runtime/src/sandbox/persistent-shell.ts to avoid @agentsy/runtime
+      // dependency in the independently-publishable @agentsy/tools package.
+      "packages/tools/src/shell/index.ts",
+      "packages/runtime/src/sandbox/persistent-shell.ts",
+      // Intentional — output-validator.ts has its own JSON Schema validation
+      // logic that mirrors validate-json-schema.ts but is independently maintained
+      // for the daemon's OutputValidator service (no cross-package dep).
+      "packages/daemon/src/services/output-validator.ts",
+      "packages/core/src/structured/validate-json-schema.ts"
     ],
     "minLines": 8,
     "minTokens": 70
@@ -226,7 +238,18 @@
       // Shared CLI executor — wraps child_process.execSync with error recovery
       "packages/secrets/src/provider/local/exec.ts",
       // Token resolver — structurally moderate complexity; CRAP high without coverage mapping
-      "packages/secrets/src/injection/resolver.ts"
+      "packages/secrets/src/injection/resolver.ts",
+      // pi-shell output minimizer — complexity driven by per-language ANSI filter patterns, not cyclomatic logic
+      "packages/runtime/src/sandbox/pi-shell/minimizer.ts",
+      "packages/runtime/src/sandbox/pi-shell/filters/cargo.ts",
+      "packages/runtime/src/sandbox/pi-shell/filters/docker.ts",
+      "packages/runtime/src/sandbox/pi-shell/filters/git.ts",
+      "packages/runtime/src/sandbox/pi-shell/filters/go.ts",
+      "packages/runtime/src/sandbox/pi-shell/filters/jvm.ts",
+      "packages/runtime/src/sandbox/pi-shell/filters/npm.ts",
+      "packages/runtime/src/sandbox/pi-shell/filters/python.ts",
+      // pi-ast summarizer — parser functions are regex/line-based, complexity inherent in language grammar coverage
+      "packages/retrieval/src/pi-ast/summarizer.ts"
     ]
   },
   // Test file overrides — suppress export/type noise while keeping files in the
@@ -275,7 +298,10 @@
     "@azure/keyvault-secrets",
     "@google-cloud/secret-manager",
     "piscina",
-    "bree"
+    "bree",
+    // Build-time only — @quietloudlab/ai-interaction-atlas is a frozen snapshot
+    // dependency used for codegen + Zod manifest validation. Never imported at runtime.
+    "@quietloudlab/ai-interaction-atlas"
   ],
   // Intentional duplicate exports across namespace-barrel module boundaries
   "ignoreExports": [
@@ -291,6 +317,14 @@
     { "file": "packages/gateway/src/client.ts", "exports": ["*"] },
     { "file": "packages/gateway/src/registry/index.ts", "exports": ["*"] },
     { "file": "packages/memory/src/cli/init-cli.ts", "exports": ["*"] },
-    { "file": "packages/memory/src/cli/mcp-server-cli.ts", "exports": ["*"] }
+    { "file": "packages/memory/src/cli/mcp-server-cli.ts", "exports": ["*"] },
+    // Intentional per-service type aliases — each daemon service defines its own
+    // AgentHostLike/RoutingServiceLike for isolated compilation (no cross-service deps)
+    { "file": "packages/daemon/src/services/sandbox-service.ts", "exports": ["AgentHostLike"] },
+    { "file": "packages/daemon/src/services/diagnostics-service.ts", "exports": ["AgentHostLike", "RoutingServiceLike"] },
+    { "file": "packages/daemon/src/services/resilience-service.ts", "exports": ["RoutingServiceLike"] },
+    // Intentional re-export — acp-capabilities.ts is the canonical source,
+    // capabilities.ts re-exports it for backward compat
+    { "file": "packages/daemon/src/acp/capabilities.ts", "exports": ["AGENT_CAPABILITIES"] }
   ]
 }

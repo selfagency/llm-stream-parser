@@ -25,7 +25,7 @@ function stripSingleLineComments(text: string): string {
   let i = 0;
 
   while (i < text.length) {
-    const char = text[i]!;
+    const char = text[i] as string;
 
     if (escaped) {
       result += char;
@@ -110,7 +110,7 @@ function addMissingClosingBrackets(text: string): string {
 
   let result = text;
   for (let i = stack.length - 1; i >= 0; i--) {
-    result += stack[i]!;
+    result += stack[i] as string;
   }
 
   return result;
@@ -126,7 +126,7 @@ function consumeChar(
   text: string,
   state: { escaped: boolean; inString: boolean; depth: number; start: number }
 ): number {
-  const char = text[i]!;
+  const char = text[i] as string;
   if (state.escaped) {
     state.escaped = false;
     return 1;

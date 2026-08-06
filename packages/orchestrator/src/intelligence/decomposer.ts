@@ -283,4 +283,65 @@ export class TaskDecomposer {
       };
     }
   }
+
+  // ── Recursive decomposition (Tip 3: break down until solvable) ────────
+
+  /**
+   * Recursively decompose a goal until all tasks are "solvable" or max depth.
+   *
+   * A task is solvable if `isSolvable` returns true. The default check:
+   * `estimatedTokens <= solvableThreshold && tier !== 'frontier'`.
+   *
+   * Tasks that remain unsolvable at max depth get `metadata.requiresHuman: true`
+   * (maps to Atlas constraint `const_human_loop`).
+   */
+  decomposeRecursive(goal: string, options?: DecomposeOptions): DecomposedTask[] {
+    const opts: Required<DecomposeOptions> = {
+      maxDepth: options?.maxDepth ?? 3,
+      solvableThreshold: options?.solvableThreshold ?? 500,
+      isSolvable:
+        options?.isSolvable ??
+        (task => task.estimatedTokens <= (options?.solvableThreshold ?? 500) && task.tier !== 'frontier')
+    };
+
+    const result: DecomposedTask[] = [];
+    this.#decomposeInto(goal, 0, opts, result, 'task');
+    return result;
+  }
+
+  #decomposeInto(
+    goal: string,
+    depth: number,
+    opts: Required<DecomposeOptions>,
+    result: DecomposedTask[],
+    idPrefix: string
+  ): void {
+    const tasks = this.decompose(goal);
+
+    for (const [i, task] of tasks.entries()) {
+      const taskId = `${idPrefix}-${i}`;
+
+      if (opts.isSolvable(task) || depth >= opts.maxDepth) {
+        // Solvable or max depth — add it
+        result.push({
+          ...task,
+          id: taskId,
+          metadata:
+            depth >= opts.maxDepth && !opts.isSolvable(task) ? { ...task.metadata, requiresHuman: true } : task.metadata
+        });
+      } else {
+        // Not solvable — decompose further
+        this.#decomposeInto(task.description, depth + 1, opts, result, taskId);
+      }
+    }
+  }
+}
+
+export interface DecomposeOptions {
+  /** Function to check if a task is solvable as-is */
+  isSolvable?: (task: DecomposedTask) => boolean;
+  /** Max recursion depth (default 3) */
+  maxDepth?: number;
+  /** Min estimated tokens for a task to be considered "solvable" (default 500) */
+  solvableThreshold?: number;
 }

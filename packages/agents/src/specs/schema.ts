@@ -1,3 +1,4 @@
+import { AtlasManifestSchema } from '@agentsy/atlas';
 import { z } from 'zod';
 
 /**
@@ -51,6 +52,13 @@ export const AgentHooksSchema = z
   })
   .passthrough();
 
+export const ToolFilterSchema = z
+  .object({
+    allow: z.array(z.string()).optional(),
+    deny: z.array(z.string()).optional()
+  })
+  .passthrough();
+
 /**
  * Zod schema for agent specification
  */
@@ -59,12 +67,14 @@ export const AgentSpecSchema = z
     name: z.string(),
     role: z.string(),
     description: z.string(),
+    atlas: AtlasManifestSchema.optional(),
     layers: z.array(AgentLayerSchema).optional(),
     constraints: z.array(z.string()).optional(),
     hooks: AgentHooksSchema.optional(),
     skillRegistry: z.array(SkillMetadataSchema).optional(),
     orchestrator: z.enum(['sequential', 'parallel', 'sisyphus']).optional(),
-    tokenBudget: z.number().int().positive().optional()
+    tokenBudget: z.number().int().positive().optional(),
+    tools: ToolFilterSchema.optional()
   })
   .passthrough();
 

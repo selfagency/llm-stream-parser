@@ -76,6 +76,8 @@ export async function installComponent(rec: RecommendationEntry, options: Instal
       case 'connector': {
         return await installConnector(rec, options);
       }
+      default:
+        throw new Error(`Unknown component type: ${String(rec.componentType)}`);
     }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -237,17 +239,15 @@ async function installGuardrail(rec: RecommendationEntry, options: InstallOption
 
   // Check port status — non-ported validators need TypeScript porting
   const validator = getValidatorDetails(rec.componentId);
-  if (validator !== null && validator.portStatus !== 'ported') {
+  if (validator !== null && validator.portStatus !== 'ported' && options.guardrailPipeline === undefined) {
     // Porting stub: in practice this would generate TypeScript source
     // from the Python @register_validator decorator
-    if (options.guardrailPipeline === undefined) {
-      return {
-        componentId: rec.componentId,
-        componentType: rec.componentType,
-        success: false,
-        error: `Guardrail '${rec.componentId}' has portStatus '${validator.portStatus}' and requires GuardrailPipeline to port and register`
-      };
-    }
+    return {
+      componentId: rec.componentId,
+      componentType: rec.componentType,
+      success: false,
+      error: `Guardrail '${rec.componentId}' has portStatus '${validator.portStatus}' and requires GuardrailPipeline to port and register`
+    };
   }
 
   // Register with GuardrailPipeline

@@ -8,6 +8,7 @@ export default defineConfig({
     'ipc/index': 'src/ipc/index.ts',
     'acp/index': 'src/acp/index.ts',
     'pool/index': 'src/pool/index.ts',
+    'pool/worker-entry': 'src/pool/worker-entry.ts',
     'processes/index': 'src/processes/index.ts',
     'lifecycle/index': 'src/lifecycle/index.ts',
     'services/index': 'src/services/index.ts',
