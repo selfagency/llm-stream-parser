@@ -230,7 +230,9 @@ function safeString(value: unknown, fallback = 'unknown'): string {
 }
 
 function _safeCall<T>(fn: (() => T) | undefined, fallback: T): T {
-  if (!fn) return fallback;
+  if (!fn) {
+    return fallback;
+  }
   try {
     const result = fn();
     return result ?? fallback;
@@ -240,7 +242,9 @@ function _safeCall<T>(fn: (() => T) | undefined, fallback: T): T {
 }
 
 function safeCallNum(fn: (() => number | undefined) | undefined, fallback: number): number {
-  if (!fn) return fallback;
+  if (!fn) {
+    return fallback;
+  }
   try {
     const result = fn();
     return result ?? fallback;
@@ -274,10 +278,14 @@ function resolveModelsRegistered(
   gateway: GatewayLike | null
 ): number {
   const fromRouting = safeCallNum(() => routingService?.getModelCount?.(), 0);
-  if (fromRouting > 0) return fromRouting;
+  if (fromRouting > 0) {
+    return fromRouting;
+  }
   if (gateway) {
     const fromGateway = safeCallNum(() => gateway.getModelCount?.(), 0);
-    if (fromGateway > 0) return fromGateway;
+    if (fromGateway > 0) {
+      return fromGateway;
+    }
     if (typeof gateway.modelCount === 'number') {
       return gateway.modelCount;
     }
@@ -293,10 +301,14 @@ function resolveTotalProviders(
   gateway: GatewayLike | null
 ): number {
   const fromRouting = safeCallNum(() => routingService?.getTotalProviderCount?.(), 0);
-  if (fromRouting > 0) return fromRouting;
+  if (fromRouting > 0) {
+    return fromRouting;
+  }
   if (gateway) {
     const fromGateway = safeCallNum(() => gateway.getTotalProviderCount?.(), 0);
-    if (fromGateway > 0) return fromGateway;
+    if (fromGateway > 0) {
+      return fromGateway;
+    }
     if (Array.isArray(gateway.providerIds)) {
       return gateway.providerIds.length;
     }
@@ -312,7 +324,9 @@ function resolveHealthyProviders(
   gateway: GatewayLike | null
 ): number {
   const fromRouting = safeCallNum(() => routingService?.getHealthyProviderCount?.(), 0);
-  if (fromRouting > 0) return fromRouting;
+  if (fromRouting > 0) {
+    return fromRouting;
+  }
   return safeCallNum(() => gateway?.getHealthyProviderCount?.(), 0);
 }
 
@@ -442,6 +456,95 @@ function resolveAcp(acpServer: AcpServerLike | null | undefined, daemon: DaemonL
   return { enabled, activeSessions };
 }
 
+/** Resolve memory health from a MemoryProvider-like dependency with async/sync fallback. */
+async function resolveMemoryHealth(memory: MemoryEngineLike | null | undefined): Promise<MemoryHealth> {
+  if (!memory) {
+    return { scopes: 0, totalItems: 0, lastConsolidation: null };
+  }
+
+  const scopes = await resolveNumberMetric(
+    () => memory.getScopeCount?.(),
+    () => memory.scopeCount
+  );
+  const totalItems = await resolveNumberMetric(
+    () => memory.getTotalItemCount?.(),
+    () => memory.totalItems
+  );
+  const lastConsolidation = await resolveDateMetric(() => memory.getLastConsolidationTime?.());
+
+  return { scopes, totalItems, lastConsolidation };
+}
+
+/** Resolve a numeric metric from a function-or-property dependency, defaulting to 0. */
+async function resolveNumberMetric(
+  fn: () => number | Promise<number> | undefined,
+  prop: () => number | undefined
+): Promise<number> {
+  try {
+    const result = fn();
+    if (result !== undefined) {
+      const resolved = result instanceof Promise ? await result : result;
+      return typeof resolved === 'number' ? resolved : 0;
+    }
+  } catch {
+    return 0;
+  }
+  try {
+    const value = prop();
+    return typeof value === 'number' ? value : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** Resolve a date metric from a function dependency, defaulting to null. */
+async function resolveDateMetric(
+  fn: () => Date | string | null | Promise<Date | string | null> | undefined
+): Promise<Date | string | null> {
+  try {
+    const result = fn();
+    if (result === undefined) {
+      return null;
+    }
+    const resolved = result instanceof Promise ? await result : result;
+    return resolved ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Resolve job scheduler health with list/running fallback. */
+async function resolveJobsHealth(jobScheduler: JobSchedulerLike | null | undefined): Promise<JobsHealth> {
+  let scheduled: ScheduleEntry[] | number = [];
+  let running = 0;
+
+  if (jobScheduler) {
+    try {
+      const listResult = jobScheduler.list();
+      scheduled = listResult instanceof Promise ? await listResult : listResult;
+      if (!Array.isArray(scheduled)) {
+        scheduled = 0;
+      }
+    } catch {
+      scheduled = [];
+    }
+
+    if (jobScheduler.getRunningCount) {
+      try {
+        const rc = jobScheduler.getRunningCount();
+        running = rc instanceof Promise ? await rc : rc;
+        if (typeof running !== 'number') {
+          running = 0;
+        }
+      } catch {
+        running = 0;
+      }
+    }
+  }
+
+  return { scheduled, running };
+}
+
 // ── Factory ──────────────────────────────────────────────────────────────────
 
 export interface DiagnosticsService {
@@ -521,90 +624,9 @@ export function createDiagnosticsService(
       totalProviders: resolveTotalProviders(deps.routingService ?? undefined, gateway)
     };
 
-    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: memory DI resolution with async sync fallback
-    const memory: MemoryHealth = await (async () => {
-      let scopes = 0;
-      let totalItems = 0;
-      let lastConsolidation: Date | string | null = null;
+    const memory: MemoryHealth = await resolveMemoryHealth(deps.memory);
 
-      if (!deps.memory) {
-        return { scopes, totalItems, lastConsolidation };
-      }
-
-      try {
-        if (typeof deps.memory.getScopeCount === 'function') {
-          const result = deps.memory.getScopeCount();
-          scopes = result instanceof Promise ? await result : result;
-          if (typeof scopes !== 'number') {
-            scopes = 0;
-          }
-        } else if (typeof deps.memory.scopeCount === 'number') {
-          scopes = deps.memory.scopeCount;
-        }
-      } catch {
-        scopes = 0;
-      }
-
-      try {
-        if (typeof deps.memory.getTotalItemCount === 'function') {
-          const result = deps.memory.getTotalItemCount();
-          totalItems = result instanceof Promise ? await result : result;
-          if (typeof totalItems !== 'number') {
-            totalItems = 0;
-          }
-        } else if (typeof deps.memory.totalItems === 'number') {
-          totalItems = deps.memory.totalItems;
-        }
-      } catch {
-        totalItems = 0;
-      }
-
-      try {
-        if (typeof deps.memory.getLastConsolidationTime === 'function') {
-          const result = deps.memory.getLastConsolidationTime();
-          const resolved = result instanceof Promise ? await result : result;
-          if (resolved) {
-            lastConsolidation = resolved;
-          }
-        }
-      } catch {
-        lastConsolidation = null;
-      }
-
-      return { scopes, totalItems, lastConsolidation };
-    })();
-
-    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: job scheduler DI with list/running fallback
-    const jobs: JobsHealth = await (async () => {
-      let scheduled: ScheduleEntry[] | number = [];
-      let running = 0;
-
-      if (deps.jobScheduler) {
-        try {
-          const listResult = deps.jobScheduler.list();
-          scheduled = listResult instanceof Promise ? await listResult : listResult;
-          if (!Array.isArray(scheduled)) {
-            scheduled = 0;
-          }
-        } catch {
-          scheduled = [];
-        }
-
-        if (deps.jobScheduler.getRunningCount) {
-          try {
-            const rc = deps.jobScheduler.getRunningCount();
-            running = rc instanceof Promise ? await rc : rc;
-            if (typeof running !== 'number') {
-              running = 0;
-            }
-          } catch {
-            running = 0;
-          }
-        }
-      }
-
-      return { scheduled, running };
-    })();
+    const jobs: JobsHealth = await resolveJobsHealth(deps.jobScheduler);
 
     const streams: StreamsHealth = (() => {
       if (!deps.streamManager) {

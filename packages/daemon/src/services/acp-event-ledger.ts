@@ -657,7 +657,7 @@ export class ACPEventLedger {
     return result.sort((a, b) => a.sequence - b.sequence);
   }
 
-  #toInferenceEntry(ev: AcpEvent): InferenceEntry | null {
+  #toInferenceEntry(ev: ACPEvent): InferenceEntry | null {
     if (ev.eventType !== 'inference' && ev.eventType !== 'stream.chunk' && ev.eventType !== 'stream.end') {
       return null;
     }
