@@ -280,6 +280,44 @@ export function createContextEpochTracker(options: ContextEpochTrackerOptions): 
     return turnEpoch.epoch < current.epoch;
   }
 
+  /**
+   * If the current epoch was already bumped earlier in this turn, return the
+   * prior-bump result (aborting the turn snapshot). Otherwise return null.
+   */
+  function priorBumpDuringTurn(
+    alreadyBumped: boolean,
+    current: ContextEpoch,
+    reason: string
+  ): AbortAndRebuildResult | null {
+    if (!isPriorBumpDuringTurn(alreadyBumped, current)) {
+      return null;
+    }
+    const abortedSnapshot = turnEpoch as ContextEpoch;
+    const rebuilt = current;
+    if (inTurn) {
+      turnEpoch = rebuilt;
+    }
+    return {
+      aborted: abortedSnapshot,
+      hadStaleReferences: true,
+      reason,
+      rebuilt
+    };
+  }
+
+  /**
+   * Reuse the current snapshot when it was already bumped this turn and the
+   * turn epoch mismatches; otherwise run the provided rebuild.
+   */
+  function resolveRebuild(
+    alreadyBumped: boolean,
+    abortedSnapshot: ContextEpoch,
+    rebuild: () => ContextEpoch
+  ): ContextEpoch {
+    const turnMismatch = abortedSnapshot.epoch !== turnEpoch?.epoch;
+    return alreadyBumped && turnMismatch ? abortedSnapshot : rebuild();
+  }
+
   function bumpToModel(newModel: string, scope: string[] | undefined, reason: string | undefined): ContextEpoch {
     const bumped = bumpInternal({
       model: newModel,
@@ -311,27 +349,21 @@ export function createContextEpochTracker(options: ContextEpochTrackerOptions): 
       const scopeMatches = options?.scope === undefined || scopesEqual(options.scope, current.scope);
       const alreadyBumped = current.model === newModel && scopeMatches;
 
-      if (isPriorBumpDuringTurn(alreadyBumped, current)) {
-        const abortedSnapshot = turnEpoch as ContextEpoch;
-        const rebuilt = current;
-        if (inTurn) {
-          turnEpoch = rebuilt;
-        }
-        return {
-          aborted: abortedSnapshot,
-          hadStaleReferences: true,
-          reason: options?.reason ?? `model-switch:${abortedSnapshot.model}->${newModel}`,
-          rebuilt
-        };
+      const prior = priorBumpDuringTurn(
+        alreadyBumped,
+        current,
+        options?.reason ?? `model-switch:${current.model}->${newModel}`
+      );
+      if (prior) {
+        return prior;
       }
 
       const abortedSnapshot = current;
       const scopeChanged = options?.scope !== undefined && !scopesEqual(options.scope, current.scope);
       const hadStaleReferences = newModel !== current.model || scopeChanged;
-      const turnMismatch = abortedSnapshot.epoch !== turnEpoch?.epoch;
-
-      const rebuilt =
-        alreadyBumped && turnMismatch ? abortedSnapshot : bumpToModel(newModel, options?.scope, options?.reason);
+      const rebuilt = resolveRebuild(alreadyBumped, abortedSnapshot, () =>
+        bumpToModel(newModel, options?.scope, options?.reason)
+      );
 
       if (inTurn) {
         turnEpoch = rebuilt;
@@ -349,25 +381,18 @@ export function createContextEpochTracker(options: ContextEpochTrackerOptions): 
       const current = snapshot();
       const alreadyBumped = scopesEqual(newScope, current.scope);
 
-      if (isPriorBumpDuringTurn(alreadyBumped, current)) {
-        const abortedSnapshot = turnEpoch as ContextEpoch;
-        const rebuilt = current;
-        if (inTurn) {
-          turnEpoch = rebuilt;
-        }
-        return {
-          aborted: abortedSnapshot,
-          hadStaleReferences: true,
-          reason: reason ?? `scope-change:${abortedSnapshot.scope.join(',')}->${newScope.join(',')}`,
-          rebuilt
-        };
+      const prior = priorBumpDuringTurn(
+        alreadyBumped,
+        current,
+        reason ?? `scope-change:${current.scope.join(',')}->${newScope.join(',')}`
+      );
+      if (prior) {
+        return prior;
       }
 
       const abortedSnapshot = current;
       const hadStaleReferences = !scopesEqual(newScope, current.scope);
-      const turnMismatch = abortedSnapshot.epoch !== turnEpoch?.epoch;
-
-      const rebuilt = alreadyBumped && turnMismatch ? abortedSnapshot : bumpToScope(newScope, reason);
+      const rebuilt = resolveRebuild(alreadyBumped, abortedSnapshot, () => bumpToScope(newScope, reason));
 
       if (inTurn) {
         turnEpoch = rebuilt;
