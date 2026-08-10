@@ -162,7 +162,7 @@ export function resolvePreset(
   name: string,
   presets: Record<string, CouncilDefinition> = COUNCIL_PRESETS
 ): CouncilDefinition | undefined {
-  return presets[name];
+  return Object.hasOwn(presets, name) ? presets[name] : undefined;
 }
 
 export function buildCustomDefinition(params: {

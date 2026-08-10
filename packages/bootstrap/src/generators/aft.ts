@@ -182,7 +182,10 @@ function estimateStats(profile: ProjectProfile): AftStats {
   const singleLoc = 5e3;
   const baseLoc = profile.monorepo ? monoLoc : singleLoc;
 
-  const byLanguage: Record<string, { files: number; loc: number }> = {};
+  const byLanguage: Record<string, { files: number; loc: number }> = Object.create(null) as Record<
+    string,
+    { files: number; loc: number }
+  >;
   for (const l of profile.languages) {
     const share = 1 / profile.languages.length;
     byLanguage[l] = {
