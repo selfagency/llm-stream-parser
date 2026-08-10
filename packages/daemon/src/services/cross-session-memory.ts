@@ -254,34 +254,40 @@ function computeConsistencyScore(items: MemoryItem[]): number {
   const uniqueTopics = new Set(topics);
   const topicConsistency = uniqueTopics.size === 1 ? 1 : 1 / uniqueTopics.size;
 
+  const { totalJaccard, pairs } = computePairwiseJaccard(tokenSets);
+  const jaccardAvg = pairs === 0 ? 0.5 : totalJaccard / pairs;
+
+  return Math.max(0, Math.min(1, topicConsistency * 0.6 + jaccardAvg * 0.4));
+}
+
+/** Compute the sum of Jaccard similarities across all token-set pairs. */
+function computePairwiseJaccard(tokenSets: readonly Set<string>[]): { totalJaccard: number; pairs: number } {
   let totalJaccard = 0;
   let pairs = 0;
   for (let i = 0; i < tokenSets.length; i++) {
     for (let j = i + 1; j < tokenSets.length; j++) {
       const a = tokenSets[i] as Set<string>;
       const b = tokenSets[j] as Set<string>;
-      if (a.size === 0 && b.size === 0) {
-        totalJaccard += 1;
-      } else {
-        let intersection = 0;
-        for (const tok of a) {
-          if (b.has(tok)) {
-            intersection++;
-          }
-        }
-        const union = a.size + b.size - intersection;
-        if (union === 0) {
-          totalJaccard += 0;
-        } else {
-          totalJaccard += intersection / union;
-        }
-      }
+      totalJaccard += jaccardSimilarity(a, b);
       pairs++;
     }
   }
-  const jaccardAvg = pairs === 0 ? 0.5 : totalJaccard / pairs;
+  return { totalJaccard, pairs };
+}
 
-  return Math.max(0, Math.min(1, topicConsistency * 0.6 + jaccardAvg * 0.4));
+/** Jaccard similarity between two token sets (1 if both empty). */
+function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 && b.size === 0) {
+    return 1;
+  }
+  let intersection = 0;
+  for (const tok of a) {
+    if (b.has(tok)) {
+      intersection++;
+    }
+  }
+  const union = a.size + b.size - intersection;
+  return union === 0 ? 0 : intersection / union;
 }
 
 function summarizeGroup(items: MemoryItem[]): string {
