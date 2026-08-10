@@ -296,25 +296,41 @@ async function handleList(_argv: readonly string[], opts: SecretsCliOptions): Pr
   const allTypes = await registry.listAll();
 
   if (opts.json) {
-    opts.stdout(
-      JSON.stringify(
-        {
-          providers: providerList.map((p: import('@agentsy/secrets').KeyringProvider) => ({
-            id: p.id,
-            name: p.name,
-            capabilities: p.capabilities
-          })),
-          secrets: allTypes
-        },
-        null,
-        2
-      )
-    );
+    opts.stdout(formatListJson(providerList, allTypes));
     return 0;
   }
 
-  opts.stdout(`Configured providers (${providerList.length}):`);
-  opts.stdout('');
+  opts.stdout(formatListText(providerList, allTypes));
+  return 0;
+}
+
+/** Format the provider/secret list as JSON. */
+function formatListJson(
+  providerList: readonly KeyringProvider[],
+  allTypes: readonly { providerId: string; resourceType: string }[]
+): string {
+  return JSON.stringify(
+    {
+      providers: providerList.map((p: KeyringProvider) => ({
+        id: p.id,
+        name: p.name,
+        capabilities: p.capabilities
+      })),
+      secrets: allTypes
+    },
+    null,
+    2
+  );
+}
+
+/** Format the provider/secret list as human-readable text. */
+function formatListText(
+  providerList: readonly KeyringProvider[],
+  allTypes: readonly { providerId: string; resourceType: string }[]
+): string {
+  const lines: string[] = [];
+  lines.push(`Configured providers (${providerList.length}):`);
+  lines.push('');
   for (const p of providerList) {
     const capFlags = [
       p.capabilities.canList ? 'list' : '',
@@ -323,19 +339,19 @@ async function handleList(_argv: readonly string[], opts: SecretsCliOptions): Pr
     ]
       .filter(Boolean)
       .join(',');
-    opts.stdout(`  ${p.id} (${p.name}) [${capFlags}]`);
+    lines.push(`  ${p.id} (${p.name}) [${capFlags}]`);
   }
 
   if (allTypes.length > 0) {
-    opts.stdout('');
-    opts.stdout(`Available secrets (${allTypes.length}):`);
-    opts.stdout('');
+    lines.push('');
+    lines.push(`Available secrets (${allTypes.length}):`);
+    lines.push('');
     for (const s of allTypes) {
-      opts.stdout(`  ${s.providerId}/${s.resourceType}`);
+      lines.push(`  ${s.providerId}/${s.resourceType}`);
     }
   }
 
-  return 0;
+  return lines.join('\n');
 }
 
 // ---------------------------------------------------------------------------
