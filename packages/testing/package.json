@@ -21,9 +21,9 @@
     "@agentsy/memory": "workspace:*",
     "@agentsy/observability": "workspace:*",
     "@agentsy/providers": "workspace:*",
-    "@agentsy/renderers": "workspace:*",
+    "@agentsy/ui": "workspace:*",
     "@agentsy/session": "workspace:*",
-    "@agentsy/types": "workspace:*"
+    "@agentsy/shared": "workspace:*"
   },
   "devDependencies": {
     "@copilotkit/aimock": "^1.29.0",

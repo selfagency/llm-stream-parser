@@ -53,12 +53,12 @@ pnpm format
 - [Architecture overview](./docs/architecture/index.md)
 - [Roadmap](./docs/roadmap.md)
 - [Developer docs](./docs/developers/index.md)
-- [Dogfood implementation plan](./plan/DOGFOOD-PLAN.md)
-- [Master implementation plan](./plan/MASTER-IMPLEMENTATION-PLAN.md)
+- [Dogfood implementation plan](./plan/INDEX.md)
+- [Master implementation plan](./plan/00-overview.md)
 
 ## Dogfood implementation
 
-The repository now follows `plan/DOGFOOD-PLAN.md` as the active production sequence for CLI-first delivery. Start there when implementing the next vertical slice.
+The repository now follows `plan/INDEX.md` as the active production sequence for CLI-first delivery. Start there when implementing the next vertical slice.
 
 ## Configuration
 

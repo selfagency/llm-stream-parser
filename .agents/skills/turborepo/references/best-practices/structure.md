@@ -95,7 +95,7 @@ Package tasks enable Turborepo to:
 
 ```json
 {
-  "$schema": "https://v2-9-15-canary-2.turborepo.dev/schema.json",
+  "$schema": "https://v2-9-17-canary-1.turborepo.dev/schema.json",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -117,7 +117,7 @@ With `futureFlags.globalConfiguration`, global settings move under a `global` ke
 
 ```json
 {
-  "$schema": "https://v2-9-15-canary-2.turborepo.dev/schema.json",
+  "$schema": "https://v2-9-17-canary-1.turborepo.dev/schema.json",
   "futureFlags": { "globalConfiguration": true },
   "global": {
     "inputs": ["tsconfig.json"],
@@ -157,7 +157,7 @@ packages:
 
 This allows:
 
-```text
+```
 packages/
 ├── ui/
 ├── utils/
@@ -182,7 +182,7 @@ packages:
 
 ### Minimum Required Files
 
-```text
+```
 packages/ui/
 ├── package.json    # Required: Makes it a package
 ├── src/            # Source code
@@ -210,7 +210,7 @@ packages/ui/
 
 Create a shared TypeScript config package:
 
-```text
+```
 packages/
 └── typescript-config/
     ├── package.json
@@ -256,7 +256,7 @@ You likely don't need a `tsconfig.json` in the workspace root. Each package shou
 
 ### Shared Config Package
 
-```text
+```
 packages/
 └── eslint-config/
     ├── package.json

@@ -48,6 +48,7 @@ function normalizeSentence(sentence: string): string {
   return sentence.replaceAll(/\s+/gu, ' ').trim();
 }
 
+// fallow-ignore-next-line complexity
 function buildRelationships(sentences: string[], entitySet: Set<string>): EntityRelationship[] {
   const relationships: EntityRelationship[] = [];
   const seenEdges = new Set<string>();

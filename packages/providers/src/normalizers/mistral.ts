@@ -20,7 +20,7 @@ function extractThinkingContent(thinkingArray: unknown[]): string {
 }
 
 /**
- * Extracts text and thinking content from a Mistral structured content block.
+ * Extracts text and thinking content from a structured content block.
  * @returns [text, thinking] tuple
  */
 function extractContentFromBlock(block: unknown): [string, string] {
@@ -34,7 +34,7 @@ function extractContentFromBlock(block: unknown): [string, string] {
   const b = block as Record<string, unknown>;
 
   if (b.type === 'text' && typeof b.text === 'string') {
-    ({ text } = b);
+    text = b.text;
   } else if (b.type === 'thinking' && Array.isArray(b.thinking)) {
     thinking = extractThinkingContent(b.thinking);
   }
@@ -71,18 +71,44 @@ export function normalizeMistralChunk(raw: unknown): NormalizerResult | null {
   }
 
   // Slow path: check for Mistral's structured content array (2509/2507 format).
+  const structuredContent = parseMistralStructuredContent(raw);
+  if (!structuredContent) {
+    return standard;
+  }
+
+  const { text, thinking } = structuredContent;
+  if (!(text || thinking)) {
+    return standard;
+  }
+
+  const base = standard ?? { chunk: {}, rawEvent: raw };
+  return {
+    chunk: {
+      ...base.chunk,
+      ...(text && { content: text }),
+      ...(thinking && { thinking })
+    },
+    rawEvent: raw
+  };
+}
+
+/**
+ * Parses Mistral's structured content array from the raw chunk.
+ * @returns [text, thinking] tuple, or null if no structured content found.
+ */
+function parseMistralStructuredContent(raw: unknown): { text: string; thinking: string } | null {
   try {
     if (!raw || typeof raw !== 'object') {
-      return standard;
+      return null;
     }
     const { choices } = raw as Record<string, unknown>;
     if (!Array.isArray(choices) || choices.length === 0) {
-      return standard;
+      return null;
     }
 
     const delta = (choices[0] as Record<string, unknown>).delta as Record<string, unknown> | undefined;
     if (!Array.isArray(delta?.content)) {
-      return standard;
+      return null;
     }
 
     let text = '';
@@ -94,20 +120,8 @@ export function normalizeMistralChunk(raw: unknown): NormalizerResult | null {
       thinking += blockThinking;
     }
 
-    if (!(text || thinking)) {
-      return standard;
-    }
-
-    const base = standard ?? { chunk: {}, rawEvent: raw };
-    return {
-      chunk: {
-        ...base.chunk,
-        ...(text && { content: text }),
-        ...(thinking && { thinking })
-      },
-      rawEvent: raw
-    };
+    return { text, thinking };
   } catch {
-    return standard;
+    return null;
   }
 }

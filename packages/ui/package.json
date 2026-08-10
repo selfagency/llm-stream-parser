@@ -1,8 +1,8 @@
 {
   "name": "@agentsy/ui",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
-  "description": "UI state management and event sourcing for the @agentsy platform.",
+  "description": "Composable output renderers for the @agentsy platform.",
   "repository": {
     "type": "git",
     "url": "https://github.com/selfagency/agentsy.git"
@@ -16,6 +16,41 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./ink": {
+      "types": "./dist/ink.d.ts",
+      "import": "./dist/ink.js",
+      "require": "./dist/ink.cjs"
+    },
+    "./cli": {
+      "types": "./dist/cli.d.ts",
+      "import": "./dist/cli.js",
+      "require": "./dist/cli.cjs"
+    },
+    "./streaming-md": {
+      "types": "./dist/streaming-md.d.ts",
+      "import": "./dist/streaming-md.js",
+      "require": "./dist/streaming-md.cjs"
+    },
+    "./plain": {
+      "types": "./dist/plain.d.ts",
+      "import": "./dist/plain.js",
+      "require": "./dist/plain.cjs"
+    },
+    "./adapters": {
+      "types": "./dist/adapters.d.ts",
+      "import": "./dist/adapters.js",
+      "require": "./dist/adapters.cjs"
+    },
+    "./ui": {
+      "types": "./dist/ui/index.d.ts",
+      "import": "./dist/ui/index.js",
+      "require": "./dist/ui/index.cjs"
+    },
+    "./ink/themes": {
+      "types": "./dist/ink/themes.d.ts",
+      "import": "./dist/ink/themes.js",
+      "require": "./dist/ink/themes.cjs"
     }
   },
   "publishConfig": {
@@ -31,14 +66,44 @@
   },
   "dependencies": {
     "@agentsy/core": "workspace:*",
-    "@agentsy/types": "workspace:*"
+    "@agentsy/models": "workspace:*",
+    "@agentsy/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.9.0",
+    "@types/react": "^19.2.16",
     "@vitest/coverage-v8": "^4.1.8",
+    "ink-testing-library": "^4.0.0",
     "tsup": "^8.5.1",
     "typescript": "6.0.3",
     "vitest": "^4.1.8"
+  },
+  "peerDependencies": {
+    "cli-highlight": "*",
+    "dompurify": "*",
+    "ink": ">=4.0.0",
+    "react": ">=18.0.0",
+    "streaming-markdown": "*"
+  },
+  "peerDependenciesMeta": {
+    "ink": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "cli-highlight": {
+      "optional": true
+    },
+    "streaming-markdown": {
+      "optional": true
+    },
+    "dompurify": {
+      "optional": true
+    }
+  },
+  "optionalDependencies": {
+    "cli-markdown": "^3.5.1"
   },
   "packageManager": "pnpm@10.33.2"
 }

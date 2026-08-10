@@ -43,12 +43,23 @@ describe('PIIScanner', () => {
     }
   });
 
-  it('redacts email and phone', async () => {
+  it('redacts using [REDACTED:<type>] format', async () => {
     const r = await redactScanner.evaluate('Email: user@example.com, Phone: 555-123-4567');
     expect(r.status).toBe('transform');
     if (r.status === 'transform') {
       expect(r.sanitized).not.toContain('user@example.com');
       expect(r.sanitized).not.toContain('555-123-4567');
+      expect(r.sanitized).toContain('[REDACTED:email]');
+      expect(r.sanitized).toContain('[REDACTED:phone]');
+    }
+  });
+
+  it('redacts SSN, credit-card, and other high-severity types consistently', async () => {
+    const r = await redactScanner.evaluate('SSN: 123-45-6789, Card: 4111-1111-1111-1111');
+    expect(r.status).toBe('transform');
+    if (r.status === 'transform') {
+      expect(r.sanitized).toContain('[REDACTED:ssn]');
+      expect(r.sanitized).toContain('[REDACTED:credit-card]');
     }
   });
 

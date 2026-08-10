@@ -297,7 +297,7 @@ describe('createRuntimeLoop', () => {
           }
         }
       ])
-    ).rejects.toThrow('Runtime spawn depth exceeded maxDepth');
+    ).rejects.toThrow(/Runtime spawn depth exceeded maxDepth/);
   });
 });
 
@@ -382,7 +382,7 @@ describe('createRuntimeWorkflowExecutor', () => {
       }
     ];
 
-    await expect(workflow.execute(tasks)).rejects.toThrow('depends on missing task');
+    await expect(workflow.execute(tasks)).rejects.toThrow(/depends on missing task/);
   });
 
   it('rejects workflows with cycles', async () => {
@@ -404,6 +404,6 @@ describe('createRuntimeWorkflowExecutor', () => {
       }
     ];
 
-    await expect(workflow.execute(tasks)).rejects.toThrow('contains a cycle');
+    await expect(workflow.execute(tasks)).rejects.toThrow(/contains a cycle/);
   });
 });

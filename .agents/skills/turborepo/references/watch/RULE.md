@@ -1,6 +1,6 @@
 # turbo watch
 
-Full docs: <https://turborepo.dev/docs/reference/watch>
+Full docs: https://turborepo.dev/docs/reference/watch
 
 Re-run tasks automatically when code changes. Dependency-aware.
 

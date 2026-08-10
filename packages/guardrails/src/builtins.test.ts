@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { BUILTIN_SCANNER_IDS, createBuiltinScanners } from './builtins.js';
 
 describe('createBuiltinScanners', () => {
-  it('returns all 7 built-in scanners', () => {
+  it('returns all built-in scanners', () => {
     const scanners = createBuiltinScanners();
-    expect(scanners).toHaveLength(7);
+    expect(scanners).toHaveLength(30);
   });
 
   it('each scanner has valid metadata', () => {
@@ -12,7 +12,8 @@ describe('createBuiltinScanners', () => {
     for (const s of scanners) {
       expect(s.metadata.id).toBeTruthy();
       expect(s.metadata.name).toBeTruthy();
-      expect(s.metadata.owaspCategories.length).toBeGreaterThanOrEqual(1);
+      // Some scanners (e.g. FrustrationScanner) have no OWASP categories
+      expect(Array.isArray(s.metadata.owaspCategories)).toBe(true);
       expect(typeof s.metadata.priority).toBe('number');
     }
   });

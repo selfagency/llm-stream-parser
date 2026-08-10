@@ -101,6 +101,9 @@ export class WeightedStrategy implements RoutingStrategy {
     if (total <= 0) {
       return eligible[0];
     }
+    // nosemgrep: insecure-randomness -- Math.random() is used for weighted-random load balancing.
+    // Prediction of the selected replica confers no advantage: the selection is observable
+    // and any eligible replica is authorized to handle the request.
     let target = Math.random() * total;
     for (const entry of eligible) {
       const weight = this.#weights.get(entry.id) ?? 1;

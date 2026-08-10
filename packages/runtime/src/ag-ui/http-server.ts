@@ -11,7 +11,8 @@
  * - Compatible with Node.js http, Hono, Express, Fastify, etc.
  */
 
-import type { AgUiEvent } from '@agentsy/types';
+import { randomUUID } from 'node:crypto';
+import type { AgUiEvent } from '@agentsy/shared';
 
 /**
  * Options for SSE stream creation.
@@ -169,7 +170,7 @@ export function createAgentRunHandler(streamGenerator: (runId: string) => AsyncG
       return;
     }
 
-    const runId = `run_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+    const runId = `run_${randomUUID()}`;
 
     try {
       const events = streamGenerator(runId);
@@ -205,7 +206,7 @@ export function createAgentRunHandler(streamGenerator: (runId: string) => AsyncG
  */
 export function createExpressMiddleware(streamGenerator: (runId: string) => AsyncGenerator<AgUiEvent>) {
   return async (_req: NodeRequest, res: NodeResponse) => {
-    const runId = `run_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+    const runId = `run_${randomUUID()}`;
 
     try {
       const events = streamGenerator(runId);
@@ -237,7 +238,7 @@ export function createExpressMiddleware(streamGenerator: (runId: string) => Asyn
  */
 export function createHonoHandler(streamGenerator: (runId: string) => AsyncGenerator<AgUiEvent>) {
   return (c: Record<string, unknown>) => {
-    const runId = `run_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+    const runId = `run_${randomUUID()}`;
 
     try {
       const events = streamGenerator(runId);

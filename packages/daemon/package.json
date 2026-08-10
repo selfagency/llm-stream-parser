@@ -1,0 +1,125 @@
+{
+  "name": "@agentsy/daemon",
+  "version": "0.0.0",
+  "description": "Long-lived daemon process with IPC, ACP, subprocess management, and lifecycle orchestration",
+  "keywords": [
+    "agentsy",
+    "typescript"
+  ],
+  "homepage": "https://github.com/selfagency/agentsy#readme",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/selfagency/agentsy.git"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./ipc": {
+      "types": "./dist/ipc/index.d.ts",
+      "import": "./dist/ipc/index.js",
+      "require": "./dist/ipc/index.cjs"
+    },
+    "./acp": {
+      "types": "./dist/acp/index.d.ts",
+      "import": "./dist/acp/index.js",
+      "require": "./dist/acp/index.cjs"
+    },
+    "./processes": {
+      "types": "./dist/processes/index.d.ts",
+      "import": "./dist/processes/index.js",
+      "require": "./dist/processes/index.cjs"
+    },
+    "./lifecycle": {
+      "types": "./dist/lifecycle/index.d.ts",
+      "import": "./dist/lifecycle/index.js",
+      "require": "./dist/lifecycle/index.cjs"
+    },
+    "./services": {
+      "types": "./dist/services/index.d.ts",
+      "import": "./dist/services/index.js",
+      "require": "./dist/services/index.cjs"
+    },
+    "./agents": {
+      "types": "./dist/agents/index.d.ts",
+      "import": "./dist/agents/index.js",
+      "require": "./dist/agents/index.cjs"
+    },
+    "./jobs": {
+      "types": "./dist/jobs/index.d.ts",
+      "import": "./dist/jobs/index.js",
+      "require": "./dist/jobs/index.cjs"
+    },
+    "./connectors": {
+      "types": "./dist/connectors/index.d.ts",
+      "import": "./dist/connectors/index.js",
+      "require": "./dist/connectors/index.cjs"
+    },
+    "./mcp": {
+      "types": "./dist/mcp/index.d.ts",
+      "import": "./dist/mcp/index.js",
+      "require": "./dist/mcp/index.cjs"
+    },
+    "./db": {
+      "types": "./dist/db/index.d.ts",
+      "import": "./dist/db/index.js",
+      "require": "./dist/db/index.cjs"
+    },
+    "./display": {
+      "types": "./dist/display/index.d.ts",
+      "import": "./dist/display/index.js",
+      "require": "./dist/display/index.cjs"
+    },
+    "./cli": {
+      "types": "./dist/cli/index.d.ts",
+      "import": "./dist/cli/index.js",
+      "require": "./dist/cli/index.cjs"
+    },
+    "./streaming": {
+      "types": "./dist/streaming/index.d.ts",
+      "import": "./dist/streaming/index.js",
+      "require": "./dist/streaming/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "check-types": "tsc --noEmit",
+    "lint": "biome lint",
+    "format": "biome format",
+    "test": "vitest --run --passWithNoTests",
+    "coverage": "vitest --run --passWithNoTests --coverage"
+  },
+  "dependencies": {
+    "@agentsy/bootstrap": "workspace:*",
+    "@agentsy/gateway": "workspace:*",
+    "@agentsy/guardrails": "workspace:*",
+    "@agentsy/memory": "workspace:*",
+    "@agentsy/observability": "workspace:*",
+    "@agentsy/providers": "workspace:*",
+    "@agentsy/retrieval": "workspace:*",
+    "@agentsy/shared": "workspace:*",
+    "better-sqlite3": "^11.10.0",
+    "bree": "^9.2.3",
+    "piscina": "^4.7.0",
+    "zod": "^3.24.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.9.0",
+    "@vitest/coverage-v8": "^4.1.8",
+    "tsup": "^8.5.1",
+    "typescript": "6.0.3",
+    "vitest": "^4.1.8"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.33.2"
+}

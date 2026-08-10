@@ -1,4 +1,4 @@
-import type { JsonObject, StreamChunk } from '@agentsy/types';
+import type { JsonObject, StreamChunk } from '@agentsy/shared';
 
 import type { XmlToolCall } from '../../tool-calls/index.js';
 

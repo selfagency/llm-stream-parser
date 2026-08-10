@@ -21,7 +21,9 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@agentsy/ui": ["../ui/src/index.ts"],
+      "@agentsy/ui/*": ["../ui/src/*"]
     }
   },
   "include": ["src"],

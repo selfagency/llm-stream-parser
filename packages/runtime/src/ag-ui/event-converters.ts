@@ -5,8 +5,8 @@
  * Allows the same event stream to be consumed by different UI frameworks.
  */
 
-import type { AgUiEvent } from '@agentsy/types';
-import { EventType } from '@agentsy/types';
+import type { AgUiEvent } from '@agentsy/shared';
+import { EventType } from '@agentsy/shared';
 
 /**
  * CopilotKit event format (simplified).

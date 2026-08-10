@@ -4,8 +4,8 @@
  * Verifies state snapshots, deltas, and RFC 6902 JSON Patch operations
  */
 
-import type { StateSnapshotEvent } from '@agentsy/types';
-import { EventType } from '@agentsy/types';
+import type { StateSnapshotEvent } from '@agentsy/shared';
+import { EventType } from '@agentsy/shared';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { JsonPatchOp } from './state-manager.js';
 import {

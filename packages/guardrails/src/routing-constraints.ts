@@ -149,3 +149,115 @@ export function evaluateConstraints(constraint: RoutingConstraint, model: Gatewa
 
   return { pass: violations.length === 0, violations };
 }
+
+// =============================================================================
+// Batch evaluator — filter candidates with denial reasons
+// =============================================================================
+
+/**
+ * Result of evaluating routing constraints against a batch of candidates.
+ */
+export interface RoutingConstraintEvalBatchResult {
+  /**
+   * Contestable denial reasons emitted when no route satisfies policy.
+   * These are structured reasons that can be challenged or overridden
+   * by a human operator or higher-level policy.
+   */
+  contestableDenials: string[];
+  /** Candidates that were rejected, with denial reasons. */
+  denied: Array<{
+    candidate: GatewayModelInfo;
+    violations: ConstraintViolation[];
+  }>;
+  /** Candidates that passed all constraints. */
+  passed: GatewayModelInfo[];
+}
+
+/**
+ * Evaluate routing constraints against a batch of model candidates.
+ * Returns filtered candidates with denial reasons for each rejected
+ * candidate, and contestable denial reasons when no route satisfies
+ * the policy.
+ *
+ * @param constraints - The routing constraints to evaluate.
+ * @param candidates - The model candidates to evaluate.
+ * @returns A batch result with passed, denied, and contestable denials.
+ */
+export function evaluateRoutingConstraints(
+  constraints: RoutingConstraint,
+  candidates: GatewayModelInfo[]
+): RoutingConstraintEvalBatchResult {
+  const passed: GatewayModelInfo[] = [];
+  const denied: Array<{ candidate: GatewayModelInfo; violations: ConstraintViolation[] }> = [];
+  const contestableDenials: string[] = [];
+
+  for (const candidate of candidates) {
+    const result = evaluateConstraints(constraints, candidate);
+    if (result.pass) {
+      passed.push(candidate);
+    } else {
+      denied.push({ candidate, violations: result.violations });
+    }
+  }
+
+  // Emit contestable denial reasons when no route satisfies policy
+  if (passed.length === 0 && denied.length > 0) {
+    const violationCodes = new Set(denied.flatMap(d => d.violations.map(v => v.code)));
+    for (const code of violationCodes) {
+      switch (code) {
+        case 'local-only-no-local-available': {
+          contestableDenials.push(
+            'No local models available for the requested tier/use case. ' +
+              'Consider relaxing the localOnly constraint or installing a local provider.'
+          );
+          break;
+        }
+        case 'provider-excluded': {
+          const excludedProviders = constraints.excludeProviders?.join(', ') ?? 'unknown';
+          contestableDenials.push(
+            `All candidates are from excluded providers (${excludedProviders}). ` +
+              'Consider removing the provider exclusion or adding an allowed provider.'
+          );
+          break;
+        }
+        case 'missing-capability-json': {
+          contestableDenials.push(
+            'No model supports JSON mode in the requested tier. ' +
+              'Consider relaxing the requireJsonMode constraint or escalating to a higher tier.'
+          );
+          break;
+        }
+        case 'missing-capability-reasoning': {
+          contestableDenials.push(
+            'No model supports extended reasoning in the requested tier. ' +
+              'Consider relaxing the requireReasoning constraint or escalating to a higher tier.'
+          );
+          break;
+        }
+        case 'missing-capability-tools': {
+          contestableDenials.push(
+            'No model supports function calling in the requested tier. ' +
+              'Consider relaxing the requireTools constraint or escalating to a higher tier.'
+          );
+          break;
+        }
+        case 'missing-capability-vision': {
+          contestableDenials.push(
+            'No model supports vision input in the requested tier. ' +
+              'Consider relaxing the requireVision constraint or escalating to a higher tier.'
+          );
+          break;
+        }
+        default: {
+          contestableDenials.push(
+            `No route satisfies policy: constraint violation ${code}. ` +
+              'Consider adjusting constraints or escalating to a higher tier.'
+          );
+          break;
+        }
+      }
+    }
+  }
+
+  return { passed, denied, contestableDenials };
+}

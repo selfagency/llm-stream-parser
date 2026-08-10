@@ -101,8 +101,13 @@ const CLOUD_PATTERNS: { pattern: RegExp; id: string; severity: 'critical' | 'hig
   { pattern: /\bdop_[0-9a-f]{40}\b/g, id: 'do-pat', severity: 'high', confidence: 0.9 },
   // DigitalOcean OAuth token
   { pattern: /\bdoo_[0-9a-f]{40}\b/g, id: 'do-oauth-token', severity: 'high', confidence: 0.9 },
-  // Vercel token
-  { pattern: /\b[A-Za-z0-9]{24}\b/g, id: 'vercel-token', severity: 'high', confidence: 0.75 },
+  // Vercel token (requires context keyword to reduce false positives)
+  {
+    pattern: /(?:Vercel|VERCEL|vercel)[:=]\s*[A-Za-z0-9]{24}\b/g,
+    id: 'vercel-token',
+    severity: 'high',
+    confidence: 0.5
+  },
   // Netlify access token
   { pattern: /\bnf_[A-Za-z0-9]{40,}\b/g, id: 'netlify-access-token', severity: 'high', confidence: 0.85 },
   // Cloudflare API token
@@ -178,12 +183,12 @@ const SAAS_PATTERNS: { pattern: RegExp; id: string; severity: 'critical' | 'high
     severity: 'high',
     confidence: 0.85
   },
-  // Postmark server token
+  // Postmark server token (requires context keyword to avoid bare UUID false positives)
   {
-    pattern: /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,
+    pattern: /(?:[Pp]ostmark)[:=]\s*[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b/g,
     id: 'postmark-server-token',
     severity: 'high',
-    confidence: 0.8
+    confidence: 0.5
   },
   // PagerDuty API token
   { pattern: /u\+[A-Za-z0-9_-]{20,}/g, id: 'pagerduty-api-token', severity: 'high', confidence: 0.85 },
@@ -239,12 +244,12 @@ const PACKAGE_PATTERNS: { pattern: RegExp; id: string; severity: 'critical' | 'h
     severity: 'high',
     confidence: 0.85
   },
-  // Snyk token
+  // Snyk token (requires context keyword to avoid bare UUID false positives)
   {
-    pattern: /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,
+    pattern: /(?:[Ss]nyk)[:=]\s*[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b/g,
     id: 'snyk-token',
     severity: 'high',
-    confidence: 0.8
+    confidence: 0.5
   },
   // RubyGems API key
   { pattern: /rubygems_[A-Za-z0-9]{40,}/g, id: 'rubygems-api-key', severity: 'high', confidence: 0.85 }

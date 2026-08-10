@@ -1,9 +1,31 @@
 // Core exports
 
+// Background task manager (Tip 36)
+export {
+  type BackgroundTaskHandle,
+  BackgroundTaskManager,
+  type BackgroundTaskSpec,
+  type BackgroundTaskStatus
+} from './agent/background-tasks.js';
+// Verification gate (Tip 26)
+export {
+  VerificationGate,
+  type VerificationGateConfig,
+  type VerificationResult
+} from './agent/verification-gate.js';
 // Agent registry and discovery
 export { AgentRegistry } from './agents/registry.js';
 // Context isolation and resource locking
 export { type ContextFrame, ContextManager, type LockToken } from './context/index.js';
+// Context monitor + handoff (Tip 5, Tip 8)
+export {
+  type ContextAction,
+  ContextMonitor,
+  type ContextMonitorConfig,
+  type ContextSnapshot,
+  type ContextStatus,
+  type HandoffDocument
+} from './context/monitor.js';
 export { OrchestrationEngine } from './core/engine.js';
 // Governance policies and enforcement
 export type {
@@ -73,6 +95,13 @@ export {
 } from './intelligence/model-router.js';
 // Tier routing with budget escalation
 export { TIER_ORDER, TierRouter } from './intelligence/tier-router.js';
+// Verify loop (Tip 9, Tip 34)
+export {
+  runVerifyLoop,
+  type VerifyIteration,
+  type VerifyLoopConfig,
+  type VerifyLoopResult
+} from './loops/verify-loop.js';
 export { createOrchestratorLoop } from './orchestrator-loop.js';
 // Circuit-breaker state tracking per replica
 export {
@@ -88,6 +117,12 @@ export {
   ReplicaHealthProbe,
   type ReplicaHealthProbeConfig
 } from './recovery/health-probe.js';
+// Job poller (Tip 15)
+export {
+  type JobPollerConfig,
+  type JobResult,
+  pollUntilDone
+} from './recovery/job-poller.js';
 // Recovery / multi-replica failover chain
 export {
   createFailoverChain,
@@ -129,6 +164,8 @@ export {
 export type { ITaskBoard, Task, TaskAttempt, TaskStatus, ToolCallRecord } from './task-board/types.js';
 // Type definitions
 export * from './types/index.js';
+// Routing types (TaskTier, RoutingIntent, FailoverPolicy)
+export type { FailoverPolicy, RoutingIntent } from './types/routing.js';
 // Utilities
 export * from './utils/matching.js';
 export * from './utils/timing.js';

@@ -43,6 +43,7 @@ export {
 } from './policy.js';
 export type {
   Detection,
+  GuardrailDecisionReceipt,
   GuardrailMetadata,
   GuardrailPhase,
   GuardrailResult,
@@ -50,6 +51,44 @@ export type {
   OWASPCategory,
   PipelineConfig
 } from './types.js';
+
+// ---------------------------------------------------------------------------
+// Ethics registry — maps policy document clauses to machine-enforceable rules
+// ---------------------------------------------------------------------------
+
+export type { EnforceableAs, EthicalClause, PolicySource } from './ethics/registry.js';
+export { DEFAULT_ETHICS_REGISTRY, EthicsRegistry } from './ethics/registry.js';
+
+// ---------------------------------------------------------------------------
+// Provider ethics policy — hard blocks and warn-and-acknowledge entries
+// ---------------------------------------------------------------------------
+
+export type { ProviderEthicsAction, ProviderEthicsEntry } from './ethics/provider-policy.js';
+export {
+  getProviderEthicsPolicy,
+  isProviderBlocked,
+  PROVIDER_ETHICS_POLICY,
+  requiresAcknowledgement
+} from './ethics/provider-policy.js';
+
+// ---------------------------------------------------------------------------
+// Style-mimicry scanner — blocks prompts targeting living creators
+// ---------------------------------------------------------------------------
+
+export { StyleMimicryScanner } from './scanners/style-mimicry.js';
+
+// ---------------------------------------------------------------------------
+// Audit logger — decision receipt persistence and export
+// ---------------------------------------------------------------------------
+
+export type { AuditLogger, ReceiptQuery } from './audit/logger.js';
+export { JsonlAuditLogger, ReceiptExporter, redactReceipt } from './audit/logger.js';
+
+// ---------------------------------------------------------------------------
+// Canonical GuardrailsConfig
+// ---------------------------------------------------------------------------
+
+export type { GuardrailsConfig } from './config.js';
 
 // ---------------------------------------------------------------------------
 // Message scrubbing — LLM input / deep object scrubbing (Phase 5.2)
@@ -74,6 +113,13 @@ export type { BaselineDocument, BaselineEntry } from './baseline.js';
 export { BaselineManager, fingerprint } from './baseline.js';
 
 // ---------------------------------------------------------------------------
+// UI Copy Scanner — product-level dark-pattern detection (Phase 16)
+// ---------------------------------------------------------------------------
+
+export type { DarkPatternDetection, UIStringTable } from './ui-copy-scanner.js';
+export { scanUICopy } from './ui-copy-scanner.js';
+
+// ---------------------------------------------------------------------------
 // Inline ignore directives — source-level suppression (Phase 5.2)
 // ---------------------------------------------------------------------------
 
@@ -86,6 +132,12 @@ export { parseIgnoreDirectives, shouldIgnore } from './inline-ignore.js';
 
 export type { CredentialPattern, CredentialReferenceScannerOptions } from './credential-scanner.js';
 export { CredentialReferenceScanner } from './credential-scanner.js';
+
+// ---------------------------------------------------------------------------
+// Policy enforcer — bridges policy-as-code with the guardrail pipeline
+// ---------------------------------------------------------------------------
+
+export { PolicyEnforcer } from './policy-enforcer.js';
 
 // ---------------------------------------------------------------------------
 // Legacy error classes (Phase 3.7)
@@ -113,6 +165,7 @@ export type {
   ConstraintViolation,
   ConstraintViolationCode,
   GatewayModelInfo,
-  RoutingConstraint
+  RoutingConstraint,
+  RoutingConstraintEvalBatchResult
 } from './routing-constraints.js';
-export { evaluateConstraints } from './routing-constraints.js';
+export { evaluateConstraints, evaluateRoutingConstraints } from './routing-constraints.js';

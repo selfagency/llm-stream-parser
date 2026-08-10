@@ -2,7 +2,7 @@
 
 **Experimental feature** - See [RFC](https://github.com/vercel/turborepo/discussions/9435)
 
-Full docs: <https://turborepo.dev/docs/reference/boundaries>
+Full docs: https://turborepo.dev/docs/reference/boundaries
 
 Boundaries enforce package isolation by detecting:
 

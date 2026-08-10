@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto';
-
 import { eq } from 'drizzle-orm';
 import { createWikiFsAdapter } from '../agentfs/wiki-adapter.js';
 import type { MemoryDatabase } from '../database/connection.js';
@@ -15,6 +14,7 @@ import type { NavigationSystem } from './navigation-system.js';
 import { createNavigationSystem } from './navigation-system.js';
 import type { VersionTracker } from './version-tracker.js';
 import { createVersionTracker } from './version-tracker.js';
+import { getDiff, type PageDiff } from './wiki-utils.js';
 
 export type RawSourceType = 'document' | 'conversation' | 'capture';
 
@@ -64,12 +64,6 @@ export interface WikiPageHistoryEntry {
   body: string;
   editedAt: Date;
   version: number;
-}
-
-/** Added and removed lines between two page versions. */
-export interface PageDiff {
-  addedLines: string[];
-  removedLines: string[];
 }
 
 /** A semantic relation linking one wiki page to another. */
@@ -157,19 +151,6 @@ function ensureCanWrite(page: WikiPage, actorId: string): void {
   }
 
   throw new Error(`Actor ${actorId} does not have write access to ${page.pageId}`);
-}
-
-function getDiff(fromBody: string, toBody: string): PageDiff {
-  const fromLines = fromBody.split('\n');
-  const toLines = toBody.split('\n');
-
-  const fromSet = new Set(fromLines);
-  const toSet = new Set(toLines);
-
-  const addedLines = toLines.filter(line => !fromSet.has(line));
-  const removedLines = fromLines.filter(line => !toSet.has(line));
-
-  return { addedLines, removedLines };
 }
 
 function resolveWikiDependencies(dependencies: WikiManagerDependencies) {

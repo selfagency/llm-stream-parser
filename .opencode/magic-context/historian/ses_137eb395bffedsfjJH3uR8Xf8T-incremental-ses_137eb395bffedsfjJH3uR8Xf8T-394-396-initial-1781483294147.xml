@@ -1,0 +1,45 @@
+The messages are pure tool calls (reads of `int.test.ts`, `exec.ts`, `secrets.ts`, and a failed attempt to read non-existent provider files). No narrative text — continuing the same post-PR findings investigation from compartment 350-393.
+
+Since this is a pure investigation stretch with no new objective, I'll extend the preceding compartment rather than create a new one.
+
+```xml
+<output>
+<compartments>
+<compartment start="350" end="396" title="Review-driven lint fixes — committed, PR #119 created, Fallow/Semgrep findings posted" episode_type="refactor,release" importance="45">
+<p1>
+Review-driven lint fixes committed and pushed on `feature/phase-10-secret-injection`. Biome `noNegationElse` (34 errors) fixed via `biome write --write`; remaining 4 issues fixed manually — `detectProjectRoot` made sync, `registeredCount` variable removed, `handleList` and `handleLookup` refactored to reduce cognitive complexity below 20 by extracting shared initialization into a helper. All 18 secrets package test files and 12 CLI files pass. Branch cleaned via `git commit --amend` to remove unintended index.ts changes. User confirmed no further work needed before push.
+
+U: no
+
+Branch pushed, PR #119 created for Phase 10: Secret Injection Providers. Fallow and Semgrep bots immediately posted findings as PR comments:
+- Fallow `unused-export` on `handleInit`, `handleList`, `handleLookup`, `handleSync` in `packages/cli/src/commands/secrets.ts` — these are CLI command handlers dispatched via `run()`, not imported elsewhere
+- Fallow `high-crap-score` on `handleList` (31.6, cyclomatic 10), `handleLookup` (37.1, cyclomatic 11), `handleSync` (43.1, cyclomatic 12)
+- Fallow `code-duplication` groups across cloud providers (doppler/infisical 37-line clones, 14/17/18-line clone groups across all local providers)
+- Semgrep `bracket-notation` on `packages/secrets/src/provider/local/exec.ts:38` (`hints[cli]`) — static `hints` map keys (`op`, `bw`, `dcli`, `lpass`, `security`), not external input; false positive
+- Semgrep `bracket-notation` on `packages/cli/src/commands/secrets.ts` (`PROVIDER_FACTORIES[name]`) — static factory map keys, not external input; false positive
+- Various Fallow minor issues in int.test.ts, vault.ts, apple-pm.ts, registry.test.ts, registry.ts
+
+Agent continued reading source files to assess findings: re-read `int.test.ts`, `exec.ts`, `secrets.ts`, and attempted to read non-existent `gopass.ts`, `keychain.ts`, `onepassword.ts`, `pass.ts` in the local provider directory. Actual local providers are: `1password.ts`, `apple-pm.ts`, `bitwarden.ts`, `dashlane.ts`, `lastpass.ts`.
+
+Agent began addressing findings (read files, called `todowrite`). Work still in progress.
+</p1>
+<p2>
+Lint fixes (Biome write, cognitive complexity refactors) committed, branch pushed, PR #119 created. Fallow bot posted unused-export and CRAP-score findings on CLI command handlers; Semgrep posted bracket-notation findings on `exec.ts` and `secrets.ts` — both Semgrep findings are false positives (static internal map keys). Agent continuing to read source files to assess findings; actual local providers are 1password, apple-pm, bitwarden, dashlane, lastpass.
+</p2>
+<p3>
+Phase 10 PR #119 created on `feature/phase-10-secret-injection`. Post-PR Fallow/Semgrep bot findings being reviewed — Semgrep bracket-notation alerts are false positives for static factory maps; Fallow unused-export and CRAP-score alerts on CLI handlers are under review.
+</p3>
+<p4>PR #119 Phase 10 Secret Injection; feature/phase-10-secret-injection; Fallow unused-export; Semgrep bracket-notation false positives exec.ts secrets.ts</p4>
+</compartment>
+</compartments>
+<facts>
+<CONSTRAINTS>
+* Semgrep's detect-object-injection rule fires on bracket-notation object access with external input as the key. Safe alternative for arrays: `.at()` method — bounds-checked, returns `undefined` for out-of-bounds, avoids prototype pollution entirely.
+</CONSTRAINTS>
+</facts>
+<meta>
+<messages_processed>394-396</messages_processed>
+<unprocessed_from>397</unprocessed_from>
+</meta>
+</output>
+```

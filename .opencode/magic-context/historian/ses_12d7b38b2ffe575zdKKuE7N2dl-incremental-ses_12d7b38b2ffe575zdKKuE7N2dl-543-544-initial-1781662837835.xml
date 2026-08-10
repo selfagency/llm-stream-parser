@@ -1,0 +1,26 @@
+```xml
+<output>
+<compartments>
+<compartment start="543" end="544" title="Investigating resurfaced UI barrel files in Fallow baseline" episode_type="infra" importance="10">
+<p1>
+Four UI barrel files resurfaced in the Fallow baseline after council wiring was completed. Started verifying consumption status by reading ink component barrel files to determine which are legitimately consumed vs dead.
+</p1>
+<p2>
+Four UI barrel files under investigation for consumption status — reads in progress.
+</p2>
+<p3>
+Four UI barrel files resurfaced post-council resolution, consumption verification underway.
+</p3>
+<p4/>
+</compartment>
+</compartments>
+<facts>
+</facts>
+<events>
+</events>
+<meta>
+<messages_processed>543-544</messages_processed>
+<unprocessed_from>544</unprocessed_from>
+</meta>
+</output>
+```

@@ -62,9 +62,6 @@
   "dependencies": {
     "@agentsy/shared": "workspace:*",
     "@agentsy/tokenomics": "workspace:*",
-    "@agentsy/types": "workspace:*",
-    "@cortexkit/aft-bridge": "^0.37.1",
-    "@cortexkit/magic-context": "^0.23.0",
     "@oclif/core": "^4.11.4",
     "@tursodatabase/sync": "^0.6.1",
     "better-sqlite3": "^12.1.0",

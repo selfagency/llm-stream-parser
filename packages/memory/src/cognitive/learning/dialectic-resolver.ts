@@ -139,6 +139,25 @@ function createResolution(group: Observation[], priority: ResolutionPriority, cu
   };
 }
 
+function findOverlappingGroup(observations: Observation[], startIndex: number, visited: Set<number>): Observation[] {
+  const group: Observation[] = [observations.at(startIndex) as Observation];
+  visited.add(startIndex);
+
+  for (let j = startIndex + 1; j < observations.length; j++) {
+    if (visited.has(j)) {
+      continue;
+    }
+    const a = observations[startIndex] as Observation;
+    const b = observations[j] as Observation;
+    if (observationsOverlap(a, b)) {
+      group.push(b);
+      visited.add(j);
+    }
+  }
+
+  return group;
+}
+
 function detectContradictionsInternal(observations: Observation[]): Observation[][] {
   const groups: Observation[][] = [];
   const visited = new Set<number>();
@@ -147,26 +166,7 @@ function detectContradictionsInternal(observations: Observation[]): Observation[
     if (visited.has(i)) {
       continue;
     }
-    const group: Observation[] = [observations.at(i) as Observation];
-    visited.add(i);
-
-    for (let j = i + 1; j < observations.length; j++) {
-      if (visited.has(j)) {
-        continue;
-      }
-      // nosemgrep: typescript.lang.security.detect-object-injection.detect-object-injection -- numeric loop index, not user input
-      const a = observations[i];
-      // nosemgrep: typescript.lang.security.detect-object-injection.detect-object-injection -- numeric loop index, not user input
-      const b = observations[j];
-      if (!(a && b)) {
-        continue;
-      }
-      if (observationsOverlap(a, b)) {
-        group.push(b);
-        visited.add(j);
-      }
-    }
-
+    const group = findOverlappingGroup(observations, i, visited);
     if (group.length >= 2) {
       groups.push(group);
     }

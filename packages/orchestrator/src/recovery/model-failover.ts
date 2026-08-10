@@ -16,12 +16,17 @@
  *   - Each step points to a specific replica or model
  *   - ExhaustedError is thrown when no steps remain
  *   - The caller invokes `getNextStep` on model-call failure
+ *
+ * Updated (2026-06-15):
+ *   - Added `excludePriorAttempts` filtering support
+ *   - Added `tierEscalation` support for replica-aware failover
+ *   - Failover is now replica-aware (not just provider-level)
  */
 
 import type { ModelEntry, ModelReplica, ModelTier } from '@agentsy/gateway';
 import { getLogicalModel } from '@agentsy/gateway';
 
-import type { EscalationPolicy } from '../intelligence/model-router.js';
+import type { EscalationPolicy } from '../intelligence/gateway-backed-router.js';
 import type { CircuitBreakerSet } from './circuit-breaker-set.js';
 import type { RateLimitStatus } from './rate-limit-escalation.js';
 
@@ -160,6 +165,24 @@ function buildEscalationSteps(
 }
 
 /**
+ * Options for `createFailoverChain` — extends the original positional
+ * parameters with replica-aware failover and prior-attempt exclusion.
+ */
+export interface CreateFailoverChainOptions {
+  circuitBreakerSet?: CircuitBreakerSet;
+  /** Exclude these logical model ids from the chain (previously attempted). */
+  excludeModelIds?: Set<string>;
+  /** Exclude these replica ids from the chain (previously attempted). */
+  excludeReplicaIds?: Set<string>;
+  rateLimitMap?: Map<string, RateLimitStatus>;
+  /**
+   * Whether to allow tier escalation. When `false`, no escalation steps
+   * are added even if the escalation policy allows it.
+   */
+  tierEscalation?: boolean;
+}
+
+/**
  * Build a `FailoverChain` from the originally-selected model, all available
  * replicas, and the escalation policy.
  *
@@ -168,6 +191,9 @@ function buildEscalationSteps(
  *
  * Each distinct replica gets its own step so the caller can track individual
  * failures and circuit-break per-replica.
+ *
+ * Supports replica-aware failover via `excludeReplicaIds` and `excludeModelIds`
+ * options, and tier escalation control via `tierEscalation`.
  */
 export function createFailoverChain(
   originalModel: ModelEntry,
@@ -175,17 +201,51 @@ export function createFailoverChain(
   escalationPolicy: EscalationPolicy,
   circuitBreakerSet?: CircuitBreakerSet,
   rateLimitMap?: Map<string, RateLimitStatus>
+): FailoverChain;
+
+export function createFailoverChain(
+  originalModel: ModelEntry,
+  replicas: ModelReplica[],
+  escalationPolicy: EscalationPolicy,
+  options?: CreateFailoverChainOptions
+): FailoverChain;
+
+// fallow-ignore-next-line complexity
+export function createFailoverChain(
+  originalModel: ModelEntry,
+  replicas: ModelReplica[],
+  escalationPolicy: EscalationPolicy,
+  circuitBreakerSetOrOptions?: CircuitBreakerSet | CreateFailoverChainOptions,
+  rateLimitMap?: Map<string, RateLimitStatus>
 ): FailoverChain {
+  // Normalize overloaded parameters
+  const isOptions = circuitBreakerSetOrOptions !== undefined && !('isOpen' in circuitBreakerSetOrOptions);
+  const circuitBreakerSet: CircuitBreakerSet | undefined = isOptions
+    ? (circuitBreakerSetOrOptions as CreateFailoverChainOptions).circuitBreakerSet
+    : circuitBreakerSetOrOptions;
+  const resolvedRateLimitMap: Map<string, RateLimitStatus> | undefined = isOptions
+    ? (circuitBreakerSetOrOptions as CreateFailoverChainOptions).rateLimitMap
+    : rateLimitMap;
+  const excludeReplicaIds: Set<string> | undefined = isOptions
+    ? (circuitBreakerSetOrOptions as CreateFailoverChainOptions).excludeReplicaIds
+    : undefined;
+  const excludeModelIds: Set<string> | undefined = isOptions
+    ? (circuitBreakerSetOrOptions as CreateFailoverChainOptions).excludeModelIds
+    : undefined;
+  const tierEscalation: boolean = isOptions
+    ? ((circuitBreakerSetOrOptions as CreateFailoverChainOptions).tierEscalation ?? true)
+    : true;
+
   const steps: FailoverStep[] = [];
-  const seenReplicaIds = new Set<string>();
-  const seenModelIds = new Set<string>([originalModel.id]);
+  const seenReplicaIds = new Set<string>(excludeReplicaIds ?? []);
+  const seenModelIds = new Set<string>([originalModel.id, ...(excludeModelIds ?? [])]);
 
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
 
   /** Check whether a replica is rate-limited (when a rateLimitMap is provided). */
-  const isRateLimited = (replicaId: string): boolean => rateLimitMap?.get(replicaId)?.isRateLimited === true;
+  const isRateLimited = (replicaId: string): boolean => resolvedRateLimitMap?.get(replicaId)?.isRateLimited === true;
 
   /**
    * Return the set of replica ids for a logical model that are *not* already
@@ -210,7 +270,7 @@ export function createFailoverChain(
     availableReplicaIds,
     isRateLimited,
     circuitBreakerSet,
-    rateLimitMap
+    rateLimitMap: resolvedRateLimitMap
   };
 
   // ---------------------------------------------------------------------------
@@ -250,10 +310,10 @@ export function createFailoverChain(
   buildSameTierSteps(seenModelIds, sameTierCtx);
 
   // ---------------------------------------------------------------------------
-  // 4. Tier escalation (only when allowed)
+  // 4. Tier escalation (only when allowed by both policy and options)
   // ---------------------------------------------------------------------------
 
-  if (escalationPolicy.allowEscalation) {
+  if (escalationPolicy.allowEscalation && tierEscalation) {
     steps.push(
       ...buildEscalationSteps(
         escalationPolicy,

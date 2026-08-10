@@ -46,7 +46,7 @@
     "@agentsy/providers": "workspace:*",
     "@agentsy/secrets": "workspace:*",
     "@agentsy/tokenomics": "workspace:*",
-    "@agentsy/types": "workspace:*",
+    "@agentsy/shared": "workspace:*",
     "zod": "^3.25.67"
   },
   "devDependencies": {

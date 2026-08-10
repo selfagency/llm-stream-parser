@@ -1,0 +1,74 @@
+{
+  "name": "@agentsy/agents",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Default agents implementation with YAML specifications, hook system, and skill composition",
+  "author": "Agentsy Team",
+  "license": "GPL-3.0-or-later",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./specs": {
+      "types": "./dist/specs.d.ts",
+      "import": "./dist/specs.js",
+      "require": "./dist/specs.cjs"
+    },
+    "./loader": {
+      "types": "./dist/loader.d.ts",
+      "import": "./dist/loader.js",
+      "require": "./dist/loader.cjs"
+    },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "import": "./dist/runtime.js",
+      "require": "./dist/runtime.cjs"
+    },
+    "./hooks": {
+      "types": "./dist/hooks.d.ts",
+      "import": "./dist/hooks.js",
+      "require": "./dist/hooks.cjs"
+    },
+    "./skills": {
+      "types": "./dist/skills.d.ts",
+      "import": "./dist/skills.js",
+      "require": "./dist/skills.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "check-types": "tsc --noEmit",
+    "lint": "ultracite check",
+    "lint:fix": "ultracite fix",
+    "format": "rumdl fmt",
+    "precommit": "run-s lint check-types",
+    "test": "vitest",
+    "coverage": "vitest --coverage"
+  },
+  "dependencies": {
+    "@agentsy/atlas": "workspace:*",
+    "@agentsy/core": "workspace:*",
+    "@agentsy/runtime": "workspace:*",
+    "@agentsy/shared": "workspace:*",
+    "js-yaml": "^5.2.2",
+    "yaml": "^2.6.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^25.9.2",
+    "tsup": "^8.3.5",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  },
+  "engines": {
+    "node": "^24.0.0"
+  }
+}

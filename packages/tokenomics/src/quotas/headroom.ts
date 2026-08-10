@@ -20,6 +20,7 @@ import type { TokenUsage } from '../token-manager.js';
 export interface ReplicaUsageFields {
   accountId?: string;
   logicalModelId?: string;
+  providerId?: string;
   replicaId?: string;
 }
 

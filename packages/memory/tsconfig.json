@@ -6,7 +6,7 @@
     "baseUrl": ".",
     "paths": {
       "@agentsy/tokenomics": ["../tokenomics/src/index.ts"],
-      "@agentsy/types": ["../types/src/index.ts"]
+      "@agentsy/shared": ["../shared/src/index.ts"]
     },
     "strictNullChecks": true
   },

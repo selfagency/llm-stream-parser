@@ -1,6 +1,6 @@
 import { AllProvidersExhaustedError, type ProviderFailureDetail } from './errors.js';
 import type { ProviderHealthRegistry } from './health/provider-health-registry.js';
-import type { QuotaTracker } from './quota/tracker.js';
+import type { QuotaTracker, QuotaTrackerRegistry } from './quota/tracker.js';
 import { createStrategy, type StrategyOptions } from './strategies/strategies.js';
 import type { RoutingStrategy } from './strategies/strategy.js';
 import type { ProviderEntry, StrategyName } from './types.js';
@@ -14,6 +14,8 @@ export interface RetryWithFailoverContext {
   providers: readonly ProviderEntry[];
   /** Per-provider quota tracker registry. Read for pre-flight; updated on response. */
   quota: QuotaTracker;
+  /** Per-provider quota tracker registry (optional). When set, used for per-provider snapshots. */
+  quotaRegistry?: QuotaTrackerRegistry;
   /** Current request, used by the strategy for capability matching. */
   request: { estimatedInputTokens?: number; model?: string };
   /** Routing strategy used to pick the order. */
@@ -158,7 +160,9 @@ function orderProviders(context: RetryWithFailoverContext): ProviderEntry[] {
   }
   const quotaMap = new Map<string, ReturnType<QuotaTracker['getUsageSnapshot']>>();
   for (const entry of context.providers) {
-    quotaMap.set(entry.id, context.quota.getUsageSnapshot());
+    // Use per-provider quota tracker when available, fall back to shared tracker
+    const tracker = context.quotaRegistry?.getTracker(entry.id) ?? context.quota;
+    quotaMap.set(entry.id, tracker.getUsageSnapshot());
   }
   const picked = context.strategy.select(context.providers, {
     health: healthMap,
@@ -183,16 +187,44 @@ function errorMessage(error: unknown): string {
   return String(error);
 }
 
+// fallow-ignore-next-line complexity
 function classifyReason(error: unknown): string {
   if (error instanceof Error) {
     if (error.name === 'AbortError') {
       return 'timeout';
     }
-    if (error.message.toLowerCase().includes('rate')) {
+
+    // Check for HTTP status codes first (most reliable)
+    if (hasStatus(error, 429)) {
       return 'rate-limited';
+    }
+    if (hasStatus(error, 503)) {
+      return 'service_unavailable';
+    }
+    if (hasStatus(error, 500)) {
+      return 'server_error';
+    }
+
+    // Then check for known error patterns — be specific, not substring
+    const lower = error.message.toLowerCase();
+    if (/rate[\s_-]?limit/.test(lower) || /too[\s_-]?many[\s_-]?requests/.test(lower)) {
+      return 'rate-limited';
+    }
+    if (/quota[\s_-]?exceeded/.test(lower) || /usage[\s_-]?limit/.test(lower)) {
+      return 'quota_exceeded';
+    }
+    if (/timeout|timed?\s*out|deadline\s*exceeded/.test(lower)) {
+      return 'timeout';
+    }
+    if (/connection[\s_-]?refused|econnreset|econnrefused/.test(lower)) {
+      return 'connection_error';
     }
   }
   return 'error';
+}
+
+function hasStatus(error: Error, status: number): boolean {
+  return 'status' in error && (error as unknown as { status: number }).status === status;
 }
 
 /**

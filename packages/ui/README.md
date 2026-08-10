@@ -1,14 +1,14 @@
-# @agentsy/ui
+# @agentsy/renderers
 
-Conversation state and event-store helpers.
+Composable output renderers for stream-driven UIs.
 
 ## Purpose
 
-`@agentsy/ui` provides reducer/store primitives for applying conversation events to UI state.
+`@agentsy/renderers` provides plain-text, CLI, and Ink renderer building blocks for streamed assistant output.
 
 ## Role in Agentsy
 
-This package bridges processing/agent events into deterministic UI state updates for consumer applications.
+This package sits downstream of `@agentsy/processor` and `@agentsy/agent` to present model output in terminal and programmatic UI surfaces.
 
 ## Status
 
@@ -16,38 +16,51 @@ This package bridges processing/agent events into deterministic UI state updates
 
 ## When to install it
 
-Install this package when you want deterministic conversation state derived from processor or agent events.
+Install this package when you need plain-text rendering today or when you are extending renderer surfaces in the monorepo.
 
 Typical neighbors:
 
 - `@agentsy/processor`
-- `@agentsy/renderers`
+- `@agentsy/formatting`
+- `@agentsy/ui`
 - `@agentsy/vscode`
 
 ## API overview
 
-- `createConversationStore`
-- `createConversationStoreFromProcessor`
-- `bindProcessorToConversationStore`
-- `applyConversationEvent`
+- `createPlainTextRenderer`
+- shared renderer utilities and types
+
+Source contains additional CLI, Ink, and streaming Markdown implementations, but the documented stable entry point is the package root surface.
 
 ## Usage
 
 ```ts
-import { createConversationStore, applyConversationEvent } from "@agentsy/ui";
+import { normalizeOpenAIChatChunk } from "@agentsy/normalizers";
+import { LLMStreamProcessor } from "@agentsy/processor";
+import { createPlainTextRenderer } from "@agentsy/renderers";
 
-const store = createConversationStore("conversation-1");
-store.dispatch(event);
+const processor = new LLMStreamProcessor();
+const renderer = createPlainTextRenderer({
+  output: (text) => process.stdout.write(text),
+});
+
+processor.on("text", (text) => void renderer.write(text));
+
+for await (const rawChunk of openAiStream) {
+  processor.process(normalizeOpenAIChatChunk(rawChunk));
+}
+
+await renderer.end();
 ```
 
 ## Learn more
 
-- [Package page](https://agentsy.self.agency/packages/ui)
+- [Package page](https://agentsy.self.agency/packages/renderers)
 
 ## Development
 
 ```bash
-cd packages/ui
+cd packages/renderers
 pnpm build
 pnpm check-types
 pnpm test

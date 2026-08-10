@@ -76,10 +76,24 @@ jobs:
           gate: new-only
 
   unit-test-coverage:
-    name: Run unit tests with coverage
+    name: Unit tests (${{ matrix.group }})
     if: ${{ github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore(release):') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: core
+            filter: --filter=@agentsy/shared --filter=@agentsy/core --filter=@agentsy/providers --filter=@agentsy/gateway --filter=@agentsy/models --filter=@agentsy/tokenomics --filter=@agentsy/observability
+          - group: runtime
+            filter: --filter=@agentsy/guardrails --filter=@agentsy/runtime --filter=@agentsy/orchestrator --filter=@agentsy/session --filter=@agentsy/memory --filter=@agentsy/retrieval --filter=@agentsy/secrets
+          - group: surface
+            filter: --filter=@agentsy/cli --filter=@agentsy/ui --filter=@agentsy/tools --filter=@agentsy/prompts --filter=@agentsy/vscode --filter=@agentsy/testing --filter=@agentsy/agents --filter=@agentsy/bootstrap
+          - group: plugins
+            filter: --filter=@agentsy/plugins
+          - group: daemon
+            filter: --filter=@agentsy/daemon
 
     steps:
       - name: Checkout repository
@@ -106,41 +120,90 @@ jobs:
           CI: true
 
       - name: Run unit tests with coverage and JUNIT
+        env:
+          CI: true
+          NODE_OPTIONS: --max-old-space-size=4096
         run: |
-          pnpm turbo run coverage -- \
+          pnpm turbo run coverage ${{ matrix.filter }} --concurrency=2 -- \
             --coverage.reporter=json \
             --coverage.reporter=lcov \
             --coverage.reporter=text \
             --reporter=junit \
             --outputFile.junit=test-report.junit.xml
-        env:
-          CI: true
         continue-on-error: false
 
       - name: Upload test results to GitHub
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: test-results
+          name: test-results-${{ matrix.group }}
           path: packages/*/test-report.junit.xml
           retention-days: 7
 
-      - name: Prepare coverage reports
-        run: |
-          mkdir -p coverage-input
-          for package in packages/*/; do
-            package_name=$(basename "$package")
-            coverage_dir="$package/coverage"
-            coverage_json="$coverage_dir/coverage-final.json"
+      - name: Upload raw coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: coverage-reports-${{ matrix.group }}
+          path: packages/*/coverage/coverage-final.json
+          retention-days: 7
 
-            if [ -f "$coverage_json" ]; then
-              mkdir -p "coverage-input/$package_name"
-              cp "$coverage_json" "coverage-input/$package_name/coverage-final.json"
-              echo "Prepared coverage for $package_name"
-            else
-              echo "Skipping $package_name: coverage-final.json not found"
+  merge-and-upload-coverage:
+    name: Merge & upload coverage
+    if: always()
+    needs: [unit-test-coverage]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Download core coverage
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: coverage-reports-core
+          path: coverage-input
+
+      - name: Download runtime coverage
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: coverage-reports-runtime
+          path: coverage-input
+
+      - name: Download surface coverage
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: coverage-reports-surface
+          path: coverage-input
+
+      - name: Download daemon coverage
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: coverage-reports-daemon
+          path: coverage-input
+
+      - name: Download plugins coverage
+        continue-on-error: true
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: coverage-reports-plugins
+          path: coverage-input
+
+      - name: Reorganize coverage files
+        shell: bash
+        run: |
+          # Upload produces packages/*/coverage/coverage-final.json but
+          # merge-coverage expects <pkg>/coverage-final.json. Flatten.
+          for dir in coverage-input/packages/*/; do
+            pkg="$(basename "$dir")"
+            src="coverage-input/packages/$pkg/coverage/coverage-final.json"
+            if [ -f "$src" ]; then
+              mkdir -p "coverage-input/$pkg"
+              cp "$src" "coverage-input/$pkg/coverage-final.json"
             fi
           done
+          rm -rf coverage-input/packages
 
       - name: Merge coverage reports
         uses: selfagency/merge-coverage@4f847ad20e457b1b08b73acd5e8de2fca504385c
@@ -162,6 +225,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Run codacy-coverage-reporter
+        continue-on-error: true
         uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699
         with:
           api-token: ${{ secrets.CODACY_API_TOKEN }}

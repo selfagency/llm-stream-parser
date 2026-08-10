@@ -12,7 +12,7 @@ import type {
   RuntimeTaskResult,
   RuntimeWorkflowExecutor,
   RuntimeWorkflowTask
-} from '@agentsy/types';
+} from '@agentsy/shared';
 
 export type {
   RuntimeExecutor,
@@ -24,7 +24,7 @@ export type {
   RuntimeTaskResult,
   RuntimeWorkflowExecutor,
   RuntimeWorkflowTask
-} from '@agentsy/types';
+} from '@agentsy/shared';
 export type { PolicyApprovalHookOptions, ToolPolicyRule } from './approval/approval-hook.js';
 export { createPolicyApprovalHook } from './approval/approval-hook.js';
 // Approval subpath — re-export so the ./approval entry point code is reachable
@@ -36,8 +36,15 @@ export {
   type RuntimeContextReuse,
   type RuntimeReusableSegment
 } from './cache-aware-context.js';
-export type { RuntimeCheckpoint } from './checkpoint.js';
-export { checkpoint, clearCheckpoint, loadCheckpoint } from './checkpoint.js';
+export type { RoutingState, RuntimeCheckpoint } from './checkpoint.js';
+export {
+  checkpoint,
+  clearCheckpoint,
+  clearRoutingState,
+  loadCheckpoint,
+  loadRoutingState,
+  saveRoutingState
+} from './checkpoint.js';
 export type {
   GuardrailResult,
   InputGuardrail,
@@ -67,6 +74,8 @@ export type {
   PlanAgentDefinition,
   PlanResult,
   PlanTask,
+  PostToolCallEvent,
+  PreToolCallEvent,
   RuntimeHookEvent,
   SessionOptions,
   SkillActivator,
@@ -396,8 +405,14 @@ export function createRuntimeWorkflowExecutor(options: RuntimeLoopOptions = {}):
   };
 }
 
+// Phase 17 — Tool deny-rule filtering
 // Phase 4 — Virtual sandbox
+// Phase 17 — pi-iso isolation PAL trait
+export * from './sandbox/persistent-shell.js';
+export * from './sandbox/pi-iso/index.js';
+export * from './sandbox/pi-shell/index.js';
 export * from './sandbox/policy/secrets-guard.js';
+export * from './sandbox/tool-filter.js';
 export * from './sandbox/virtual/container-detector.js';
 export * from './sandbox/virtual/dynamic-trigger.js';
 export * from './sandbox/virtual/router.js';

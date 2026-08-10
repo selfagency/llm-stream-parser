@@ -1,5 +1,5 @@
 import type { SessionStore } from '@agentsy/session';
-import type { RuntimeSnapshot } from '@agentsy/types';
+import type { RuntimeSnapshot } from '@agentsy/shared';
 
 /**
  * Keys used within {@link InterruptionCheckpoint.metadata}

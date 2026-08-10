@@ -1,4 +1,12 @@
+import TurndownService from 'turndown';
 import type { ToolDefinition, ToolResult } from '../../definitions.js';
+
+const turndown = new TurndownService({
+  headingStyle: 'atx',
+  codeBlockStyle: 'fenced',
+  bulletListMarker: '-',
+  emDelimiter: '*'
+});
 
 export function createHttpTool(): ToolDefinition {
   return {
@@ -29,13 +37,33 @@ async function handleHttpFetch(input: Record<string, unknown>): Promise<ToolResu
 
   try {
     const response = await executeFetch(url, method, input);
-    const body = await response.text();
+    const rawBody = await response.text();
+    const contentType = response.headers.get('content-type') ?? '';
+
+    let body = rawBody;
+    let bodyFormat: string;
+
+    // Auto-convert HTML to Markdown
+    if (contentType.includes('text/html') && rawBody.trim().startsWith('<')) {
+      try {
+        body = turndown.turndown(rawBody);
+        bodyFormat = 'markdown';
+      } catch {
+        // If conversion fails, return raw HTML — don't break the fetch
+        body = rawBody;
+        bodyFormat = 'html';
+      }
+    } else {
+      bodyFormat = contentType.includes('text/html') ? 'html' : contentType;
+    }
+
     return {
       ok: true,
       data: {
         status: response.status,
         statusText: response.statusText,
         body,
+        bodyFormat,
         headers: Object.fromEntries(response.headers.entries())
       }
     };

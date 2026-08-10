@@ -1,4 +1,22 @@
-import type { SessionStore } from '@agentsy/types';
+import type { SessionStore } from '@agentsy/shared';
+
+/**
+ * Routing state for model replica failover continuity.
+ *
+ * Tracks the failover chain across replica attempts so that resumed
+ * sessions can continue from where the previous attempt left off
+ * without repeating already-failed replicas.
+ */
+export interface RoutingState {
+  /** Replicas that have been attempted (in order of attempt). */
+  attemptedReplicas: string[];
+  /** The replica currently being used (or last used). */
+  currentReplicaId: string;
+  /** How many times the failure has escalated (0 = initial). */
+  escalationLevel: number;
+  /** Ordered chain of replica IDs visited during failover. */
+  failoverChain: string[];
+}
 
 /**
  * Serializable runtime state snapshot for mid-run checkpointing.
@@ -26,6 +44,11 @@ export interface RuntimeCheckpoint {
     currentReplicaId?: string;
     escalationLevel?: number;
   };
+  /**
+   * Routing state for model replica failover continuity.
+   * Captures the full failover chain for observability and recovery.
+   */
+  routingState?: RoutingState;
   /** Active subagents and their state summaries. */
   subagentStates: { id: string; status: string; result?: unknown }[];
   timestamp: number;
@@ -94,4 +117,52 @@ export function loadCheckpoint(sessionStore: Pick<SessionStore, 'getValue'>): Ru
  */
 export function clearCheckpoint(sessionStore: Pick<SessionStore, 'removeValue'>): void {
   sessionStore.removeValue(CHECKPOINT_KEY);
+}
+
+// codacy:disable security/HardcodedPassword -- Not a password, it's a store key prefix
+const ROUTING_STATE_KEY = 'routing_state';
+
+/**
+ * Save routing state to the session store for failover continuity.
+ *
+ * Persists the current failover chain so that resumed sessions can
+ * continue from where the previous attempt left off.
+ *
+ * @param state - The routing state to persist.
+ * @param sessionStore - The session store for persistence.
+ */
+export function saveRoutingState(state: RoutingState, sessionStore: Pick<SessionStore, 'setValue'>): void {
+  sessionStore.setValue(ROUTING_STATE_KEY, state);
+}
+
+/**
+ * Load the most recent routing state from the session store.
+ *
+ * @param sessionStore - The session store to read from.
+ * @returns The routing state, or `null` if none exists.
+ */
+export function loadRoutingState(sessionStore: Pick<SessionStore, 'getValue'>): RoutingState | null {
+  const raw = sessionStore.getValue(ROUTING_STATE_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  const state = raw as RoutingState;
+  if (
+    !Array.isArray(state.attemptedReplicas) ||
+    typeof state.currentReplicaId !== 'string' ||
+    typeof state.escalationLevel !== 'number' ||
+    !Array.isArray(state.failoverChain)
+  ) {
+    return null;
+  }
+
+  return state;
+}
+
+/**
+ * Clear the routing state from the session store.
+ */
+export function clearRoutingState(sessionStore: Pick<SessionStore, 'removeValue'>): void {
+  sessionStore.removeValue(ROUTING_STATE_KEY);
 }

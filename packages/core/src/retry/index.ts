@@ -22,6 +22,16 @@ function createAbortError(): Error {
   return error;
 }
 
+/**
+ * Full jitter: random between 0 and the calculated delay.
+ * Prevents thundering herd when multiple retries fire concurrently.
+ */
+function jitteredDelay(baseDelay: number): number {
+  // nosemgrep: insecure-randomness -- Math.random() is used for retry-backoff jitter (full-jitter strategy).
+  // Predictability of jitter confers no advantage; jitter exists to prevent thundering-herd retries.
+  return Math.random() * baseDelay;
+}
+
 export function retry<T>(fn: () => Promise<T>, options: RetryOptions = {}): Promise<T> {
   const { maxAttempts = 3, initialDelay = 1000, maxDelay = 30_000, backoffFactor = 2, signal } = options;
 
@@ -58,7 +68,8 @@ export function retry<T>(fn: () => Promise<T>, options: RetryOptions = {}): Prom
         if (state.attempt >= maxAttempts) {
           settle(() => reject(error));
         } else {
-          const delay = Math.min(initialDelay * backoffFactor ** (state.attempt - 1), maxDelay);
+          const baseDelay = Math.min(initialDelay * backoffFactor ** (state.attempt - 1), maxDelay);
+          const delay = jitteredDelay(baseDelay);
           setTimeout(attemptOnce, delay);
         }
       }

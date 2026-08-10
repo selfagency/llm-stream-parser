@@ -1,0 +1,42 @@
+Messages 157-162 continue Batch 4 — fixing type errors in cloud providers (missing SDK types, dynamic import typing, optional `sync()`) and writing test files. This is the same work unit as compartment 154-156, which ended with "Paused to type-check before writing test files." I'll extend that compartment to cover 154-162.
+
+```xml
+<output>
+<compartments>
+<compartment start="154" end="162" title="Batch 4 — 6 cloud providers (Doppler, Infisical, Vault, AWS SM, GCP SM, Azure KV)" episode_type="feature,infra" importance="55">
+<p1>
+Batch 4 cloud providers implementation on `feature/phase-10-secret-injection`. Created `packages/secrets/src/provider/cloud/` directory and wrote all six provider files in parallel:
+- `doppler.ts` — `createDopplerKeyring`, `DopplerConfig`
+- `infisical.ts` — `createInfisicalKeyring`, `InfisicalConfig`
+- `vault.ts` — `createVaultKeyring`, `VaultConfig` (supports both CLI and HTTP API modes; KV engine mount path)
+- `aws-sm.ts` — `createAwsSmKeyring`, `AwsSmConfig`
+- `gcp-sm.ts` — `createGcpSmKeyring`, `GcpSmConfig`
+- `azure-kv.ts` — `createAzureKvKeyring`, `AzureKvConfig`
+
+Created barrel export at `cloud/index.ts` re-exporting all six providers and their config types. Updated `package.json` with optional dependencies for the cloud providers. Updated `tsup.config.ts` with the `cloud/` subpath entry point.
+
+After initial write, fixed three type issues across the cloud providers: missing SDK type imports (dynamic import typing for `@aws-sdk/client-secrets-manager`), and optional `sync()` method presence when `canSync: false`. Type-check came back clean after fixes. Started writing cloud provider test files.
+</p1>
+<p2>
+Batch 4: six cloud providers written and type-checked (Doppler, Infisical, Vault, AWS Secrets Manager, GCP Secret Manager, Azure Key Vault) in `packages/secrets/src/provider/cloud/`. Fixed missing SDK types and optional sync() presence across providers. Barrel exports, package.json optional deps, and tsup cloud/ entry point updated. Test files in progress.
+</p2>
+<p3>
+Batch 4 cloud providers implemented on the Phase 10 branch — all six providers written, type-fixed, and wired into the barrel and build config. Tests started.
+</p3>
+<p4>
+feature/phase-10-secret-injection; Batch 4; cloud providers; doppler; infisical; vault; aws-sm; gcp-sm; azure-kv
+</p4>
+</compartment>
+</compartments>
+<facts>
+</facts>
+<events>
+</events>
+<user_observations>
+</user_observations>
+<meta>
+<messages_processed>157-162</messages_processed>
+<unprocessed_from>163</unprocessed_from>
+</meta>
+</output>
+```

@@ -1,3 +1,5 @@
+import type { AtlasLayerId } from '@agentsy/atlas';
+
 export const NodeType = {
   TASK: 'task',
   DECISION: 'decision',
@@ -20,6 +22,7 @@ export type WorkflowStatus = (typeof WorkflowStatus)[keyof typeof WorkflowStatus
 
 export interface TaskNode {
   agent: string;
+  atlasLayer?: AtlasLayerId;
   id: string;
   input: Record<string, unknown>;
   name: string;

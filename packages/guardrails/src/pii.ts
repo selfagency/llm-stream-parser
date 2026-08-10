@@ -301,18 +301,7 @@ export class PIIScanner implements GuardrailScanner {
         let sanitized = input;
         for (const { pattern, id } of ALL_PII_PATTERNS) {
           pattern.lastIndex = 0;
-          sanitized = sanitized.replace(pattern, () => {
-            if (id === 'email') {
-              return '[REDACTED-EMAIL]';
-            }
-            if (id === 'ssn') {
-              return '[REDACTED-SSN]';
-            }
-            if (id === 'credit-card') {
-              return '[REDACTED-CC]';
-            }
-            return '[REDACTED]';
-          });
+          sanitized = sanitized.replace(pattern, `[REDACTED:${id}]`);
         }
         return Promise.resolve({
           status: 'transform',

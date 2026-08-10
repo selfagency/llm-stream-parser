@@ -6,6 +6,7 @@
  * for consumption by any AG-UI frontend (CopilotKit, custom, etc.).
  */
 
+import { randomUUID } from 'node:crypto';
 import type {
   AgUiEvent,
   ReasoningEndEvent,
@@ -20,8 +21,8 @@ import type {
   ToolCallArgsEvent,
   ToolCallEndEvent,
   ToolCallStartEvent
-} from '@agentsy/types';
-import { EventType } from '@agentsy/types';
+} from '@agentsy/shared';
+import { EventType } from '@agentsy/shared';
 
 /**
  * Represents events from createPipeline.
@@ -66,7 +67,7 @@ export interface AdapterOptions {
  * Creates a unique message ID for tracking separate message streams.
  */
 function generateMessageId(): string {
-  return `msg_${Math.random().toString(36).slice(2, 11)}`;
+  return `msg_${randomUUID()}`;
 }
 
 /**

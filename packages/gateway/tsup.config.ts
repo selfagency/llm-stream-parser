@@ -13,7 +13,7 @@ export default defineConfig({
     '@agentsy/observability',
     '@agentsy/providers',
     '@agentsy/secrets',
-    '@agentsy/types',
+    '@agentsy/shared',
     'zod'
   ],
   format: ['esm', 'cjs'],

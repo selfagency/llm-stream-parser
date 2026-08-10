@@ -106,48 +106,65 @@ function envBool(key: string, fallback: boolean): boolean {
   return fallback;
 }
 
-/**
- * Load memory configuration with optional overrides.
- * Priority: overrides > env vars > defaults
- */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: will refactor later
-export function loadConfig(overrides?: Partial<MemoryConfig>): MemoryConfig {
-  const dbPath = overrides?.db?.path ?? envString('AGENTSY_MEMORY_DB', '.agentsy/memory.db');
+/** Resolve log level, clamping to valid set. */
+function resolveLogLevel(overrides?: Partial<MemoryConfig>, envVar?: string): MemoryConfig['logLevel'] {
+  const raw = overrides?.logLevel ?? envString(envVar ?? 'AGENTY_MEMORY_LOG_LEVEL', 'info');
+  return raw === 'debug' || raw === 'info' || raw === 'warn' || raw === 'error' ? raw : 'info';
+}
+
+/** Build the db config section from overrides and env vars. */
+function loadDbConfig(overrides?: Partial<MemoryConfig>): MemoryConfig['db'] {
+  const path = overrides?.db?.path ?? envString('AGENTSY_MEMORY_DB', '.agentsy/memory.db');
   const syncUrl = overrides?.db?.syncUrl ?? (process.env.AGENTSY_MEMORY_SYNC_URL || undefined);
   const syncAuthToken = overrides?.db?.syncAuthToken ?? (process.env.AGENTSY_MEMORY_SYNC_AUTH_TOKEN || undefined);
   const syncIntervalMs = overrides?.db?.syncIntervalMs ?? envNumber('AGENTSY_MEMORY_SYNC_INTERVAL_MS', 60_000);
+  return {
+    path,
+    syncIntervalMs,
+    ...(syncUrl === undefined ? {} : { syncUrl }),
+    ...(syncAuthToken === undefined ? {} : { syncAuthToken })
+  };
+}
 
+/** Build the MCP server config section from overrides and env vars. */
+function loadMcpConfig(overrides?: Partial<MemoryConfig>, dbPath?: string): MemoryConfig['mcp'] {
   const transport = overrides?.mcp?.transport ?? (envString('AGENTSY_MEMORY_TRANSPORT', 'stdio') as 'stdio' | 'http');
   const port = overrides?.mcp?.port ?? envNumber('AGENTSY_MEMORY_PORT', 4231);
-  const logLevel = overrides?.logLevel ?? (envString('AGENTY_MEMORY_LOG_LEVEL', 'info') as MemoryConfig['logLevel']);
-
   return {
-    db: {
-      path: dbPath,
-      ...(syncUrl === undefined ? {} : { syncUrl }),
-      ...(syncAuthToken === undefined ? {} : { syncAuthToken }),
-      syncIntervalMs
-    },
-    tiers: overrides?.tiers ?? DEFAULT_TIER_CONFIGS,
-    budget: overrides?.budget ?? { budgets: {} },
-    decay: overrides?.decay ?? DEFAULT_DECAY_CONFIG,
-    mcp: {
-      transport,
-      port,
-      ...(dbPath ? { dbPath } : {}),
-      ...(syncUrl ? { syncUrl } : {}),
-      ...(syncAuthToken ? { syncAuthToken } : {}),
-      logLevel:
-        logLevel === 'debug' || logLevel === 'info' || logLevel === 'warn' || logLevel === 'error' ? logLevel : 'info'
-    },
-    hooks: overrides?.hooks ?? {
+    transport,
+    port,
+    ...(dbPath ? { dbPath } : {}),
+    logLevel: resolveLogLevel(overrides)
+  };
+}
+
+/** Build the hooks config section from overrides and env vars. */
+function loadHooksConfig(overrides?: Partial<MemoryConfig>): MemoryConfig['hooks'] {
+  return (
+    overrides?.hooks ?? {
       onSessionStart: envBool('AGENTSY_MEMORY_HOOK_SESSION_START', true),
       onSessionEnd: envBool('AGENTSY_MEMORY_HOOK_SESSION_END', true),
       onToolCall: envBool('AGENTSY_MEMORY_HOOK_TOOL_CALL', true),
       onResponse: envBool('AGENTSY_MEMORY_HOOK_RESPONSE', true)
-    },
-    logLevel:
-      logLevel === 'debug' || logLevel === 'info' || logLevel === 'warn' || logLevel === 'error' ? logLevel : 'info'
+    }
+  );
+}
+
+/**
+ * Load memory configuration with optional overrides.
+ * Priority: overrides > env vars > defaults
+ */
+export function loadConfig(overrides?: Partial<MemoryConfig>): MemoryConfig {
+  const db = loadDbConfig(overrides);
+
+  return {
+    db,
+    tiers: overrides?.tiers ?? DEFAULT_TIER_CONFIGS,
+    budget: overrides?.budget ?? { budgets: {} },
+    decay: overrides?.decay ?? DEFAULT_DECAY_CONFIG,
+    mcp: loadMcpConfig(overrides, db.path),
+    hooks: loadHooksConfig(overrides),
+    logLevel: resolveLogLevel(overrides)
   };
 }
 

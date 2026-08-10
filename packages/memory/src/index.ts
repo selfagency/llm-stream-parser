@@ -270,7 +270,6 @@ export { createVersionTracker, type VersionTracker } from './wiki/version-tracke
 export {
   type ConceptRelation,
   createWikiManager,
-  type PageDiff,
   type RawCapture,
   type RawCaptureInput,
   type RawSourceType,
@@ -282,6 +281,7 @@ export {
   type WikiPageHistoryEntry,
   type WikiPageInput
 } from './wiki/wiki-manager.js';
+export type { PageDiff } from './wiki/wiki-utils.js';
 
 export interface MemoryRecord {
   content: string;

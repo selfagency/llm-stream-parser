@@ -4,7 +4,6 @@ import { kvStore } from '../database/schema.js';
 import { cosineSimilarity } from '../math-utils.js';
 import type {
   ConceptRelation,
-  PageDiff,
   RawCapture,
   RawCaptureInput,
   VectorSearchResult,
@@ -13,6 +12,8 @@ import type {
   WikiPageHistoryEntry,
   WikiPageInput
 } from '../wiki/wiki-manager.js';
+import type { PageDiff } from '../wiki/wiki-utils.js';
+import { getDiff } from '../wiki/wiki-utils.js';
 
 export interface WikiFsAdapterOptions {
   db: MemoryDatabase;
@@ -81,14 +82,21 @@ function serializeHistory(entry: WikiPageHistoryEntry): string {
   });
 }
 
-function getDiff(fromBody: string, toBody: string): PageDiff {
-  const fromLines = fromBody.split('\n');
-  const toLines = toBody.split('\n');
-  const fromSet = new Set(fromLines);
-  const toSet = new Set(toLines);
-  const addedLines = toLines.filter(line => !fromSet.has(line));
-  const removedLines = fromLines.filter(line => !toSet.has(line));
-  return { addedLines, removedLines };
+/** Build a WikiPage from input, merging with existing data and defaults. */
+// NOSONAR
+function buildPage(input: WikiPageInput, existing: WikiPage | null): WikiPage {
+  const now = Date.now();
+  const version = existing ? existing.version + 1 : 1;
+  return {
+    pageId: input.pageId,
+    title: input.title ?? existing?.title ?? input.pageId,
+    body: input.body ?? existing?.body ?? '',
+    tags: input.tags ?? existing?.tags ?? [],
+    format: input.format ?? existing?.format ?? 'markdown',
+    writerIds: input.writerIds ?? existing?.writerIds ?? [],
+    version,
+    updatedAt: new Date(now)
+  };
 }
 
 // biome-ignore lint/suspicious/useAwait: Implements WikiManager interface requiring Promise return
@@ -133,48 +141,38 @@ export function createWikiFsAdapter(options: WikiFsAdapterOptions): WikiManager 
     }
   }
 
-  async function upsertPage(input: WikiPageInput): Promise<WikiPage> {
-    const now = Date.now();
-    const existing = await getPage(input.pageId);
-    const version = existing ? existing.version + 1 : 1;
-    const page: WikiPage = {
-      pageId: input.pageId,
-      title: input.title ?? existing?.title ?? input.pageId,
-      body: input.body ?? existing?.body ?? '',
-      tags: input.tags ?? existing?.tags ?? [],
-      format: input.format ?? existing?.format ?? 'markdown',
-      writerIds: input.writerIds ?? existing?.writerIds ?? [],
-      version,
-      updatedAt: new Date(now)
-    };
-
+  /** Write page meta to kv_store (upsert). */
+  function writePageMeta(page: WikiPage): void {
+    const now = Math.floor(Date.now() / 1000);
     db.insert(kvStore)
-      .values({
-        key: makePageMetaKey(namespace, input.pageId),
-        value: serializeMeta(page),
-        updatedAt: Math.floor(now / 1000)
-      })
-      .onConflictDoUpdate({
-        target: kvStore.key,
-        set: { value: serializeMeta(page), updatedAt: Math.floor(now / 1000) }
-      })
+      .values({ key: makePageMetaKey(namespace, page.pageId), value: serializeMeta(page), updatedAt: now })
+      .onConflictDoUpdate({ target: kvStore.key, set: { value: serializeMeta(page), updatedAt: now } })
       .run();
+  }
 
-    // Record history
-    const historyEntry: WikiPageHistoryEntry = {
-      version,
+  /** Append a history entry to kv_store. */
+  function appendPageHistory(page: WikiPage, actorId: string): void {
+    const now = Math.floor(Date.now() / 1000);
+    const entry: WikiPageHistoryEntry = {
+      version: page.version,
       body: page.body,
-      actorId: input.actorId ?? 'system',
-      editedAt: new Date(now)
+      actorId,
+      editedAt: new Date(now * 1000)
     };
     db.insert(kvStore)
       .values({
-        key: makeHistoryKey(namespace, input.pageId, version),
-        value: serializeHistory(historyEntry),
-        updatedAt: Math.floor(now / 1000)
+        key: makeHistoryKey(namespace, page.pageId, page.version),
+        value: serializeHistory(entry),
+        updatedAt: now
       })
       .run();
+  }
 
+  async function upsertPage(input: WikiPageInput): Promise<WikiPage> {
+    const existing = await getPage(input.pageId);
+    const page = buildPage(input, existing);
+    writePageMeta(page);
+    appendPageHistory(page, input.actorId ?? 'system');
     return page;
   }
 
@@ -188,44 +186,19 @@ export function createWikiFsAdapter(options: WikiFsAdapterOptions): WikiManager 
       throw new Error(`Page not found: ${pageId}`);
     }
 
-    const now = Date.now();
-    const nextVersion = existing.version + 1;
+    const version = existing.version + 1;
     const page: WikiPage = {
       ...existing,
       ...(patch.title === undefined ? {} : { title: patch.title }),
       ...(patch.body === undefined ? {} : { body: patch.body }),
       ...(patch.tags === undefined ? {} : { tags: patch.tags }),
       ...(patch.format === undefined ? {} : { format: patch.format }),
-      version: nextVersion,
-      updatedAt: new Date(now)
+      version,
+      updatedAt: new Date()
     };
 
-    db.insert(kvStore)
-      .values({
-        key: makePageMetaKey(namespace, pageId),
-        value: serializeMeta(page),
-        updatedAt: Math.floor(now / 1000)
-      })
-      .onConflictDoUpdate({
-        target: kvStore.key,
-        set: { value: serializeMeta(page), updatedAt: Math.floor(now / 1000) }
-      })
-      .run();
-
-    const historyEntry: WikiPageHistoryEntry = {
-      version: nextVersion,
-      body: page.body,
-      actorId,
-      editedAt: new Date(now)
-    };
-    db.insert(kvStore)
-      .values({
-        key: makeHistoryKey(namespace, pageId, nextVersion),
-        value: serializeHistory(historyEntry),
-        updatedAt: Math.floor(now / 1000)
-      })
-      .run();
-
+    writePageMeta(page);
+    appendPageHistory(page, actorId);
     return page;
   }
 

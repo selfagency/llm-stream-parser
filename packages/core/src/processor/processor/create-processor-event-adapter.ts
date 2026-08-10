@@ -1,4 +1,4 @@
-import type { ConversationEvent, FinishReason, UsageInfo } from '@agentsy/types';
+import type { ConversationEvent, FinishReason, UsageInfo } from '@agentsy/shared';
 
 import type { LLMStreamProcessor, OutputPart, StreamEventMap } from './llm-stream-processor.js';
 

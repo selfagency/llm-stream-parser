@@ -27,7 +27,7 @@ export function createInputGuardrailHook(pipeline: GuardrailPipeline): {
         .evaluate(event.input, 'input' satisfies GuardrailPhase, {
           sessionId: event.sessionId
         })
-        .then(result => {
+        .then(({ result }) => {
           if (result.status === 'block') {
             return {
               continue: false,
@@ -42,9 +42,17 @@ export function createInputGuardrailHook(pipeline: GuardrailPipeline): {
           }
 
           if (result.status === 'escalate' && result.reason) {
+            // escalate is differentiated from block — pause for approval
             return {
               continue: false,
               reason: result.reason
+            } satisfies HookResult;
+          }
+
+          if (result.status === 'quarantine' && result.reason) {
+            return {
+              continue: false,
+              reason: `Quarantined: ${result.reason}`
             } satisfies HookResult;
           }
 
@@ -82,7 +90,7 @@ export function createToolInputGuardrailHook(pipeline: GuardrailPipeline): {
             toolName: event.toolName
           }
         )
-        .then(result => {
+        .then(({ result }) => {
           if (result.status === 'block') {
             return {
               continue: false,
@@ -100,6 +108,13 @@ export function createToolInputGuardrailHook(pipeline: GuardrailPipeline): {
             return {
               continue: false,
               reason: result.reason
+            } satisfies HookResult;
+          }
+
+          if (result.status === 'quarantine' && result.reason) {
+            return {
+              continue: false,
+              reason: `Quarantined: ${result.reason}`
             } satisfies HookResult;
           }
 
@@ -139,7 +154,7 @@ export function createToolOutputGuardrailHook(pipeline: GuardrailPipeline): {
             toolName: event.toolName
           }
         )
-        .then(result => {
+        .then(({ result }) => {
           if (result.status === 'block') {
             return {
               continue: false,
@@ -157,6 +172,13 @@ export function createToolOutputGuardrailHook(pipeline: GuardrailPipeline): {
             return {
               continue: false,
               reason: result.reason
+            } satisfies HookResult;
+          }
+
+          if (result.status === 'quarantine' && result.reason) {
+            return {
+              continue: false,
+              reason: `Quarantined: ${result.reason}`
             } satisfies HookResult;
           }
 
@@ -193,7 +215,7 @@ export function createOutputGuardrailHook(pipeline: GuardrailPipeline): {
             sessionId: event.sessionId
           }
         )
-        .then(result => {
+        .then(({ result }) => {
           if (result.status === 'block') {
             return {
               continue: false,
@@ -207,6 +229,226 @@ export function createOutputGuardrailHook(pipeline: GuardrailPipeline): {
             } satisfies HookResult;
           }
 
+          if (result.status === 'quarantine' && result.reason) {
+            return {
+              continue: false,
+              reason: `Quarantined: ${result.reason}`
+            } satisfies HookResult;
+          }
+
+          return { continue: true } satisfies HookResult;
+        });
+    }
+  };
+}
+
+// =============================================================================
+// Phase 10 — guardrail lifecycle hooks
+// =============================================================================
+
+/**
+ * Create a hook that runs retrieval guardrails on `PreRetrieval`.
+ *
+ * Evaluates the retrieval query before RAG lookup.
+ * Priority defaults to 65.
+ */
+export function createRetrievalGuardrailHook(pipeline: GuardrailPipeline): {
+  handler: (event: RuntimeHookEvent) => Promise<HookResult>;
+  id: string;
+  priority: number;
+} {
+  return {
+    id: 'guardrails:retrieval',
+    priority: 65,
+    handler: (event: RuntimeHookEvent): Promise<HookResult> => {
+      if (event.type !== 'PreRetrieval') {
+        return Promise.resolve({ continue: true });
+      }
+
+      return pipeline
+        .evaluate(event.query, 'retrieval' satisfies GuardrailPhase, {
+          sessionId: event.sessionId,
+          retrievalDomains: event.retrievalDomains
+        })
+        .then(({ result }) => {
+          if (result.status === 'block') {
+            return {
+              continue: false,
+              reason: result.reason ?? 'Retrieval query blocked by guardrail'
+            } satisfies HookResult;
+          }
+          if (result.status === 'transform' && result.sanitized) {
+            return { transform: { sanitized: result.sanitized } } satisfies HookResult;
+          }
+          return { continue: true } satisfies HookResult;
+        });
+    }
+  };
+}
+
+/**
+ * Create a hook that runs post-retrieval guardrails on `PostRetrieval`.
+ *
+ * Evaluates retrieved content before it is injected into model context.
+ * Priority defaults to 66.
+ */
+export function createPostRetrievalGuardrailHook(pipeline: GuardrailPipeline): {
+  handler: (event: RuntimeHookEvent) => Promise<HookResult>;
+  id: string;
+  priority: number;
+} {
+  return {
+    id: 'guardrails:post-retrieval',
+    priority: 66,
+    handler: (event: RuntimeHookEvent): Promise<HookResult> => {
+      if (event.type !== 'PostRetrieval') {
+        return Promise.resolve({ continue: true });
+      }
+
+      const combined = event.retrieved.map(r => r.content).join('\n');
+      return pipeline
+        .evaluate(combined, 'retrieval' satisfies GuardrailPhase, {
+          sessionId: event.sessionId
+        })
+        .then(({ result }) => {
+          if (result.status === 'block') {
+            return {
+              continue: false,
+              reason: result.reason ?? 'Retrieved content blocked by guardrail'
+            } satisfies HookResult;
+          }
+          if (result.status === 'transform' && result.sanitized) {
+            return { transform: { sanitized: result.sanitized } } satisfies HookResult;
+          }
+          return { continue: true } satisfies HookResult;
+        });
+    }
+  };
+}
+
+/**
+ * Create a hook that runs memory write guardrails on `PreMemoryWrite`.
+ *
+ * Evaluates memory entries before they are persisted.
+ * Priority defaults to 70.
+ */
+export function createMemoryWriteGuardrailHook(pipeline: GuardrailPipeline): {
+  handler: (event: RuntimeHookEvent) => Promise<HookResult>;
+  id: string;
+  priority: number;
+} {
+  return {
+    id: 'guardrails:memory-write',
+    priority: 70,
+    handler: (event: RuntimeHookEvent): Promise<HookResult> => {
+      if (event.type !== 'PreMemoryWrite') {
+        return Promise.resolve({ continue: true });
+      }
+
+      const combined = event.entries.map(e => e.content).join('\n');
+      return pipeline
+        .evaluate(combined, 'memory' satisfies GuardrailPhase, {
+          sessionId: event.sessionId
+        })
+        .then(({ result }) => {
+          if (result.status === 'block') {
+            return {
+              continue: false,
+              reason: result.reason ?? 'Memory write blocked by guardrail'
+            } satisfies HookResult;
+          }
+          if (result.status === 'transform' && result.sanitized) {
+            return { transform: { sanitized: result.sanitized } } satisfies HookResult;
+          }
+          return { continue: true } satisfies HookResult;
+        });
+    }
+  };
+}
+
+/**
+ * Create a hook that runs action guardrails on `PreAction`.
+ *
+ * Evaluates high-impact action parameters before execution.
+ * Priority defaults to 77 (after tool-input at 75, before tool-output at 80).
+ */
+export function createPreActionGuardrailHook(pipeline: GuardrailPipeline): {
+  handler: (event: RuntimeHookEvent) => Promise<HookResult>;
+  id: string;
+  priority: number;
+} {
+  return {
+    id: 'guardrails:pre-action',
+    priority: 77,
+    handler: (event: RuntimeHookEvent): Promise<HookResult> => {
+      if (event.type !== 'PreAction') {
+        return Promise.resolve({ continue: true });
+      }
+
+      const input = JSON.stringify(event.params);
+      return pipeline
+        .evaluate(input, 'action' satisfies GuardrailPhase, {
+          sessionId: event.sessionId,
+          actionName: event.actionName,
+          approvalGranted: event.approvalGranted,
+          params: event.params
+        })
+        .then(({ result }) => {
+          if (result.status === 'block') {
+            return { continue: false, reason: result.reason ?? 'Action blocked by guardrail' } satisfies HookResult;
+          }
+          if (result.status === 'escalate' && result.reason) {
+            return {
+              continue: false,
+              reason: result.reason,
+              approvalRequired: { approvalId: `action_${event.actionName}` },
+              actionName: event.actionName,
+              params: event.params as Record<string, unknown>
+            } satisfies HookResult;
+          }
+          return { continue: true } satisfies HookResult;
+        });
+    }
+  };
+}
+
+/**
+ * Create a hook that runs egress guardrails on `PreEgress`.
+ *
+ * Evaluates outbound HTTP requests before they are sent.
+ * Priority defaults to 85.
+ */
+export function createEgressGuardrailHook(pipeline: GuardrailPipeline): {
+  handler: (event: RuntimeHookEvent) => Promise<HookResult>;
+  id: string;
+  priority: number;
+} {
+  return {
+    id: 'guardrails:egress',
+    priority: 85,
+    handler: (event: RuntimeHookEvent): Promise<HookResult> => {
+      if (event.type !== 'PreEgress') {
+        return Promise.resolve({ continue: true });
+      }
+
+      const input = `${event.method} ${event.url}${event.body ? `\n${event.body}` : ''}`;
+      return pipeline
+        .evaluate(input, 'egress' satisfies GuardrailPhase, {
+          sessionId: event.sessionId,
+          url: event.url,
+          method: event.method,
+          headers: event.headers
+        })
+        .then(({ result }) => {
+          if (result.status === 'block') {
+            return {
+              continue: false,
+              reason: result.reason ?? 'Egress request blocked by guardrail'
+            } satisfies HookResult;
+          }
+          if (result.status === 'transform' && result.sanitized) {
+            return { transform: { sanitized: result.sanitized } } satisfies HookResult;
+          }
           return { continue: true } satisfies HookResult;
         });
     }

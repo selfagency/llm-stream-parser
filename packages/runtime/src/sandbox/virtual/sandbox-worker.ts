@@ -17,38 +17,48 @@ function sendMessage(message: WorkerOutputMessage): void {
   parentPort?.postMessage(message);
 }
 
-// Create a safe realm
-const context = createContext({
-  console: {
-    error: (...args: unknown[]) => {
-      sendMessage({ args, type: 'error' });
+// Create a safe realm.
+// WARNING: node:vm is NOT a security boundary per Node.js docs. This sandbox is
+// defense-in-depth for agent-authored tool code — it prevents accidental global
+// access and is backed by worker.terminate() for timeout enforcement. It does NOT
+// protect against a determined attacker.
+const context = createContext(
+  {
+    console: {
+      error: (...args: unknown[]) => {
+        sendMessage({ args, type: 'error' });
+      },
+      info: (...args: unknown[]) => {
+        sendMessage({ args, type: 'info' });
+      },
+      log: (...args: unknown[]) => {
+        sendMessage({ args, type: 'log' });
+      },
+      warn: (...args: unknown[]) => {
+        sendMessage({ args, type: 'warn' });
+      }
     },
-    info: (...args: unknown[]) => {
-      sendMessage({ args, type: 'info' });
+    process: {
+      env: Object.freeze({ ...env })
     },
-    log: (...args: unknown[]) => {
-      sendMessage({ args, type: 'log' });
-    },
-    warn: (...args: unknown[]) => {
-      sendMessage({ args, type: 'warn' });
-    }
+    // Intentional omissions: Buffer (abused for escapes), require, global,
+    // process.exit, __dirname, __filename, and fetch.
+    URL,
+    TextEncoder,
+    TextDecoder
   },
-  process: {
-    env: Object.freeze({ ...env })
-  },
-  // Add other primitives if needed, but keep it minimal for security
-  URL,
-  TextEncoder,
-  TextDecoder,
-  Buffer
-});
+  { microtaskMode: 'afterEvaluate' }
+);
+
 Object.freeze(context);
 
 try {
   // nosemgrep: dangerous-sandbox-run-in-context
-  // runInContext executes user-provided code inside a hardened vm.Context with
-  // no Node builtins, no require, no filesystem, and a frozen global object.
-  // Timeout and worker.terminate() provide defense-in-depth.
+  // vm.runInContext is NOT a security boundary (per Node.js docs). This code
+  // runs agent-authored tool output, not external untrusted input. Hardening:
+  // - frozen context with no Buffer, no require, no filesystem, no globals
+  // - microtaskMode: 'afterEvaluate' prevents microtask-based escapes
+  // - timeout kills divergent code; worker.terminate() is the hard fallback
   const result: unknown = runInContext(code, context, {
     displayErrors: true,
     timeout // vm timeout provides a first layer, but worker.terminate() is the fallback

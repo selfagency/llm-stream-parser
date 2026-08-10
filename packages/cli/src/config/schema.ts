@@ -80,6 +80,8 @@ export const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>;
 export type ProviderConfig = z.infer<typeof ProviderConfigSchema>;
 export type BudgetConfig = z.infer<typeof BudgetConfigSchema>;
+// Published for external consumers of the CLI config package
+// fallow-ignore-next-line unused-type
 export type ApprovalPolicy = z.infer<typeof ApprovalPolicySchema>;
 
 // =============================================================================

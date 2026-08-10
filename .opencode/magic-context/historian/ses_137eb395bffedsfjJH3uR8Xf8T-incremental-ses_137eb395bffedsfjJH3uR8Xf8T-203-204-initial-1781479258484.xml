@@ -1,0 +1,37 @@
+Messages 203-204 contain only a brief TC note about `vi.fn()` arrow functions not being constructible and confirming the `function` keyword pattern — this is a direct continuation of the Batch 4 cloud provider mock constructor work from compartment [191-202]. The compartment should be extended to cover 203-204 rather than creating a new one.
+
+```xml
+<output>
+<compartments>
+<compartment start="191" end="204" title="Batch 4 cloud provider — constructor mock fixes and all 17 tests passing" episode_type="feature,bug,infra" importance="55">
+<p1>
+Batch 4 cloud providers on `feature/phase-10-secret-injection`. After lint-cleaning provider files (infisical.ts, vault.ts, azure-kv.ts), ran full secrets package tests. Three test files still failed with "X is not a constructor" errors — `aws-sm.test.ts`, `gcp-sm.test.ts`, `azure-kv.test.ts`. The root cause was the mock factory approach using plain function syntax still not being constructible when `new` was called. Fixed by explicitly using `vi.fn()` with proper return handling for all three constructor mocks. All 17 test files pass.
+
+A subsequent TC note confirmed that arrow functions inside `vi.fn()` also fail to be constructible — the correct pattern is the `function` keyword directly (not an arrow function). The test files in `aws-sm.test.ts` and similar already use `function` keyword with `biome-ignore` comments for `useArrowFunction` and `useConsistentObjectDefinitions`.
+</p1>
+<p2>
+Batch 4: fixed "not a constructor" failures in aws-sm, gcp-sm, and azure-kv test files. Arrow functions in `vi.fn()` are also not constructible — requires `function` keyword directly (not arrow function). All 17 secrets test files pass on `feature/phase-10-secret-injection`.
+</p2>
+<p3>
+Batch 4 cloud provider test mock constructor issue resolved. All 17 secrets test files pass on `feature/phase-10-secret-injection`. Arrow functions cannot be used with `new` in vi.fn() mocks — `function` keyword required.
+</p3>
+<p4>
+feature/phase-10-secret-injection; vi.fn() mock constructor; function keyword; 17 tests passing; aws-sm.test.ts; gcp-sm.test.ts; azure-kv.test.ts
+</p4>
+</compartment>
+</compartments>
+<facts>
+<PROJECT_RULES>
+* Cloud provider SDK mocks must use `function` keyword directly inside `vi.fn()` — arrow functions in `vi.fn()` are also not constructible with `new`.
+</PROJECT_RULES>
+</facts>
+<events>
+</events>
+<user_observations>
+</user_observations>
+<meta>
+<messages_processed>203-204</messages_processed>
+<unprocessed_from>205</unprocessed_from>
+</meta>
+</output>
+```

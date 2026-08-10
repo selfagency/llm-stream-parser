@@ -5,7 +5,7 @@ import type {
   StreamChunk,
   ToolCallState,
   UsageInfo
-} from '@agentsy/types';
+} from '@agentsy/shared';
 
 import { ThinkingParser } from '../../thinking/index.js';
 import type { NativeToolCall, XmlToolCall } from '../../tool-calls/index.js';
@@ -27,7 +27,7 @@ import type { ProcessorStats } from './processor-stats.js';
 import { createEmptyStats } from './processor-stats.js';
 import type { ToolCallParser } from './tool-call-parser.js';
 
-export type { StreamChunk } from '@agentsy/types';
+export type { StreamChunk } from '@agentsy/shared';
 export type {
   IncompletenessDetail,
   IncompletenessType,

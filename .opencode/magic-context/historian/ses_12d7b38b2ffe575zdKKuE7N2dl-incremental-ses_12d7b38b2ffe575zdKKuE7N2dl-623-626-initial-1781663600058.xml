@@ -1,0 +1,28 @@
+```xml
+<output>
+<compartments>
+<compartment start="623" end="626" title="Reviewing Fallow docs for config pattern alignment" episode_type="infra,investigation" importance="15">
+<p1>
+U: shared Fallow documentation URLs covering configuration/overview, rules, suppression, workspaces, and boundaries.
+
+Read the Fallow documentation to understand proper configuration patterns. Noted several misalignments with the current `.fallowrc.jsonc` approach — agent was preparing to propose a revised config. Work arc is incomplete.
+</p1>
+<p2>
+Reviewed Fallow docs; found misalignments with current `.fallowrc.jsonc` config patterns. Proposed revision pending.
+</p2>
+<p3>
+Fallow configuration reviewed against official docs; current config has pattern misalignments being addressed.
+</p3>
+<p4/>
+</compartment>
+</compartments>
+<facts>
+</facts>
+<events>
+</events>
+<meta>
+<messages_processed>623-626</messages_processed>
+<unprocessed_from>623</unprocessed_from>
+</meta>
+</output>
+```

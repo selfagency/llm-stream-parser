@@ -12,7 +12,6 @@ import type { HttpHandler } from 'msw';
 import { setupServer } from 'msw/node';
 import type { MockMemoryState } from './handlers/memory.js';
 import { createMemoryHandlers, createMockMemoryState } from './handlers/memory.js';
-import { createAllProviderHandlers } from './handlers/providers.js';
 import type { MockRetrievalState } from './handlers/retrieval.js';
 import { createMockRetrievalState, createRetrievalHandlers } from './handlers/retrieval.js';
 
@@ -27,8 +26,6 @@ export interface TestServerConfig {
   extraHandlers?: HttpHandler[];
   /** Whether to include memory/RAG handlers (default: true) */
   includeMemory?: boolean;
-  /** Whether to include provider API handlers (default: true) */
-  includeProviders?: boolean;
   /** Whether to include retrieval/embedding handlers (default: true) */
   includeRetrieval?: boolean;
   /** Base URL for memory handlers */
@@ -78,7 +75,6 @@ function buildHandlers(
   retrievalState: ReturnType<typeof createMockRetrievalState>
 ): HttpHandler[] {
   return [
-    ...((config?.includeProviders ?? true) ? createAllProviderHandlers() : []),
     ...((config?.includeMemory ?? true)
       ? createMemoryHandlers({
           state: memoryState,

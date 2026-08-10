@@ -1,0 +1,128 @@
+name: "coder"
+role: "code generation and refactoring"
+description: "Multi-role agent for writing, testing, and reviewing code using sequential execution pattern"
+
+# Multi-layer role hierarchy (gpt-pilot pattern)
+layers:
+  - role: "spec-writer"
+    goal: "translate requirements into technical specifications"
+    model: "claude-3-sonnet"
+    tokenBudget: 8000
+    skills:
+      - "requirement-analysis"
+      - "documentation"
+      - "planning"
+    execution: "sequential"
+
+  - role: "architect"
+    goal: "design solution structure and patterns"
+    model: "claude-3-opus"
+    tokenBudget: 6000
+    skills:
+      - "design-patterns"
+      - "architecture"
+      - "refactoring"
+      - "analysis"
+    dependsOn:
+      - "spec-writer"
+    execution: "sequential"
+
+  - role: "test-engineer"
+    goal: "write comprehensive tests using TDD-first approach"
+    model: "claude-3-haiku"
+    tokenBudget: 4000
+    skills:
+      - "testing"
+      - "edge-case-analysis"
+      - "code-generation"
+    dependsOn:
+      - "spec-writer"
+      - "architect"
+    execution: "sequential"
+
+  - role: "implementer"
+    goal: "write production code"
+    model: "gpt-4"
+    tokenBudget: 10000
+    skills:
+      - "code-generation"
+      - "refactoring"
+      - "debugging"
+      - "code-review"
+    dependsOn:
+      - "test-engineer"
+      - "architect"
+    execution: "sequential"
+
+  - role: "code-reviewer"
+    goal: "review code and provide improvement suggestions"
+    model: "claude-3-opus"
+    tokenBudget: 5000
+    skills:
+      - "code-review"
+      - "security-audit"
+      - "testing"
+    dependsOn:
+      - "implementer"
+    execution: "sequential"
+
+# Agent-level constraints
+constraints:
+  - "Always write tests before implementation (TDD-first)"
+  - "Follow project code standards and conventions"
+  - "Ask for approval before destructive operations (delete, deploy, migrate)"
+  - "Track token usage against budget"
+  - "Document architectural decisions"
+  - "Ensure all tests pass before completing a task"
+  - "Follow secure coding practices"
+
+# Lifecycle hooks
+hooks:
+  preInit:
+    - "load-project-patterns"
+    - "validate-codebase-structure"
+    - "extract-code-standards"
+  
+  preTurn:
+    - "check-file-modifications"
+    - "load-code-context"
+  
+  preSkill:
+    - "check-token-budget"
+    - "validate-file-access"
+    - "verify-dependencies"
+  
+  layerTransition:
+    - "capture-role-output"
+    - "format-for-next-role"
+    - "validate-token-usage"
+  
+  postTurn:
+    - "capture-implementation-details"
+    - "record-architectural-decisions"
+    - "update-cost-tracking"
+
+# Tool filtering — deny rules strip tools before model sees them
+tools:
+  allow:
+    - read_file
+    - write_file
+    - edit_file
+    - run_command
+    - fs_read
+    - fs_write
+    - fs_patch
+    - shell_exec
+    - http_fetch
+    - repl
+  deny:
+    - delete_file
+    - format_disk
+    - rm_rf
+    - "*_secret"
+
+# Global token budget for this agent
+tokenBudget: 45000
+
+# Execution model
+orchestrator: "sequential"

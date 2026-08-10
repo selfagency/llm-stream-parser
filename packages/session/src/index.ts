@@ -48,3 +48,5 @@ export {
   type SessionSnapshot,
   type SessionStore
 } from './store.js';
+// Session tree for fork/clone/summarize (Phase 17)
+export { type SessionEntry, SessionTree, type SessionTreeNode } from './tree.js';

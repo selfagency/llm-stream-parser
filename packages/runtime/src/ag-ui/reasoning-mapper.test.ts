@@ -4,7 +4,7 @@
  * Verifies mapping of reasoning content to AG-UI reasoning events
  */
 
-import { EventType } from '@agentsy/types';
+import { EventType } from '@agentsy/shared';
 import { describe, expect, it } from 'vitest';
 
 import { mapReasoningToEvents } from './reasoning-mapper.js';

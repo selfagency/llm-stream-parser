@@ -22,9 +22,16 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "paths": {
+      "@agentsy/daemon": ["packages/daemon/src/index.ts"],
+      "@agentsy/daemon/*": ["packages/daemon/src/*"],
+      "@agentsy/gateway": ["packages/gateway/src/index.ts"],
+      "@agentsy/gateway/*": ["packages/gateway/src/*"],
+      "@agentsy/bootstrap": ["packages/bootstrap/src/index.ts"],
+      "@agentsy/bootstrap/*": ["packages/bootstrap/src/*"],
       "@agentsy/context": ["packages/context/src/index.ts"],
-      "@agentsy/connectors": ["packages/connectors/src/index.ts"],
       "@agentsy/guardrails": ["packages/guardrails/src/index.ts"],
+      "@agentsy/atlas": ["packages/atlas/src/index.ts"],
+      "@agentsy/atlas/*": ["packages/atlas/src/*"],
       "@agentsy/models": ["packages/models/src/index.ts"],
       "@agentsy/models/local-providers": [
         "packages/models/src/local-providers/index.ts"
@@ -34,7 +41,6 @@
       ],
       "@agentsy/observability": ["packages/observability/src/index.ts"],
       "@agentsy/observability/*": ["packages/observability/src/*"],
-      "@agentsy/mcp": ["packages/mcp/src/index.ts"],
       "@agentsy/memory": ["packages/memory/src/index.ts"],
       "@agentsy/memory/*": ["packages/memory/src/*"],
       "@agentsy/secrets": ["packages/secrets/src/index.ts"],
@@ -43,9 +49,26 @@
       "@agentsy/shared": ["packages/shared/src/index.ts"],
       "@agentsy/shared/*": ["packages/shared/src/*"],
       "@agentsy/tokenomics": ["packages/tokenomics/src/index.ts"],
+      "@agentsy/tokenomics/*": ["packages/tokenomics/src/*"],
       "@agentsy/tools": ["packages/tools/src/index.ts"],
       "@agentsy/tools/*": ["packages/tools/src/*"],
-      "@agentsy/types": ["packages/types/src/index.ts"]
+      "@agentsy/ui": ["packages/ui/src/index.ts"],
+      "@agentsy/ui/*": ["packages/ui/src/*"],
+      "@agentsy/orchestrator": ["packages/orchestrator/src/index.ts"],
+      "@agentsy/orchestrator/council": [
+        "packages/orchestrator/src/council/index.ts"
+      ],
+      "@agentsy/orchestrator/*": ["packages/orchestrator/src/*"],
+      "@agentsy/core": ["packages/core/src/index.ts"],
+      "@agentsy/core/*": ["packages/core/src/*"],
+      "@agentsy/providers": ["packages/providers/src/index.ts"],
+      "@agentsy/providers/*": ["packages/providers/src/*"],
+      "@agentsy/cli": ["packages/cli/src/index.ts"],
+      "@agentsy/cli/*": ["packages/cli/src/*"],
+      "@agentsy/runtime": ["packages/runtime/src/index.ts"],
+      "@agentsy/runtime/*": ["packages/runtime/src/*"],
+      "@agentsy/retrieval": ["packages/retrieval/src/index.ts"],
+      "@agentsy/retrieval/*": ["packages/retrieval/src/*"]
     },
     "rewriteRelativeImportExtensions": true,
     "allowImportingTsExtensions": true

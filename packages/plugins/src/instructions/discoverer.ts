@@ -56,6 +56,16 @@ export class InstructionsDiscoverer {
 
     this.roots = [
       {
+        // Handoff documents — highest priority, always injected.
+        // Written by ContextMonitor when an agent's context degrades.
+        // Stored in .agentsy/handoffs/ so the glob discoverer can find them.
+        path: resolve(this.projectDir, '.agentsy', 'handoffs'),
+        priority: 95,
+        scope: 'workspace',
+        alwaysInject: true,
+        isGlob: true
+      },
+      {
         path: resolve(this.projectDir, 'AGENTS.md'),
         priority: 90,
         scope: 'workspace',

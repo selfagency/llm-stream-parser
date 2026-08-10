@@ -1,4 +1,4 @@
-import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse, NormalizedChunk } from '@agentsy/shared';
 import { ProviderHealthRegistry } from './health/provider-health-registry.js';
 import { buildNoopClient } from './noop-client.js';
 import { MetricsCollector } from './observability/metrics-collector.js';
@@ -94,13 +94,11 @@ export function createLoadBalancedClient(
     return config.providers.map(p => ({ ...p, model }));
   }
 
-  function complete(request: CompletionRequest): Promise<CompletionResponse> {
-    // Auto-instrument the call: time the whole retry/failover loop,
-    // track the provider that actually served the request, and record
-    // one `RequestMetric` per caller-visible call. Failover hops
-    // (provider A -> provider B) are recorded as a separate event.
-    const startedAt = Date.now();
-    let lastTried: ProviderEntry | undefined;
+  function executeWithRetry<R>(
+    request: CompletionRequest,
+    callClient: (client: import('@agentsy/providers').UniversalClient) => Promise<R>,
+    lastTried: { current: ProviderEntry | undefined }
+  ): Promise<R> {
     return retryWithFailover(
       {
         health,
@@ -111,21 +109,27 @@ export function createLoadBalancedClient(
         strategy
       },
       entry => {
-        if (lastTried !== undefined && lastTried.id !== entry.id) {
+        if (lastTried.current !== undefined && lastTried.current.id !== entry.id) {
           metrics.recordFailover(entry.id);
         }
-        lastTried = entry;
+        lastTried.current = entry;
         const client = registry.get(entry.id)?.client;
         if (client === undefined) {
           return Promise.reject(new Error(`No client registered for provider ${entry.id}`));
         }
-        return client.complete(request);
+        return callClient(client);
       },
       { maxAttemptsPerProvider: maxAttempts }
-    ).then(
+    );
+  }
+
+  function complete(request: CompletionRequest): Promise<CompletionResponse> {
+    const startedAt = Date.now();
+    const lastTried: { current: ProviderEntry | undefined } = { current: undefined };
+    return executeWithRetry(request, client => client.complete(request), lastTried).then(
       (response): CompletionResponse => {
-        const providerId = lastTried?.id ?? '<unconfigured>';
-        const modelId = lastTried?.model ?? currentModel;
+        const providerId = lastTried.current?.id ?? '<unconfigured>';
+        const modelId = lastTried.current?.model ?? currentModel;
         const metric: import('./observability/metrics-collector.js').RequestMetric = {
           latencyMs: Date.now() - startedAt,
           modelId,
@@ -145,8 +149,8 @@ export function createLoadBalancedClient(
         return response;
       },
       (error: unknown): never => {
-        const providerId = lastTried?.id ?? '<unconfigured>';
-        const modelId = lastTried?.model ?? currentModel;
+        const providerId = lastTried.current?.id ?? '<unconfigured>';
+        const modelId = lastTried.current?.model ?? currentModel;
         metrics.recordRequest({
           latencyMs: Date.now() - startedAt,
           modelId,
@@ -159,36 +163,11 @@ export function createLoadBalancedClient(
   }
 
   function stream(request: CompletionRequest): Promise<ReadableStream<NormalizedChunk>> {
-    // Stream instrumentation: the gateway records the
-    // time-to-first-byte (TTFB), total stream duration, and
-    // chunk count via a `TransformStream` wrapper. The consumer
-    // reads the wrapped stream exactly as they would the source.
     const startedAt = Date.now();
-    let lastTried: ProviderEntry | undefined;
-    return retryWithFailover(
-      {
-        health,
-        inFlight,
-        providers: providersForRequest(request),
-        quota: pickTracker(quota, providersForRequest(request)[0]?.id ?? ''),
-        request: { model: request.model },
-        strategy
-      },
-      entry => {
-        if (lastTried !== undefined && lastTried.id !== entry.id) {
-          metrics.recordFailover(entry.id);
-        }
-        lastTried = entry;
-        const client = registry.get(entry.id)?.client;
-        if (client === undefined) {
-          return Promise.reject(new Error(`No client registered for provider ${entry.id}`));
-        }
-        return client.stream(request);
-      },
-      { maxAttemptsPerProvider: maxAttempts }
-    ).then(source => {
-      const providerId = lastTried?.id ?? '<unconfigured>';
-      const modelId = lastTried?.model ?? currentModel;
+    const lastTried: { current: ProviderEntry | undefined } = { current: undefined };
+    return executeWithRetry(request, client => client.stream(request), lastTried).then(source => {
+      const providerId = lastTried.current?.id ?? '<unconfigured>';
+      const modelId = lastTried.current?.model ?? currentModel;
       const { stream: wrapped, closed } = instrumentStream(source);
       closed
         .then(summary => {

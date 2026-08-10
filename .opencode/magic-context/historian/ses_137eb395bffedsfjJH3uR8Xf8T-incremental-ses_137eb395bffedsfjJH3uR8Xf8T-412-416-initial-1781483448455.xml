@@ -1,0 +1,24 @@
+```xml
+<output>
+<compartments>
+<compartment start="397" end="416" title="Implementing post-PR findings fixes — getFactory accessor, handleSync refactor, exports cleaned" episode_type="refactor" importance="42">
+<p1>
+Continuing work on PR #119 (`feature/phase-10-secret-injection`) post-PR bot findings. Agent implements fixes systematically on `packages/cli/src/commands/secrets.ts`. Semgrep bracket-notation fix: added a safe `getFactory()` accessor (lines 129-135) using `Object.hasOwn(PROVIDER_FACTORIES, name)` guard to replace direct bracket access with external input as key. Updated all call sites — `initRegistryFromConfig` and `syncProvider` — to use `getFactory()`. Fallow unused-export fix: removed `export` keyword from `handleInit`, `handleList`, `handleLookup`, `handleSync` since they are internal CLI dispatch handlers, not module exports. Cognitive complexity fix for `handleSync`: extracted `syncProvider()` helper (provider sync loop) and `displaySyncResults()` helper (result display) to bring handleSync below the 20-threshold. Remaining fixes applied in parallel across provider files. Type-check and test to verify all fixes so far.
+</p1>
+<p2>
+Post-PR findings on PR #119 addressed: Semgrep bracket-notation in `secrets.ts` fixed with `getFactory()` safe accessor using `Object.hasOwn` guard; unused exports removed from CLI handlers (`handleInit`, `handleList`, `handleLookup`, `handleSync`); `handleSync` cognitive complexity resolved by extracting `syncProvider` and `displaySyncResults` helpers. Parallel fixes running across provider files. Type-check and test in progress.
+</p2>
+<p3>
+All PR #119 post-PR bot findings on `secrets.ts` addressed — Semgrep bracket-notation via safe `getFactory()` accessor, unused exports removed from CLI handlers, and `handleSync` cognitive complexity reduced by extracting helpers. Type-check and test verification underway.
+</p3>
+<p4>getFactory safe accessor; handleSync complexity refactor; unused-export fix; PR #119; parallel fixes running; type-check in progress</p4>
+</compartment>
+</compartments>
+<facts/>
+<events/>
+<meta>
+<messages_processed>412-416</messages_processed>
+<unprocessed_from>417</unprocessed_from>
+</meta>
+</output>
+```

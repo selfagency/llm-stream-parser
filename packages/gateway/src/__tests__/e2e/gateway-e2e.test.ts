@@ -11,7 +11,7 @@
  * for a stub), these tests run the real code path end-to-end.
  */
 
-import type { NormalizedChunk } from '@agentsy/types';
+import type { NormalizedChunk } from '@agentsy/shared';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';

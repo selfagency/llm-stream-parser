@@ -1,0 +1,78 @@
+{
+  "name": "@agentsy/atlas",
+  "version": "0.1.0",
+  "description": "AI Interaction Atlas integration — typed taxonomy, manifest validation, and drift detection for Agentsy",
+  "keywords": [
+    "agentsy",
+    "ai-interaction-atlas",
+    "taxonomy",
+    "guardrails",
+    "manifest",
+    "patterns"
+  ],
+  "homepage": "https://github.com/selfagency/agentsy#readme",
+  "bugs": {
+    "url": "https://github.com/selfagency/agentsy/issues"
+  },
+  "license": "GPL-3.0-or-later",
+  "author": "Agentsy contributors",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/selfagency/agentsy.git",
+    "directory": "packages/atlas"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./manifest": {
+      "types": "./dist/manifest.d.ts",
+      "import": "./dist/manifest.js"
+    },
+    "./validate": {
+      "types": "./dist/validate.d.ts",
+      "import": "./dist/validate.js"
+    },
+    "./bridge": {
+      "types": "./dist/bridge.d.ts",
+      "import": "./dist/bridge.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src/snapshot",
+    "src/generated",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsx src/codegen.ts && tsup",
+    "codegen": "tsx src/codegen.ts",
+    "drift": "tsx src/drift.ts",
+    "check-types": "tsc --noEmit",
+    "lint": "ultracite check",
+    "lint:fix": "ultracite fix",
+    "format": "rumdl fmt",
+    "precommit": "run-s lint check-types",
+    "test": "vitest",
+    "coverage": "vitest --coverage"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@quietloudlab/ai-interaction-atlas": "1.0.14",
+    "@types/node": "^25.9.2",
+    "tsup": "^8.3.5",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  },
+  "engines": {
+    "node": "^24.0.0"
+  }
+}

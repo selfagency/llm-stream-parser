@@ -1,4 +1,4 @@
-import type { JsonObject } from '@agentsy/types';
+import type { JsonObject } from '@agentsy/shared';
 
 export interface BuildRepairPromptOptions {
   error: string;

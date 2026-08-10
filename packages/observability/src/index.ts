@@ -36,6 +36,8 @@
  * ```
  */
 
+// Auto-init
+export { type AutoInitOptions, type AutoInitResult, createObservabilityFromEnv } from './auto-init.js';
 // Core types and implementations
 export * from './core/logger.js';
 export * from './core/meter.js';

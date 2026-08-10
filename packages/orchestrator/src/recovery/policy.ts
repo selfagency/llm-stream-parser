@@ -332,7 +332,10 @@ export class RecoveryExecutor {
     }
 
     delay = Math.min(delay, config.maxDelayMs);
-    const jitter = delay * config.jitterFraction * (Math.random() - 0.5);
+    // nosemgrep: insecure-randomness -- Math.random() is used for retry-backoff jitter.
+    // Predictability of jitter confers no advantage; jitter exists to prevent thundering-herd
+    // retries, not to provide cryptographic randomness.
+    const jitter = delay * config.jitterFraction * (Math.random() - 0.5); // NOSONAR:typescript:S2245
 
     return delay + jitter;
   }

@@ -3,7 +3,7 @@ import type { ProcessorOptions, StreamChunk } from '@agentsy/core/processor';
 import { LLMStreamProcessor } from '@agentsy/core/processor';
 import { parseSSEStream } from '@agentsy/core/sse';
 import { parseJson } from '@agentsy/core/structured';
-import type { JsonObject } from '@agentsy/types';
+import type { JsonObject } from '@agentsy/shared';
 
 import {
   normalizeAnthropicEvent,

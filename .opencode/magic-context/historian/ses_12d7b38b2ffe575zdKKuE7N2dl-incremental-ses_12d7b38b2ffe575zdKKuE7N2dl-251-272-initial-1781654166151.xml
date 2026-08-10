@@ -1,0 +1,45 @@
+Looking at messages 251-272, this is a direct continuation of the Phase 9c work already captured in compartment [229-250]. The additional work covers:
+
+1. Verifying all crypto replacements were applied correctly
+2. Fixing a non-standard nosemgrep suppression pattern in scheduler.test.ts to match project convention
+3. Discovering and fixing an **import mismatch bug**: 9 files were importing `{ randomUUID }` as a named export but calling it as `crypto.randomUUID()` (namespace access) — the correct pattern per codebase convention is just `randomUUID()`
+4. Running type checks across all 4 affected packages — all clean
+
+Since this is the same objective (Phase 9c insecure randomness fixes) with the same episode type, I'll merge it into compartment [229-250] rather than creating a separate compartment. No new U: lines to preserve — the user's directive was in the earlier compartment.
+
+```xml
+<output>
+<compartments>
+<compartment start="229" end="272" title="Phase 9c: Insecure randomness — suppressions and crypto replacements for Math.random()" episode_type="refactor" importance="14">
+<p1>
+Verified scripts and memory packages type-check clean (no errors from my refactors). Confirmed Phase 9b done — all 4 cognitive complexity targets refactored. Started Phase 9c: Insecure randomness (8 SonarCloud findings + cross-cutting audit 9.3.8).
+
+Read the quality plan to scope Phase 9c. SonarCloud flags `Math.random()` as a former-hotspot requiring verification. The 8 findings plus the cross-cutting audit yielded 17 locations across 18 files. Categorized each:
+- **Suppress with justification**: weighted random in gateway load balancer (9.3.1), test IDs in tier-adapter.test.ts (9.3.2), importance randomization in awaken.test.ts (9.3.3), scheduling jitter in scheduler.test.ts (9.3.4)
+- **Replace with crypto**: dedup key in injection.ts (9.3.5 — generates a dedup tag for raw XML blocks), plus cross-cutting production code (9.3.8) across runtime/ag-ui/handler-chain.ts, runtime/ag-ui/agent.ts, daemon/process/lifecycle.ts, daemon/jobs/job-runner.ts, tokenomics/learner/learner.ts, tokenomics/roi/roi.ts
+
+Applied all fixes in batches. 9.3.1 through 9.3.4: added suppression comments (nosemgrep + sonar equivalents) to gateway/strategies.ts, memory/coordination/scheduler.test.ts, and tier-adapter.test.ts. For injection.ts: replaced `Math.random().toString(36).slice(2)` with `createHash('sha1').update(block).digest('hex').slice(0, 8)` — deterministic content-based hash instead of RNG, so identical raw blocks dedupe correctly.
+
+For the remaining production files: replaced `Math.random()` with `crypto.getRandomValues(new Uint8Array(n))` in runtime/ag-ui/handler-chain.ts, runtime/ag-ui/agent.ts, daemon/jobs/job-runner.ts, and daemon/process/lifecycle.ts. Also added `import { randomBytes } from 'node:crypto'` where needed and fixed a related import in daemon/process/lifecycle.ts.
+
+During verification: fixed non-standard nosemgrep suppression pattern in scheduler.test.ts to use `// nosemgrep:` (project convention). Discovered import mismatch bug across 9 files: all imported `{ randomUUID }` as named export but called it as `crypto.randomUUID()` (namespace access) — codebase convention is `randomUUID()` directly. Fixed all 9 files: learner.ts, handler-chain.ts, agent.ts, job-runner.ts, lifecycle.ts, roi.ts, roi.test.ts, and two others. All four type-check clean. Phase 9c complete. Moving to Phase 9d next.
+</p1>
+<p2>
+Phase 9c complete. 8 SonarCloud insecure-randomness findings + cross-cutting audit resolved across 17 locations in 18 files. Safe cases (weighted load-balancing, test fixtures, scheduling jitter) suppressed with nosemgrep/sonar comments. Security-sensitive production code (dedup keys, externally-visible IDs) replaced with `crypto` alternatives: `createHash('sha1')` for injection.ts dedup tags; `crypto.getRandomValues()` for runtime, daemon, and tokenomics ID generation. Bug fix: 9 files had import mismatch — imported `{ randomUUID }` named but called `crypto.randomUUID()` namespace; corrected to `randomUUID()` per codebase convention. All four packages type-check clean.
+</p2>
+<p3>
+Phase 9c (Insecure randomness) complete. All Math.random() usages assessed: suppressions added for safe cases, crypto-based replacements applied for production ID generation and dedup keys. Import mismatch bug fixed across 9 files (named import vs namespace call). Phase 9d (dynamic code execution safety) is next.
+</p3>
+<p4/>
+</compartment>
+</compartments>
+<facts>
+</facts>
+<events>
+</events>
+<meta>
+<messages_processed>251-272</messages_processed>
+<unprocessed_from>273</unprocessed_from>
+</meta>
+</output>
+```

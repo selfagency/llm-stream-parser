@@ -75,8 +75,8 @@
   "dependencies": {
     "@agentsy/core": "workspace:*",
     "@agentsy/providers": "workspace:*",
-    "@agentsy/renderers": "workspace:*",
-    "@agentsy/types": "workspace:*"
+    "@agentsy/ui": "workspace:*",
+    "@agentsy/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.9.0",

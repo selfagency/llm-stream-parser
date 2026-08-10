@@ -35,6 +35,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./sanitize": {
+      "types": "./dist/sanitize/index.d.ts",
+      "import": "./dist/sanitize/index.js"
     }
   },
   "scripts": {
@@ -46,7 +50,8 @@
     "format": "biome format"
   },
   "dependencies": {
-    "@agentsy/types": "workspace:*"
+    "@agentsy/atlas": "workspace:*",
+    "@agentsy/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.9.0",

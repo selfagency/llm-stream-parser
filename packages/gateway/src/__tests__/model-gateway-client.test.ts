@@ -6,7 +6,7 @@
  * uncovered, plus minimal success-path verification.
  */
 
-import type { CompletionRequest, CompletionResponse } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse } from '@agentsy/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createModelGatewayClient, type ReplicaCallFunction } from '../model-gateway-client.js';

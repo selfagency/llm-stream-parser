@@ -49,4 +49,20 @@ export class CircuitBreaker {
 
     return true;
   }
+
+  /**
+   * Restore circuit breaker state from persistence.
+   *
+   * Used by the daemon to restore circuit-breaker state on restart.
+   * For 'open' state, records enough failures to keep the circuit open
+   * and sets the timestamp so the auto-reset window is preserved.
+   */
+  restoreState(state: CircuitBreakerState, openedAt?: number): void {
+    this.#state = state;
+    if (state === 'open') {
+      const threshold = this.#config.failureThreshold ?? 5;
+      this.#failures = threshold;
+      this.#openedAt = openedAt ?? Date.now();
+    }
+  }
 }

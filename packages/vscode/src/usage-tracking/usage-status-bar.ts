@@ -59,6 +59,31 @@ export class UsageStatusBar {
   }
 
   /**
+   * Set the status bar item color based on quota usage thresholds.
+   */
+  private setStatusColor(item: Record<string, unknown>, percentUsed: number): void {
+    const { colorScheme } = this.config;
+    if (!colorScheme) {
+      return;
+    }
+    const warning = this.config.warningThreshold ?? DEFAULT_WARNING_THRESHOLD;
+    const error = this.config.errorThreshold ?? DEFAULT_ERROR_THRESHOLD;
+    const status = getQuotaStatus(percentUsed, warning, error);
+    // biome-ignore lint/style/useDefaultSwitchClause: exhaustive over known status values
+    switch (status) {
+      case 'error':
+        item.color = colorScheme.error;
+        break;
+      case 'warning':
+        item.color = colorScheme.warning;
+        break;
+      case 'normal':
+        item.color = colorScheme.normal;
+        break;
+    }
+  }
+
+  /**
    * Update the status bar display for a given quota.
    */
   updateDisplay(quota: UsageQuota): void {
@@ -68,8 +93,6 @@ export class UsageStatusBar {
 
     const item = this.statusBarItem as Record<string, unknown>;
     const percent = Math.round(quota.percentUsed * 100);
-    const warning = this.config.warningThreshold ?? DEFAULT_WARNING_THRESHOLD;
-    const error = this.config.errorThreshold ?? DEFAULT_ERROR_THRESHOLD;
 
     const text = `$(pulse) ${this.config.displayName}: ${quota.used.toLocaleString()} / ${quota.total.toLocaleString()} ${quota.unit}`;
     item.text = text;
@@ -81,22 +104,7 @@ export class UsageStatusBar {
       .replace('{{unit}}', quota.unit)
       .replace('{{percent}}', String(percent));
 
-    if (quota.percentUsed >= error) {
-      const { colorScheme } = this.config;
-      if (colorScheme) {
-        item.color = colorScheme.error;
-      }
-    } else if (quota.percentUsed >= warning) {
-      const { colorScheme } = this.config;
-      if (colorScheme) {
-        item.color = colorScheme.warning;
-      }
-    } else {
-      const { colorScheme } = this.config;
-      if (colorScheme) {
-        item.color = colorScheme.normal;
-      }
-    }
+    this.setStatusColor(item, quota.percentUsed);
   }
 
   /**

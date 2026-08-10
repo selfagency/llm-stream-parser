@@ -4,9 +4,10 @@ export default defineConfig({
   clean: true,
   dts: true,
   entry: {
-    index: 'src/index.ts'
+    index: 'src/index.ts',
+    'sanitize/index': 'src/sanitize/index.ts'
   },
-  external: ['@agentsy/types'],
+  external: ['@agentsy/shared'],
   format: ['esm'],
   treeshake: true
 });

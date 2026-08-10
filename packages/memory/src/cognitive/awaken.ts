@@ -98,7 +98,34 @@ function reclaimBudgetForDiscarded(results: DecayedItem[], budgetRelease: Awaken
   }
 }
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: will refactor later
+function performPromote(result: DecayedItem, tiers: AwakenDeps['tiers'], currentTier: MemoryTierLike): void {
+  const currentIdx = TIER_ORDER.indexOf(result.tier);
+  const nextIdx = currentIdx + 1;
+  if (nextIdx >= TIER_ORDER.length) {
+    return;
+  }
+  const nextTierName = TIER_ORDER[nextIdx];
+  // nosemgrep: typescript.lang.security.detect-object-injection.detect-object-injection -- known tier key, not user input
+  const nextTier = nextTierName ? tiers[nextTierName] : undefined;
+  if (nextTier) {
+    currentTier.promote(1, nextTier);
+  }
+}
+
+function performDemote(result: DecayedItem, tiers: AwakenDeps['tiers'], currentTier: MemoryTierLike): void {
+  const currentIdx = TIER_ORDER.indexOf(result.tier);
+  const prevIdx = currentIdx - 1;
+  if (prevIdx < 0) {
+    return;
+  }
+  const prevTierName = TIER_ORDER[prevIdx];
+  // nosemgrep: typescript.lang.security.detect-object-injection.detect-object-injection -- known tier key, not user input
+  const prevTier = prevTierName ? tiers[prevTierName] : undefined;
+  if (prevTier) {
+    currentTier.demote(1, prevTier);
+  }
+}
+
 function applyDecayMoves(results: DecayedItem[], tiers: AwakenDeps['tiers']): void {
   for (const result of results) {
     // nosemgrep: typescript.lang.security.detect-object-injection.detect-object-injection -- known tier key, not user input
@@ -108,25 +135,9 @@ function applyDecayMoves(results: DecayedItem[], tiers: AwakenDeps['tiers']): vo
     }
 
     if (result.action === 'promote') {
-      const currentIdx = TIER_ORDER.indexOf(result.tier);
-      const nextIdx = currentIdx + 1;
-      if (nextIdx < TIER_ORDER.length) {
-        const nextTierName = TIER_ORDER[nextIdx];
-        const nextTier = nextTierName ? tiers[nextTierName] : undefined;
-        if (nextTier) {
-          currentTier.promote(1, nextTier);
-        }
-      }
+      performPromote(result, tiers, currentTier);
     } else if (result.action === 'demote') {
-      const currentIdx = TIER_ORDER.indexOf(result.tier);
-      const prevIdx = currentIdx - 1;
-      if (prevIdx >= 0) {
-        const prevTierName = TIER_ORDER[prevIdx];
-        const prevTier = prevTierName ? tiers[prevTierName] : undefined;
-        if (prevTier) {
-          currentTier.demote(1, prevTier);
-        }
-      }
+      performDemote(result, tiers, currentTier);
     }
   }
 }

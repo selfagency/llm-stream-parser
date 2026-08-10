@@ -1,4 +1,4 @@
-import type { CompletionMessage, NormalizedChunk, UsageInfo } from '@agentsy/types';
+import type { CompletionMessage, NormalizedChunk, UsageInfo } from '@agentsy/shared';
 
 /** @internal — accumulated state while reading a stream chunk by chunk */
 interface ChunkProcessingState {
@@ -14,6 +14,45 @@ interface ChunkCallbacks {
   onText?: (delta: string) => void;
   onThinking?: (delta: string) => void;
   onToolCall?: (id: string, name: string, args: unknown) => void;
+}
+
+/** @internal — a tool call extracted from the stream, pending storage in history */
+interface ExtractedToolCall {
+  args: unknown;
+  id: string;
+  name: string;
+}
+
+/** @internal — pending tool call awaiting completion or failure */
+interface PendingToolCall {
+  args: unknown;
+  id: string;
+  name: string;
+}
+
+/**
+ * Emit failed tool call updates for all pending tool calls when the stream errors.
+ * This prevents the agent from hanging waiting for tool results that will never arrive.
+ */
+function failUnsettledTools(
+  pendingToolCalls: Map<string, PendingToolCall>,
+  error: unknown,
+  onToolCallUpdate?: (id: string, state: 'output-error', output: string) => void
+): void {
+  // Log for debugging when tool calls are being failed due to stream error
+  if (pendingToolCalls.size > 0) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`[failUnsettledTools] Failing ${pendingToolCalls.size} pending tool call(s): ${errorMessage}`);
+  }
+
+  for (const [toolCallId, _pending] of pendingToolCalls) {
+    onToolCallUpdate?.(
+      toolCallId,
+      'output-error',
+      `Provider stream error: ${error instanceof Error ? error.message : String(error)}`
+    );
+    pendingToolCalls.delete(toolCallId);
+  }
 }
 
 /**
@@ -34,6 +73,7 @@ export interface TurnEventOptions {
   onText?: (delta: string) => void;
   onThinking?: (delta: string) => void;
   onToolCall?: (id: string, name: string, args: unknown) => void;
+  onToolCallUpdate?: (id: string, state: 'output-error', output: string) => void;
 }
 
 export interface TurnResult {
@@ -142,7 +182,7 @@ export function createSimpleTurnLoop(options: SimpleTurnLoopOptions): SimpleTurn
   let activeReader: ReadableStreamDefaultReader<NormalizedChunk> | null = null;
 
   const run = async (userInput: string, events: TurnEventOptions = {}): Promise<TurnResult> => {
-    const { onText, onThinking, onToolCall, onDone, onError } = events;
+    const { onText, onThinking, onToolCall, onDone, onError, onToolCallUpdate } = events;
 
     messages.push({ role: 'user', content: userInput });
 
@@ -150,6 +190,8 @@ export function createSimpleTurnLoop(options: SimpleTurnLoopOptions): SimpleTurn
     let accThinking = '';
     let finishReason: string | undefined;
     let usage: UsageInfo | undefined;
+    const extractedToolCalls: ExtractedToolCall[] = [];
+    const pendingToolCalls: Map<string, PendingToolCall> = new Map();
 
     try {
       const stream = await handler.stream({ messages, model, stream: true });
@@ -163,9 +205,13 @@ export function createSimpleTurnLoop(options: SimpleTurnLoopOptions): SimpleTurn
       if (onThinking) {
         callbacks.onThinking = onThinking;
       }
-      if (onToolCall) {
-        callbacks.onToolCall = onToolCall;
-      }
+      // Always capture tool calls for history, forwarding to user callback if provided
+      callbacks.onToolCall = (id: string, name: string, args: unknown): void => {
+        extractedToolCalls.push({ id, name, args });
+        pendingToolCalls.set(id, { id, name, args });
+        onToolCall?.(id, name, args);
+      };
+
       const result = await readStream(reader, callbacks);
       activeReader = null;
 
@@ -176,15 +222,33 @@ export function createSimpleTurnLoop(options: SimpleTurnLoopOptions): SimpleTurn
     } catch (err) {
       activeReader = null;
       const error = err instanceof Error ? err : new Error(String(err));
+      // Fail any pending tool calls that were never completed
+      failUnsettledTools(pendingToolCalls, error, onToolCallUpdate);
       onError?.(error);
       // Remove the user message we pushed since the turn failed
       messages.pop();
       throw error;
     }
 
-    // Append assistant response to history
-    if (accText || accThinking) {
-      messages.push({ role: 'assistant', content: accText });
+    // Append assistant response to history, including tool calls
+    if (accText || accThinking || extractedToolCalls.length > 0) {
+      const assistantMessage: CompletionMessage = {
+        role: 'assistant',
+        content: accText || null
+      };
+
+      if (extractedToolCalls.length > 0) {
+        assistantMessage.tool_calls = extractedToolCalls.map(tc => ({
+          id: tc.id,
+          type: 'function' as const,
+          function: {
+            name: tc.name,
+            arguments: typeof tc.args === 'string' ? tc.args : JSON.stringify(tc.args)
+          }
+        }));
+      }
+
+      messages.push(assistantMessage);
     }
 
     const result: TurnResult = {

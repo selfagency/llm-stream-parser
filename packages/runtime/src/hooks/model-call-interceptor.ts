@@ -6,7 +6,7 @@
  * and a session id, and returns a wrapper for gateway model calls.
  */
 
-import type { CompletionRequest, CompletionResponse } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse } from '@agentsy/shared';
 
 import type { HookRegistry } from './registry.js';
 import type { ModelCallFailedEvent, PostModelCallEvent, PreModelCallEvent } from './types.js';
@@ -62,16 +62,21 @@ export async function interceptModelCall(
   }
 
   if (!preResult.continue) {
-    throw new Error(`Model call blocked: ${preResult.reason}`);
+    const reason = 'reason' in preResult ? preResult.reason : 'Unknown reason';
+    throw new Error(`Model call blocked: ${reason}`);
   }
 
   // Execute the actual model call
   try {
+    const startTime = Date.now();
     const response = await call();
+    const latencyMs = Date.now() - startTime;
 
     // Fire PostModelCall
     await hooks.fire({
       actualTokens: response.usage?.totalTokens ?? estimatedTokens ?? 0,
+      costUsd: 0, // cost tracking is handled by tokenomics package
+      latencyMs,
       logicalModelId,
       providerId,
       replicaId,
@@ -83,8 +88,9 @@ export async function interceptModelCall(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    // Fire ModelCallFailed
+    // Fire ModelCallFailed — attempt 1 for first failure in the interceptor
     await hooks.fire({
+      attempt: 1,
       error: errorMessage,
       logicalModelId,
       providerId,

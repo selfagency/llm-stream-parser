@@ -6,7 +6,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts'
   },
-  external: ['@agentsy/core', '@agentsy/types', 'zod'],
+  external: ['@agentsy/core', '@agentsy/shared', 'zod'],
   format: ['esm', 'cjs'],
   minify: false,
   sourcemap: true,

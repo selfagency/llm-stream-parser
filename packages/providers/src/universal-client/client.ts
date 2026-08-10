@@ -4,9 +4,9 @@
 
 import { ReadableStream } from 'node:stream/web';
 
-import type { CompletionRequest, CompletionResponse, NormalizedChunk, UsageInfo } from '@agentsy/types';
+import type { CompletionRequest, CompletionResponse, NormalizedChunk, UsageInfo } from '@agentsy/shared';
 
-import type { NormalizerProvider } from '../pipeline/index.js';
+import type { NormalizerProvider, PipelineEvent } from '../pipeline/index.js';
 import { createPipeline } from '../pipeline/index.js';
 
 /**
@@ -178,8 +178,47 @@ function toProviderRequest(request: CompletionRequest, provider: NormalizerProvi
   }
 }
 
+/**
+ * Context object passed to header builder functions.
+ */
+interface HeaderContext {
+  apiKey: string;
+  headers: Record<string, string>;
+  organizationId?: string;
+  stream?: boolean;
+}
+
+/**
+ * Dispatch table for provider-specific header construction.
+ * Each provider's handler sets its required headers on the context object.
+ */
+const HEADER_BUILDERS: Partial<Record<NormalizerProvider, (ctx: HeaderContext) => void>> & {
+  default: (ctx: HeaderContext) => void;
+} = {
+  openai: ({ headers, apiKey, organizationId }) => {
+    headers.Authorization = `Bearer ${apiKey}`;
+    if (organizationId) {
+      headers['OpenAI-Organization'] = organizationId;
+    }
+  },
+  anthropic: ({ headers, apiKey, stream }) => {
+    headers['x-api-key'] = apiKey;
+    headers['anthropic-version'] = '2023-06-01';
+    if (stream) {
+      headers.accept = 'text/event-stream';
+    }
+  },
+  gemini: ({ headers, apiKey }) => {
+    headers.Authorization = `Bearer ${apiKey}`;
+  },
+  // Default handler for providers without special requirements
+  default: ({ headers, apiKey }) => {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+};
+
 function buildHeaders(
-  _provider: NormalizerProvider,
+  provider: NormalizerProvider,
   apiKey?: string,
   organizationId?: string,
   stream?: boolean
@@ -189,30 +228,15 @@ function buildHeaders(
   };
 
   if (apiKey) {
-    switch (_provider) {
-      case 'openai': {
-        headers.Authorization = `Bearer ${apiKey}`;
-        if (organizationId) {
-          headers['OpenAI-Organization'] = organizationId;
-        }
-        break;
-      }
-      case 'anthropic': {
-        headers['x-api-key'] = apiKey;
-        headers['anthropic-version'] = '2023-06-01';
-        if (stream) {
-          headers.accept = 'text/event-stream';
-        }
-        break;
-      }
-      case 'gemini': {
-        headers.Authorization = `Bearer ${apiKey}`;
-        break;
-      }
-      default: {
-        headers.Authorization = `Bearer ${apiKey}`;
-      }
+    const ctx: HeaderContext = { headers, apiKey };
+    if (organizationId) {
+      ctx.organizationId = organizationId;
     }
+    if (stream) {
+      ctx.stream = stream;
+    }
+    const builder = HEADER_BUILDERS[provider] ?? HEADER_BUILDERS.default;
+    builder(ctx);
   }
 
   return headers;
@@ -360,36 +384,52 @@ export function createUniversalClient(config: UniversalClientConfig): UniversalC
         provider
       });
 
-      const chunks: NormalizedChunk[] = [];
-      for await (const event of pipeline) {
-        if (event.type === 'delta' && event.content) {
-          chunks.push({ content: event.content });
-        } else if (event.type === 'tool_call' && event.tool_call) {
-          chunks.push({
-            tool_calls: [
-              {
-                function: {
-                  arguments: event.tool_call.parameters,
-                  name: event.tool_call.name
-                }
-              }
-            ]
-          });
-        } else if (event.type === 'thinking' && event.thinking) {
-          chunks.push({ thinking: event.thinking });
-        }
-      }
-
+      // True streaming: emit chunks as they arrive from the pipeline
       const stream = new ReadableStream<NormalizedChunk>({
-        start(controller) {
-          for (const chunk of chunks) {
-            controller.enqueue(chunk);
-          }
-          controller.close();
+        async start(controller) {
+          await readPipelineToStream(pipeline, controller);
         }
       });
 
       return stream;
     }
   };
+}
+
+/**
+ * Read events from the pipeline and enqueue normalized chunks into the
+ * ReadableStream controller. Extracted from the inline start() closure
+ * to keep cognitive complexity under the limit.
+ *
+ * Handles `delta`, `tool_call`, and `thinking` events. The `message_done`
+ * event is silently consumed — it carries no data to enqueue, and the
+ * stream controller closes naturally when the pipeline iterator completes.
+ */
+async function readPipelineToStream(
+  pipeline: AsyncIterable<PipelineEvent>,
+  controller: ReadableStreamDefaultController<NormalizedChunk>
+): Promise<void> {
+  try {
+    for await (const event of pipeline) {
+      if (event.type === 'delta' && event.content) {
+        controller.enqueue({ content: event.content });
+      } else if (event.type === 'tool_call' && event.tool_call) {
+        controller.enqueue({
+          tool_calls: [
+            {
+              function: {
+                arguments: event.tool_call.parameters,
+                name: event.tool_call.name
+              }
+            }
+          ]
+        });
+      } else if (event.type === 'thinking' && event.thinking) {
+        controller.enqueue({ thinking: event.thinking });
+      }
+    }
+    controller.close();
+  } catch (error) {
+    controller.error(error);
+  }
 }

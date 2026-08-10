@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import type { AgentFsEntry, AgentFsManager, AgentFsOptions } from '@agentsy/types';
+import type { AgentFsEntry, AgentFsManager, AgentFsOptions } from '@agentsy/shared';
 
 export type { AgentFsEntry, AgentFsManager, AgentFsOptions };
 
