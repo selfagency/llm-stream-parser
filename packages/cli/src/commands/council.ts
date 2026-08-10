@@ -308,7 +308,7 @@ function parseRunArgs(args: readonly string[]): ParsedRunArgs {
 }
 
 function resolvePresetDefinition(
-  positional: string[],
+  positional: readonly string[],
   presets: Record<string, CouncilDefinition>,
   timeoutMs: number | undefined,
   io: CliIO
@@ -354,6 +354,33 @@ function resolveAdhocDefinition(
   }
 }
 
+/** Resolve a council definition and prompt from preset or ad-hoc run args. */
+function resolveRunDefinition(
+  membersStr: string | null,
+  chairmanStr: string | null,
+  timeoutMs: number | undefined,
+  positional: readonly string[],
+  presets: Record<string, CouncilDefinition>,
+  io: CliIO
+): { definition?: CouncilDefinition | undefined; prompt?: string; errorCode?: number } {
+  if (membersStr === null) {
+    const result = resolvePresetDefinition(positional, presets, timeoutMs, io);
+    if (result.errorCode !== undefined) {
+      return { errorCode: result.errorCode };
+    }
+    if (!result.definition) {
+      writeErr(io, 'Error: failed to resolve council definition\n');
+      return { errorCode: 1 };
+    }
+    return { definition: result.definition, prompt: positional.slice(1).join(' ') };
+  }
+  const result = resolveAdhocDefinition(membersStr, chairmanStr, timeoutMs, io);
+  if (result.errorCode !== undefined) {
+    return { errorCode: result.errorCode };
+  }
+  return { definition: result.definition, prompt: positional.join(' ') };
+}
+
 async function handleRun(args: readonly string[], io: CliIO, deps: CouncilDeps): Promise<number> {
   const presets = deps.presets ?? COUNCIL_PRESETS;
   const executeCouncilFn = deps.executeCouncil ?? executeCouncil;
@@ -361,28 +388,11 @@ async function handleRun(args: readonly string[], io: CliIO, deps: CouncilDeps):
 
   const { membersStr, chairmanStr, timeoutMs, positional, json } = parseRunArgs(args);
 
-  let definition: CouncilDefinition | undefined;
-  let prompt: string;
-
-  if (membersStr === null) {
-    const result = resolvePresetDefinition(positional, presets, timeoutMs, io);
-    if (result.errorCode !== undefined) {
-      return result.errorCode;
-    }
-    if (!result.definition) {
-      writeErr(io, 'Error: failed to resolve council definition\n');
-      return 1;
-    }
-    definition = result.definition;
-    prompt = positional.slice(1).join(' ');
-  } else {
-    const result = resolveAdhocDefinition(membersStr, chairmanStr, timeoutMs, io);
-    if (result.errorCode !== undefined) {
-      return result.errorCode;
-    }
-    definition = result.definition;
-    prompt = positional.join(' ');
+  const resolved = resolveRunDefinition(membersStr, chairmanStr, timeoutMs, positional, presets, io);
+  if (resolved.errorCode !== undefined) {
+    return resolved.errorCode;
   }
+  const { definition, prompt } = resolved;
 
   if (!definition) {
     writeErr(io, 'Error: failed to resolve council definition\n');
