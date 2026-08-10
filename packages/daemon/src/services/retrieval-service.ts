@@ -15,8 +15,7 @@ import type { UnifiedDB } from '../db/unified-db.js';
 import type { TimerScheduler } from '../jobs/bree-scheduler.js';
 import type { CreateEmbeddingProviderOptions, EmbeddingProvider } from '../retrieval/index.js';
 import { createEmbeddingProvider } from '../retrieval/index.js';
-import type { Logger } from '../types.js';
-import type { Service } from './routing-service.js';
+import type { Logger, Service } from '../types.js';
 
 // ── Types ──────────────────────────────────────────────
 

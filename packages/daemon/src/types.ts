@@ -19,3 +19,15 @@ export type DeepPartial<T> = T extends (infer U)[]
   : T extends object
     ? { [P in keyof T]?: DeepPartial<T[P]> }
     : T;
+
+/**
+ * Lifecycle contract for daemon-hosted services.
+ * Shared by all services registered with {@link ServiceHost}.
+ */
+export interface Service {
+  readonly name: string;
+  sleep(): Promise<void>;
+  start(): Promise<void>;
+  stop(): Promise<void>;
+  wakeup(): Promise<void>;
+}

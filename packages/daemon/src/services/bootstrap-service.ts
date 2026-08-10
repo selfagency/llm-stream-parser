@@ -20,17 +20,7 @@ import {
   seedMagicContext,
   writeConfig
 } from '@agentsy/bootstrap';
-import type { Logger } from '../types.js';
-
-// ── Service interface ───────────────────────────────────
-
-export interface Service {
-  readonly name: string;
-  sleep(): Promise<void>;
-  start(): Promise<void>;
-  stop(): Promise<void>;
-  wakeup(): Promise<void>;
-}
+import type { Logger, Service } from '../types.js';
 
 // ── Deps and result types ───────────────────────────────
 

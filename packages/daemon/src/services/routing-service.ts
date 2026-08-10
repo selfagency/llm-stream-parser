@@ -19,17 +19,10 @@ import {
 } from '@agentsy/gateway';
 
 import type { UnifiedDB } from '../db/unified-db.js';
+import type { Service } from '../types.js';
 import { UnifiedDBPersistenceAdapter } from './unified-db-persistence-adapter.js';
 
 export type ServiceState = 'stopped' | 'starting' | 'active' | 'sleeping' | 'stopping';
-
-export interface Service {
-  readonly name: string;
-  sleep(): Promise<void>;
-  start(): Promise<void>;
-  stop(): Promise<void>;
-  wakeup(): Promise<void>;
-}
 
 export interface RoutingServiceDeps {
   db: UnifiedDB;
