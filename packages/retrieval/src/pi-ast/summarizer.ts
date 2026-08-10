@@ -971,14 +971,14 @@ function groupByKind(symbols: readonly SymbolInfo[]): Record<string, SymbolInfo[
     'variable',
     'export'
   ];
-  const ordered: Record<string, SymbolInfo[]> = {};
+  const ordered: Record<string, SymbolInfo[]> = Object.create(null) as Record<string, SymbolInfo[]>;
   for (const kind of order) {
-    if (groups[kind]) {
-      ordered[kind] = groups[kind];
+    if (Object.hasOwn(groups, kind)) {
+      ordered[kind] = groups[kind] as SymbolInfo[];
     }
   }
   for (const kind of Object.keys(groups)) {
-    if (!ordered[kind]) {
+    if (!Object.hasOwn(ordered, kind)) {
       const g = groups[kind];
       if (g) {
         ordered[kind] = g;
