@@ -175,17 +175,21 @@ function resolveLangfuseOptions(
     opts.projectId = projectId;
   }
 
-  const flushIntervalMs = options?.flushIntervalMs ?? detection.flushIntervalMs;
-  if (flushIntervalMs !== undefined) {
-    opts.flushIntervalMs = flushIntervalMs;
-  }
-
-  const maxBatchSize = options?.maxBatchSize ?? detection.maxBatchSize;
-  if (maxBatchSize !== undefined) {
-    opts.maxBatchSize = maxBatchSize;
-  }
+  assignOptionalNumber(opts, 'flushIntervalMs', options?.flushIntervalMs ?? detection.flushIntervalMs);
+  assignOptionalNumber(opts, 'maxBatchSize', options?.maxBatchSize ?? detection.maxBatchSize);
 
   return opts;
+}
+
+/** Assign an optional numeric option if defined. */
+function assignOptionalNumber(
+  opts: LangfuseExporterOptions,
+  key: 'flushIntervalMs' | 'maxBatchSize',
+  value: number | undefined
+): void {
+  if (value !== undefined) {
+    opts[key] = value;
+  }
 }
 
 // ── Helpers ─────────────────────────────────────────────
