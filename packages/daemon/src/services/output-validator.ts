@@ -318,14 +318,14 @@ function deepEqual(a: unknown, b: unknown): boolean {
 }
 
 interface ValidationContext {
-  value: unknown;
-  schema: JsonSchema;
-  path: string;
-  errors: string[];
   depth: number;
-  maxDepth: number;
+  errors: string[];
   keyCount: { count: number };
+  maxDepth: number;
   maxKeys: number;
+  path: string;
+  schema: JsonSchema;
+  value: unknown;
 }
 
 function ctx(
@@ -460,6 +460,7 @@ function validateStringValue(c: ValidationContext): void {
   // compile-time constants defined in the OutputValidator's internal schema registry.
   if (typeof schema.pattern === 'string') {
     try {
+      // nosemgrep: schema.pattern comes from internal hardcoded schema definitions only
       const re = new RegExp(schema.pattern);
       if (!re.test(v)) {
         errors.push(`${path}: does not match pattern ${schema.pattern}`);

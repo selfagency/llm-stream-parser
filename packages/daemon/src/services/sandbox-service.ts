@@ -167,6 +167,7 @@ function matchesPattern(name: string, pattern: string): boolean {
     return name === pattern;
   }
   const escaped = pattern.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&');
+  // nosemgrep: pattern comes from agent YAML configs, not user input
   const re = new RegExp(`^${escaped.replace(/\*/g, '.*')}$`);
   return re.test(name);
 }

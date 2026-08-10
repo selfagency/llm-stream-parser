@@ -202,6 +202,7 @@ export function validateCompactionTemplate(markdown: string): {
   const missing: CompactionSection[] = [];
 
   for (const section of COMPACTION_SECTIONS) {
+    // nosemgrep: section values are compile-time constants from COMPACTION_SECTIONS
     const pattern = new RegExp(`^##\\s+${escapeRegExp(section)}\\s*$`, 'im');
     if (!pattern.test(markdown)) {
       missing.push(section);

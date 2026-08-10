@@ -91,6 +91,7 @@ export class CodeChangeScanner implements GuardrailScanner {
     const filePath = extractFilePath(context);
 
     // Check for destructive commands
+    // nosemgrep: cmd values are compile-time constants from DESTRUCTIVE_COMMANDS
     if (DESTRUCTIVE_COMMANDS.some(cmd => new RegExp(`\\b${cmd}\\b`, 'i').test(input))) {
       detections.push({
         id: 'cc-destructive-command',
@@ -116,6 +117,7 @@ export class CodeChangeScanner implements GuardrailScanner {
     }
 
     // Flag overwrite commands that are not explicitly safe
+    // nosemgrep: cmd values are compile-time constants from OVERWRITE_COMMANDS
     if (OVERWRITE_COMMANDS.some(cmd => new RegExp(`\\b${cmd}\\b`, 'i').test(input)) && detections.length === 0) {
       detections.push({
         id: 'cc-overwrite-operation',
@@ -144,9 +146,11 @@ function patternToRegex(pattern: string): RegExp {
     .replace(/\*/g, '[^/]*')
     .replace(/___DOUBLESTAR___/g, '.*');
   if (pattern.includes('*') || pattern.includes('**')) {
+    // nosemgrep: pattern comes from protectedFiles config, not user input
     return new RegExp(`^${escaped}$`, 'i');
   }
   // Non-glob patterns match as suffixes
+  // nosemgrep: pattern comes from protectedFiles config, not user input
   return new RegExp(`${escaped}$`, 'i');
 }
 
