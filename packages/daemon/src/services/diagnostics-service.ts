@@ -344,28 +344,35 @@ function normalizeAgentEntry(raw: unknown): AgentHealthEntry {
   const entry = raw as Record<string, unknown>;
   const spec = entry.spec as Record<string, unknown> | undefined;
 
-  const id =
-    safeString(entry.id, '') ||
-    safeString(spec?.id, '') ||
-    safeString((entry as { spec?: { id?: string } }).spec?.id, 'unknown');
-
-  const role = safeString(entry.role, '') || safeString(spec?.role, 'general');
-
-  const memoryScope =
-    safeString(entry.memoryScope, '') ||
-    safeString(spec?.memoryScope, '') ||
-    safeString((spec as { memoryScope?: string })?.memoryScope, 'default');
-
-  const state = safeString(entry.state, '') || safeString(entry.status, 'unknown');
+  const id = firstString(entry.id, spec?.id, (entry as { spec?: { id?: string } }).spec?.id, 'unknown');
+  const role = firstString(entry.role, spec?.role, undefined, 'general');
+  const memoryScope = firstString(
+    entry.memoryScope,
+    spec?.memoryScope,
+    (spec as { memoryScope?: string })?.memoryScope,
+    'default'
+  );
+  const state = firstString(entry.state, entry.status, undefined, 'unknown');
 
   return {
-    id: id || 'unknown',
-    role: role || 'general',
-    state: state || 'unknown',
+    id,
+    role,
+    state,
     tokensUsed: safeNumber(entry.tokensUsed, 0),
     turnsCompleted: safeNumber(entry.turnsCompleted, 0),
-    memoryScope: memoryScope || 'default'
+    memoryScope
   };
+}
+
+/** Return the first non-empty string among candidates, falling back to a default. */
+function firstString(...candidates: unknown[]): string {
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.length > 0) {
+      return candidate;
+    }
+  }
+  const last = candidates.at(-1);
+  return typeof last === 'string' ? last : '';
 }
 
 function normalizeServiceEntries(host: ServiceHostLike | null | undefined): ServiceStateEntry[] {
@@ -410,7 +417,6 @@ function resolveSubprocessMemoryMb(entry: SubprocessEntry): number | null {
   return null;
 }
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: maps multiple acp session shapes
 function resolveAcp(acpServer: AcpServerLike | null | undefined, daemon: DaemonLike | null | undefined): AcpHealth {
   let enabled = false;
 
