@@ -191,43 +191,25 @@ function buildAgentsyComponents(config: AgentsyConfig): string {
   const { installed } = config;
   const lines: string[] = ['## Agentsy Components', ''];
 
-  if (installed.connectors.length > 0) {
-    lines.push('### Connectors');
-    lines.push(bulletList(installed.connectors));
-    lines.push('');
+  const sections: ReadonlyArray<{ title: string; items: readonly string[] }> = [
+    { title: 'Connectors', items: installed.connectors },
+    { title: 'MCP Servers', items: installed.mcpServers },
+    { title: 'Skills', items: installed.skills },
+    { title: 'Guardrails', items: installed.guardrails },
+    { title: 'Hooks', items: installed.hooks }
+  ];
+
+  let anyInstalled = false;
+  for (const section of sections) {
+    if (section.items.length > 0) {
+      anyInstalled = true;
+      lines.push(`### ${section.title}`);
+      lines.push(bulletList(section.items));
+      lines.push('');
+    }
   }
 
-  if (installed.mcpServers.length > 0) {
-    lines.push('### MCP Servers');
-    lines.push(bulletList(installed.mcpServers));
-    lines.push('');
-  }
-
-  if (installed.skills.length > 0) {
-    lines.push('### Skills');
-    lines.push(bulletList(installed.skills));
-    lines.push('');
-  }
-
-  if (installed.guardrails.length > 0) {
-    lines.push('### Guardrails');
-    lines.push(bulletList(installed.guardrails));
-    lines.push('');
-  }
-
-  if (installed.hooks.length > 0) {
-    lines.push('### Hooks');
-    lines.push(bulletList(installed.hooks));
-    lines.push('');
-  }
-
-  if (
-    installed.connectors.length === 0 &&
-    installed.mcpServers.length === 0 &&
-    installed.skills.length === 0 &&
-    installed.guardrails.length === 0 &&
-    installed.hooks.length === 0
-  ) {
+  if (!anyInstalled) {
     lines.push('*No agentsy components installed yet.*');
     lines.push('');
   }
