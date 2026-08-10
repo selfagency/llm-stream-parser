@@ -161,7 +161,8 @@ function parseUnsetVars(command: string): string[] {
 }
 
 function buildEnvRecord(inheritEnv: boolean, initialEnv?: Readonly<Record<string, string>>): Record<string, string> {
-  const base: Record<string, string> = {};
+  // Null-prototype object prevents prototype pollution via __proto__/constructor/prototype keys
+  const base: Record<string, string> = Object.create(null) as Record<string, string>;
   if (inheritEnv) {
     for (const [k, v] of Object.entries(process.env)) {
       if (v !== undefined) {
@@ -205,7 +206,7 @@ class PersistentShellImpl implements PersistentShell {
     this.#initialCwd = initialCwd;
     this.#cwd = initialCwd;
     this.#inheritEnv = options.inheritEnv !== false;
-    this.#initialEnv = options.initialEnv ? { ...options.initialEnv } : {};
+    this.#initialEnv = options.initialEnv ? { ...options.initialEnv } : (Object.create(null) as Record<string, string>);
     this.#env = buildEnvRecord(this.#inheritEnv, options.initialEnv);
   }
 
@@ -230,12 +231,19 @@ class PersistentShellImpl implements PersistentShell {
     if (!key) {
       throw new Error('setEnv: key must be non-empty');
     }
+    // Guard against prototype-pollution keys parsed from command strings
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      return;
+    }
     this.#env[key] = value;
   }
 
   unsetEnv(key: string): void {
     this.#assertNotDisposed();
     if (!key) {
+      return;
+    }
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
       return;
     }
     delete this.#env[key];
@@ -328,9 +336,15 @@ class PersistentShellImpl implements PersistentShell {
 
   #applyEnvTracking(command: string): void {
     for (const { key, value } of parseExportAssignments(command)) {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        continue;
+      }
       this.#env[key] = value;
     }
     for (const varName of parseUnsetVars(command)) {
+      if (varName === '__proto__' || varName === 'constructor' || varName === 'prototype') {
+        continue;
+      }
       delete this.#env[varName];
     }
   }
