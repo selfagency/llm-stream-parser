@@ -585,7 +585,7 @@ function validateArrayValue(c: ValidationContext): void {
 }
 
 function validateObjectValue(c: ValidationContext): void {
-  const { value, schema, path, errors, depth, maxDepth, keyCount, maxKeys } = c;
+  const { value, errors, keyCount, maxKeys } = c;
   const obj = value as Record<string, unknown>;
   const keys = Object.keys(obj);
   keyCount.count += keys.length;
@@ -594,28 +594,43 @@ function validateObjectValue(c: ValidationContext): void {
     return;
   }
 
+  validateRequiredProperties(c, obj);
+  validateProperties(c, obj);
+  validateAdditionalProperties(c, keys);
+}
+
+function validateRequiredProperties(c: ValidationContext, obj: Record<string, unknown>): void {
+  const { schema, path, errors } = c;
   const required = Array.isArray(schema.required)
     ? (schema.required as unknown[]).filter((x): x is string => typeof x === 'string')
     : [];
-
   for (const key of required) {
     if (!Object.hasOwn(obj, key)) {
       errors.push(`${path}.${key}: missing required property`);
     }
   }
+}
 
+function validateProperties(c: ValidationContext, obj: Record<string, unknown>): void {
+  const { schema, path, errors, depth, maxDepth, keyCount, maxKeys } = c;
   const properties =
     schema.properties && typeof schema.properties === 'object' && !Array.isArray(schema.properties)
       ? (schema.properties as Record<string, JsonSchema>)
       : {};
-
   for (const [k, childSchema] of Object.entries(properties)) {
     if (Object.hasOwn(obj, k) && childSchema && typeof childSchema === 'object' && !Array.isArray(childSchema)) {
       validateNode(obj[k], childSchema, `${path}.${k}`, errors, depth + 1, maxDepth, keyCount, maxKeys);
     }
   }
+}
 
+function validateAdditionalProperties(c: ValidationContext, keys: string[]): void {
+  const { schema, path, errors } = c;
   if (schema.additionalProperties === false) {
+    const properties =
+      schema.properties && typeof schema.properties === 'object' && !Array.isArray(schema.properties)
+        ? (schema.properties as Record<string, JsonSchema>)
+        : {};
     for (const k of keys) {
       if (!Object.hasOwn(properties, k)) {
         errors.push(`${path}.${k}: additional property not allowed`);
