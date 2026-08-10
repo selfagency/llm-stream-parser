@@ -19,7 +19,7 @@ export interface OutputValidatorConfig {
 export interface ValidateOptions {
   autoRepair?: boolean;
   maxRepairAttempts?: number;
-  onRepairAttempt?: (attempt: number, repaired: string) => void;
+  onRepairAttempt?: ((attempt: number, repaired: string) => void) | undefined;
   originalPrompt?: string;
 }
 
@@ -73,7 +73,6 @@ function tryJsonParse(text: string): { success: true; data: unknown } | { succes
   }
 }
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: bracket matching is inherently branchy
 function extractJsonCandidates(text: string): string[] {
   const candidates: string[] = [];
   const stack: string[] = [];
@@ -178,7 +177,6 @@ function repairExtractJson(input: string): string {
   return stripped;
 }
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: repair state machine
 function repairIncompleteJson(input: string): string {
   const trimmed = stripCodeFences(input).trim();
   const stack: string[] = [];
@@ -659,7 +657,7 @@ export function createOutputValidator(config: OutputValidatorConfig = {}): Outpu
     const autoRepair = options.autoRepair ?? defaultAutoRepair;
     const maxAttempts = options.maxRepairAttempts ?? defaultMaxAttempts;
 
-    let attempts = 1;
+    const attempts = 1;
     let currentRaw = output;
     const firstTry = parseAndValidate(output);
 
@@ -718,67 +716,17 @@ export function createOutputValidator(config: OutputValidatorConfig = {}): Outpu
       }
     }
 
-    let lastError = 'Unknown error';
-    let lastErrors: string[] = [lastError];
-    let lastParseError: string | undefined;
-
-    const strategiesToTry = REPAIR_STRATEGIES.slice(0, Math.max(0, maxAttempts));
-
-    for (let i = 0; i < strategiesToTry.length; i++) {
-      const strategy = strategiesToTry[i];
-      if (!strategy) {
-        continue;
-      }
-
-      attempts++;
-      let repaired: string;
-      try {
-        repaired = strategy(currentRaw);
-      } catch (err) {
-        lastError = err instanceof Error ? err.message : String(err);
-        lastErrors = [lastError];
-        continue;
-      }
-
-      const callbacks = options.onRepairAttempt;
-      if (callbacks) {
-        callbacks(i + 1, repaired);
-      }
-
-      const parsedTry = parseAndValidate(repaired);
-      if (!('parsed' in parsedTry)) {
-        lastError = (parsedTry as { error: string }).error;
-        lastErrors = [`Parse error after repair ${i + 1}: ${lastError}`];
-        lastParseError = lastError;
-        currentRaw = repaired;
-        continue;
-      }
-
-      const schemaCheck = validateAgainstSchema(parsedTry.parsed, schema, maxDepth, maxKeys);
-      if (schemaCheck.valid) {
-        return {
-          valid: true,
-          data: parsedTry.parsed as T,
-          attempts,
-          repaired: true,
-          repairedOutput: repaired
-        };
-      }
-
-      lastError = schemaCheck.errors[0] ?? 'Schema validation failed after repair';
-      lastErrors = schemaCheck.errors;
-      lastParseError = undefined;
-      currentRaw = repaired;
-    }
-
-    return {
-      valid: false,
-      error: lastErrors[0] ?? lastError,
-      errors: lastErrors,
+    return runRepairLoop<T>({
       attempts,
-      repaired: attempts > 1,
-      ...(lastParseError ? { parseError: lastParseError } : {})
-    };
+      currentRaw,
+      maxAttempts,
+      maxDepth,
+      maxKeys,
+      onRepairAttempt: options.onRepairAttempt,
+      parseAndValidate,
+      schema,
+      validateAgainstSchema
+    });
   }
 
   function validate<T = unknown>(
@@ -795,6 +743,90 @@ export function createOutputValidator(config: OutputValidatorConfig = {}): Outpu
     getRepairStrategies() {
       return REPAIR_STRATEGIES.map(fn => fn.name);
     }
+  };
+}
+
+interface RepairLoopParams {
+  attempts: number;
+  currentRaw: string;
+  maxAttempts: number;
+  maxDepth: number;
+  maxKeys: number;
+  onRepairAttempt?: ((attempt: number, repaired: string) => void) | undefined;
+  parseAndValidate: (text: string) => { parsed: unknown; rawUsed: string } | { error: string; rawUsed: string };
+  schema: JsonSchema;
+  validateAgainstSchema: (
+    value: unknown,
+    schema: JsonSchema,
+    maxDepth: number,
+    maxKeys: number
+  ) => { valid: true } | { valid: false; errors: string[] };
+}
+
+/** Try each repair strategy in order until one parses and validates. */
+function runRepairLoop<T>(params: RepairLoopParams): ValidationResult<T> {
+  const { attempts: initialAttempts, currentRaw: initialRaw, maxAttempts, maxDepth, maxKeys, onRepairAttempt } = params;
+  let attempts = initialAttempts;
+  let currentRaw = initialRaw;
+  let lastError = 'Unknown error';
+  let lastErrors: string[] = [lastError];
+  let lastParseError: string | undefined;
+
+  const strategiesToTry = REPAIR_STRATEGIES.slice(0, Math.max(0, maxAttempts));
+
+  for (let i = 0; i < strategiesToTry.length; i++) {
+    const strategy = strategiesToTry[i];
+    if (!strategy) {
+      continue;
+    }
+
+    attempts++;
+    let repaired: string;
+    try {
+      repaired = strategy(currentRaw);
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err);
+      lastErrors = [lastError];
+      continue;
+    }
+
+    if (onRepairAttempt) {
+      onRepairAttempt(i + 1, repaired);
+    }
+
+    const parsedTry = params.parseAndValidate(repaired);
+    if (!('parsed' in parsedTry)) {
+      lastError = (parsedTry as { error: string }).error;
+      lastErrors = [`Parse error after repair ${i + 1}: ${lastError}`];
+      lastParseError = lastError;
+      currentRaw = repaired;
+      continue;
+    }
+
+    const schemaCheck = params.validateAgainstSchema(parsedTry.parsed, params.schema, maxDepth, maxKeys);
+    if (schemaCheck.valid) {
+      return {
+        valid: true,
+        data: parsedTry.parsed as T,
+        attempts,
+        repaired: true,
+        repairedOutput: repaired
+      };
+    }
+
+    lastError = schemaCheck.errors[0] ?? 'Schema validation failed after repair';
+    lastErrors = schemaCheck.errors;
+    lastParseError = undefined;
+    currentRaw = repaired;
+  }
+
+  return {
+    valid: false,
+    error: lastErrors[0] ?? lastError,
+    errors: lastErrors,
+    attempts,
+    repaired: attempts > 1,
+    ...(lastParseError ? { parseError: lastParseError } : {})
   };
 }
 
