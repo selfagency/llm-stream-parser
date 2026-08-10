@@ -245,20 +245,31 @@ function handleToolResult(item: RolloutItem, callMap: Map<string, ToolCallEntry>
       order[idx] = updated;
     }
   } else {
-    const orphanId = rawId || `${item.sessionId}-${item.sequence}`;
-    const entry: ToolCallEntry = {
-      arguments: {},
-      name: getStringField(item.data, 'name') ?? 'unknown',
-      result: loose.result ?? loose.output,
-      sequence: item.sequence,
-      sessionId: item.sessionId,
-      status: 'completed',
-      timestamp: item.timestamp,
-      toolCallId: orphanId
-    };
-    callMap.set(orphanId, entry);
-    order.push(entry);
+    addOrphanToolResult(item, loose, rawId, callMap, order);
   }
+}
+
+/** Record a tool result that has no matching prior tool call. */
+function addOrphanToolResult(
+  item: RolloutItem,
+  loose: LooseData,
+  rawId: string,
+  callMap: Map<string, ToolCallEntry>,
+  order: ToolCallEntry[]
+): void {
+  const orphanId = rawId || `${item.sessionId}-${item.sequence}`;
+  const entry: ToolCallEntry = {
+    arguments: {},
+    name: getStringField(item.data, 'name') ?? 'unknown',
+    result: loose.result ?? loose.output,
+    sequence: item.sequence,
+    sessionId: item.sessionId,
+    status: 'completed',
+    timestamp: item.timestamp,
+    toolCallId: orphanId
+  };
+  callMap.set(orphanId, entry);
+  order.push(entry);
 }
 
 export function deriveToolCallsView(items: readonly RolloutItem[]): ToolCallsView {
