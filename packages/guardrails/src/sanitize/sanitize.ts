@@ -128,21 +128,10 @@ export async function sanitize(
 ): Promise<SanitizeResult> {
   // nosemgrep: mode is a typed enum with a static config map, not user input
   const modeConfig = MODE_CONFIGS[mode];
-  const scanners: GuardrailScanner[] = [];
+  const scanners = buildScannerPipeline(options, modeConfig);
   const byScanner: Record<string, number> = {};
   const ruleIds: string[] = [];
   let totalDetections = 0;
-
-  // Build scanner pipeline
-  if (options?.piiRedaction ?? modeConfig.piiRedaction) {
-    scanners.push(new PIIScanner());
-  }
-
-  if (options?.secretRedaction ?? modeConfig.secretRedaction) {
-    scanners.push(new SecretDetectionScanner());
-  }
-
-  scanners.push(new InfrastructureScanner(options?.infrastructure ?? modeConfig.infrastructure));
 
   // Apply guardrail scanners
   let result = input;
@@ -156,12 +145,9 @@ export async function sanitize(
 
   // Apply custom redaction rules
   if (options?.customRules) {
-    const { matches, sanitized } = options.customRules.apply(result, mode);
-    for (const match of matches) {
-      ruleIds.push(match.id);
-      totalDetections++;
-    }
-    result = sanitized;
+    const applied = applyCustomRules(options.customRules, result, mode, ruleIds);
+    result = applied.sanitized;
+    totalDetections += applied.detections;
   }
 
   // Check for unredacted warnings
@@ -175,6 +161,33 @@ export async function sanitize(
   };
 
   return { sanitized: result, summary };
+}
+
+/** Build the scanner pipeline from mode config and option overrides. */
+function buildScannerPipeline(options: SanitizeOptions | undefined, modeConfig: ModeConfig): GuardrailScanner[] {
+  const scanners: GuardrailScanner[] = [];
+  if (options?.piiRedaction ?? modeConfig.piiRedaction) {
+    scanners.push(new PIIScanner());
+  }
+  if (options?.secretRedaction ?? modeConfig.secretRedaction) {
+    scanners.push(new SecretDetectionScanner());
+  }
+  scanners.push(new InfrastructureScanner(options?.infrastructure ?? modeConfig.infrastructure));
+  return scanners;
+}
+
+/** Apply custom redaction rules, returning the sanitized text and detection count. */
+function applyCustomRules(
+  rules: NonNullable<SanitizeOptions['customRules']>,
+  input: string,
+  mode: SanitizeMode,
+  ruleIds: string[]
+): { detections: number; sanitized: string } {
+  const { matches, sanitized } = rules.apply(input, mode);
+  for (const match of matches) {
+    ruleIds.push(match.id);
+  }
+  return { detections: matches.length, sanitized };
 }
 
 /**
