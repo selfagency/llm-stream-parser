@@ -648,35 +648,44 @@ export class ACPEventLedger {
     const result: InferenceEntry[] = [];
 
     for (const ev of events) {
-      if (ev.eventType !== 'inference' && ev.eventType !== 'stream.chunk' && ev.eventType !== 'stream.end') {
-        continue;
-      }
-      const data = parseEventDataSafe(ev.eventData);
-      const loose = asLoose(data);
-      const usageData = (loose.usage as Record<string, unknown>) ?? data;
-      const hasUsage =
-        loose.model !== undefined ||
-        loose.inputTokens !== undefined ||
-        loose.outputTokens !== undefined ||
-        loose.costUsd !== undefined ||
-        (usageData !== data && typeof usageData === 'object');
-
-      if (ev.eventType === 'inference' || hasUsage) {
-        result.push({
-          costUsd: extractNumber(data, 'costUsd') ?? extractNumber(usageData, 'costUsd'),
-          eventType: ev.eventType,
-          inputTokens: extractNumber(data, 'inputTokens') ?? extractNumber(usageData, 'inputTokens'),
-          model: extractString(data, 'model') ?? extractString(usageData, 'model'),
-          outputTokens: extractNumber(data, 'outputTokens') ?? extractNumber(usageData, 'outputTokens'),
-          raw: data,
-          sequence: ev.sequence,
-          sessionId: ev.sessionId,
-          timestamp: ev.timestamp
-        });
+      const entry = this.#toInferenceEntry(ev);
+      if (entry) {
+        result.push(entry);
       }
     }
 
     return result.sort((a, b) => a.sequence - b.sequence);
+  }
+
+  #toInferenceEntry(ev: AcpEvent): InferenceEntry | null {
+    if (ev.eventType !== 'inference' && ev.eventType !== 'stream.chunk' && ev.eventType !== 'stream.end') {
+      return null;
+    }
+    const data = parseEventDataSafe(ev.eventData);
+    const loose = asLoose(data);
+    const usageData = (loose.usage as Record<string, unknown>) ?? data;
+    const hasUsage =
+      loose.model !== undefined ||
+      loose.inputTokens !== undefined ||
+      loose.outputTokens !== undefined ||
+      loose.costUsd !== undefined ||
+      (usageData !== data && typeof usageData === 'object');
+
+    if (ev.eventType !== 'inference' && !hasUsage) {
+      return null;
+    }
+
+    return {
+      costUsd: extractNumber(data, 'costUsd') ?? extractNumber(usageData, 'costUsd'),
+      eventType: ev.eventType,
+      inputTokens: extractNumber(data, 'inputTokens') ?? extractNumber(usageData, 'inputTokens'),
+      model: extractString(data, 'model') ?? extractString(usageData, 'model'),
+      outputTokens: extractNumber(data, 'outputTokens') ?? extractNumber(usageData, 'outputTokens'),
+      raw: data,
+      sequence: ev.sequence,
+      sessionId: ev.sessionId,
+      timestamp: ev.timestamp
+    };
   }
 
   getCompactionView(sessionId: string): readonly CompactionEntry[] {
