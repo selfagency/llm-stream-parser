@@ -82,28 +82,25 @@ function parseManifest(manifest: unknown, source: string): RegistryEntry[] {
   }
   const entries: RegistryEntry[] = [];
 
-  for (const item of manifest.components ?? []) {
-    const entry = parseManifestItem(item, `${source}/components`);
-    if (entry !== null) {
-      entries.push(entry);
-    }
-  }
-
-  for (const item of manifest.modules ?? []) {
-    const entry = parseManifestItem(item, `${source}/modules`);
-    if (entry !== null) {
-      entries.push(entry);
-    }
-  }
-
-  for (const item of manifest.profiles ?? []) {
-    const entry = parseManifestItem(item, `${source}/profiles`);
-    if (entry !== null) {
-      entries.push(entry);
-    }
-  }
+  collectManifestItems(entries, manifest.components, `${source}/components`);
+  collectManifestItems(entries, manifest.modules, `${source}/modules`);
+  collectManifestItems(entries, manifest.profiles, `${source}/profiles`);
 
   return entries;
+}
+
+/** Parse a manifest section into registry entries, appending to the given list. */
+function collectManifestItems(
+  entries: RegistryEntry[],
+  items: readonly EccManifestItem[] | undefined,
+  source: string
+): void {
+  for (const item of items ?? []) {
+    const entry = parseManifestItem(item, source);
+    if (entry !== null) {
+      entries.push(entry);
+    }
+  }
 }
 
 // ── Main logic ────────────────────────────────────────────
