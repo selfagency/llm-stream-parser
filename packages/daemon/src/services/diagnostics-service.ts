@@ -413,47 +413,53 @@ function resolveSubprocessMemoryMb(entry: SubprocessEntry): number | null {
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: maps multiple acp session shapes
 function resolveAcp(acpServer: AcpServerLike | null | undefined, daemon: DaemonLike | null | undefined): AcpHealth {
   let enabled = false;
-  let activeSessions = 0;
 
   if (daemon) {
     enabled = daemon.acp !== null && daemon.acp !== undefined;
   }
 
-  if (acpServer) {
-    if (typeof (acpServer as { getActiveSessionCount?: () => number }).getActiveSessionCount === 'function') {
-      try {
-        const c = (acpServer as { getActiveSessionCount: () => number }).getActiveSessionCount();
-        if (typeof c === 'number') {
-          activeSessions = c;
-        }
-      } catch {
-        // ignore
-      }
-    } else if (typeof acpServer.count === 'function') {
-      try {
-        activeSessions = acpServer.count();
-      } catch {
-        // ignore
-      }
-    }
+  const activeSessions = acpServer ? resolveActiveSessionCount(acpServer) : 0;
 
-    const sessions = acpServer.activeSessions ?? acpServer.sessions;
-    if (sessions) {
-      if (typeof (sessions as AcpSessionsLike).size === 'number') {
-        activeSessions = (sessions as AcpSessionsLike).size as number;
-      } else if (typeof (sessions as AcpSessionsLike).count === 'number') {
-        activeSessions = (sessions as AcpSessionsLike).count as number;
-      } else if (sessions instanceof Map || sessions instanceof Set) {
-        activeSessions = sessions.size;
-      }
-    }
-
-    if (acpServer && !daemon) {
-      enabled = true;
-    }
+  if (acpServer && !daemon) {
+    enabled = true;
   }
 
   return { enabled, activeSessions };
+}
+
+/** Resolve the active ACP session count across the various supported shapes. */
+function resolveActiveSessionCount(acpServer: AcpServerLike): number {
+  if (typeof (acpServer as { getActiveSessionCount?: () => number }).getActiveSessionCount === 'function') {
+    try {
+      const c = (acpServer as { getActiveSessionCount: () => number }).getActiveSessionCount();
+      if (typeof c === 'number') {
+        return c;
+      }
+    } catch {
+      // ignore
+    }
+  } else if (typeof acpServer.count === 'function') {
+    try {
+      return acpServer.count();
+    } catch {
+      // ignore
+    }
+  }
+
+  const sessions = acpServer.activeSessions ?? acpServer.sessions;
+  if (sessions) {
+    if (typeof (sessions as AcpSessionsLike).size === 'number') {
+      return (sessions as AcpSessionsLike).size as number;
+    }
+    if (typeof (sessions as AcpSessionsLike).count === 'number') {
+      return (sessions as AcpSessionsLike).count as number;
+    }
+    if (sessions instanceof Map || sessions instanceof Set) {
+      return sessions.size;
+    }
+  }
+
+  return 0;
 }
 
 /** Resolve memory health from a MemoryProvider-like dependency with async/sync fallback. */
