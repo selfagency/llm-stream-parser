@@ -34,49 +34,52 @@ export function toOpenAICompatibleMessages(
   messages: readonly OutboundMessage[],
   _options: OutboundAdapterOptions = {}
 ): OpenAICompatibleMessage[] {
-  return messages.map(msg => {
-    const text = msg.parts
-      .filter((p: OutboundPart): p is { type: 'text'; text: string } => p.type === 'text')
-      .map(p => p.text)
-      .join('\n');
+  return messages.map(mapOutboundMessage);
+}
 
-    const toolCallPart = msg.parts.find(p => p.type === 'tool-call');
-    const toolResultPart = msg.parts.find(p => p.type === 'tool-result');
+/** Map a single outbound message to the OpenAI-compatible wire shape. */
+function mapOutboundMessage(msg: OutboundMessage): OpenAICompatibleMessage {
+  const text = msg.parts
+    .filter((p: OutboundPart): p is { type: 'text'; text: string } => p.type === 'text')
+    .map(p => p.text)
+    .join('\n');
 
-    if (toolResultPart?.type === 'tool-result') {
-      return {
-        content: toolResultPart.content,
-        role: 'tool',
-        tool_call_id: toolResultPart.callId
-      };
-    }
+  const toolCallPart = msg.parts.find(p => p.type === 'tool-call');
+  const toolResultPart = msg.parts.find(p => p.type === 'tool-result');
 
-    if (msg.role === 'system') {
-      return { content: text, role: 'system' };
-    }
-    if (msg.role === 'user') {
-      return { content: text, role: 'user' };
-    }
+  if (toolResultPart?.type === 'tool-result') {
+    return {
+      content: toolResultPart.content,
+      role: 'tool',
+      tool_call_id: toolResultPart.callId
+    };
+  }
 
-    if (toolCallPart?.type === 'tool-call') {
-      return {
-        content: text || null,
-        role: 'assistant',
-        tool_calls: [
-          {
-            function: {
-              arguments: JSON.stringify(toolCallPart.input ?? {}),
-              name: toolCallPart.name
-            },
-            id: toolCallPart.callId,
-            type: 'function'
-          }
-        ]
-      };
-    }
+  if (msg.role === 'system') {
+    return { content: text, role: 'system' };
+  }
+  if (msg.role === 'user') {
+    return { content: text, role: 'user' };
+  }
 
-    return { content: text, role: 'assistant' };
-  });
+  if (toolCallPart?.type === 'tool-call') {
+    return {
+      content: text || null,
+      role: 'assistant',
+      tool_calls: [
+        {
+          function: {
+            arguments: JSON.stringify(toolCallPart.input ?? {}),
+            name: toolCallPart.name
+          },
+          id: toolCallPart.callId,
+          type: 'function'
+        }
+      ]
+    };
+  }
+
+  return { content: text, role: 'assistant' };
 }
 
 /**
