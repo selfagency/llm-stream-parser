@@ -102,7 +102,10 @@ describe('reviewAgentsMd', () => {
   it('flags profile drift for missing frameworks', () => {
     const content = generateAgentsMd(profile('/test'), config());
     // Change profile to include a framework not in the content
-    const driftedProfile = { ...profile('/test'), frameworks: ['svelte', 'next.js', 'react'] as const };
+    const driftedProfile: ProjectProfile = {
+      ...profile('/test'),
+      frameworks: ['svelte', 'next.js', 'react'] as ProjectProfile['frameworks']
+    };
     const result = reviewAgentsMd(content, driftedProfile);
     expect(result.findings.some(f => f.severity === 'warning' && f.message.includes('svelte'))).toBe(true);
   });
@@ -134,11 +137,11 @@ describe('reviewAgentsMd', () => {
 
   it('recommends regeneration when many warnings', () => {
     const content = '# AGENTS.md\n\n## Project\n\n## Commands\n\n## Conventions\n';
-    const driftedProfile = {
+    const driftedProfile: ProjectProfile = {
       ...profile('/test'),
-      frameworks: ['svelte', 'astro', 'vue'] as const,
-      languages: ['python', 'rust'] as const,
-      packageManager: 'cargo' as const
+      frameworks: ['svelte', 'astro', 'vue'] as ProjectProfile['frameworks'],
+      languages: ['python', 'rust'] as ProjectProfile['languages'],
+      packageManager: 'cargo'
     };
     const result = reviewAgentsMd(content, driftedProfile);
     expect(result.shouldRegenerate).toBe(true);
