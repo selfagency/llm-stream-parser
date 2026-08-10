@@ -433,20 +433,34 @@ function validateNode(
   }
 }
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: combinator validation (anyOf/oneOf/allOf/not) is inherently branchy
 function validateCombinators(c: ValidationContext): void {
-  const { value, schema, path, errors, depth, maxDepth, keyCount, maxKeys } = c;
+  validateEnum(c);
+  validateConst(c);
+  validateNot(c);
+  validateAnyOf(c);
+  validateOneOf(c);
+  validateAllOf(c);
+}
+
+function validateEnum(c: ValidationContext): void {
+  const { value, schema, path, errors } = c;
   if (Array.isArray(schema.enum)) {
     const enumVals = schema.enum as unknown[];
     if (!enumVals.some(item => deepEqual(item, value))) {
       errors.push(`${path}: value is not in enum`);
     }
   }
+}
 
+function validateConst(c: ValidationContext): void {
+  const { value, schema, path, errors } = c;
   if ('const' in schema && !deepEqual(value, schema.const)) {
     errors.push(`${path}: value does not match const`);
   }
+}
 
+function validateNot(c: ValidationContext): void {
+  const { value, schema, path, errors, depth, maxDepth, keyCount, maxKeys } = c;
   if (schema.not && typeof schema.not === 'object' && !Array.isArray(schema.not)) {
     const notErrs: string[] = [];
     validateNode(value, schema.not as JsonSchema, path, notErrs, depth + 1, maxDepth, keyCount, maxKeys);
@@ -454,7 +468,10 @@ function validateCombinators(c: ValidationContext): void {
       errors.push(`${path}: value must not match 'not' schema`);
     }
   }
+}
 
+function validateAnyOf(c: ValidationContext): void {
+  const { value, schema, path, errors, depth, maxDepth, maxKeys } = c;
   if (Array.isArray(schema.anyOf)) {
     const matched = (schema.anyOf as JsonSchema[]).some(sub => {
       if (!sub || typeof sub !== 'object' || Array.isArray(sub)) {
@@ -468,21 +485,27 @@ function validateCombinators(c: ValidationContext): void {
       errors.push(`${path}: does not match any of 'anyOf'`);
     }
   }
+}
 
+function validateOneOf(c: ValidationContext): void {
+  const { value, schema, path, errors, depth, maxDepth, maxKeys } = c;
   if (Array.isArray(schema.oneOf)) {
-    const matches = (schema.oneOf as JsonSchema[]).reduce((c, sub) => {
+    const matches = (schema.oneOf as JsonSchema[]).reduce((count, sub) => {
       if (!sub || typeof sub !== 'object' || Array.isArray(sub)) {
-        return c;
+        return count;
       }
       const subErrs: string[] = [];
       validateNode(value, sub, path, subErrs, depth + 1, maxDepth, { count: 0 }, maxKeys);
-      return subErrs.length === 0 ? c + 1 : c;
+      return subErrs.length === 0 ? count + 1 : count;
     }, 0);
     if (matches !== 1) {
       errors.push(`${path}: must match exactly one 'oneOf' (matched ${matches})`);
     }
   }
+}
 
+function validateAllOf(c: ValidationContext): void {
+  const { value, schema, path, errors, depth, maxDepth, keyCount, maxKeys } = c;
   if (Array.isArray(schema.allOf)) {
     for (const sub of schema.allOf as JsonSchema[]) {
       if (!sub || typeof sub !== 'object' || Array.isArray(sub)) {
