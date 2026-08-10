@@ -17,6 +17,7 @@ import {
   type AgentsyConfig,
   configExists,
   createDefaultConfig,
+  type ProjectProfile,
   readConfig,
   scanProject,
   writeConfig
@@ -129,14 +130,7 @@ async function handleScan(rest: readonly string[], io: CliIO): Promise<number> {
     if (hasFlag(rest, '--json')) {
       stdout(JSON.stringify(profile, null, 2));
     } else {
-      stdout(`Scan complete — ${profile.languages.join(', ')} project`);
-      stdout(`  Languages:      ${profile.languages.join(', ')}`);
-      stdout(`  Frameworks:     ${profile.frameworks.join(', ') || '(none detected)'}`);
-      stdout(`  Package manager: ${profile.packageManager}`);
-      stdout(`  Build system:   ${profile.buildSystem}`);
-      stdout(`  Monorepo:       ${profile.monorepo ? 'Yes' : 'No'}`);
-      stdout(`  Test runners:   ${profile.testRunner.join(', ') || '(none detected)'}`);
-      stdout(`  CI:             ${profile.ci.join(', ') || '(none detected)'}`);
+      stdout(formatScanSummary(profile));
     }
     return 0;
   } catch (error: unknown) {
@@ -144,6 +138,20 @@ async function handleScan(rest: readonly string[], io: CliIO): Promise<number> {
     stderr(`Scan failed: ${message}`);
     return 1;
   }
+}
+
+/** Format a scan profile as a human-readable summary. */
+function formatScanSummary(profile: ProjectProfile): string {
+  return [
+    `Scan complete — ${profile.languages.join(', ')} project`,
+    `  Languages:      ${profile.languages.join(', ')}`,
+    `  Frameworks:     ${profile.frameworks.join(', ') || '(none detected)'}`,
+    `  Package manager: ${profile.packageManager}`,
+    `  Build system:   ${profile.buildSystem}`,
+    `  Monorepo:       ${profile.monorepo ? 'Yes' : 'No'}`,
+    `  Test runners:   ${profile.testRunner.join(', ') || '(none detected)'}`,
+    `  CI:             ${profile.ci.join(', ') || '(none detected)'}`
+  ].join('\n');
 }
 
 async function handleInit(rest: readonly string[], io: CliIO): Promise<number> {
