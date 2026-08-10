@@ -99,23 +99,32 @@ async function handleRecommended(
   stdout('Installing recommended components...');
   try {
     const results: InstallResult[] = await installRecommended(process.cwd(), threshold);
-    const succeeded: InstallResult[] = results.filter((r: InstallResult) => r.success);
-    const failed: InstallResult[] = results.filter((r: InstallResult) => !r.success);
-
-    stdout(`Installed ${succeeded.length} / ${results.length} components`);
-    for (const result of succeeded) {
-      stdout(`  \u2713 ${result.componentId}`);
-    }
-    for (const result of failed) {
-      stderr(`  \u2717 ${result.componentId}: ${result.error ?? 'Unknown error'}`);
-    }
-
-    return failed.length > 0 ? 1 : 0;
+    return reportInstallResults(results, stdout, stderr);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     stderr(`Install failed: ${message}`);
     return 1;
   }
+}
+
+/** Report install results to stdout/stderr and return the exit code. */
+function reportInstallResults(
+  results: readonly InstallResult[],
+  stdout: (msg: string) => void,
+  stderr: (msg: string) => void
+): number {
+  const succeeded: InstallResult[] = results.filter((r: InstallResult) => r.success);
+  const failed: InstallResult[] = results.filter((r: InstallResult) => !r.success);
+
+  stdout(`Installed ${succeeded.length} / ${results.length} components`);
+  for (const result of succeeded) {
+    stdout(`  \u2713 ${result.componentId}`);
+  }
+  for (const result of failed) {
+    stderr(`  \u2717 ${result.componentId}: ${result.error ?? 'Unknown error'}`);
+  }
+
+  return failed.length > 0 ? 1 : 0;
 }
 
 // ── Positional handler ───────────────────────────────────
