@@ -94,32 +94,21 @@ function buildLangfuseOverrides(
   const lf = options.langfuse;
   const overrides: Record<string, unknown> = {};
 
-  if (lf?.endpoint !== undefined) {
-    overrides.endpoint = lf.endpoint;
-  }
-  if (lf?.publicKey !== undefined) {
-    overrides.publicKey = lf.publicKey;
-  }
-  if (lf?.secretKey !== undefined) {
-    overrides.secretKey = lf.secretKey;
-  }
-
-  const projectId = lf?.projectId ?? detection.projectId;
-  if (projectId !== undefined) {
-    overrides.projectId = projectId;
-  }
-
-  const flushIntervalMs = lf?.flushIntervalMs ?? detection.flushIntervalMs;
-  if (flushIntervalMs !== undefined) {
-    overrides.flushIntervalMs = flushIntervalMs;
-  }
-
-  const maxBatchSize = lf?.maxBatchSize ?? detection.maxBatchSize;
-  if (maxBatchSize !== undefined) {
-    overrides.maxBatchSize = maxBatchSize;
-  }
+  assignIfDefined(overrides, 'endpoint', lf?.endpoint);
+  assignIfDefined(overrides, 'publicKey', lf?.publicKey);
+  assignIfDefined(overrides, 'secretKey', lf?.secretKey);
+  assignIfDefined(overrides, 'projectId', lf?.projectId ?? detection.projectId);
+  assignIfDefined(overrides, 'flushIntervalMs', lf?.flushIntervalMs ?? detection.flushIntervalMs);
+  assignIfDefined(overrides, 'maxBatchSize', lf?.maxBatchSize ?? detection.maxBatchSize);
 
   return Object.keys(overrides).length > 0 ? overrides : undefined;
+}
+
+/** Assign a value to an overrides record only when it is defined. */
+function assignIfDefined(overrides: Record<string, unknown>, key: string, value: unknown): void {
+  if (value !== undefined) {
+    overrides[key] = value;
+  }
 }
 
 /**
