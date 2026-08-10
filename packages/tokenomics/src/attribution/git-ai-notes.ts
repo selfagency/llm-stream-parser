@@ -148,7 +148,10 @@ export function aggregateGitAiStats(repoRoot: string, commits: string[]): GitAiP
   const totalAdded = totalHuman + totalAi;
 
   // Aggregate by tool/model
-  const byTool: Record<string, { aiAdditions: number; aiPercentage: number }> = {};
+  const byTool: Record<string, { aiAdditions: number; aiPercentage: number }> = Object.create(null) as Record<
+    string,
+    { aiAdditions: number; aiPercentage: number }
+  >;
   for (const s of stats) {
     for (const [tool, data] of Object.entries(s.toolModelBreakdown)) {
       const existing = byTool[tool] ?? { aiAdditions: 0, aiPercentage: 0 };

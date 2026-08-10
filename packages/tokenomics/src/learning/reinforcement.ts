@@ -139,10 +139,11 @@ export function reinforcePattern(
  * @returns A nested routing weight map.
  */
 export function getRoutingWeights(patterns: ReinforcedPattern[]): Record<string, Record<string, number>> {
-  const weights: Record<string, Record<string, number>> = {};
+  // Null-prototype object prevents prototype pollution via __proto__/constructor/prototype modelIds
+  const weights: Record<string, Record<string, number>> = Object.create(null) as Record<string, Record<string, number>>;
 
   for (const pattern of patterns) {
-    const agentWeights = weights[pattern.modelId] ?? {};
+    const agentWeights = weights[pattern.modelId] ?? (Object.create(null) as Record<string, number>);
     agentWeights[pattern.agentId] = pattern.routingWeight;
     weights[pattern.modelId] = agentWeights;
   }

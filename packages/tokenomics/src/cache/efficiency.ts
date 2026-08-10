@@ -99,8 +99,9 @@ export function computeCacheEfficiency(
  * @returns A `ProviderCacheHeaders` with parsed values.
  */
 export function parseProviderCacheHeaders(headers: Record<string, string>): ProviderCacheHeaders {
-  const raw: Record<string, string> = {};
-  const lower: Record<string, string> = {};
+  // Null-prototype objects prevent prototype pollution via header keys
+  const raw: Record<string, string> = Object.create(null) as Record<string, string>;
+  const lower: Record<string, string> = Object.create(null) as Record<string, string>;
 
   for (const [key, value] of Object.entries(headers)) {
     const lk = key.toLowerCase();

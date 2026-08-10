@@ -294,7 +294,7 @@ function deriveCategory(dominantKind: FrustrationEventKind, fingerprint: string)
     context_explosion: 'context-overflow'
   };
 
-  const kindLabel = kindLabels[dominantKind] ?? 'unknown-pattern';
+  const kindLabel = Object.hasOwn(kindLabels, dominantKind) ? kindLabels[dominantKind] : 'unknown-pattern';
   const modelMatch = fingerprint.match(/m:([^|]+)/);
   const modelTag = modelMatch ? modelMatch[1] : 'unknown';
 

@@ -19,7 +19,8 @@
  * an optional field to `undefined` is a type error.
  */
 export function omitUndefined<T extends Record<string, unknown>>(obj: T): T {
-  const result = {} as T;
+  // Null-prototype object prevents prototype pollution via own keys
+  const result = Object.create(null) as T;
   for (const [k, v] of Object.entries(obj)) {
     if (v !== undefined) {
       result[k as keyof T] = v as T[keyof T];

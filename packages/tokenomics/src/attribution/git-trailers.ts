@@ -122,7 +122,8 @@ export function formatTrailers(trailers: AiTrailers): string {
 export function parseTrailers(commitMessage: string): AiTrailers | null {
   const lines = commitMessage.split('\n');
 
-  const raw: Record<string, string> = {};
+  // Null-prototype object prevents prototype pollution via AI-* trailer keys from commit messages
+  const raw: Record<string, string> = Object.create(null) as Record<string, string>;
 
   for (const line of lines) {
     const trimmed = line.trim();
