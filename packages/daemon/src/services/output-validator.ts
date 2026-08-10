@@ -187,54 +187,10 @@ function repairIncompleteJson(input: string): string {
   let buffer = '';
 
   for (const char of trimmed) {
-    if (escaped) {
-      escaped = false;
-      buffer += char;
-      continue;
-    }
-    if (char === '\\') {
-      escaped = true;
-      buffer += char;
-      continue;
-    }
-    if (char === '"') {
-      inString = !inString;
-      buffer += char;
-      continue;
-    }
-    if (inString) {
-      buffer += char;
-      continue;
-    }
-    if (char === '{') {
-      stack.push('}');
-      buffer += char;
-    } else if (char === '[') {
-      stack.push(']');
-      buffer += char;
-    } else if (char === '}' || char === ']') {
-      if (stack.length > 0 && stack.at(-1) === char) {
-        stack.pop();
-        buffer += char;
-      } else {
-        let closed = '';
-        while (stack.length > 0 && stack.at(-1) !== char) {
-          const popped = stack.pop();
-          if (popped) {
-            closed += popped;
-          }
-        }
-        if (stack.at(-1) === char) {
-          buffer += closed + char;
-          stack.pop();
-        } else {
-          // Unmatched closing bracket — emit it anyway rather than silently dropping
-          buffer += char;
-        }
-      }
-    } else {
-      buffer += char;
-    }
+    const next = advanceRepairScanner(char, { escaped, inString, stack, buffer });
+    escaped = next.escaped;
+    inString = next.inString;
+    buffer = next.buffer;
   }
 
   if (inString) {
@@ -247,6 +203,71 @@ function repairIncompleteJson(input: string): string {
     }
   }
   return buffer;
+}
+
+interface RepairScannerState {
+  buffer: string;
+  escaped: boolean;
+  inString: boolean;
+  stack: string[];
+}
+
+interface RepairScannerResult {
+  buffer: string;
+  escaped: boolean;
+  inString: boolean;
+}
+
+/** Advance the JSON repair scanner by one character, updating the buffer and stack. */
+function advanceRepairScanner(char: string, state: RepairScannerState): RepairScannerResult {
+  const { escaped, inString, stack, buffer } = state;
+
+  if (escaped) {
+    return { escaped: false, inString, buffer: buffer + char };
+  }
+  if (char === '\\') {
+    return { escaped: true, inString, buffer: buffer + char };
+  }
+  if (char === '"') {
+    return { escaped, inString: !inString, buffer: buffer + char };
+  }
+  if (inString) {
+    return { escaped, inString, buffer: buffer + char };
+  }
+
+  if (char === '{') {
+    stack.push('}');
+    return { escaped, inString, buffer: buffer + char };
+  }
+  if (char === '[') {
+    stack.push(']');
+    return { escaped, inString, buffer: buffer + char };
+  }
+  if (char === '}' || char === ']') {
+    return { escaped, inString, buffer: buffer + closeBracket(char, stack) };
+  }
+  return { escaped, inString, buffer: buffer + char };
+}
+
+/** Handle a closing bracket, auto-closing any mismatched open brackets on the stack. */
+function closeBracket(char: string, stack: string[]): string {
+  if (stack.length > 0 && stack.at(-1) === char) {
+    stack.pop();
+    return char;
+  }
+  let closed = '';
+  while (stack.length > 0 && stack.at(-1) !== char) {
+    const popped = stack.pop();
+    if (popped) {
+      closed += popped;
+    }
+  }
+  if (stack.at(-1) === char) {
+    stack.pop();
+    return closed + char;
+  }
+  // Unmatched closing bracket — emit it anyway rather than silently dropping
+  return char;
 }
 
 function repairTrailingCommas(input: string): string {
