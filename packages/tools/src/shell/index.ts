@@ -189,6 +189,22 @@ function safeIsDirectory(p: string): boolean {
   }
 }
 
+/** Normalize a child_process exec error into stdout/stderr/exitCode. */
+function normalizeExecError(error: unknown): { exitCode: number; stderr: string; stdout: string } {
+  const execError = error as unknown as {
+    stdout?: string | Buffer;
+    stderr?: string | Buffer;
+    code?: number;
+    status?: number;
+  };
+  const stdout =
+    typeof execError.stdout === 'string' ? execError.stdout : ((execError.stdout as Buffer)?.toString?.('utf-8') ?? '');
+  const stderr =
+    typeof execError.stderr === 'string' ? execError.stderr : ((execError.stderr as Buffer)?.toString?.('utf-8') ?? '');
+  const exitCode = execError.code ?? execError.status ?? 1;
+  return { exitCode, stderr, stdout };
+}
+
 // ─── Impl ───────────────────────────────────────────────────────────────
 
 class PersistentShellImpl implements PersistentShell {
@@ -296,21 +312,7 @@ class PersistentShellImpl implements PersistentShell {
         stdout: stdout ?? ''
       };
     } catch (error) {
-      const execError = error as unknown as {
-        stdout?: string | Buffer;
-        stderr?: string | Buffer;
-        code?: number;
-        status?: number;
-      };
-      const stdout =
-        typeof execError.stdout === 'string'
-          ? execError.stdout
-          : ((execError.stdout as Buffer)?.toString?.('utf-8') ?? '');
-      const stderr =
-        typeof execError.stderr === 'string'
-          ? execError.stderr
-          : ((execError.stderr as Buffer)?.toString?.('utf-8') ?? '');
-      const exitCode = execError.code ?? execError.status ?? 1;
+      const { exitCode, stderr, stdout } = normalizeExecError(error);
 
       this.#applyEnvTracking(command);
 
