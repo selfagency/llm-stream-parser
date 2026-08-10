@@ -1,4 +1,6 @@
 /* biome-ignore-all lint: docker filter needs branching */
+
+import { collapseBlankLines, insertFilterSummary } from './shared.js';
 import type { FilterContext, OutputFilterId, ShellFilter } from './types.js';
 
 const DOCKER_BUILDKIT_INTERNAL_RE = /^\s*#\d+\s+\[internal\]\s+load\s+|\[internal\].*\(.*\)|^\s*=>\s+\[internal\]/;
@@ -25,13 +27,8 @@ export class DockerFilter implements ShellFilter {
     let filteredCached = 0;
 
     for (const raw of lines) {
-      const trimmed = raw.trim();
-
-      if (trimmed === '') {
-        if (out.length > 0 && out.at(-1)?.trim() === '') {
-          continue;
-        }
-        out.push(raw);
+      const { keep, trimmed } = collapseBlankLines(out, raw);
+      if (!keep) {
         continue;
       }
 
@@ -100,12 +97,7 @@ export class DockerFilter implements ShellFilter {
 
     if (filteredInternal > 3 || filteredCached > 3) {
       const summary = `… [docker] ${filteredInternal} internal/transfer lines, ${filteredCached} cached lines filtered …`;
-      const lastIdx = out.findIndex(l => /Successfully built|Successfully tagged|DONE/.test(l));
-      if (lastIdx >= 0) {
-        out.splice(lastIdx, 0, summary);
-      } else {
-        out.unshift(summary);
-      }
+      insertFilterSummary(out, summary, /Successfully built|Successfully tagged|DONE/);
     }
 
     return out;

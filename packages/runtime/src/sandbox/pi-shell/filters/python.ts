@@ -1,4 +1,6 @@
 /* biome-ignore-all lint: python filter branching */
+
+import { collapseBlankLines } from './shared.js';
 import type { FilterContext, OutputFilterId, ShellFilter } from './types.js';
 
 export class PythonFilter implements ShellFilter {
@@ -18,12 +20,8 @@ export class PythonFilter implements ShellFilter {
     let filtered = 0;
 
     for (const raw of lines) {
-      const trimmed = raw.trim();
-      if (trimmed === '') {
-        if (out.length > 0 && out.at(-1)?.trim() === '') {
-          continue;
-        }
-        out.push(raw);
+      const { keep, trimmed } = collapseBlankLines(out, raw);
+      if (!keep) {
         continue;
       }
 

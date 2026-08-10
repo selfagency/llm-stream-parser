@@ -1,4 +1,6 @@
 /* biome-ignore-all lint: jvm filter needs branching for gradle+maven */
+
+import { collapseBlankLines, insertFilterSummary } from './shared.js';
 import type { FilterContext, OutputFilterId, ShellFilter } from './types.js';
 
 const GRADLE_TASK_UPTODATE_RE = />\s*Task\s+:\S+\s+UP-TO-DATE/;
@@ -39,21 +41,17 @@ export class JvmFilter implements ShellFilter {
     };
 
     for (const raw of lines) {
-      const trimmed = raw.trim();
+      const { keep, trimmed } = collapseBlankLines(out, raw);
+      if (!keep) {
+        continue;
+      }
 
-      if (trimmed === '') {
-        if (out.length > 0 && out.at(-1)?.trim() === '') {
-          continue;
+      if (trimmed === '' && inErrorBlock) {
+        errorBuffer.push(raw);
+        if (errorBuffer.length > 40) {
+          flushError();
+          inErrorBlock = false;
         }
-        if (inErrorBlock) {
-          errorBuffer.push(raw);
-          if (errorBuffer.length > 40) {
-            flushError();
-            inErrorBlock = false;
-          }
-          continue;
-        }
-        out.push(raw);
         continue;
       }
 
@@ -121,12 +119,7 @@ export class JvmFilter implements ShellFilter {
     if (filteredTasks > 0 || filteredDownloads > 0) {
       const summary = `… [jvm] ${filteredTasks} up-to-date tasks, ${filteredDownloads} download/info lines filtered …`;
       if (filteredTasks > 3 || filteredDownloads > 5) {
-        const buildIdx = out.findIndex(l => GRADLE_BUILD_RE.test(l) || SUMMARY_RE.test(l));
-        if (buildIdx >= 0) {
-          out.splice(buildIdx, 0, summary);
-        } else {
-          out.unshift(summary);
-        }
+        insertFilterSummary(out, summary, GRADLE_BUILD_RE);
       }
     }
 

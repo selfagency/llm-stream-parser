@@ -1,4 +1,6 @@
 /* biome-ignore-all lint: git filter branching */
+
+import { collapseBlankLines } from './shared.js';
 import type { FilterContext, OutputFilterId, ShellFilter } from './types.js';
 
 const GIT_REMOTE_PROGRESS_RE =
@@ -24,13 +26,8 @@ export class GitFilter implements ShellFilter {
     let filteredProgress = 0;
 
     for (const raw of lines) {
-      const trimmed = raw.trim();
-
-      if (trimmed === '') {
-        if (out.length > 0 && out.at(-1)?.trim() === '') {
-          continue;
-        }
-        out.push(raw);
+      const { keep, trimmed } = collapseBlankLines(out, raw);
+      if (!keep) {
         continue;
       }
 
