@@ -90,6 +90,7 @@ describe('StreamingSecretsFilter', () => {
 
   it('masks JWT tokens', () => {
     const filter = new StreamingSecretsFilter({ maxSecretLength: 5 });
+    // nosemgrep: test fixture with fake JWT payload, not a real token
     const jwt = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNqP0JqGZ3g3qJw6xQ';
     const result = feedAll(filter, `Token: ${jwt}`);
     expect(result).toContain('[REDACTED]');

@@ -64,6 +64,7 @@ describe('SecretDetectionScanner', () => {
   });
 
   it('detects Snyk token with context keyword', async () => {
+    // nosemgrep: test fixture with fake UUID, not a real Snyk key
     const r = await scanner.evaluate('snyk: 550e8400-e29b-41d4-a716-446655440000');
     expect(r.status).not.toBe('pass');
     assertDetections(r, ['snyk-token']);
