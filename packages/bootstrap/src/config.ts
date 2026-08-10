@@ -112,20 +112,40 @@ function isAgentsyConfig(value: unknown): value is AgentsyConfig {
   const obj = value as Record<string, unknown>;
   return (
     typeof obj.schemaVersion === 'number' &&
-    typeof obj.project === 'object' &&
-    obj.project !== null &&
-    typeof (obj.project as Record<string, unknown>).rootPath === 'string' &&
-    typeof (obj.project as Record<string, unknown>).profile === 'object' &&
-    (obj.project as Record<string, unknown>).profile !== null &&
-    Array.isArray(((obj.project as Record<string, unknown>).profile as Record<string, unknown>).languages) &&
-    typeof obj.installed === 'object' &&
-    obj.installed !== null &&
-    Array.isArray((obj.installed as Record<string, unknown>).connectors) &&
-    typeof obj.artifacts === 'object' &&
-    obj.artifacts !== null &&
-    typeof (obj.artifacts as Record<string, unknown>).agentsMd === 'boolean' &&
+    isValidProject(obj.project) &&
+    isValidInstalled(obj.installed) &&
+    isValidArtifacts(obj.artifacts) &&
     Array.isArray(obj.recommendations)
   );
+}
+
+function isValidProject(project: unknown): boolean {
+  if (typeof project !== 'object' || project === null) {
+    return false;
+  }
+  const p = project as Record<string, unknown>;
+  return typeof p.rootPath === 'string' && isValidProfile(p.profile);
+}
+
+function isValidProfile(profile: unknown): boolean {
+  if (typeof profile !== 'object' || profile === null) {
+    return false;
+  }
+  return Array.isArray((profile as Record<string, unknown>).languages);
+}
+
+function isValidInstalled(installed: unknown): boolean {
+  if (typeof installed !== 'object' || installed === null) {
+    return false;
+  }
+  return Array.isArray((installed as Record<string, unknown>).connectors);
+}
+
+function isValidArtifacts(artifacts: unknown): boolean {
+  if (typeof artifacts !== 'object' || artifacts === null) {
+    return false;
+  }
+  return typeof (artifacts as Record<string, unknown>).agentsMd === 'boolean';
 }
 
 // ── Agent Tools ─────────────────────────────────────────
