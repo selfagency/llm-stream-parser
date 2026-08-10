@@ -384,16 +384,12 @@ async function handleLookup(argv: readonly string[], opts: SecretsCliOptions): P
 
     if (opts.json) {
       opts.stdout(
-        JSON.stringify(
-          {
-            resourceType,
-            resolved: true,
-            value: reveal ? value : maskedValue(value),
-            revealed: reveal
-          },
-          null,
-          2
-        )
+        formatLookupJson({
+          error: undefined,
+          resourceType,
+          revealed: reveal,
+          value: reveal ? value : maskedValue(value)
+        })
       );
       return 0;
     }
@@ -405,23 +401,33 @@ async function handleLookup(argv: readonly string[], opts: SecretsCliOptions): P
     const message = error instanceof Error ? error.message : String(error);
 
     if (opts.json) {
-      opts.stdout(
-        JSON.stringify(
-          {
-            resourceType,
-            resolved: false,
-            error: message
-          },
-          null,
-          2
-        )
-      );
+      opts.stdout(formatLookupJson({ error: message, resourceType, revealed: reveal, value: undefined }));
       return 1;
     }
 
     opts.stderr(`Failed to resolve ${resourceType}: ${message}`);
     return 1;
   }
+}
+
+/** Format a lookup result as JSON. */
+function formatLookupJson(input: {
+  error: string | undefined;
+  resourceType: string;
+  revealed: boolean;
+  value: string | undefined;
+}): string {
+  return JSON.stringify(
+    {
+      error: input.error,
+      resourceType: input.resourceType,
+      resolved: input.error === undefined,
+      revealed: input.revealed,
+      value: input.value
+    },
+    null,
+    2
+  );
 }
 
 interface SyncProviderConfig {

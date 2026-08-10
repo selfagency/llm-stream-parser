@@ -25,7 +25,7 @@ export interface AtlasManifestData {
 
 // ── Helpers ─────────────────────────────────────────────
 
-function bulletList(items: string[]): string {
+function bulletList(items: readonly string[]): string {
   if (items.length === 0) {
     return '  - *none detected*';
   }
