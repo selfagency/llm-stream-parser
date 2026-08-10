@@ -35,7 +35,7 @@ Example:
 
 ## Dogfood implementation order
 
-This package is governed by [`plan/DOGFOOD-PLAN.md`](../../plan/DOGFOOD-PLAN.md). CLI work should follow the phase order in that plan, starting with the Phase 1 foundation and then the streaming chat slice.
+This package is governed by [`plan/INDEX.md`](../../plan/INDEX.md). CLI work should follow the phase order in that plan, starting with the Phase 1 foundation and then the streaming chat slice.
 
 ## Testing
 

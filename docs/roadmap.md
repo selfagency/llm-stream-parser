@@ -1,6 +1,6 @@
 # Roadmap
 
-This roadmap tracks implementation direction against the canonical plan in `plan/MASTER-IMPLEMENTATION-PLAN.md`. The current execution order for dogfood-first delivery lives in `plan/DOGFOOD-PLAN.md`.
+This roadmap tracks implementation direction against the canonical plan in `plan/00-overview.md`. The current execution order for dogfood-first delivery lives in `plan/INDEX.md`.
 
 ## Status of sandbox isolation
 
@@ -9,7 +9,7 @@ This roadmap tracks implementation direction against the canonical plan in `plan
 - [🔄] `ContainerSandbox` (Rivet) promoted from 'Investigation' to 'Implementation'.
 - [🔄] Drafting `RivetSandbox` provider for the `SandboxRouter`.
 - [✅] Implemented virtual sandbox with hybrid architecture supporting both virtual first and container fallback.
-- [🔄] Dogfood implementation is now tracked in `plan/DOGFOOD-PLAN.md`.
+- [🔄] Dogfood implementation is now tracked in `plan/INDEX.md`.
 
 ## Snapshot (May 2026)
 
@@ -40,7 +40,7 @@ The following domains existed as implementation plans and are now manifest-backe
 - Keep core/providers boundaries explicit and consistent in code/docs.
 - Continue package-level implementation plan execution on manifest-backed packages.
 - Preserve runtime/orchestrator split and session durability invariants.
-- Follow `plan/DOGFOOD-PLAN.md` for CLI-first implementation order.
+- Follow `plan/INDEX.md` for CLI-first implementation order.
 
 ### Priority 2 — domain promotion (complete)
 
@@ -81,6 +81,6 @@ And by architecture governance:
 ## What changed recently
 
 - `plan/agentsy-platform-v2.md` was retired after consolidation.
-- Master planning authority moved to `plan/MASTER-IMPLEMENTATION-PLAN.md`.
+- Master planning authority moved to `plan/00-overview.md`.
 - Roadmap now reflects repository reality (manifest-backed vs plan-only domains) rather than historical package assumptions.
 - **Phase 11 complete**: All plan-only domains (`connectors`, `guardrails`, `mcp`, `retrieval`) promoted to manifest-backed packages. CLI config system, MCP CLI, connectors CLI, and guardrails CLI integrated. Integration tests pass with MSW mocks covering all network calls.
