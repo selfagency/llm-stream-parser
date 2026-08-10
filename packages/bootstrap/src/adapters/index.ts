@@ -1,4 +1,5 @@
-// fallow-ignore-file unused-file — barrel, consumed transitively
+// fallow-ignore-file unused-file
+// barrel, consumed transitively
 
 /**
  * Registry Adapters — barrel exports
