@@ -29,7 +29,7 @@ function resolveLanguage(filePath: string, profile: ProjectProfile): string {
 
 // ── Types ───────────────────────────────────────────────
 
-export interface AftFileEntry {
+interface AftFileEntry {
   /** Short description */
   description: string;
   /** Language label */
@@ -42,7 +42,7 @@ export interface AftFileEntry {
   type: 'file' | 'dir';
 }
 
-export interface AftStats {
+interface AftStats {
   /** File count grouped by language */
   byLanguage: Record<string, { files: number; loc: number }>;
   /** Total file count */
@@ -51,7 +51,7 @@ export interface AftStats {
   totalLoc: number;
 }
 
-export interface AftJson {
+interface AftJson {
   /** Detected configuration files */
   configFiles: string[];
   /** Detected entry point files */

@@ -14,7 +14,7 @@ import type { ProjectProfile } from '../scanner.js';
 /**
  * Magic Context compartments structure.
  */
-export interface MagicContextSeed {
+interface MagicContextSeed {
   /** Fine-grained context buckets (e.g. api-routes, database-schema) */
   compartments: Record<string, string>;
   /** High-level project facts (name, purpose, stack) */
