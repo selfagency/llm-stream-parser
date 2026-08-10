@@ -87,36 +87,64 @@ function extractJsonCandidates(text: string): string[] {
       continue;
     }
 
-    if (escaped) {
-      escaped = false;
-      continue;
-    }
-    if (inString && char === '\\') {
-      escaped = true;
-      continue;
-    }
-    if (char === '"') {
-      inString = !inString;
-      continue;
-    }
-    if (inString) {
-      continue;
-    }
-
-    if (char === '{' || char === '[') {
-      if (stack.length === 0) {
-        start = i;
-      }
-      stack.push(char === '{' ? '}' : ']');
-    } else if ((char === '}' || char === ']') && stack.length > 0 && stack.at(-1) === char) {
-      stack.pop();
-      if (stack.length === 0 && start >= 0) {
-        candidates.push(text.slice(start, i + 1));
-        start = -1;
-      }
+    const next = advanceJsonScanner(char, i, { escaped, inString, stack, start });
+    escaped = next.escaped;
+    inString = next.inString;
+    start = next.start;
+    if (next.completed) {
+      candidates.push(text.slice(next.candidateStart, i + 1));
+      start = -1;
     }
   }
   return candidates;
+}
+
+interface JsonScannerState {
+  escaped: boolean;
+  inString: boolean;
+  stack: string[];
+  start: number;
+}
+
+interface JsonScannerResult {
+  candidateStart: number;
+  completed: boolean;
+  escaped: boolean;
+  inString: boolean;
+  start: number;
+}
+
+/**
+ * Advance the JSON bracket-matching scanner by one character.
+ * Returns the updated state and whether a complete top-level candidate closed.
+ */
+function advanceJsonScanner(char: string, index: number, state: JsonScannerState): JsonScannerResult {
+  const { escaped, inString, stack, start } = state;
+
+  if (escaped) {
+    return { escaped: false, inString, start, completed: false, candidateStart: start };
+  }
+  if (inString && char === '\\') {
+    return { escaped: true, inString, start, completed: false, candidateStart: start };
+  }
+  if (char === '"') {
+    return { escaped, inString: !inString, start, completed: false, candidateStart: start };
+  }
+  if (inString) {
+    return { escaped, inString, start, completed: false, candidateStart: start };
+  }
+
+  if (char === '{' || char === '[') {
+    const nextStart = stack.length === 0 ? index : start;
+    stack.push(char === '{' ? '}' : ']');
+    return { escaped, inString, start: nextStart, completed: false, candidateStart: nextStart };
+  }
+  if ((char === '}' || char === ']') && stack.length > 0 && stack.at(-1) === char) {
+    stack.pop();
+    const completed = stack.length === 0 && start >= 0;
+    return { escaped, inString, start, completed, candidateStart: start };
+  }
+  return { escaped, inString, start, completed: false, candidateStart: start };
 }
 
 function tryExtractAndParse(text: string): { success: true; data: unknown; raw: string } | { success: false } {
