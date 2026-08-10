@@ -133,26 +133,8 @@ export class HonkerQueueAdapter {
 
   private mapJob(raw: unknown, queue: string): Job {
     const r = raw as Record<string, unknown>;
-
-    // Safely parse opts
-    let opts: Record<string, unknown> = {};
-    if (typeof r.opts === 'string') {
-      try {
-        opts = JSON.parse(r.opts) as Record<string, unknown>;
-      } catch {
-        opts = {};
-      }
-    }
-
-    // Safely parse payload
-    let payload: unknown = r.payload;
-    if (typeof payload === 'string') {
-      try {
-        payload = JSON.parse(payload);
-      } catch {
-        payload = r.payload;
-      }
-    }
+    const opts = parseJsonRecord(r.opts);
+    const payload = parseJsonPayload(r.payload);
 
     return {
       id: typeof r.id === 'string' || typeof r.id === 'number' ? String(r.id) : '',
@@ -166,5 +148,29 @@ export class HonkerQueueAdapter {
       claimedBy: typeof r.claimed_by === 'string' ? r.claimed_by : null,
       createdAt: r.created_at ? new Date((r.created_at as number) * 1000) : new Date()
     };
+  }
+}
+
+/** Parse a JSON-encoded opts column into a record, falling back to an empty object. */
+function parseJsonRecord(value: unknown): Record<string, unknown> {
+  if (typeof value !== 'string') {
+    return {};
+  }
+  try {
+    return JSON.parse(value) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+/** Parse a JSON-encoded payload column, falling back to the raw value. */
+function parseJsonPayload(value: unknown): unknown {
+  if (typeof value !== 'string') {
+    return value;
+  }
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
   }
 }
